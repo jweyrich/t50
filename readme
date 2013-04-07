@@ -2,8 +2,8 @@
   \__    ___/|   ____/\   _  \   T50: an Experimental Packet Injector Tool
     |    |   |____  \ /  /_\  \                 
     |    |   /       \\  \_/   \
-    |____|  /______  / \_____  /   Copyright (c) 2001-2011 Nelson Brito
-                   \/        \/             All Rights Reserved
+    |____|  /______  / \_____  /         Created by Nelson Brito
+                   \/        \/       Maintained by Fernando Mercês
 
 T50 Experimental Mixed Packet Injector (f.k.a. F22 Raptor) is a tool designed
 to perform "Stress Testing". The concept started on 2001, right after release
