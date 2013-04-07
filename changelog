@@ -6,9 +6,9 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
-T50 5.4.1 - November 26, 2011 - thanks to Frederico Pissara!
+T50 5.4.1 - April 7, 2013 - thanks to Frederico Pissara!
  - Fixed bug in option parsing.
- - Fixed licensing miss in some files.
+ - Fixed license missing in some files.
  * Improved code, reduced memory consumption.
  * Improved Makefile, reduced compilation time, use of SS3 instructions.
  - Manpage moved to section 8.

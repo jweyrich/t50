@@ -2,7 +2,7 @@
 * T50 - Experimental Mixed Packet Injector
 *
 * Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
-* Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+* Copyright (C) 2011 - 2013 Fernando Mercês <fernando@mentebinaria.com.br>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by

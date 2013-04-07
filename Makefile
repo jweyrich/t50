@@ -1,7 +1,3 @@
-# T50 Makefile
-#
-# Written by Fernando Mercês <fernando@mentebinaria.com.br>
-#
 # __HAVE_TURBO__ - turbo mode enable --turbo option. This makes
 # T50 create a child process to improve performance.
 #
@@ -11,13 +7,13 @@
 	
 PREFIX=/usr
 MANDIR=/usr/share/man/man8
-SRCDIR=.
+SRCDIR=./src
 CC=gcc
 USE_SSE=-msse -mfpmath=sse
 STRIP=-s
-CFLAGS=-W -Wall -Wextra -O3 $(USE_SSE) -ffast-math $(STRIP)
+CFLAGS=-W -std=gnu99 -Wall -Wextra -O3 $(USE_SSE) -ffast-math $(STRIP)
 INCLUDES=-I$(SRCDIR)/include
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"$(shell cat ../VERSION)\"
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"$(shell cat ./version)\"
 #DFLAGS+=-D__HAVE_DEBUG__
 SRC=$(shell find $(SRCDIR) -type f -name '*.c')
 	

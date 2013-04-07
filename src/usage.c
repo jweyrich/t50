@@ -25,7 +25,7 @@ void usage()
 {
   printf("T50 Experimental Mixed Packet Injector Tool %s\n"
          "Originally created by Nelson Brito <nbrito@sekure.org>\n"
-         "Now produced by Fernando Mercês <fernando@mentebinaria.com.br>\n\n",
+         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n\n",
          VERSION);
   
   printf("Usage: %s <host> [/CIDR] [options]\n\n", PACKAGE);
