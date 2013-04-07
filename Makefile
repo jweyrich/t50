@@ -8,6 +8,7 @@
 PREFIX=/usr
 MANDIR=/usr/share/man/man8
 SRCDIR=./src
+DOCDIR=./doc
 CC=gcc
 USE_SSE=-msse -mfpmath=sse
 STRIP=-s
@@ -25,7 +26,7 @@ clean:
 	
 install: 
 	install t50 $(PREFIX)/sbin
-	gzip -c -9 ../t50.1 > $(MANDIR)/t50.8.gz
+	gzip -c -9 $(DOCDIR)/t50.1 > $(MANDIR)/t50.8.gz
 	
 uninstall:
 	rm -f $(PREFIX)/sbin/t50
