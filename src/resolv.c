@@ -21,12 +21,54 @@
 #include <common.h>
 
 /* IP address and name resolving */
-in_addr_t resolv(char *host)
+in_addr_t resolv(char *name)
 {
+	/*   try this method to follow posix, so i try with getaddinfo()  ;-)*/
+    struct addrinfo hints, * res, * res0 = NULL;
+    struct sockaddr_in * target = NULL;
+    int error;
+    char buffer[16];
+    char *tmp = NULL;
+    
+    memset(&hints, 0, sizeof(struct addrinfo));
+    
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = 0;
+    error = getaddrinfo(name, "http", &hints, &res0);
+    
+    if(error)
+    {
+        if (res0)
+            freeaddrinfo(res0);
+        puts ("error on addr in resolv()");
+    }
+    
+    for (res = res0; res; res = res->ai_next)
+    {
+        target = (struct sockaddr_in *) res->ai_addr;
+        if (target)
+        {
+            tmp = inet_ntoa(target->sin_addr);
+            if (tmp && strlen(tmp))
+            {
+            	// y use strlcpy() from openbsd ?
+                strncpy(buffer, tmp, strlen(tmp));
+                buffer[strlen(tmp)] = '\0';
+                if (res0)
+                    freeaddrinfo(res0);
+                return  inet_addr(buffer);
+            }
+        }
+    }
+    
+    freeaddrinfo(res0);	
+    
+    return  inet_addr(buffer);
+/*	
 	in_addr_t ip_addr;
 	struct hostent *hostname;
 	
-  /* FIXME: gethostbyname is deprecated by POSIX-1:2008 */
+  / FIXME: gethostbyname is deprecated by POSIX-1:2008 /
 	if((hostname = gethostbyname(host)) == NULL)
 	{
 		ERROR("error resolving hostname");
@@ -36,4 +78,8 @@ in_addr_t resolv(char *host)
 	memcpy(&ip_addr, hostname->h_addr, hostname->h_length);
 
 	return ip_addr;
+*/
+
+
+
 }
