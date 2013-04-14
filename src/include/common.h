@@ -42,6 +42,9 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 /* This code prefers to use Linux headers rather than BSD favored */
 #include <linux/ip.h>
