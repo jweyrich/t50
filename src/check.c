@@ -63,54 +63,6 @@ int checkConfigOptions(const struct config_options *o)
     return 0;
   }
 
-  /* Testing IANA IP address allocation for private internets (RFC 1700, 1918 and 3330). */
-  switch(ntohl(o->ip.daddr) & 0xff000000)
-  {
-    /* Allowing 10/8 (RFC 1918). */
-    case 0x0a000000: break;
-
-                     /* Allowing 127/8 (RFC 1700). */
-    case 0x7f000000: break;
-
-                     /* Allowing 169.254/16 (RFC 3330). */
-    case 0xa9000000:
-                     if ((ntohl(o->ip.daddr) & 0xffff0000) != 0xa9fe0000)
-                     {
-                       fprintf(stderr, "T50 is RFC 1700, RFC 1918 and RFC 3330 compliance\n");
-                       fflush(stderr);
-                       return 0;
-                     }
-                     break;
-
-                     /* Allowing 172.16/12 (RFC 1918). */
-    case 0xac000000:
-                     if ((ntohl(o->ip.daddr) & 0xffff0000) < 0xac100000 || \
-                         (ntohl(o->ip.daddr) & 0xffff0000) > 0xac1f0000)
-                     {
-                       fprintf(stderr, "T50 is RFC 1700, RFC 1918 and RFC 3330 compliance\n");
-                       fflush(stderr);
-                       return 0;
-                     }
-                     break;
-
-                     /* Allowing 192.168/16 (RFC 1918). */
-    case 0xc0000000:
-                     if ((ntohl(o->ip.daddr) & 0xffff0000) != 0xc0a80000)
-                     {
-                       fprintf(stderr, "T50 is RFC 1700, RFC 1918 and RFC 3330 compliance\n");
-                       fflush(stderr);
-                       return 0;
-                     }
-                     break;
-
-                     /* Blocking all other IP addresses. */
-    default:
-                     fprintf(stderr, "T50 is RFC 1700, RFC 1918 and RFC 3330 compliance\n");
-                     fflush(stderr);
-                     return 0;
-                     break;
-  }
-
 #ifdef  __HAVE_TURBO__
   /* Sanitizing TURBO mode. */
   if (o->turbo && o->flood == 0)

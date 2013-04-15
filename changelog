@@ -6,11 +6,13 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
-T50 5.4.1 - April 7, 2013 - thanks to Frederico Pissara!
+T50 5.4.1 - April 7, 2013 - (special thanks to Frederico Pissara)
  - Fixed bug in option parsing.
  - Fixed license missing in some files.
+ * Depecrecation of gethostbyname() - thanks to Cooler
  * Improved code, reduced memory consumption.
  * Improved Makefile, reduced compilation time, use of SS3 instructions.
+ * Removed pirvate IP address restriction.
  - Manpage moved to section 8.
  + Strip set by default.
 
