@@ -9,7 +9,7 @@ PREFIX=/usr
 MANDIR=/usr/share/man/man8
 SRCDIR=./src
 DOCDIR=./doc
-CC=gcc
+CC?=gcc
 USE_SSE=-msse -mfpmath=sse
 STRIP=-s
 CFLAGS=-W -std=gnu99 -Wall -Wextra -O3 $(USE_SSE) -ffast-math $(STRIP)
