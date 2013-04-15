@@ -23,12 +23,10 @@
 /* IP address and name resolving */
 in_addr_t resolv(char *name)
 {
-	/*   try this method to follow posix, so i try with getaddinfo()  ;-)*/
+/*   try this method to follow posix, so i try with getaddinfo()  ;-)*/
     struct addrinfo hints, * res, * res0 = NULL;
     struct sockaddr_in * target = NULL;
     int error;
-    char buffer[16];
-    char *tmp = NULL;
     
     memset(&hints, 0, sizeof(struct addrinfo));
     
@@ -40,30 +38,22 @@ in_addr_t resolv(char *name)
     {
         if (res0)
             freeaddrinfo(res0);
-        puts ("error on addr in resolv()");
+        puts ("error in resolv.c ,on function getaddrinfo()");
     }
     
     for (res = res0; res; res = res->ai_next)
     {
         target = (struct sockaddr_in *) res->ai_addr;
+        /* need condition to look if AF is ipv4 or ipv6 , because sin_addr to ipv4 and sin6_addr to ipv6 */
         if (target)
-        {
-            tmp = inet_ntoa(target->sin_addr);
-            if (tmp && strlen(tmp))
-            {
-            	// y use strlcpy() from openbsd ?
-                strncpy(buffer, tmp, strlen(tmp));
-                buffer[strlen(tmp)] = '\0';
-                if (res0)
-                    freeaddrinfo(res0);
-                return  inet_addr(buffer);
-            }
-        }
+         return (in_addr_t)&target->sin_addr;  
+
     }
     
-    freeaddrinfo(res0);	
+    if (res0)
+     freeaddrinfo(res0);	
     
-    return  inet_addr(buffer);
+    return 0;
 /*	
 	in_addr_t ip_addr;
 	struct hostent *hostname;
