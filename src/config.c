@@ -2,7 +2,7 @@
  *  T50 - Experimental Mixed Packet Injector
  *
  *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2011 - 2013 Fernando Mercês <fernando@mentebinaria.com.br>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1201,7 +1201,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
   /* Checking the command line interface options. */
   if (optind >= argc)
   {
-    ERROR("too many arguments. Try --help for usage and help");
+    ERROR("t50 what? try --help for usage");
     exit(EXIT_FAILURE);
   }
 

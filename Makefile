@@ -20,13 +20,14 @@ SRC=$(shell find $(SRCDIR) -type f -name '*.c')
 	
 all:
 	$(CC) $(CFLAGS) $(INCLUDES) $(DFLAGS) $(SRC) -o t50
+	gzip -c -9 $(DOCDIR)/t50.1 > $(DOCDIR)/t50.8.gz
 	
 clean:
-	rm -f t50
+	rm -f t50 doc/t50.8.gz
 	
 install: 
 	install t50 $(PREFIX)/sbin
-	gzip -c -9 $(DOCDIR)/t50.1 > $(MANDIR)/t50.8.gz
+	install $(DOCDIR)/t50.8.gz $(MANDIR)/t50.8.gz
 	
 uninstall:
-	rm -f $(PREFIX)/sbin/t50
+	rm -f $(PREFIX)/sbin/t50 $(MANDIR)/t50.8.gz
