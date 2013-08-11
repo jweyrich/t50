@@ -1,13 +1,13 @@
   ___________._______________
-  \__    ___/|   ____/\   _  \   T50: an Experimental Packet Injector Tool
+  \__    ___/|   ____/\   _  \   the fatest network packet injector
     |    |   |____  \ /  /_\  \                 
     |    |   /       \\  \_/   \
-    |____|  /______  / \_____  /         Created by Nelson Brito
-                   \/        \/       Maintained by Fernando Mercês
+    |____|  /______  / \_____  / 
+                   \/        \/ 
 
-T50 Experimental Mixed Packet Injector (f.k.a. F22 Raptor) is a tool designed
-to perform "Stress Testing". The concept started on 2001, right after release
-'nb-isakmp.c', and the main goal was:
+T50 (f.k.a. F22 Raptor) is a tool designed to perform "Stress Testing".
+The concept started on 2001, right after release 'nb-isakmp.c', and
+the main goal was:
   - Having a tool to perform TCP/IP protocol fuzzer,  covering common regular
     protocols, such as: ICMP, TCP and UDP.
 
