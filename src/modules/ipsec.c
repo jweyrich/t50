@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <common.h>
 
@@ -25,7 +24,7 @@
 Description:   This function configures and sends the IPSec packet header.
 
 Targets:       N/A */
-void ipsec(const socket_t fd, const struct config_options *o)
+int ipsec(const socket_t fd, const struct config_options *o)
 {
   /* GRE options size. */
   size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
@@ -48,14 +47,11 @@ void ipsec(const socket_t fd, const struct config_options *o)
   uint32_t offset, counter;
 
   /* Packet. */
-  uint8_t packet[packet_size], *checksum;
+  uint8_t *checksum;
 
   /* Socket address, IP header and IPSec AH header. */
   struct sockaddr_in sin;
   struct iphdr * ip;
-
-  /* GRE Encapsulated IP Header. */
-  struct iphdr * gre_ip __attribute__ ((unused));
 
   /* IPSec AH header and IPSec ESP Header. */
   struct ip_auth_hdr * ip_auth;
@@ -66,29 +62,16 @@ void ipsec(const socket_t fd, const struct config_options *o)
   sin.sin_port        = htons(IPPORT_RND(o->dest));
   sin.sin_addr.s_addr = o->ip.daddr;
 
-  ip           = (struct iphdr *)packet;
-  ip->version  = IPVERSION;
-  ip->ihl      = sizeof(struct iphdr)/4;
-  ip->tos      = o->ip.tos;
-  ip->frag_off = htons(o->ip.frag_off ? 
-      (o->ip.frag_off >> 3) | IP_MF : 
-      o->ip.frag_off | IP_DF);
-  ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__16BIT_RND(o->ip.id));
-  ip->ttl      = o->ip.ttl;
-  ip->protocol = o->encapsulated ? 
-    IPPROTO_GRE : 
-    o->ip.protocol;
-  ip->saddr    = INADDR_RND(o->ip.saddr);
-  ip->daddr    = o->ip.daddr;
-  /* The code does not have to handle this, Kernel will do-> */
-  ip->check    = 0;
+  /* Try to reallocate packet, if necessary */
+  alloc_packet(packet_size);
+
+  ip = ip_header(packet, packet_size, o);
 
   /* Computing the GRE Offset. */
   offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
-  gre_ip = gre_encapsulation(packet, o,
+  gre_encapsulation(packet, o,
         sizeof(struct iphdr) + 
         sizeof(struct ip_auth_hdr) + 
         ip_ah_icv                  +
@@ -150,12 +133,8 @@ void ipsec(const socket_t fd, const struct config_options *o)
   gre_checksum(packet, o, packet_size);
 
   /* Sending packet. */
-  if (sendto(fd, &packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-  {
-    perror("sendto()");
-    /* Closing the socket. */
-    close(fd);
-    /* Exiting. */
-    exit(EXIT_FAILURE);
-  }
+  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
+    return 1;
+
+  return 0;
 }

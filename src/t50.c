@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +20,7 @@
 #include <common.h>
 
 /* Global variables */
-static pid_t pid = 1;
+static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */ 
 static socket_t fd;
 
 /* Months */
@@ -32,22 +31,24 @@ static const char *const months[] =
 static struct launch_t50_modules 
 {
   int32_t proto;
-  void (* raw) (socket_t, struct config_options *);
+  /* NOTE: Return type of modules changed to centralize error handling. */
+  int (*raw) (const socket_t, const struct config_options *);
 } t50[] = 
   {
-    { IPPROTO_ICMP,  (void *)icmp   },
-    { IPPROTO_IGMP,  (void *)igmpv1 },
-    { IPPROTO_IGMP,  (void *)igmpv3 },
-    { IPPROTO_TCP,   (void *)tcp    },
-    { IPPROTO_EGP,   (void *)egp    },
-    { IPPROTO_UDP,   (void *)udp    },
-    { IPPROTO_UDP,   (void *)ripv1  },
-    { IPPROTO_UDP,   (void *)ripv2  },
-    { IPPROTO_DCCP,  (void *)dccp   },
-    { IPPROTO_RSVP,  (void *)rsvp   },
-    { IPPROTO_AH,    (void *)ipsec  },
-    { IPPROTO_EIGRP, (void *)eigrp  },
-    { IPPROTO_OSPF,  (void *)ospf   },
+    /* NOTE: casting to (void *) unecessary! */
+    { IPPROTO_ICMP,  icmp   },
+    { IPPROTO_IGMP,  igmpv1 },
+    { IPPROTO_IGMP,  igmpv3 },
+    { IPPROTO_TCP,   tcp    },
+    { IPPROTO_EGP,   egp    },
+    { IPPROTO_UDP,   udp    },
+    { IPPROTO_UDP,   ripv1  },
+    { IPPROTO_UDP,   ripv2  },
+    { IPPROTO_DCCP,  dccp   },
+    { IPPROTO_RSVP,  rsvp   },
+    { IPPROTO_AH,    ipsec  },
+    { IPPROTO_EIGRP, eigrp  },
+    { IPPROTO_OSPF,  ospf   },
     { 0, NULL }
   };
 #define NUM_MODULES ((sizeof(t50) / sizeof(t50[0])) - 1)
@@ -99,7 +100,20 @@ static void initializeSignalHandlers(void)
 #ifdef  __HAVE_TURBO__
   sigaction(SIGCHLD, &sa, NULL);
 #endif
+}
 
+/* Auxiliary function to return the ordinary suffix for a number. */
+static const char *getOrdinalSuffix(unsigned int n)
+{
+  static const char *suffixes[] = { "st", "nd", "rd", "th" };
+
+  switch (n % 10) {
+    case 1: return suffixes[0];
+		case 2: return suffixes[1]; 
+    case 3: return suffixes[2];
+  }
+
+  return suffixes[3];
 }
 
 /* Main function launches all T50 modules */
@@ -108,9 +122,6 @@ int main(int argc, char *argv[])
   time_t lt;
   struct tm *tm;
 
-  /* Ordinal day complement */
-  char *d;
-  
   /* Command line interface options. */
   struct config_options *o;
 
@@ -121,7 +132,7 @@ int main(int argc, char *argv[])
   uint32_t rand_daddr;
 
   /* CIDR host identifier and first IP address. */
-  struct cidr *cidr;
+  struct cidr *cidr_ptr;
 
   initializeSignalHandlers();
 
@@ -167,24 +178,16 @@ int main(int argc, char *argv[])
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculating CIDR for destination address. */
-  cidr = config_cidr(o->bits, o->ip.daddr);
-
-  /* Getting the local time. */
-  lt = time(NULL); tm = localtime(&lt);
+  cidr_ptr = config_cidr(o->bits, o->ip.daddr);
   
+  /* "pid" is zero only for child processes */
   if (pid)
   {
-    /* Setting ordinal day complement */
-	 switch(tm->tm_mday)
-	 {
-		  case 1: case 21: case 31: d = "st"; break;
-		  case 2: case 22: d = "nd"; break;
-		  case 3: case 23: d = "rd"; break;
-		  default: d = "th"; break;
-	 }
-  
+    /* Getting the local time. */
+    lt = time(NULL); tm = localtime(&lt);
+
     printf("\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, d,
+      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
   
@@ -192,22 +195,29 @@ int main(int argc, char *argv[])
   while(o->flood || o->threshold--)
   {
     /* Setting the destination IP address to RANDOM IP address. */
-    if (cidr->hostid)
+    if (cidr_ptr->hostid)
     {
       /* Generation RANDOM position for computed IP addresses. */
       /* FIX: No floating point! >-| */
-      rand_daddr = rand() % cidr->hostid;
+      rand_daddr = rand() % cidr_ptr->hostid;
 
-		/* FIX: No addresses array needed */
-		o->ip.daddr = htonl(cidr->__1st_addr + rand_daddr);
+  		/* FIX: No addresses array needed */
+	  	o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
     }   
+
     /* Sending ICMP/IGMP/TCP/UDP packets. */
     if (o->ip.protocol != IPPROTO_T50)
     {
       /* Getting the correct protocol. */
       o->ip.protocol = t50[o->ip.protoname].proto;
+
       /* Launching t50 module. */
-      t50[o->ip.protoname].raw(fd, o);
+      if (t50[o->ip.protoname].raw(fd, o))
+      {
+        perror("Error sending packet");
+        close(fd);
+        exit(EXIT_FAILURE);
+      }
     }
     else
     {
@@ -222,11 +232,17 @@ int main(int argc, char *argv[])
         o->ip.protocol = p->proto;
 
         /* Launching t50 module. */
-        p->raw(fd, o);
+        if (p->raw(fd, o))
+        {
+          perror("Error sending packet");
+          close(fd);
+          exit(EXIT_FAILURE);
+        }
       }
 
       /* Sanitizing the threshold. */
       o->threshold -= NUM_MODULES - 1;
+
       /* Reseting protocol. */
       o->ip.protocol = IPPROTO_T50;
     }
@@ -235,22 +251,14 @@ int main(int argc, char *argv[])
   /* Closing the socket. */
   close(fd);
 
-  /* Getting the local time. */
-  lt = time(NULL); tm = localtime(&lt);
-  
+  /* NOTE: pid is zero only for child processes. */  
   if (pid)
   {
-    /* Setting ordinal day complement */
-	switch(tm->tm_mday)
-	{   
-		case 1: case 21: case 31: d = "st"; break;
-		case 2: case 22: d = "nd"; break;
-		case 3: case 23: d = "rd"; break;
-		default: d = "th"; break;
-	}
-    
+    /* Getting the local time. */
+    lt = time(NULL); tm = localtime(&lt);
+
     printf("\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, d,
+      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
   

@@ -17,34 +17,27 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h> 
+#include <common.h>
 
-/* Calculates checksum */
-uint16_t cksum(uint16_t *data, int32_t length)
+struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options *o)
 {
-	int32_t nleft = length;
-	uint16_t *w = data;
-	int32_t sum = 0;
+  struct iphdr *ip;
 
-  assert(data != NULL);
+  assert(buffer != NULL);
 
-	/* Our algorithm is simple, using a 32 bit accumulator (sum), we add
-	 * sequential 16 bit words to it, and at the end, fold back all the
-	 * carry bits from the top 16 bits into the lower 16 bits. */
-	while(nleft > 1)
-	{
-		sum += *w++;
-		nleft -= 2;
-	}
+  ip = (struct iphdr *)buffer;
+  ip->version  = IPVERSION;
+  ip->ihl      = sizeof(struct iphdr)/4;
+  ip->tos      = o->ip.tos;
+  ip->frag_off = htons(o->ip.frag_off ? (o->ip.frag_off >> 3) | IP_MF : o->ip.frag_off | IP_DF);
+  ip->tot_len  = htons(packet_size);
+  ip->id       = htons(__16BIT_RND(o->ip.id));
+  ip->ttl      = o->ip.ttl;
+  ip->protocol = o->encapsulated ? IPPROTO_GRE : o->ip.protocol;
+  ip->saddr    = INADDR_RND(o->ip.saddr);
+  ip->daddr    = o->ip.daddr;
+  /* The code does not have to handle this, Kernel will do-> */
+  ip->check    = 0;
 
-	/* mop up an odd byte, if necessary */
-	if(nleft == 1)
-		sum += *(uint8_t *)w;
-
-	/* add back carry outs from top 16 bits to low 16 bits */
-	sum = (sum >> 16) + (sum & 0xffff); /* add hi 16 to low 16 */
-	sum += (sum >> 16);                  /* add carry           */
-
-	/* returning sum truncated to 16 bits */
-	return ~sum;
+  return ip;
 }

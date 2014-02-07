@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <common.h>
 
@@ -30,7 +29,7 @@ static  size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, cons
 Description:   This function configures and sends the EIGRP packet header.
 
 Targets:       N/A */
-void eigrp(const socket_t fd, const struct config_options *o)
+int eigrp(const socket_t fd, const struct config_options *o)
 {
   /* GRE options size. */
   size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
@@ -54,14 +53,11 @@ void eigrp(const socket_t fd, const struct config_options *o)
   uint32_t offset, counter;
 
   /* Packet and Checksum. */
-  uint8_t packet[packet_size], *checksum;
+  uint8_t *checksum;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
   struct iphdr * ip;
-
-  /* GRE Encapsulated IP Header. */
-  struct iphdr * gre_ip __attribute__ ((unused));
 
   /* EIGRP header. */
   struct eigrp_hdr * eigrp;
@@ -71,30 +67,17 @@ void eigrp(const socket_t fd, const struct config_options *o)
   sin.sin_port        = htons(IPPORT_RND(o->dest));
   sin.sin_addr.s_addr = o->ip.daddr;
 
+  /* Try to reallocate packet, if necessary */
+  alloc_packet(packet_size);
+
   /* IP Header structure making a pointer to Packet. */
-  ip           = (struct iphdr *)packet;
-  ip->version  = IPVERSION;
-  ip->ihl      = sizeof(struct iphdr)/4;
-  ip->tos      = o->ip.tos;
-  ip->frag_off = htons(o->ip.frag_off ? 
-      (o->ip.frag_off >> 3) | IP_MF : 
-      o->ip.frag_off | IP_DF);
-  ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__16BIT_RND(o->ip.id));
-  ip->ttl      = o->ip.ttl;
-  ip->protocol = o->encapsulated ? 
-    IPPROTO_GRE : 
-    o->ip.protocol;
-  ip->saddr    = INADDR_RND(o->ip.saddr);
-  ip->daddr    = o->ip.daddr;
-  /* The code does not have to handle this, Kernel will do-> */
-  ip->check    = 0;
+  ip = ip_header(packet, packet_size, o);
 
   /* Computing the GRE Offset. */
   offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
-  gre_ip = gre_encapsulation(packet, o, 
+  gre_encapsulation(packet, o, 
         sizeof(struct iphdr) + 
         sizeof(struct eigrp_hdr) + 
         eigrp_tlv_len);
@@ -342,7 +325,8 @@ void eigrp(const socket_t fd, const struct config_options *o)
      * In the other hand,   EIGRP Packet for Hello can carry Paremeter, 
      * Software Version, Multicast Sequence or nothing (Acknowledge).
      */
-  }else if (o->eigrp.opcode == EIGRP_OPCODE_HELLO)
+  }
+  else if (o->eigrp.opcode == EIGRP_OPCODE_HELLO)
   {
     /*
      * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
@@ -376,19 +360,19 @@ eigrp_parameter:
             o->eigrp.length : 
             EIGRP_TLEN_PARAMETER);
         checksum += sizeof(uint16_t);
-        *checksum++ = (o->eigrp.values & EIGRP_KVALUE_K1) == EIGRP_KVALUE_K1 ? 
+        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ? 
           __8BIT_RND(o->eigrp.k1) : 
           o->eigrp.k1;
-        *checksum++ = (o->eigrp.values & EIGRP_KVALUE_K2) == EIGRP_KVALUE_K2 ? 
+        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ? 
           __8BIT_RND(o->eigrp.k2) : 
           o->eigrp.k2;
-        *checksum++ = (o->eigrp.values & EIGRP_KVALUE_K3) == EIGRP_KVALUE_K3 ? 
+        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ? 
           __8BIT_RND(o->eigrp.k3) : 
           o->eigrp.k3;
-        *checksum++ = (o->eigrp.values & EIGRP_KVALUE_K4) == EIGRP_KVALUE_K4 ? 
+        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ? 
           __8BIT_RND(o->eigrp.k4) : 
           o->eigrp.k4;
-        *checksum++ = (o->eigrp.values & EIGRP_KVALUE_K5) == EIGRP_KVALUE_K5 ? 
+        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ? 
           __8BIT_RND(o->eigrp.k5) : 
           o->eigrp.k5;
         *checksum++ = FIELD_MUST_BE_ZERO;
@@ -505,14 +489,10 @@ eigrp_multicast:
   gre_checksum(packet, o, packet_size);
 
   /* Sending packet. */
-  if (sendto(fd, &packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-  {
-    perror("sendto()");
-    /* Closing the socket. */
-    close(fd);
-    /* Exiting. */
-    exit(EXIT_FAILURE);
-  }
+  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
+    return 1;
+
+  return 0;
 }
 
 /* EIGRP header size calculation */

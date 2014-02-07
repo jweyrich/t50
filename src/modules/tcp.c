@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <common.h>
 
@@ -30,7 +29,7 @@ static size_t tcp_options_len(const uint8_t, const uint8_t, const uint8_t);
 Description:   This function configures and sends the TCP packet header.
 
 Targets:       N/A */
-void tcp(const socket_t fd, const struct config_options *o)
+int tcp(const socket_t fd, const struct config_options *o)
 {
   /* GRE options size. */
   size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
@@ -51,7 +50,7 @@ void tcp(const socket_t fd, const struct config_options *o)
   uint32_t offset, counter;
 
   /* Packet and Checksum. */
-  uint8_t packet[packet_size], *checksum;
+  uint8_t *checksum;
 
   /* Socket address, IP header. */
   struct sockaddr_in sin;
@@ -69,24 +68,11 @@ void tcp(const socket_t fd, const struct config_options *o)
   sin.sin_port        = htons(IPPORT_RND(o->dest));
   sin.sin_addr.s_addr = o->ip.daddr;
 
+  /* Try to reallocate packet, if necessary */
+  alloc_packet(packet_size);
+
   /* IP Header structure making a pointer to Packet. */
-  ip           = (struct iphdr *)packet;
-  ip->version  = IPVERSION;
-  ip->ihl      = sizeof(struct iphdr)/4;
-  ip->tos      = o->ip.tos;
-  ip->frag_off = htons(o->ip.frag_off ? 
-      (o->ip.frag_off >> 3) | IP_MF : 
-      o->ip.frag_off | IP_DF);
-  ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__16BIT_RND(o->ip.id));
-  ip->ttl      = o->ip.ttl;
-  ip->protocol = o->encapsulated ? 
-    IPPROTO_GRE : 
-    o->ip.protocol;
-  ip->saddr    = INADDR_RND(o->ip.saddr);
-  ip->daddr    = o->ip.daddr;
-  /* The code does not have to handle this, Kernel will do-> */
-  ip->check    = 0;
+  ip           = ip_header(packet, packet_size, o);
 
   /* Computing the GRE Offset. */
   offset = sizeof(struct iphdr);
@@ -159,7 +145,7 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |00000010|00000100|   max seg size   |
    *    +--------+--------+---------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_MSS)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_MSS))
   {
     *checksum++ = TCPOPT_MSS;
     *checksum++ = TCPOLEN_MSS;
@@ -179,7 +165,7 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |00000011|00000011| shift  |
    *    +--------+--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_WSOPT)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_WSOPT))
   {
     *checksum++ = TCPOPT_WSOPT;
     *checksum++ = TCPOLEN_WSOPT;
@@ -202,7 +188,7 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |       TS Echo Reply (TSecr)       |
    *    +--------+--------+--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_TSOPT)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_TSOPT))
   {
     /*
      * TCP Extensions for High Performance (RFC 1323)
@@ -232,6 +218,7 @@ void tcp(const socket_t fd, const struct config_options *o)
     *((uint32_t *)checksum) = htonl(__32BIT_RND(o->tcp.tsecr));
     checksum   += sizeof(uint32_t);
   }
+
   /*
    * TCP Extensions for Transactions Functional Specification (RFC 1644)
    *
@@ -247,13 +234,12 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_CC)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC))
   {
     *checksum++ = TCPOPT_CC;
     *checksum++ = TCPOLEN_CC;
     *((uint32_t *)checksum) = htonl(__32BIT_RND(o->tcp.cc));
     checksum   += sizeof(uint32_t);
-
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -268,6 +254,7 @@ void tcp(const socket_t fd, const struct config_options *o)
     tcp->syn     = 1;
     tcp->seq     = htonl(__32BIT_RND(o->tcp.sequence));
   }
+
   /*
    * TCP Extensions for Transactions Functional Specification (RFC 1644)
    *
@@ -295,7 +282,7 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_CC_NEXT)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC_NEXT))
   {
     *checksum++ = o->tcp.cc_new ? 
       TCPOPT_CC_NEW : 
@@ -305,6 +292,7 @@ void tcp(const socket_t fd, const struct config_options *o)
         __32BIT_RND(o->tcp.cc_new) : 
         __32BIT_RND(o->tcp.cc_echo));
     checksum   += sizeof(uint32_t);
+
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
      *
@@ -330,7 +318,9 @@ void tcp(const socket_t fd, const struct config_options *o)
        * contained a CC or CC.NEW option.  Its SEG.CC value is the SEG.CC value
        * from the initial SYN.
        */
-    }else{
+    } 
+    else 
+    {
       tcp->syn     = 1;
       tcp->seq     = htonl(__32BIT_RND(o->tcp.sequence));
       tcp->ack     = 1;
@@ -338,6 +328,7 @@ void tcp(const socket_t fd, const struct config_options *o)
     }
 
   }
+
   /*
    * TCP Selective Acknowledgement Options (SACK) (RFC 2018)
    *
@@ -351,11 +342,12 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |00000100|00000010|
    *    +--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_SACK_OK)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_OK))
   {
     *checksum++ = TCPOPT_SACK_OK;
     *checksum++ = TCPOLEN_SACK_OK;
   }
+
   /*
    * TCP Selective Acknowledgement Options (SACK) (RFC 2018)
    *
@@ -381,7 +373,7 @@ void tcp(const socket_t fd, const struct config_options *o)
    *    |      Right Edge of nth Block      |
    *    +--------+--------+--------+--------+
    */
-  if (o->tcp.options & TCP_OPTION_SACK_EDGE)
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_EDGE))
   {
     *checksum++ = TCPOPT_SACK_EDGE;
     /* (((sizeof(uint32_t ) * 2) * 1) + TCPOLEN_SACK_OK = (8 * 1) + 2 = 10 */
@@ -391,6 +383,7 @@ void tcp(const socket_t fd, const struct config_options *o)
     *((uint32_t *)checksum) = htonl(__32BIT_RND(o->tcp.sack_right));
     checksum   += sizeof(uint32_t);
   }
+
   /*
    *  Protection of BGP Sessions via the TCP MD5 Signature Option (RFC 2385)
    *
@@ -422,6 +415,7 @@ void tcp(const socket_t fd, const struct config_options *o)
     for(counter = 0 ; counter < auth_hmac_md5_len(o->tcp.md5) ; counter++)
       *checksum++ = __8BIT_RND(0);
   }
+
   /*
    *  The TCP Authentication Option (RFC 5925)
    *
@@ -482,14 +476,10 @@ void tcp(const socket_t fd, const struct config_options *o)
   gre_checksum(packet, o, packet_size);
 
   /* Sending packet. */
-  if (sendto(fd, &packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-  {
-    perror("sendto()");
-    /* Closing the socket. */
-    close(fd);
-    /* Exiting. */
-    exit(EXIT_FAILURE);
-  }
+  if (sendto(fd, packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
+    return 1;
+
+  return 0;
 }
 
 /* Function Name: TCP options size calculation.
@@ -510,38 +500,38 @@ static size_t tcp_options_len(const uint8_t foo, const uint8_t bar, const uint8_
   /*
    * TCP Options has Maximum Segment Size (MSS) Option defined.
    */
-  if (foo & TCP_OPTION_MSS) size += TCPOLEN_MSS;
+  if (TEST_BITS(foo, TCP_OPTION_MSS)) size += TCPOLEN_MSS;
 
   /*
    * TCP Options has Window Scale (WSopt) Option defined.
    */
-  if (foo & TCP_OPTION_WSOPT) size += TCPOLEN_WSOPT;
+  if (TEST_BITS(foo, TCP_OPTION_WSOPT)) size += TCPOLEN_WSOPT;
 
   /*
    * TCP Options has Timestamp (TSopt) Option defined.
    */
-  if (foo & TCP_OPTION_TSOPT) size += TCPOLEN_TSOPT;
+  if (TEST_BITS(foo, TCP_OPTION_TSOPT)) size += TCPOLEN_TSOPT;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK-Permitted) Option
    * defined.
    */
-  if (foo & TCP_OPTION_SACK_OK) size += TCPOLEN_SACK_OK;
+  if (TEST_BITS(foo, TCP_OPTION_SACK_OK)) size += TCPOLEN_SACK_OK;
 
   /*
    * TCP Options has Connection Count (CC) Option defined.
    */
-  if (foo & TCP_OPTION_CC) size += TCPOLEN_CC;
+  if (TEST_BITS(foo, TCP_OPTION_CC)) size += TCPOLEN_CC;
 
   /*
    * TCP Options has CC.NEW or CC.ECHO Option defined.
    */
-  if (foo & TCP_OPTION_CC_NEXT) size += TCPOLEN_CC;
+  if (TEST_BITS(foo, TCP_OPTION_CC_NEXT)) size += TCPOLEN_CC;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK) Option defined.
    */
-  if (foo & TCP_OPTION_SACK_EDGE) size += TCPOLEN_SACK_EDGE(1);
+  if (TEST_BITS(foo, TCP_OPTION_SACK_EDGE)) size += TCPOLEN_SACK_EDGE(1);
 
   /*
    * Defining it the size should use MD5 Signature Option or the brand

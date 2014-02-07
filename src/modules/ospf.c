@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <common.h>
 
@@ -30,7 +29,7 @@ static size_t ospf_hdr_len(const uint8_t, const uint8_t, const uint8_t, const ui
 Description:   This function configures and sends the OSPF packet header.
 
 Targets:       N/A */
-void ospf(const socket_t fd, const struct config_options *o)
+int ospf(const socket_t fd, const struct config_options *o)
 {
   /* GRE options size. */
   size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
@@ -39,13 +38,13 @@ void ospf(const socket_t fd, const struct config_options *o)
   const uint8_t ospf_options = __8BIT_RND(o->ospf.options);
 
   /* OSPF LLS Header? */
-  uint8_t lls = ((ospf_options & OSPF_OPTION_LLS) == OSPF_OPTION_LLS ? 1 : 0);
+  uint8_t lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
 
   /* OSPF Header length. */
   size_t ospf_length = ospf_hdr_len(o->ospf.type, o->ospf.neighbor, o->ospf.lsa_type, o->ospf.dd_include_lsa);
 
   /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)           + 
+  const uint32_t packet_size = sizeof(struct iphdr) + 
     greoptlen                      + 
     sizeof(struct ospf_hdr)        + 
     sizeof(struct ospf_auth_hdr)   + 
@@ -57,16 +56,11 @@ void ospf(const socket_t fd, const struct config_options *o)
   uint32_t offset, counter;
 
   /* Packet and Checksum. */
-  uint8_t packet[packet_size], *checksum;
+  uint8_t *checksum;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
   struct iphdr * ip;
-
-  /* GRE Encapsulated IP Header. */
-  struct gre_hdr * gre = NULL;
-  struct gre_sum_hdr * gre_sum = NULL;
-  struct iphdr * gre_ip  __attribute__ ((unused)) = NULL;
 
   /* OSPF header. */
   struct ospf_hdr * ospf;
@@ -81,117 +75,22 @@ void ospf(const socket_t fd, const struct config_options *o)
   sin.sin_port        = htons(IPPORT_RND(o->dest));
   sin.sin_addr.s_addr = o->ip.daddr;
 
+  /* Try to reallocate packet, if necessary */
+  alloc_packet(packet_size);
+
   /* IP Header structure making a pointer to Packet. */
-  ip           = (struct iphdr *)packet;
-  ip->version  = IPVERSION;
-  ip->ihl      = sizeof(struct iphdr)/4;
-  ip->tos      = o->ip.tos;
-  ip->frag_off = htons(o->ip.frag_off ? 
-      (o->ip.frag_off >> 3) | IP_MF : 
-      o->ip.frag_off | IP_DF);
-  ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__16BIT_RND(o->ip.id));
-  ip->ttl      = o->ip.ttl;
-  ip->protocol = o->encapsulated ? 
-    IPPROTO_GRE : 
-    o->ip.protocol;
-  ip->saddr    = INADDR_RND(o->ip.saddr);
-  ip->daddr    = o->ip.daddr;
-  /* The code does not have to handle this, Kernel will do-> */
-  ip->check    = 0;
+  ip = ip_header(packet, packet_size, o);
 
   /* Computing the GRE Offset. */
   offset = sizeof(struct iphdr);
 
-  /* GRE Encapsulation takes place. */
-  if (o->encapsulated)
-  {
-    /* GRE Header structure making a pointer to IP Header structure. */
-    gre          = (struct gre_hdr *)((uint8_t *)ip + offset);
-    gre->C       = o->gre.C;
-    gre->K       = o->gre.K;
-    gre->R       = FIELD_MUST_BE_ZERO;
-    gre->S       = o->gre.S;
-    gre->s       = FIELD_MUST_BE_ZERO;
-    gre->recur   = FIELD_MUST_BE_ZERO;
-    gre->version = GREVERSION;
-    gre->flags   = FIELD_MUST_BE_ZERO;
-    gre->proto   = htons(ETH_P_IP);
-    /* Computing the GRE offset. */
-    offset  += sizeof(struct gre_hdr);
-
-    /* GRE CHECKSUM? */
-    if (o->gre.options & GRE_OPTION_CHECKSUM)
-    {
-      /* GRE CHECKSUM Header structure making a pointer to IP Header structure. */
-      gre_sum         = (struct gre_sum_hdr *)((uint8_t *)ip + offset);
-      gre_sum->offset = FIELD_MUST_BE_ZERO;
-      gre_sum->check  = 0;
-      /* Computing the GRE offset. */
-      offset += GRE_OPTLEN_CHECKSUM;
-    }
-
-    /* GRE KEY? */
-    if (o->gre.options & GRE_OPTION_KEY)
-    {
-      /* GRE KEY Header structure making a pointer to IP Header structure. */
-      struct gre_key_hdr *gre_key;
-
-      gre_key      = (struct gre_key_hdr *)((uint8_t *)ip + offset);
-      gre_key->key = htonl(__32BIT_RND(o->gre.key));
-      /* Computing the GRE offset. */
-      offset += GRE_OPTLEN_KEY;
-    }
-
-    /* GRE SEQUENCE? */
-    if (o->gre.options & GRE_OPTION_SEQUENCE)
-    {
-      /* GRE SEQUENCE Header structure making a pointer to IP Header structure. */
-      struct gre_seq_hdr *gre_seq;
-
-      gre_seq          = (struct gre_seq_hdr *)((uint8_t *)ip + offset);
-      gre_seq->sequence = htonl(__32BIT_RND(o->gre.sequence));
-      /* Computing the GRE offset. */
-      offset += GRE_OPTLEN_SEQUENCE;
-    }
-
-    /*
-     * Generic Routing Encapsulation over IPv4 networks (RFC 1702)
-     *
-     * IP as both delivery and payload protocol
-     *
-     * When IP is encapsulated in IP,  the TTL, TOS,  and IP security options
-     * MAY  be  copied from the payload packet into the same  fields  in  the
-     * delivery packet. The payload packet's TTL MUST be decremented when the
-     * packet is decapsulated to insure that no packet lives forever.
-     */
-    /* GRE Encapsulated IP Header structure making a pointer to to IP Header structure. */
-    gre_ip           = (struct iphdr *)((uint8_t *)ip + offset);
-    gre_ip->version  = ip->version;
-    gre_ip->ihl      = ip->ihl;
-    gre_ip->tos      = ip->tos;
-    gre_ip->frag_off = ip->frag_off;
-    gre_ip->tot_len  = htons(sizeof(struct iphdr) + 
+  gre_encapsulation(packet, o, 
+        sizeof(struct iphdr) + 
         sizeof(struct ospf_hdr)        + 
         sizeof(struct ospf_auth_hdr)   + 
         ospf_length                    + 
         auth_hmac_md5_len(o->ospf.auth) + 
         ospf_tlv_len(o->ospf.type, lls, o->ospf.auth));
-    gre_ip->id       = ip->id;
-    gre_ip->ttl      = ip->ttl;
-    gre_ip->protocol = o->ip.protocol;
-    gre_ip->saddr    = o->gre.saddr ? 
-      o->gre.saddr : 
-      ip->saddr;
-    gre_ip->daddr    = o->gre.daddr ? 
-      o->gre.daddr : 
-      ip->daddr;
-    /* Computing the checksum. */
-    gre_ip->check    = 0;
-    gre_ip->check    = o->bogus_csum ? 
-      __16BIT_RND(0) : 
-      cksum((uint16_t *)gre_ip, sizeof(struct iphdr));
-  }
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
   ospf          = (struct ospf_hdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
@@ -239,7 +138,9 @@ void ospf(const socket_t fd, const struct config_options *o)
     ospf_auth->key_id   = __8BIT_RND(o->ospf.key_id);
     ospf_auth->length   = auth_hmac_md5_len(o->ospf.auth);
     ospf_auth->sequence = htonl(__32BIT_RND(o->ospf.sequence));
-  }else{
+  }
+  else
+  {
     /*
      * OSPF Version 2 (RFC 2328)
      *
@@ -259,6 +160,7 @@ void ospf(const socket_t fd, const struct config_options *o)
     ospf_auth->length   = FIELD_MUST_BE_ZERO;
     ospf_auth->sequence = FIELD_MUST_BE_ZERO;
   }
+
   /* Computing the Checksum offset. */
   offset = sizeof(struct ospf_auth_hdr);
 
@@ -441,7 +343,8 @@ build_ospf_lsupdate:
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
           cksum((uint16_t *)ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
-      } else if (o->ospf.lsa_type == LSA_TYPE_NETWORK)
+      } 
+      else if (o->ospf.lsa_type == LSA_TYPE_NETWORK)
       {
         /* Setting the correct OSPF LSA Header length. */
         ospf_lsa->length     = htons(o->ospf.length ? 
@@ -471,7 +374,8 @@ build_ospf_lsupdate:
         ospf_lsa->check      =  o->bogus_csum  ? 
           __16BIT_RND(0) : 
           cksum((uint16_t *)ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
-      }else if (o->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
+      }
+      else if (o->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
           o->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
       {
         /* Setting the correct OSPF LSA Header length. */
@@ -503,7 +407,8 @@ build_ospf_lsupdate:
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
           cksum((uint16_t *)ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
-      }else if (o->ospf.lsa_type == LSA_TYPE_ASBR ||
+      }
+      else if (o->ospf.lsa_type == LSA_TYPE_ASBR ||
           o->ospf.lsa_type == LSA_TYPE_NSSA)
       {
         /* Setting the correct OSPF LSA Header length. */
@@ -533,9 +438,7 @@ build_ospf_lsupdate:
          */
         *((in_addr_t *)checksum) = NETMASK_RND(o->ospf.netmask);
         checksum += sizeof(in_addr_t);
-        *checksum++ = (o->ospf.lsa_larger ? 
-            0x80 : 
-            0x00);
+        *checksum++ = (o->ospf.lsa_larger ? 0x80 : 0);
         *((uint32_t *)checksum) = htonl(__24BIT_RND(o->ospf.lsa_metric) << 8);
         checksum += sizeof(uint32_t) - 1;
         *((in_addr_t *)checksum) = INADDR_RND(o->ospf.lsa_forward);
@@ -549,7 +452,8 @@ build_ospf_lsupdate:
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
           cksum((uint16_t *)ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
-      }else if (o->ospf.lsa_type == LSA_TYPE_MULTICAST)
+      }
+      else if (o->ospf.lsa_type == LSA_TYPE_MULTICAST)
       {
         /* Setting the correct OSPF LSA Header length. */
         ospf_lsa->length     = htons(o->ospf.length ? 
@@ -580,7 +484,9 @@ build_ospf_lsupdate:
           __16BIT_RND(0) : 
           cksum((uint16_t *)ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
         /* Building a generic OSPF LSA Header. */
-      }else{
+      }
+      else
+      {
         /* Setting the correct OSPF LSA Header length. */
         ospf_lsa->length     = htons(o->ospf.length ? 
             o->ospf.length : 
@@ -796,7 +702,9 @@ build_ospf_lsa:
          * case, the regular LLS checksum is not calculated, but is instead set
          * to 0.
          */
-      }else{
+      }
+      else
+      {
         /* Computing the checksum. */
         ospf_lls->check  =  o->bogus_csum ? 
           __16BIT_RND(0) : 
@@ -822,25 +730,13 @@ build_ospf_lsa:
       __16BIT_RND(0) : 
       cksum((uint16_t *)ospf, sizeof(struct ospf_hdr) + offset);
 
-  /* GRE Encapsulation takes place. */
-  if (o->encapsulated)
-  {
-    /* Computing the checksum. */
-    if (o->gre.options & GRE_OPTION_CHECKSUM)
-      gre_sum->check  = o->bogus_csum ? 
-        __16BIT_RND(0) : 
-        cksum((uint16_t *)gre, packet_size - sizeof(struct iphdr));
-  }
+  gre_checksum(packet, o, packet_size);
 
   /* Sending packet. */
-  if (sendto(fd, &packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-  {
-    perror("sendto()");
-    /* Closing the socket. */
-    close(fd);
-    /* Exiting. */
-    exit(EXIT_FAILURE);
-  }
+  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
+    return 1;
+
+  return 0;
 }
 
 /* Function Name: OSPF header size calculation.

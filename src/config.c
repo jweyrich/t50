@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - 2013 Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <common.h>
 
@@ -741,7 +740,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
         o.tcp.wsopt = atoi(optarg); break;
       case OPTION_TCP_TSOPT:
         o.tcp.options |= TCP_OPTION_TSOPT;
-        if ( (tmp_ptr = (char *) strchr(optarg, 0x3a)) != NULL )
+        if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
         {
           uint32_t t;
 
@@ -768,7 +767,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
       case OPTION_TCP_SACK_EDGE:
         o.tcp.options |= TCP_OPTION_SACK_EDGE;
 
-        if ( (tmp_ptr = (char *) strchr(optarg, 0x3a)) != NULL )
+        if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
         {
           uint32_t t;
 
@@ -1205,7 +1204,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
     exit(EXIT_FAILURE);
   }
 
-  if ((tmp_ptr = (char *) strchr(argv[optind], 0x2f)) == NULL)
+  if ((tmp_ptr = (char *) strchr(argv[optind], '/')) == NULL)
     o.ip.daddr = resolv(argv[optind]);
   else
   {

@@ -9,13 +9,24 @@ PREFIX=/usr
 MANDIR=/usr/share/man/man8
 SRCDIR=./src
 DOCDIR=./doc
-CC?=gcc
-USE_SSE=-msse -mfpmath=sse
+
+# NOTE: Now llvm's clang 3.x works fine!
+CC=gcc
+#CC=clang
+
+# If you want to use SSE instructions on x86 architecture, remove the comment below.
+# There is no need to enable SSE for x86-64 architecture.
+#USE_SSE=-msse -mfpmath=sse
+
 STRIP=-s
-CFLAGS=-W -std=gnu99 -Wall -Wextra -O3 $(USE_SSE) -ffast-math $(STRIP)
+CFLAGS=-W -std=gnu99 -Wall -Wextra -mtune=native -O3 $(USE_SSE) -ffast-math $(STRIP)
 INCLUDES=-I$(SRCDIR)/include
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"$(shell cat ./version)\"
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=5.5
+
+# If you want debug info on executable, remove the comment below (and comment NDEBUG definition)
 #DFLAGS+=-D__HAVE_DEBUG__
+DFLAGS+=-DNDEBUG
+
 SRC=$(shell find $(SRCDIR) -type f -name '*.c')
 	
 all:

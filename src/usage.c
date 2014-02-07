@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -275,7 +274,8 @@ void usage()
          " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
          " 4. Mandatory arguments to long options are mandatory for short options too.\n"
          " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"                           
-         " 6. Running %s with \'--protocol T50\' option, sends ALL protocols sequentially.\n\n", PACKAGE, SITE, PACKAGE, PACKAGE);
+         " 6. Running %s with \'--protocol T50\' option, sends ALL protocols sequentially.\n\n", 
+         PACKAGE, SITE, PACKAGE, PACKAGE);
 
   exit(EXIT_FAILURE);
 }

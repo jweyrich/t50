@@ -1,8 +1,7 @@
 /*
- *  T50 - Experimental Packet Injector
+ *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +27,7 @@
 # error "Sorry! The t50 was only tested under Linux!"
 #endif  /* __linux__ */
 
+#include <assert.h> /* for debugging purposes only */
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -59,6 +59,7 @@
 #include <config.h>
 
 /* Purpose-built protocol libraries to be used by T50 modules */
+#include <protocol/ip.h>
 #include <protocol/egp.h>
 #include <protocol/gre.h>
 #include <protocol/rip.h>
@@ -70,6 +71,9 @@
 
 /* NOTE: This will do nothing. Used only to prevent warnings. */
 #define UNUSED_PARAM(x) { (x) = (x); }
+
+/* NOTE: Macro used to test bitmasks */
+#define TEST_BITS(x,bits) ((x) & (bits))
 
 /* Data types */
 typedef uint32_t in_addr_t;
@@ -202,6 +206,11 @@ extern uint32_t NETMASK_RND(uint32_t);
 #define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s); fflush(stderr);
 #endif
 
+extern uint8_t *packet;
+extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
+
+extern void alloc_packet(size_t);
+
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
 /* Command line interface options validation. */
@@ -219,30 +228,30 @@ extern void usage(void);
 
 /* Common module routines used by code */
 /* Function Name: ICMP packet header configuration. */
-extern void icmp   (const socket_t, const struct config_options *);
+extern int icmp   (const socket_t, const struct config_options *);
 /* Function Name: IGMPv1 packet header configuration. */
-extern void igmpv1 (const socket_t, const struct config_options *);
+extern int igmpv1 (const socket_t, const struct config_options *);
 /* Function Name: IGMPv3 packet header configuration. */
-extern void igmpv3 (const socket_t, const struct config_options *);
+extern int igmpv3 (const socket_t, const struct config_options *);
 /* Function Name: TCP packet header configuration. */
-extern void tcp    (const socket_t, const struct config_options *);
+extern int tcp    (const socket_t, const struct config_options *);
 /* Function Name: EGP packet header configuration. */
-extern void egp    (const socket_t, const struct config_options *);
+extern int egp    (const socket_t, const struct config_options *);
 /* Function Name: UDP packet header configuration. */
-extern void udp    (const socket_t, const struct config_options *);
+extern int udp    (const socket_t, const struct config_options *);
 /* Function Name: RIPv1 packet header configuration. */
-extern void ripv1  (const socket_t, const struct config_options *);
+extern int ripv1  (const socket_t, const struct config_options *);
 /* Function Name: RIPv2 packet header configuration. */
-extern void ripv2  (const socket_t, const struct config_options *);
+extern int ripv2  (const socket_t, const struct config_options *);
 /* Function Name: DCCP packet header configuration. */
-extern void dccp   (const socket_t, const struct config_options *);
+extern int dccp   (const socket_t, const struct config_options *);
 /* Function Name: RSVP packet header configuration. */
-extern void rsvp   (const socket_t, const struct config_options *);
+extern int rsvp   (const socket_t, const struct config_options *);
 /* Function Name: IPSec packet header configuration. */
-extern void ipsec  (const socket_t, const struct config_options *);
+extern int ipsec  (const socket_t, const struct config_options *);
 /* Function Name: EIGRP packet header configuration. */
-extern void eigrp  (const socket_t, const struct config_options *);
+extern int eigrp  (const socket_t, const struct config_options *);
 /* Function Name: OSPF packet header configuration. */
-extern void ospf   (const socket_t, const struct config_options *);
+extern int ospf   (const socket_t, const struct config_options *);
 
 #endif /* __COMMON_H */

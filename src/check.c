@@ -1,8 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2011 Nelson Brito <nbrito@sekure.org>
- *  Copyright (C) 2011 - Fernando Mercês <fernando@mentebinaria.com.br>
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,80 +22,81 @@
 /* Validate options */
 int checkConfigOptions(const struct config_options *o)
 {
-  /* Warning missed privileges. */
-  if ( getuid() )
+  /* Check if we have root priviledges. */
+  if ( getuid() != 0 )
   {
-    ERROR("you must have privileges to run me");    
+    ERROR("you must have root privilege");    
     return 0;
   }
 
   /* Warning missed target. */
   if (o->ip.daddr == INADDR_ANY)
   {
-    ERROR("try --help for usage and help");
+    ERROR("Need target address. Try --help for usage");
     return 0;
   }
 
   /* Sanitizing the CIDR. */
-  if ( (o->bits < CIDR_MINIMUM  || o->bits > CIDR_MAXIMUM) && o->bits != 0)
+  if (((o->bits < CIDR_MINIMUM) || (o->bits > CIDR_MAXIMUM)) && (o->bits != 0))
   {
     char errstr[48];
 
-    sprintf(errstr, "CIDR must be beewten %d and %d",
-        CIDR_MINIMUM, CIDR_MAXIMUM);
+    sprintf(errstr, "CIDR must be beewten %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
     ERROR(errstr);
     return 0;
   }
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
-  if ( (o->tcp.options & TCP_OPTION_SACK_OK) == TCP_OPTION_SACK_OK &&
-      (o->tcp.options & TCP_OPTION_SACK_EDGE) == TCP_OPTION_SACK_EDGE )
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_OK) &&
+      TEST_BITS(o->tcp.options, TCP_OPTION_SACK_EDGE))
   {
     ERROR("TCP options SACK-Permitted and SACK Edges are not allowed");
     return 0;
   }
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
-  if ((o->tcp.options & TCP_OPTION_CC) == TCP_OPTION_CC && (o->tcp.cc_echo) )
+  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC) && (o->tcp.cc_echo))
   {
     ERROR("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
     return 0;
   }
 
-#ifdef  __HAVE_TURBO__
-  /* Sanitizing TURBO mode. */
-  if (o->turbo && o->flood == 0)
+  if (!o->flood)
   {
-    ERROR("turbo mode is only available in flood mode");
-    return 0;
-  }
+#ifdef  __HAVE_TURBO__
+    /* Sanitizing TURBO mode. */
+    if (o->turbo)
+    {
+      ERROR("turbo mode is only available in flood mode");
+      return 0;
+    }
 #endif  /* __HAVE_TURBO__ */
 
-  /* Sanitizing the threshold. */
-  if (o->ip.protocol == IPPROTO_T50 && o->threshold < T50_THRESHOLD_MIN
-      && o->flood == 0)
-  {
-    fprintf(stderr,
-        "%s: protocol %s cannot have threshold smaller than %d\n",
-        PACKAGE,
-        mod_acronyms[o->ip.protoname],
-        T50_THRESHOLD_MIN);
-    fflush(stderr);
-    return 0;
+    /* Sanitizing the threshold. */
+    if ((o->ip.protocol == IPPROTO_T50) && (o->threshold < T50_THRESHOLD_MIN))
+    {
+      fprintf(stderr,
+          "%s: protocol %s cannot have threshold smaller than %d\n",
+          PACKAGE,
+          mod_acronyms[o->ip.protoname],
+          T50_THRESHOLD_MIN);
+      fflush(stderr);
+      return 0;
+    }
   }
-
-
-  /* Warning FLOOD mode. */
-  if (o->flood)
+  else /* if (o->flood) isn't 0 */
   {
+    /* Warning FLOOD mode. */
     printf("entering in flood mode...\n");
 
 #ifdef  __HAVE_TURBO__
-    if (o->turbo) printf("activating turbo...\n");
+    if (o->turbo) 
+      printf("activating turbo...\n");
 #endif  /* __HAVE_TURBO__ */
 
     /* Warning CIDR mode. */
-    if (o->bits) printf("performing DDoS...\n");
+    if (o->bits) 
+      printf("performing DDoS...\n");
 
     printf("hit CTRL+C to break.\n");
   }
