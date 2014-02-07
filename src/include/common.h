@@ -21,10 +21,10 @@
 #define __COMMON_H
 
 #define PACKAGE "T50"
-#define SITE "http://t50.sf.net"
+#define SITE "http://github.com/merces/t50"
 
 #if !(linux) || !(__linux__)
-# error "Sorry! The t50 was only tested under Linux!"
+# error "Sorry! The T50 was only tested under Linux!"
 #endif  /* __linux__ */
 
 #include <assert.h> /* for debugging purposes only */

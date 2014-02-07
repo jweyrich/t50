@@ -27,7 +27,7 @@ void usage()
          "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n\n",
          VERSION);
   
-  printf("Usage: %s <host> [/CIDR] [options]\n\n", PACKAGE);
+  printf("Usage: t50 <host> [/CIDR] [options]\n\n");
 
   printf("Common Options:\n"
          "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
@@ -274,7 +274,7 @@ void usage()
          " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
          " 4. Mandatory arguments to long options are mandatory for short options too.\n"
          " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"                           
-         " 6. Running %s with \'--protocol T50\' option, sends ALL protocols sequentially.\n\n", 
+         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n", 
          PACKAGE, SITE, PACKAGE, PACKAGE);
 
   exit(EXIT_FAILURE);
