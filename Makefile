@@ -21,7 +21,7 @@ CC=gcc
 STRIP=-s
 CFLAGS=-W -std=gnu99 -Wall -Wextra -mtune=native -O3 $(USE_SSE) -ffast-math $(STRIP)
 INCLUDES=-I$(SRCDIR)/include
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=5.5
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
 
 # If you want debug info on executable, remove the comment below (and comment NDEBUG definition)
 #DFLAGS+=-D__HAVE_DEBUG__
