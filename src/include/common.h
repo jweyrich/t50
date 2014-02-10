@@ -216,7 +216,7 @@ extern struct cidr *config_cidr(uint32_t, in_addr_t);
 /* Command line interface options validation. */
 extern int checkConfigOptions(const struct config_options *);
 /* Checksum calculation. */
-extern uint16_t cksum(uint16_t *, int32_t);
+extern uint16_t cksum(void *, size_t);
 /* Command line interface options configuration. */
 extern struct config_options *getConfigOptions(int, char **);
 /* IP address and name resolve. */
