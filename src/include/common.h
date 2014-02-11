@@ -79,6 +79,16 @@
 typedef uint32_t in_addr_t;
 typedef int socket_t;
 
+/* This will ease the buffers pointers manipulations. */
+typedef union {
+  void    *ptr;
+  uint8_t *byte_ptr;
+  uint16_t *word_ptr;
+  uint32_t *dword_ptr;
+  in_addr_t *inaddr_ptr;
+  uint64_t *qword_ptr;
+} mptr_t;
+
 /* Limits */
 
 /* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */

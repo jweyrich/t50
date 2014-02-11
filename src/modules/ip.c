@@ -27,7 +27,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
 
   ip = (struct iphdr *)buffer;
   ip->version  = IPVERSION;
-  ip->ihl      = sizeof(struct iphdr)/4;
+  ip->ihl      = sizeof(struct iphdr) / 4;
   ip->tos      = o->ip.tos;
   ip->frag_off = htons(o->ip.frag_off ? (o->ip.frag_off >> 3) | IP_MF : o->ip.frag_off | IP_DF);
   ip->tot_len  = htons(packet_size);

@@ -26,16 +26,9 @@ Description:   This function configures and sends the ICMP packet header.
 Targets:       N/A */
 int icmp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr) + 
-                               greoptlen            + 
-                               sizeof(struct icmphdr);
-
-  /* Checksum offset and GRE offset. */
-  uint32_t offset;
+  size_t greoptlen,   /* GRE options size. */
+         packet_size,
+         offset;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
@@ -44,10 +37,10 @@ int icmp(const socket_t fd, const struct config_options *o)
   /* ICMP header. */
   struct icmphdr * icmp;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  packet_size = sizeof(struct iphdr) + 
+                greoptlen            + 
+                sizeof(struct icmphdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
@@ -55,16 +48,13 @@ int icmp(const socket_t fd, const struct config_options *o)
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
 
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
-
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
         sizeof(struct iphdr) + 
         sizeof(struct icmphdr));
 
   /* ICMP Header structure making a pointer to Packet. */
-  icmp                   = (struct icmphdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  icmp                   = (struct icmphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   icmp->type             = o->icmp.type;
   icmp->code             = o->icmp.code;
   icmp->un.echo.id       = htons(__16BIT_RND(o->icmp.id));
@@ -79,12 +69,17 @@ int icmp(const socket_t fd, const struct config_options *o)
   offset = sizeof(struct icmphdr);
 
   /* Computing the checksum. */
-  icmp->checksum         = o->bogus_csum ? 
-                           __16BIT_RND(0) : 
-                           cksum((uint16_t *)icmp, offset);
+  icmp->checksum = o->bogus_csum ? 
+                   __16BIT_RND(0) : 
+                   cksum(icmp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

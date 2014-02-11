@@ -30,23 +30,14 @@ Description:   This function configures and sends the RSVP packet header.
 Targets:       N/A */
 int rsvp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* RSVP Objects Length. */
-  size_t objects_length = rsvp_objects_len(o->rsvp.type, o->rsvp.scope, o->rsvp.adspec, o->rsvp.tspec);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)           + 
-    sizeof(struct rsvp_common_hdr) + 
-    greoptlen                      + 
-    objects_length;
-
-  /* Checksum offset, GRE offset and Counter. */
-  uint32_t offset, counter;
+  size_t greoptlen,       /* GRE options size. */
+         objects_length,  /* RSVP objects length. */
+         packet_size,
+         offset, 
+         counter;
 
   /* Packet and Checksum. */
-  uint8_t *checksum;
+  mptr_t buffer;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
@@ -55,19 +46,18 @@ int rsvp(const socket_t fd, const struct config_options *o)
   /* RSVP Common header. */
   struct rsvp_common_hdr * rsvp;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  objects_length = rsvp_objects_len(o->rsvp.type, o->rsvp.scope, o->rsvp.adspec, o->rsvp.tspec);
+  packet_size = sizeof(struct iphdr) + 
+    sizeof(struct rsvp_common_hdr) + 
+    greoptlen                      + 
+    objects_length;
 
   /* Try to reallocate the packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
@@ -89,7 +79,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
   offset  = sizeof(struct rsvp_common_hdr);
 
   /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)rsvp + offset;
+  buffer.ptr = (void *)rsvp + offset;
 
   /*
    * The SESSION Object Class is present for all RSVP Messages.
@@ -108,16 +98,13 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * | Protocol Id |    Flags    |          DstPort          |
    * +-------------+-------------+-------------+-------------+
    */
-  *((uint16_t *)checksum) = htons(RSVP_LENGTH_SESSION);
-  checksum += sizeof(uint16_t);
-  *checksum++ = RSVP_OBJECT_SESSION;
-  *checksum++ = 1;
-  *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.session_addr);
-  checksum += sizeof(in_addr_t);
-  *checksum++ = __8BIT_RND(o->rsvp.session_proto);
-  *checksum++ = __8BIT_RND(o->rsvp.session_flags);
-  *((uint16_t *)checksum) = htons(__16BIT_RND(o->rsvp.session_port));
-  checksum += sizeof(uint16_t);
+  *buffer.word_ptr++ = htons(RSVP_LENGTH_SESSION);
+  *buffer.byte_ptr++ = RSVP_OBJECT_SESSION;
+  *buffer.byte_ptr++ = 1;
+  *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.session_addr);
+  *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.session_proto);
+  *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.session_flags);
+  *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.session_port));
   /* Computing the Checksum offset. */
   offset += RSVP_LENGTH_SESSION;
 
@@ -150,14 +137,11 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * |                 Logical Interface Handle              |
      * +-------------+-------------+-------------+-------------+
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_RESV_HOP);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_RESV_HOP;
-    *checksum++ = 1;
-    *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.hop_addr);
-    checksum += sizeof(in_addr_t);
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.hop_iface));
-    checksum += sizeof(uint32_t);
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_RESV_HOP);
+    *buffer.byte_ptr++ = RSVP_OBJECT_RESV_HOP;
+    *buffer.byte_ptr++ = 1;
+    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.hop_addr);
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.hop_iface));
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_RESV_HOP;
   }
@@ -183,12 +167,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * |                   Refresh Period R                    |
      * +-------------+-------------+-------------+-------------+
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_TIME_VALUES);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_TIME_VALUES;
-    *checksum++ = 1;
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.time_refresh));
-    checksum += sizeof(uint32_t);
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_TIME_VALUES);
+    *buffer.byte_ptr++ = RSVP_OBJECT_TIME_VALUES;
+    *buffer.byte_ptr++ = 1;
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.time_refresh));
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_TIME_VALUES;
   }
@@ -218,16 +200,13 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * |    Flags    |  Error Code |        Error Value        |
      * +-------------+-------------+-------------+-------------+
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_ERROR_SPEC);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_ERROR_SPEC;
-    *checksum++ = 1;
-    *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.error_addr);
-    checksum += sizeof(in_addr_t);
-    *checksum++ = __3BIT_RND(o->rsvp.error_flags);
-    *checksum++ = __8BIT_RND(o->rsvp.error_code);
-    *((uint16_t *)checksum) = htons(__16BIT_RND(o->rsvp.error_value));
-    checksum += sizeof(uint16_t);
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_ERROR_SPEC);
+    *buffer.byte_ptr++ = RSVP_OBJECT_ERROR_SPEC;
+    *buffer.byte_ptr++ = 1;
+    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.error_addr);
+    *buffer.byte_ptr++ = __3BIT_RND(o->rsvp.error_flags);
+    *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.error_code);
+    *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.error_value));
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_ERROR_SPEC;
   }
@@ -264,16 +243,12 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *
      * Definition same as IPv4/GPI FILTER_SPEC object.
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_SENDER_TEMPLATE);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_SENDER_TEMPLATE;
-    *checksum++ = 1;
-    *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.sender_addr);
-    checksum += sizeof(in_addr_t);
-    *((uint16_t *)checksum) = FIELD_MUST_BE_ZERO;
-    checksum += sizeof(uint16_t);
-    *((uint16_t *)checksum) = htons(__16BIT_RND(o->rsvp.sender_port));
-    checksum += sizeof(uint16_t);
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TEMPLATE);
+    *buffer.byte_ptr++ = RSVP_OBJECT_SENDER_TEMPLATE;
+    *buffer.byte_ptr++ = 1;
+    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.sender_addr);
+    *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.sender_port));
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_SENDER_TEMPLATE;
     /*
@@ -288,11 +263,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * The contents and encoding rules for this object are specified
      * in documents prepared by the int-serv working group.
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_SENDER_TSPEC + 
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TSPEC + 
         TSPEC_SERVICES(o->rsvp.tspec));
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_SENDER_TSPEC;
-    *checksum++ = 2;
+    *buffer.byte_ptr++ = RSVP_OBJECT_SENDER_TSPEC;
+    *buffer.byte_ptr++ = 2;
     /*
      * The Use of RSVP with IETF Integrated Services (RFC 2210)
      *
@@ -317,40 +291,30 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * 8   |  Maximum Packet Size [M]  (32-bit integer)                    |
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    *((uint16_t *)checksum) = FIELD_MUST_BE_ZERO;
-    checksum += sizeof(uint16_t);
-    *((uint16_t *)checksum) = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
+    *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
           RSVP_LENGTH_SENDER_TSPEC)/4);
-    checksum += sizeof(uint16_t);
-    *checksum++ = o->rsvp.tspec;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons(TSPEC_SERVICES(o->rsvp.tspec)/4);
-    checksum += sizeof(uint16_t);
+    *buffer.byte_ptr++ = o->rsvp.tspec;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(TSPEC_SERVICES(o->rsvp.tspec)/4);
 
     /* Identifying the RSVP TSPEC and building it. */
     switch (o->rsvp.tspec)
     {
       case TSPEC_TRAFFIC_SERVICE:
       case TSPEC_GUARANTEED_SERVICE:
-        *checksum++ = TSPECT_TOKEN_BUCKET_SERVICE;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
+        *buffer.byte_ptr++ = TSPECT_TOKEN_BUCKET_SERVICE;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
               TSPEC_MESSAGE_HEADER)/4);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.tspec_r));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.tspec_b));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.tspec_p));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.tspec_m));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.tspec_M));
-        checksum += sizeof(uint32_t);
-        break;
-      default:
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_r));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_b));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_p));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_m));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_M));
         break;
     }
+
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_SENDER_TSPEC;
     offset += TSPEC_SERVICES(o->rsvp.tspec);
@@ -367,11 +331,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * The contents and format for this object are specified in
      * documents prepared by the int-serv working group.
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_ADSPEC + 
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_ADSPEC + 
         ADSPEC_SERVICES(o->rsvp.adspec));
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_ADSPEC;
-    *checksum++ = 2;
+    *buffer.byte_ptr++ = RSVP_OBJECT_ADSPEC;
+    *buffer.byte_ptr++ = 2;
     /*
      * The Use of RSVP with IETF Integrated Services (RFC 2210)
      *
@@ -397,15 +360,12 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *     |                                                               |
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    *((uint16_t *)checksum) = FIELD_MUST_BE_ZERO;
-    checksum += sizeof(uint16_t);
-
-    *((uint16_t *)checksum) = htons((ADSPEC_SERVICES(o->rsvp.adspec) - 
+    *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons((ADSPEC_SERVICES(o->rsvp.adspec) - 
           ADSPEC_MESSAGE_HEADER)/4);
-
-    checksum += sizeof(uint16_t);
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_ADSPEC;
+
     /*
      * The Use of RSVP with IETF Integrated Services (RFC 2210)
      *
@@ -432,35 +392,25 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * 9   |      Composed MTU (32-bit unsigned integer)                   |
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    *checksum++ = ADSPEC_PARAMETER_SERVICE;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons((ADSPEC_PARAMETER_LENGTH - 
-          ADSPEC_MESSAGE_HEADER)/4);
-    checksum += sizeof(uint16_t);
-    *checksum++ = ADSPEC_PARAMETER_ISHOPCNT;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-    checksum += sizeof(uint16_t);
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_hop));
-    checksum += sizeof(uint32_t);
-    *checksum++ = ADSPEC_PARAMETER_BANDWIDTH;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-    checksum += sizeof(uint16_t);
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_path));
-    checksum += sizeof(uint32_t);
-    *checksum++ = ADSPEC_PARAMETER_LATENCY;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-    checksum += sizeof(uint16_t);
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_minimum));
-    checksum += sizeof(uint32_t);
-    *checksum++ = ADSPEC_PARAMETER_COMPMTU;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-    checksum += sizeof(uint16_t);
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_mtu));
-    checksum += sizeof(uint32_t);
+    *buffer.byte_ptr++ = ADSPEC_PARAMETER_SERVICE;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons((ADSPEC_PARAMETER_LENGTH - ADSPEC_MESSAGE_HEADER)/4);
+    *buffer.byte_ptr++ = ADSPEC_PARAMETER_ISHOPCNT;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_hop));
+    *buffer.byte_ptr++ = ADSPEC_PARAMETER_BANDWIDTH;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_path));
+    *buffer.byte_ptr++ = ADSPEC_PARAMETER_LATENCY;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_minimum));
+    *buffer.byte_ptr++ = ADSPEC_PARAMETER_COMPMTU;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_mtu));
     /* Computing the Checksum offset. */
     offset += ADSPEC_PARAMETER_LENGTH;
 
@@ -500,35 +450,25 @@ int rsvp(const socket_t fd, const struct config_options *o)
          *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
 adspec_guarantee:
-        *checksum++ = ADSPEC_GUARANTEED_SERVICE;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons((ADSPEC_GUARANTEED_LENGTH - 
-              ADSPEC_MESSAGE_HEADER)/4);
-        checksum += sizeof(uint16_t);
-        *checksum++ = 133;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_Ctot));
-        checksum += sizeof(uint32_t);
-        *checksum++ = 134;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_Dtot));
-        checksum += sizeof(uint32_t);
-        *checksum++ = 135;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_Csum));
-        checksum += sizeof(uint32_t);
-        *checksum++ = 136;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(ADSPEC_SERVDATA_HEADER/4);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rsvp.adspec_Dsum));
-        checksum += sizeof(uint32_t);
+        *buffer.byte_ptr++ = ADSPEC_GUARANTEED_SERVICE;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons((ADSPEC_GUARANTEED_LENGTH - ADSPEC_MESSAGE_HEADER)/4);
+        *buffer.byte_ptr++ = 133;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Ctot));
+        *buffer.byte_ptr++ = 134;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Dtot));
+        *buffer.byte_ptr++ = 135;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Csum));
+        *buffer.byte_ptr++ = 136;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Dsum));
         /* Computing the Checksum offset. */
         offset += ADSPEC_GUARANTEED_LENGTH;
         /* Going to the next ADSPEC, if it needs to do so-> */
@@ -555,11 +495,9 @@ adspec_guarantee:
          *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
 adspec_controlled:
-        *checksum++ = ADSPEC_CONTROLLED_SERVICE;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(ADSPEC_CONTROLLED_LENGTH - 
-            ADSPEC_MESSAGE_HEADER);
-        checksum += sizeof(uint16_t);
+        *buffer.byte_ptr++ = ADSPEC_CONTROLLED_SERVICE;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
         /* Computing the Checksum offset. */
         offset += ADSPEC_CONTROLLED_LENGTH;
         break;
@@ -587,12 +525,10 @@ adspec_controlled:
      * |            IPv4 Receiver Address (4 bytes)            |
      * +-------------+-------------+-------------+-------------+
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_RESV_CONFIRM);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_RESV_CONFIRM;
-    *checksum++ = 1;
-    *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.confirm_addr);
-    checksum += sizeof(in_addr_t);
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_RESV_CONFIRM);
+    *buffer.byte_ptr++ = RSVP_OBJECT_RESV_CONFIRM;
+    *buffer.byte_ptr++ = 1;
+    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.confirm_addr);
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_RESV_CONFIRM;
   }
@@ -636,17 +572,13 @@ adspec_controlled:
        * |                IPv4 Src Address (4 bytes)             |
        * +-------------+-------------+-------------+-------------+
        */
-      *((uint16_t *)checksum) = htons(RSVP_LENGTH_SCOPE(o->rsvp.scope));
-      checksum += sizeof(uint16_t);
-      *checksum++ = RSVP_OBJECT_SCOPE;
-      *checksum++ = 1;
+      *buffer.word_ptr++ = htons(RSVP_LENGTH_SCOPE(o->rsvp.scope));
+      *buffer.byte_ptr++ = RSVP_OBJECT_SCOPE;
+      *buffer.byte_ptr++ = 1;
 
       /* Dealing with scope address(es). */
       for(counter = 0; counter < o->rsvp.scope ; counter ++)
-      {
-        *((in_addr_t *)checksum) = INADDR_RND(o->rsvp.address[counter]);
-        checksum += sizeof(in_addr_t);
-      }
+        *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.address[counter]);
 
       /* Computing the Checksum offset. */
       offset += RSVP_LENGTH_SCOPE(o->rsvp.scope);
@@ -664,13 +596,11 @@ adspec_controlled:
      * |   Flags     |              Option Vector              |
      * +-------------+-------------+-------------+-------------+
      */
-    *((uint16_t *)checksum) = htons(RSVP_LENGTH_STYLE);
-    checksum += sizeof(uint16_t);
-    *checksum++ = RSVP_OBJECT_STYLE;
-    *checksum++ = 1;
-    *checksum++ = FIELD_MUST_BE_ZERO;
-    *((uint32_t *)checksum) = htonl(__24BIT_RND(o->rsvp.style_opt) << 8);
-    checksum += sizeof(in_addr_t) - 1;
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_STYLE);
+    *buffer.byte_ptr++ = RSVP_OBJECT_STYLE;
+    *buffer.byte_ptr++ = 1;
+    *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.dword_ptr++ = htonl(__24BIT_RND(o->rsvp.style_opt) << 8);
     /* Computing the Checksum offset. */
     offset += RSVP_LENGTH_STYLE;
   }
@@ -678,10 +608,15 @@ adspec_controlled:
   /* Computing the checksum. */
   rsvp->check   = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum((uint16_t *)rsvp, offset);
+    cksum(rsvp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

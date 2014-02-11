@@ -28,20 +28,13 @@ Description:   This function configures and sends the RIPv2 packet header.
 Targets:       N/A */
 int ripv2(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)  + 
-    greoptlen             + 
-    sizeof(struct udphdr) + 
-    rip_hdr_len(o->rip.auth);
-
-  /* Checksum offset, GRE offset and Counter. */
-  uint32_t offset, counter;
+  size_t greoptlen,     /* GRE options size. */
+         packet_size,
+         offset,
+         counter;
 
   /* Packet and Checksum. */
-  uint8_t *checksum;
+  mptr_t buffer;
 
   /* Socket address, IP header. */
   struct sockaddr_in sin;
@@ -54,19 +47,17 @@ int ripv2(const socket_t fd, const struct config_options *o)
   struct udphdr * udp;
   struct psdhdr * pseudo;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  packet_size = sizeof(struct iphdr)  + 
+    greoptlen             + 
+    sizeof(struct udphdr) + 
+    rip_hdr_len(o->rip.auth);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, o,
@@ -85,7 +76,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
   offset = sizeof(struct udphdr);
 
   /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)udp + offset;
+  buffer.ptr = (void *)udp + offset;
 
   /*
    * RIP Version 2 -- Carrying Additional Information (RFC 1388)
@@ -118,10 +109,9 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   | Command (1)   | Version (1)   |       Routing Domain (2)      |
    *   +---------------+---------------+-------------------------------+
    */
-  *checksum++ = o->rip.command;
-  *checksum++ = RIPVERSION;
-  *((uint16_t *)checksum) = htons(__16BIT_RND(o->rip.domain));
-  checksum += sizeof(uint16_t);
+  *buffer.byte_ptr++ = o->rip.command;
+  *buffer.byte_ptr++ = RIPVERSION;
+  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.domain));
   /* Computing the Checksum offset. */
   offset += RIP_HEADER_LENGTH;	
   /*
@@ -169,22 +159,16 @@ int ripv2(const socket_t fd, const struct config_options *o)
    */
   if (o->rip.auth)
   {
-    *((uint16_t *)checksum) = htons(0xffff);
-    checksum += sizeof(uint16_t);
-    *((uint16_t *)checksum) = htons(0x0003);
-    checksum += sizeof(uint16_t);
-    *((uint16_t *)checksum) = htons(RIP_HEADER_LENGTH + 
+    *buffer.word_ptr++ = htons(0xffff);
+    *buffer.word_ptr++ = htons(0x0003);
+    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + 
         RIP_AUTH_LENGTH         + 
         RIP_MESSAGE_LENGTH);
-    checksum += sizeof(uint16_t);
-    *checksum++ = o->rip.key_id;
-    *checksum++ = RIP_AUTH_LENGTH;
-    *((uint32_t *)checksum) = htonl(__32BIT_RND(o->rip.sequence));
-    checksum += sizeof(uint32_t);
-    *((uint32_t *)checksum) = FIELD_MUST_BE_ZERO;
-    checksum += sizeof(uint32_t);
-    *((uint32_t *)checksum) = FIELD_MUST_BE_ZERO;
-    checksum += sizeof(uint32_t);
+    *buffer.byte_ptr++ = o->rip.key_id;
+    *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
+    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rip.sequence));
+    *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
+    *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     /* Computing the Checksum offset. */
     offset += RIP_AUTH_LENGTH;
   }		
@@ -217,18 +201,12 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   |                                                               |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  *((uint16_t *)checksum) = htons(__16BIT_RND(o->rip.family));
-  checksum += sizeof(uint16_t);
-  *((uint16_t *)checksum) = htons(__16BIT_RND(o->rip.tag));
-  checksum += sizeof(uint16_t);
-  *((in_addr_t *)checksum) = INADDR_RND(o->rip.address);
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = NETMASK_RND(htonl(o->rip.netmask));
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = INADDR_RND(o->rip.next_hop);
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = htonl(__32BIT_RND(o->rip.metric));
-  checksum += sizeof(in_addr_t);
+  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.family));
+  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.tag));
+  *buffer.inaddr_ptr++ = INADDR_RND(o->rip.address);
+  *buffer.inaddr_ptr++ = NETMASK_RND(htonl(o->rip.netmask));
+  *buffer.inaddr_ptr++ = INADDR_RND(o->rip.next_hop);
+  *buffer.inaddr_ptr++ = htonl(__32BIT_RND(o->rip.metric));
   /* Computing the Checksum offset. */
   offset += RIP_MESSAGE_LENGTH;
   /*
@@ -246,22 +224,20 @@ int ripv2(const socket_t fd, const struct config_options *o)
    */
   if (o->rip.auth)
   {
-    *((uint16_t *)checksum) = htons(0xffff);
-    checksum += sizeof(uint16_t);
-    *((uint16_t *)checksum) = htons(0x0001);
-    checksum += sizeof(uint16_t);
+    *buffer.word_ptr++ = htons(0xffff);
+    *buffer.word_ptr++ = htons(0x0001);
     /*
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
      */
     for(counter = 0 ; counter < auth_hmac_md5_len(o->rip.auth) ; counter++)
-      *checksum++ = __8BIT_RND(0);
+      *buffer.byte_ptr++ = __8BIT_RND(0);
+
     /* Computing the Checksum offset. */
-    offset += RIP_TRAILER_LENGTH + 
-      auth_hmac_md5_len(o->rip.auth);
+    offset += RIP_TRAILER_LENGTH + auth_hmac_md5_len(o->rip.auth);
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
-  pseudo           = (struct psdhdr *)(checksum);
+  pseudo           = (struct psdhdr *)buffer.ptr;
   pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
@@ -273,10 +249,15 @@ int ripv2(const socket_t fd, const struct config_options *o)
   /* Computing the checksum. */
   udp->check  = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum((uint16_t *)udp, offset);
+    cksum(udp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

@@ -28,20 +28,12 @@ Description:   This function configures and sends the RIPv1 packet header.
 Targets:       N/A */
 int ripv1(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)  + 
-                               greoptlen             + 
-                               sizeof(struct udphdr) + 
-                               rip_hdr_len(0);
-
-  /* Checksum offset and GRE offset. */
-  uint32_t offset;
+  size_t greoptlen,   /* GRE options size. */
+         packet_size,
+         offset;
 
   /* Packet and Checksum. */
-  uint8_t *checksum;
+  mptr_t buffer;
 
   /* Socket address, IP header. */
   struct sockaddr_in sin;
@@ -54,19 +46,17 @@ int ripv1(const socket_t fd, const struct config_options *o)
   struct udphdr * udp;
   struct psdhdr * pseudo;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  packet_size = sizeof(struct iphdr)  + 
+                greoptlen             + 
+                sizeof(struct udphdr) + 
+                rip_hdr_len(0);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, o,
@@ -86,7 +76,7 @@ int ripv1(const socket_t fd, const struct config_options *o)
   offset = sizeof(struct udphdr);
 
   /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)udp + offset;
+  buffer.ptr = (void *)udp + offset;
 
   /*
    * Routing Information Protocol (RIP) (RFC 1058)
@@ -109,30 +99,23 @@ int ripv1(const socket_t fd, const struct config_options *o)
    *   |                          metric (4)                           |
    *   +---------------------------------------------------------------+
    */
-  *checksum++ = o->rip.command;
-  *checksum++ = RIPVERSION;
-  *((uint16_t *)checksum) = FIELD_MUST_BE_ZERO;
-  checksum += sizeof(uint16_t);
+  *buffer.byte_ptr++ = o->rip.command;
+  *buffer.byte_ptr++ = RIPVERSION;
+  *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
   /* Computing the Checksum offset. */
   offset += RIP_HEADER_LENGTH;	
 
-  *((uint16_t *)checksum) = htons(__16BIT_RND(o->rip.family));
-  checksum += sizeof(uint16_t);
-  *((uint16_t *)checksum) = FIELD_MUST_BE_ZERO;
-  checksum += sizeof(uint16_t);
-  *((in_addr_t *)checksum) = INADDR_RND(o->rip.address);
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = FIELD_MUST_BE_ZERO;
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = FIELD_MUST_BE_ZERO;
-  checksum += sizeof(in_addr_t);
-  *((in_addr_t *)checksum) = htonl(__32BIT_RND(o->rip.metric));
-  checksum += sizeof(in_addr_t);
+  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.family));
+  *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
+  *buffer.inaddr_ptr++ = INADDR_RND(o->rip.address);
+  *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
+  *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
+  *buffer.inaddr_ptr++ = htonl(__32BIT_RND(o->rip.metric));
   /* Computing the Checksum offset. */
   offset += RIP_MESSAGE_LENGTH;
 
   /* PSEUDO Header structure making a pointer to Checksum. */
-  pseudo           = (struct psdhdr *)(checksum);
+  pseudo           = (struct psdhdr *)buffer.ptr;
   pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
@@ -148,6 +131,11 @@ int ripv1(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

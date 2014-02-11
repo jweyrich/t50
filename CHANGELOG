@@ -17,6 +17,7 @@ T50 5.5 - March ?, 2014
  * Function ip_header() added to modules/ip.c.
  - On embeded systems the use of VLAs on modules functions can be hazardous
     due to restricted stack space. Buffer reallocation on heap fix this problem.
+ * cksum() 5 times faster.
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.

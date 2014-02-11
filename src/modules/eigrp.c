@@ -31,29 +31,17 @@ Description:   This function configures and sends the EIGRP packet header.
 Targets:       N/A */
 int eigrp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  size_t greoptlen,     /* GRE options size. */
+         eigrp_tlv_len, /* EIGRP TLV size. */
+         packet_size,
+         offset,
+         counter;
 
-  /* EIGRP Destination Address and Prefix. */
-  in_addr_t dest = INADDR_RND(o->eigrp.dest);
-
-  /* Must compute the EIGRP Destination Prefix here. */
-  uint32_t prefix = __5BIT_RND(o->eigrp.prefix);
-
-  /* EIGRP TLV size. */
-  size_t eigrp_tlv_len = eigrp_hdr_len(o->eigrp.opcode, o->eigrp.type, prefix, o->eigrp.auth);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)     + 
-    greoptlen                + 
-    sizeof(struct eigrp_hdr) + 
-    eigrp_tlv_len;
-
-  /* Checksum offset, GRE offset and Counter. */
-  uint32_t offset, counter;
+  in_addr_t dest;       /* EIGRP Destination address */
+  uint32_t prefix;      /* EIGRP Prefix */
 
   /* Packet and Checksum. */
-  uint8_t *checksum;
+  mptr_t buffer;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
@@ -62,19 +50,20 @@ int eigrp(const socket_t fd, const struct config_options *o)
   /* EIGRP header. */
   struct eigrp_hdr * eigrp;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  dest = INADDR_RND(o->eigrp.dest);
+  prefix = __5BIT_RND(o->eigrp.prefix);
+  eigrp_tlv_len = eigrp_hdr_len(o->eigrp.opcode, o->eigrp.type, prefix, o->eigrp.auth);
+  packet_size = sizeof(struct iphdr)     + 
+    greoptlen                + 
+    sizeof(struct eigrp_hdr) + 
+    eigrp_tlv_len;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o, 
@@ -94,7 +83,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
    *
    * EIGRP Header structure making a pointer to IP Header structure.
    */
-  eigrp              = (struct eigrp_hdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  eigrp              = (struct eigrp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   eigrp->version     = o->eigrp.ver_minor ? 
     o->eigrp.ver_minor : 
     EIGRPVERSION;
@@ -111,7 +100,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
   offset  = sizeof(struct eigrp_hdr);
 
   /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)eigrp + offset;
+  buffer.ptr = (void *)eigrp + offset;
 
   /*
    * Every live EIGRP PCAP file brings Authentication Data TLV first.
@@ -157,25 +146,22 @@ int eigrp(const socket_t fd, const struct config_options *o)
        *   |                                                               |
        *   +---------------------------------------------------------------+
        */
-      *((uint16_t *)checksum) = htons(EIGRP_TYPE_AUTH);
-      checksum += sizeof(uint16_t);
-      *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+      *buffer.word_ptr++ = htons(EIGRP_TYPE_AUTH);
+      *buffer.word_ptr++ = htons(o->eigrp.length ? 
           o->eigrp.length : 
           EIGRP_TLEN_AUTH);
-      checksum += sizeof(uint16_t);
-      *((uint16_t *)checksum) = htons(AUTH_TYPE_HMACMD5);
-      checksum += sizeof(uint16_t);
-      *((uint16_t *)checksum) = htons(auth_hmac_md5_len(o->eigrp.auth));
-      checksum += sizeof(uint16_t);
-      *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.key_id));
-      checksum += sizeof(uint32_t);
-      for(counter = 0 ; counter < EIGRP_PADDING_BLOCK ; counter++)
-        *checksum++ = FIELD_MUST_BE_ZERO;
+      *buffer.word_ptr++ = htons(AUTH_TYPE_HMACMD5);
+      *buffer.word_ptr++ = htons(auth_hmac_md5_len(o->eigrp.auth));
+      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.key_id));
+
+      for (counter = 0; counter < EIGRP_PADDING_BLOCK; counter++)
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
       /*
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
-      for(counter = 0 ; counter < auth_hmac_md5_len(o->eigrp.auth) ; counter++)
-        *checksum++ = __8BIT_RND(0);
+      for (counter = 0; counter < auth_hmac_md5_len(o->eigrp.auth); counter++)
+        *buffer.byte_ptr++ = __8BIT_RND(0);
+
       /* Computing the Checksum offset. */
       offset += EIGRP_TLEN_AUTH;
     }
@@ -260,61 +246,49 @@ int eigrp(const socket_t fd, const struct config_options *o)
        * The only difference between Internal and External Routes TLVs is 20
        * octets.
        */
-      *((uint16_t *)checksum) = htons(o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
+      *buffer.word_ptr++ = htons(o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
           EIGRP_TYPE_INTERNAL : 
           EIGRP_TYPE_EXTERNAL);
-      checksum += sizeof(uint16_t);
       /*
        * For both Internal and External Routes TLV the code must perform
        * an additional step to compute the EIGRP header length,  because 
        * it depends on the the EIGRP Prefix, and it can be 1-4 octets.
        */
-      *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+      *buffer.word_ptr++ = htons(o->eigrp.length ? 
           o->eigrp.length : 
           (o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
            EIGRP_TLEN_INTERNAL : 
            EIGRP_TLEN_EXTERNAL) + 
           EIGRP_DADDR_LENGTH(prefix));
-      checksum += sizeof(uint16_t);
-      *((in_addr_t *)checksum) = INADDR_RND(o->eigrp.next_hop);
-      checksum += sizeof(in_addr_t);
+      *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.next_hop);
       /*
        * The only difference between Internal and External Routes TLVs is 20
        * octets. Building 20 extra octets for IP External Routes TLV.
        */
       if (o->eigrp.type == EIGRP_TYPE_EXTERNAL)
       {
-        *((in_addr_t *)checksum) = INADDR_RND(o->eigrp.src_router);
-        checksum += sizeof(in_addr_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.src_as));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.tag));
-        checksum += sizeof(uint32_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.proto_metric));
-        checksum += sizeof(uint32_t);
-        *((uint16_t *)checksum) = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
+        *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.src_router);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.src_as));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.tag));
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.proto_metric));
+        *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
           FIELD_MUST_BE_ZERO : 
           htons(0x0004);
-        checksum += sizeof(uint16_t);
-        *checksum++ = __8BIT_RND(o->eigrp.proto_id);
-        *checksum++ = __8BIT_RND(o->eigrp.ext_flags);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.proto_id);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ext_flags);
       }
-      *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.delay));
-      checksum += sizeof(uint32_t);
-      *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.bandwidth));
-      checksum += sizeof(uint32_t);
-      *((uint32_t *)checksum) = htonl(__24BIT_RND(o->eigrp.mtu) << 8);
-      checksum += sizeof(uint32_t) - 1;
-      *checksum++ = __8BIT_RND(o->eigrp.hop_count);
-      *checksum++ = __8BIT_RND(o->eigrp.reliability);
-      *checksum++ = __8BIT_RND(o->eigrp.load);
-      *((uint16_t *)checksum) = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
+      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.delay));
+      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.bandwidth));
+      *buffer.dword_ptr++ = htonl(__24BIT_RND(o->eigrp.mtu) << 8);
+      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.hop_count);
+      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.reliability);
+      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.load);
+      *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
         FIELD_MUST_BE_ZERO : 
         htons(0x0004);
-      checksum += sizeof(uint16_t);
-      *checksum++ = prefix;
-      *((in_addr_t *)checksum) = EIGRP_DADDR_BUILD(dest, prefix);
-      checksum += EIGRP_DADDR_LENGTH(prefix);
+      *buffer.byte_ptr++ = prefix;
+      *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);
+      buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
       /* Computing the Checksum offset. */
       offset += (o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
           EIGRP_TLEN_INTERNAL : 
@@ -354,30 +328,27 @@ int eigrp(const socket_t fd, const struct config_options *o)
          *   +---------------------------------------------------------------+
          */
 eigrp_parameter:    
-        *((uint16_t *)checksum) = htons(EIGRP_TYPE_PARAMETER);
-        checksum += sizeof(uint16_t);
-        *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+        *buffer.word_ptr++ = htons(EIGRP_TYPE_PARAMETER);
+        *buffer.word_ptr++ = htons(o->eigrp.length ? 
             o->eigrp.length : 
             EIGRP_TLEN_PARAMETER);
-        checksum += sizeof(uint16_t);
-        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ? 
+        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ? 
           __8BIT_RND(o->eigrp.k1) : 
           o->eigrp.k1;
-        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ? 
+        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ? 
           __8BIT_RND(o->eigrp.k2) : 
           o->eigrp.k2;
-        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ? 
+        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ? 
           __8BIT_RND(o->eigrp.k3) : 
           o->eigrp.k3;
-        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ? 
+        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ? 
           __8BIT_RND(o->eigrp.k4) : 
           o->eigrp.k4;
-        *checksum++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ? 
+        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ? 
           __8BIT_RND(o->eigrp.k5) : 
           o->eigrp.k5;
-        *checksum++ = FIELD_MUST_BE_ZERO;
-        *((uint16_t *)checksum) = htons(o->eigrp.hold);
-        checksum += sizeof(uint16_t);
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(o->eigrp.hold);
         /* Computing the Checksum offset. */
         offset += EIGRP_TLEN_PARAMETER;
         /* Going to the next TLV, if it needs to do so-> */
@@ -403,16 +374,14 @@ eigrp_parameter:
          *   +---------------------------------------------------------------+
          */
 eigrp_software:     
-        *((uint16_t *)checksum) = htons(EIGRP_TYPE_SOFTWARE);
-        checksum += sizeof(uint16_t);
-        *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+        *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
+        *buffer.word_ptr++ = htons(o->eigrp.length ? 
             o->eigrp.length : 
             EIGRP_TLEN_SOFTWARE);
-        checksum += sizeof(uint16_t);
-        *checksum++ = __8BIT_RND(o->eigrp.ios_major);
-        *checksum++ = __8BIT_RND(o->eigrp.ios_minor);
-        *checksum++ = __8BIT_RND(o->eigrp.ver_major);
-        *checksum++ = __8BIT_RND(o->eigrp.ver_minor);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_major);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_minor);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_major);
+        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_minor);
         /* Computing the Checksum offset. */
         offset += EIGRP_TLEN_SOFTWARE;
         /* Going to the next TLV, if it needs to do so-> */
@@ -441,15 +410,12 @@ eigrp_software:
          *   +---------------------------------------------------------------+
          */
 eigrp_multicast:
-        *((uint16_t *)checksum) = htons(EIGRP_TYPE_SEQUENCE);
-        checksum += sizeof(uint16_t);
-        *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+        *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
+        *buffer.word_ptr++ = htons(o->eigrp.length ? 
             o->eigrp.length : 
             EIGRP_TLEN_SEQUENCE);
-        checksum += sizeof(uint16_t);
-        *checksum++ = sizeof(o->eigrp.address);
-        *((in_addr_t *)checksum) = INADDR_RND(o->eigrp.address);
-        checksum += sizeof(in_addr_t);
+        *buffer.byte_ptr++ = sizeof(o->eigrp.address);
+        *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.address);
         /*
          * Enhanced Interior Gateway Routing Protocol (EIGRP)
          *
@@ -463,14 +429,11 @@ eigrp_multicast:
          *   |                    Next Multicast Sequence                    |
          *   +---------------------------------------------------------------+
          */       
-        *((uint16_t *)checksum) = htons(EIGRP_TYPE_MULTICAST);
-        checksum += sizeof(uint16_t);
-        *((uint16_t *)checksum) = htons(o->eigrp.length ? 
+        *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
+        *buffer.word_ptr++ = htons(o->eigrp.length ? 
             o->eigrp.length : 
             EIGRP_TLEN_MULTICAST);
-        checksum += sizeof(uint16_t);
-        *((uint32_t *)checksum) = htonl(__32BIT_RND(o->eigrp.multicast));
-        checksum += sizeof(uint32_t);
+        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.multicast));
         /* Computing the Checksum offset. */
         offset += EIGRP_TLEN_MULTICAST + 
           EIGRP_TLEN_SEQUENCE;
@@ -483,10 +446,15 @@ eigrp_multicast:
   /* Computing the checksum. */
   eigrp->check    = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum((uint16_t *)eigrp, offset);
+    cksum(eigrp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
@@ -538,7 +506,8 @@ static size_t eigrp_hdr_len(const uint16_t foo,
     {
       size += EIGRP_TLEN_INTERNAL;
       size += EIGRP_DADDR_LENGTH(baz);
-    }else if (bar == EIGRP_TYPE_EXTERNAL)
+    }
+    else if (bar == EIGRP_TYPE_EXTERNAL)
     {
       size += EIGRP_TLEN_EXTERNAL;
       size += EIGRP_DADDR_LENGTH(baz);

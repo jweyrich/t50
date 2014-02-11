@@ -26,20 +26,9 @@ Description:   This function configures and sends the EGP packet header.
 Targets:       N/A */
 int egp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)   + 
-    greoptlen              + 
-    sizeof(struct egp_hdr) + 
-    sizeof(struct egp_acq_hdr);
-
-  /* Checksum offset and GRE offset. */
-  uint32_t offset;
-
-  /* Packet and Checksum. */
-  uint8_t *checksum;
+  size_t greoptlen,   /* GRE options size. */ 
+         packet_size,
+         offset;
 
   /* Socket address and IP header. */
   struct sockaddr_in sin;
@@ -49,19 +38,17 @@ int egp(const socket_t fd, const struct config_options *o)
   struct egp_hdr * egp;
   struct egp_acq_hdr * egp_acq;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  packet_size = sizeof(struct iphdr)   + 
+    greoptlen              + 
+    sizeof(struct egp_hdr) + 
+    sizeof(struct egp_acq_hdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
@@ -75,7 +62,7 @@ int egp(const socket_t fd, const struct config_options *o)
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = (struct egp_hdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  egp           = (struct egp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   egp->version  = EGPVERSION; 
   egp->type     = o->egp.type;
   egp->code     = o->egp.code;
@@ -87,11 +74,8 @@ int egp(const socket_t fd, const struct config_options *o)
   /* Computing the Checksum offset. */
   offset  = sizeof(struct egp_hdr);
 
-  /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)egp + offset;
-
   /* EGP Acquire Header structure making a pointer to Checksum. */
-  egp_acq        = (struct egp_acq_hdr *)(checksum + (offset - sizeof(struct egp_hdr)));
+  egp_acq        = (struct egp_acq_hdr *)((void *)egp + offset);
   egp_acq->hello = __16BIT_RND(o->egp.hello);
   egp_acq->poll  = __16BIT_RND(o->egp.poll);
   /* Computing the Checksum offset. */
@@ -100,10 +84,15 @@ int egp(const socket_t fd, const struct config_options *o)
   /* Computing the checksum. */
   egp->check    = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum((uint16_t *)egp, offset);
+    cksum(egp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

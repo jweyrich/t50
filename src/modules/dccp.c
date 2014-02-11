@@ -26,29 +26,14 @@ Description:   This function configures and sends the DCCP packet header.
 Targets:       N/A */
 int dccp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* DCCP Header length. */
-  size_t dccp_length = dccp_packet_hdr_len(o->dccp.type);
-
-  /* DCCP Extended Sequence NUmber length. */
-  uint32_t dccp_ext_length = (o->dccp.ext ? 
-      sizeof(struct dccp_hdr_ext) : 
-      0);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr) + 
-    greoptlen               + 
-    sizeof(struct dccp_hdr) + 
-    dccp_ext_length         + 
-    dccp_length;
-
-  /* Checksum offset and GRE offset. */
-  uint32_t offset;
+  size_t greoptlen,   /* GRE options size. */
+         dccp_length, /* DCCP header length. */
+         dccp_ext_length, /* DCCP Extended Sequence Number length. */
+         packet_size,
+         offset;
 
   /* Packet and Checksum. */
-  uint8_t *checksum;
+  void *buffer_ptr;
 
   /* Socket address and IP heade. */
   struct sockaddr_in sin;
@@ -68,19 +53,20 @@ int dccp(const socket_t fd, const struct config_options *o)
   struct dccp_hdr_ack_bits * dccp_ack;
   struct dccp_hdr_reset * dccp_rst;
 
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  dccp_length = dccp_packet_hdr_len(o->dccp.type);
+  dccp_ext_length = (o->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
+  packet_size = sizeof(struct iphdr) + 
+    greoptlen               + 
+    sizeof(struct dccp_hdr) + 
+    dccp_ext_length         + 
+    dccp_length;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   gre_ip = gre_encapsulation(packet, o, 
         sizeof(struct iphdr) + 
@@ -89,9 +75,10 @@ int dccp(const socket_t fd, const struct config_options *o)
         dccp_length);
 
   /* DCCP Header structure making a pointer to Packet. */
-  dccp                 = (struct dccp_hdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  dccp                 = (struct dccp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   dccp->dccph_sport    = htons(IPPORT_RND(o->source)); 
   dccp->dccph_dport    = htons(IPPORT_RND(o->dest));
+
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)
    *
@@ -102,12 +89,11 @@ int dccp(const socket_t fd, const struct config_options *o)
    *     header for the given Type or larger than the DCCP packet itself.
    */
   dccp->dccph_doff     = o->dccp.doff ? 
-    o->dccp.doff : 
-    (sizeof(struct dccp_hdr) + 
-     dccp_length + 
+    o->dccp.doff : (sizeof(struct dccp_hdr) + dccp_length + 
      dccp_ext_length)/4;
   dccp->dccph_type     = o->dccp.type;
   dccp->dccph_ccval    = __4BIT_RND(o->dccp.ccval);
+
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)
    *
@@ -127,10 +113,9 @@ int dccp(const socket_t fd, const struct config_options *o)
    *                  (CsCov-1)*4 bytes of the packet's application data.
    */
   dccp->dccph_cscov    = o->dccp.cscov ? 
-    (o->dccp.cscov-1)*4 : 
-    (o->bogus_csum ? 
-     __4BIT_RND(0) : 
-     o->dccp.cscov);
+    (o->dccp.cscov - 1) * 4 : 
+    (o->bogus_csum ? __4BIT_RND(0) : o->dccp.cscov);
+
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)
    *
@@ -173,21 +158,19 @@ int dccp(const socket_t fd, const struct config_options *o)
    */
   dccp->dccph_x        = o->dccp.ext;
   dccp->dccph_seq      = htons(__16BIT_RND(o->dccp.sequence_01));
-  dccp->dccph_seq2     = o->dccp.ext ? 
-    0 : 
-    __8BIT_RND(o->dccp.sequence_02);
+  dccp->dccph_seq2     = o->dccp.ext ? 0 : __8BIT_RND(o->dccp.sequence_02);
   dccp->dccph_checksum = 0;
 
   /* Computing the Checksum offset. */
   offset  = sizeof(struct dccp_hdr);
 
   /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *)dccp + offset;
+  buffer_ptr = (void *)dccp + offset;
 
   /* DCCP Extended Header structure making a pointer to Checksum. */
   if (o->dccp.ext)
   {
-    dccp_ext                = (struct dccp_hdr_ext *)(checksum + (offset - sizeof(struct dccp_hdr)));
+    dccp_ext = (struct dccp_hdr_ext *)buffer_ptr;
     dccp_ext->dccph_seq_low = htonl(__32BIT_RND(o->dccp.sequence_03));
     /* Computing the Checksum offset. */
     offset += sizeof(struct dccp_hdr_ext);
@@ -198,7 +181,7 @@ int dccp(const socket_t fd, const struct config_options *o)
   {
     case DCCP_PKT_REQUEST:
       /* DCCP Request Header structure making a pointer to Checksum. */
-      dccp_req                    = (struct dccp_hdr_request *)(checksum + (offset - sizeof(struct dccp_hdr)));
+      dccp_req = (struct dccp_hdr_request *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
       dccp_req->dccph_req_service = htonl(__32BIT_RND(o->dccp.service));
       /* Computing the Checksum offset. */
       offset += sizeof(struct dccp_hdr_request);
@@ -206,14 +189,13 @@ int dccp(const socket_t fd, const struct config_options *o)
 
     case DCCP_PKT_RESPONSE:
       /* DCCP Response Header structure making a pointer to Checksum. */
-      dccp_res                                   = (struct dccp_hdr_response *)(checksum + (offset - sizeof(struct dccp_hdr)));
+      dccp_res = (struct dccp_hdr_response *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
       dccp_res->dccph_resp_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_res->dccph_resp_ack.dccph_ack_nr_high = htons(__16BIT_RND(o->dccp.acknowledge_01));
       dccp_res->dccph_resp_ack.dccph_ack_nr_low  = htonl(__32BIT_RND(o->dccp.acknowledge_02));
       dccp_res->dccph_resp_service               = htonl(__32BIT_RND(o->dccp.service));
       /* Computing the Checksum offset. */
       offset += sizeof(struct dccp_hdr_response);
-
     case DCCP_PKT_DATA:
       break;
 
@@ -224,7 +206,7 @@ int dccp(const socket_t fd, const struct config_options *o)
     case DCCP_PKT_CLOSE:
     case DCCP_PKT_CLOSEREQ:
       /* DCCP Acknowledgment Header structure making a pointer to Checksum. */
-      dccp_ack                    = (struct dccp_hdr_ack_bits *)(checksum + (offset - sizeof(struct dccp_hdr)));
+      dccp_ack = (struct dccp_hdr_ack_bits *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
       dccp_ack->dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_ack->dccph_ack_nr_high = htons(__16BIT_RND(o->dccp.acknowledge_01));
       /* Until DCCP Options implementation. */
@@ -239,7 +221,7 @@ int dccp(const socket_t fd, const struct config_options *o)
 
     default:
       /* DCCP Reset Header structure making a pointer to Checksum. */
-      dccp_rst                                    = (struct dccp_hdr_reset *)(checksum + (offset - sizeof(struct dccp_hdr)));
+      dccp_rst = (struct dccp_hdr_reset *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
       dccp_rst->dccph_reset_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_rst->dccph_reset_ack.dccph_ack_nr_high = htons(__16BIT_RND(o->dccp.acknowledge_01));
       dccp_rst->dccph_reset_ack.dccph_ack_nr_low  = htonl(__32BIT_RND(o->dccp.acknowledge_02));
@@ -250,14 +232,10 @@ int dccp(const socket_t fd, const struct config_options *o)
   }
 
   /* Checksum making a pointer to PSEUDO Header structure. */
-  pseudo           = (struct psdhdr *)(checksum + (offset - sizeof(struct dccp_hdr)));
-  pseudo->saddr    = o->encapsulated ? 
-    gre_ip->saddr : 
-    ip->saddr;
-  pseudo->daddr    = o->encapsulated ? 
-    gre_ip->daddr : 
-    ip->daddr;
-  pseudo->zero     = 0;
+  pseudo = (struct psdhdr *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+  pseudo->saddr = o->encapsulated ? gre_ip->saddr : ip->saddr;
+  pseudo->daddr = o->encapsulated ? gre_ip->daddr : ip->daddr;
+  pseudo->zero  = 0;
   pseudo->protocol = o->ip.protocol;
   pseudo->len      = htons(offset);
 
@@ -267,9 +245,14 @@ int dccp(const socket_t fd, const struct config_options *o)
   /* Computing the checksum. */
   dccp->dccph_checksum = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum((uint16_t *)dccp, offset);
+    cksum(dccp, offset);
 
   gre_checksum(packet, o, packet_size);
+
+  /* Setting SOCKADDR structure. */
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(IPPORT_RND(o->dest));
+  sin.sin_addr.s_addr = o->ip.daddr;
 
   /* Sending Packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
