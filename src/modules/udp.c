@@ -40,6 +40,8 @@ int udp(const socket_t fd, const struct config_options *o)
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   packet_size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr);
 

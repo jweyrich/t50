@@ -179,7 +179,7 @@ enum ospf_tlv{
  */
 struct ospf_hdr{
 	uint16_t version:8,              /* version                     */
-	          type:8;                 /* type                        */
+          type:8;                 /* type                        */
 	uint16_t length;                 /* length                      */
 	in_addr_t rid;                    /* router ID                   */
 	in_addr_t aid;                    /* area ID                     */

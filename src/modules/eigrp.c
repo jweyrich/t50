@@ -50,8 +50,9 @@ int eigrp(const socket_t fd, const struct config_options *o)
   /* EIGRP header. */
   struct eigrp_hdr * eigrp;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  dest = INADDR_RND(o->eigrp.dest);
   prefix = __5BIT_RND(o->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(o->eigrp.opcode, o->eigrp.type, prefix, o->eigrp.auth);
   packet_size = sizeof(struct iphdr)     + 
@@ -81,25 +82,20 @@ int eigrp(const socket_t fd, const struct config_options *o)
    * http://packetlife.net/captures/category/cisco-proprietary/
    * http://oreilly.com/catalog/iprouting/chapter/ch04.html
    *
-   * EIGRP Header structure making a pointer to IP Header structure.
+   * EIGRP Header structure.
    */
   eigrp              = (struct eigrp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  eigrp->version     = o->eigrp.ver_minor ? 
-    o->eigrp.ver_minor : 
-    EIGRPVERSION;
+  eigrp->version     = o->eigrp.ver_minor ? o->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __8BIT_RND(o->eigrp.opcode);
   eigrp->flags       = htonl(__32BIT_RND(o->eigrp.flags));
   eigrp->sequence    = htonl(__32BIT_RND(o->eigrp.sequence));
   eigrp->acknowledge = o->eigrp.type == EIGRP_TYPE_SEQUENCE ? 
-    htonl(__32BIT_RND(o->eigrp.acknowledge)) : 
-    0;
+    htonl(__32BIT_RND(o->eigrp.acknowledge)) : 0;
   eigrp->as          = htonl(__32BIT_RND(o->eigrp.as));
   eigrp->check       = 0;
 
-  /* Computing the Checksum offset. */
   offset  = sizeof(struct eigrp_hdr);
 
-  /* Storing both Checksum and Packet. */
   buffer.ptr = (void *)eigrp + offset;
 
   /*
@@ -117,6 +113,11 @@ int eigrp(const socket_t fd, const struct config_options *o)
          (o->eigrp.type   == EIGRP_TYPE_MULTICAST ||
           o->eigrp.type   == EIGRP_TYPE_SOFTWARE)))
     {
+      /* NOTE: stemp used to avoid multiple comparisons on loop below */
+      size_t stemp;
+
+      stemp = auth_hmac_md5_len(o->eigrp.auth);
+
       /*
        * Enhanced Interior Gateway Routing Protocol (EIGRP)
        *
@@ -147,22 +148,20 @@ int eigrp(const socket_t fd, const struct config_options *o)
        *   +---------------------------------------------------------------+
        */
       *buffer.word_ptr++ = htons(EIGRP_TYPE_AUTH);
-      *buffer.word_ptr++ = htons(o->eigrp.length ? 
-          o->eigrp.length : 
-          EIGRP_TLEN_AUTH);
+      *buffer.word_ptr++ = htons(o->eigrp.length ? o->eigrp.length : EIGRP_TLEN_AUTH);
       *buffer.word_ptr++ = htons(AUTH_TYPE_HMACMD5);
-      *buffer.word_ptr++ = htons(auth_hmac_md5_len(o->eigrp.auth));
+      *buffer.word_ptr++ = htons(stemp);
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.key_id));
 
       for (counter = 0; counter < EIGRP_PADDING_BLOCK; counter++)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+
       /*
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
-      for (counter = 0; counter < auth_hmac_md5_len(o->eigrp.auth); counter++)
+      for (counter = 0; counter < stemp; counter++)
         *buffer.byte_ptr++ = __8BIT_RND(0);
 
-      /* Computing the Checksum offset. */
       offset += EIGRP_TLEN_AUTH;
     }
   }
@@ -247,8 +246,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
        * octets.
        */
       *buffer.word_ptr++ = htons(o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
-          EIGRP_TYPE_INTERNAL : 
-          EIGRP_TYPE_EXTERNAL);
+          EIGRP_TYPE_INTERNAL : EIGRP_TYPE_EXTERNAL);
       /*
        * For both Internal and External Routes TLV the code must perform
        * an additional step to compute the EIGRP header length,  because 
@@ -272,11 +270,13 @@ int eigrp(const socket_t fd, const struct config_options *o)
         *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.tag));
         *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.proto_metric));
         *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
-          FIELD_MUST_BE_ZERO : 
-          htons(0x0004);
+          FIELD_MUST_BE_ZERO : htons(0x0004);
         *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.proto_id);
         *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ext_flags);
       }
+
+      dest = INADDR_RND(o->eigrp.dest);
+
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.delay));
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.bandwidth));
       *buffer.dword_ptr++ = htonl(__24BIT_RND(o->eigrp.mtu) << 8);
@@ -284,12 +284,11 @@ int eigrp(const socket_t fd, const struct config_options *o)
       *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.reliability);
       *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.load);
       *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
-        FIELD_MUST_BE_ZERO : 
-        htons(0x0004);
+        FIELD_MUST_BE_ZERO : htons(0x0004);
       *buffer.byte_ptr++ = prefix;
       *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);
       buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
-      /* Computing the Checksum offset. */
+
       offset += (o->eigrp.type == EIGRP_TYPE_INTERNAL ? 
           EIGRP_TLEN_INTERNAL : 
           EIGRP_TLEN_EXTERNAL) + 
@@ -312,6 +311,8 @@ int eigrp(const socket_t fd, const struct config_options *o)
     switch (o->eigrp.type)
     {
       case EIGRP_TYPE_PARAMETER:
+      case EIGRP_TYPE_SOFTWARE:
+      case EIGRP_TYPE_MULTICAST:
         /*
          * Enhanced Interior Gateway Routing Protocol (EIGRP)
          *
@@ -327,126 +328,105 @@ int eigrp(const socket_t fd, const struct config_options *o)
          *   |      K5       |    Reserved   |           Hold Time           |
          *   +---------------------------------------------------------------+
          */
-eigrp_parameter:    
         *buffer.word_ptr++ = htons(EIGRP_TYPE_PARAMETER);
         *buffer.word_ptr++ = htons(o->eigrp.length ? 
-            o->eigrp.length : 
-            EIGRP_TLEN_PARAMETER);
+            o->eigrp.length : EIGRP_TLEN_PARAMETER);
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ? 
-          __8BIT_RND(o->eigrp.k1) : 
-          o->eigrp.k1;
+          __8BIT_RND(o->eigrp.k1) : o->eigrp.k1;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ? 
-          __8BIT_RND(o->eigrp.k2) : 
-          o->eigrp.k2;
+          __8BIT_RND(o->eigrp.k2) : o->eigrp.k2;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ? 
-          __8BIT_RND(o->eigrp.k3) : 
-          o->eigrp.k3;
+          __8BIT_RND(o->eigrp.k3) : o->eigrp.k3;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ? 
-          __8BIT_RND(o->eigrp.k4) : 
-          o->eigrp.k4;
+          __8BIT_RND(o->eigrp.k4) : o->eigrp.k4;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ? 
-          __8BIT_RND(o->eigrp.k5) : 
-          o->eigrp.k5;
+          __8BIT_RND(o->eigrp.k5) : o->eigrp.k5;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(o->eigrp.hold);
-        /* Computing the Checksum offset. */
+
         offset += EIGRP_TLEN_PARAMETER;
+
         /* Going to the next TLV, if it needs to do so-> */
         if (o->eigrp.type == EIGRP_TYPE_SOFTWARE ||
             o->eigrp.type == EIGRP_TYPE_MULTICAST)
-          goto eigrp_software;
-        break;
+        {
+          /*
+           * Enhanced Interior Gateway Routing Protocol (EIGRP)
+           *
+           * Software Version TLV (EIGRP Type = 0x0004)
+           *
+           *    0                   1                   2                   3 3
+           *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+           *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           *   |             Type              |            Length             |
+           *   +---------------------------------------------------------------+
+           *   |   IOS Major   |   IOS Minor   |  EIGRP Major  |  EIGRP Minor  |
+           *   +---------------------------------------------------------------+
+           */
+          *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
+          *buffer.word_ptr++ = htons(o->eigrp.length ? 
+              o->eigrp.length : EIGRP_TLEN_SOFTWARE);
+          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_major);
+          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_minor);
+          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_major);
+          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_minor);
+          
+          offset += EIGRP_TLEN_SOFTWARE;
 
-      case EIGRP_TYPE_SOFTWARE:
-        /* Going to the next TLV. */
-        goto eigrp_parameter;
-        /*
-         * Enhanced Interior Gateway Routing Protocol (EIGRP)
-         *
-         * Software Version TLV (EIGRP Type = 0x0004)
-         *
-         *    0                   1                   2                   3 3
-         *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *   |             Type              |            Length             |
-         *   +---------------------------------------------------------------+
-         *   |   IOS Major   |   IOS Minor   |  EIGRP Major  |  EIGRP Minor  |
-         *   +---------------------------------------------------------------+
-         */
-eigrp_software:     
-        *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
-        *buffer.word_ptr++ = htons(o->eigrp.length ? 
-            o->eigrp.length : 
-            EIGRP_TLEN_SOFTWARE);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_major);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_minor);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_major);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_minor);
-        /* Computing the Checksum offset. */
-        offset += EIGRP_TLEN_SOFTWARE;
-        /* Going to the next TLV, if it needs to do so-> */
-        if (o->eigrp.type == EIGRP_TYPE_MULTICAST)
-          goto eigrp_multicast;
-        break;
+          /* Going to the next TLV, if it needs to do so-> */
+          if (o->eigrp.type == EIGRP_TYPE_MULTICAST)
+          {
+            /*
+             * Enhanced Interior Gateway Routing Protocol (EIGRP)
+             *
+             * Sequence TLV (EIGRP Type = 0x0003)
+             *
+             *    0                   1                   2                   3 3
+             *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             *   |             Type              |            Length             |
+             *   +---------------------------------------------------------------+
+             *   |  Addr Length  //
+             *   +---------------+
+             *
+             *   +---------------------------------------------------------------+
+             *   //                         IP Address                           |
+             *   +---------------------------------------------------------------+
+             */
+            *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
+            *buffer.word_ptr++ = htons(o->eigrp.length ? 
+                o->eigrp.length : EIGRP_TLEN_SEQUENCE);
+            *buffer.byte_ptr++ = sizeof(o->eigrp.address);
+            *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.address);
 
-      case EIGRP_TYPE_MULTICAST:
-        /* Going to the next TLV. */
-        goto eigrp_parameter;
-        /*
-         * Enhanced Interior Gateway Routing Protocol (EIGRP)
-         *
-         * Sequence TLV (EIGRP Type = 0x0003)
-         *
-         *    0                   1                   2                   3 3
-         *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *   |             Type              |            Length             |
-         *   +---------------------------------------------------------------+
-         *   |  Addr Length  //
-         *   +---------------+
-         *
-         *   +---------------------------------------------------------------+
-         *   //                         IP Address                           |
-         *   +---------------------------------------------------------------+
-         */
-eigrp_multicast:
-        *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
-        *buffer.word_ptr++ = htons(o->eigrp.length ? 
-            o->eigrp.length : 
-            EIGRP_TLEN_SEQUENCE);
-        *buffer.byte_ptr++ = sizeof(o->eigrp.address);
-        *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.address);
-        /*
-         * Enhanced Interior Gateway Routing Protocol (EIGRP)
-         *
-         * Next Multicast Sequence TLV (EIGRP Type = 0x0005)
-         *
-         *    0                   1                   2                   3 3
-         *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *   |             Type              |            Length             |
-         *   +---------------------------------------------------------------+
-         *   |                    Next Multicast Sequence                    |
-         *   +---------------------------------------------------------------+
-         */       
-        *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
-        *buffer.word_ptr++ = htons(o->eigrp.length ? 
-            o->eigrp.length : 
-            EIGRP_TLEN_MULTICAST);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.multicast));
-        /* Computing the Checksum offset. */
-        offset += EIGRP_TLEN_MULTICAST + 
-          EIGRP_TLEN_SEQUENCE;
-        break;
-      default:
-        break;
+            /*
+             * Enhanced Interior Gateway Routing Protocol (EIGRP)
+             *
+             * Next Multicast Sequence TLV (EIGRP Type = 0x0005)
+             *
+             *    0                   1                   2                   3 3
+             *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             *   |             Type              |            Length             |
+             *   +---------------------------------------------------------------+
+             *   |                    Next Multicast Sequence                    |
+             *   +---------------------------------------------------------------+
+             */       
+            *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
+            *buffer.word_ptr++ = htons(o->eigrp.length ? 
+                o->eigrp.length : EIGRP_TLEN_MULTICAST);
+            *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.multicast));
+
+            offset += EIGRP_TLEN_MULTICAST + 
+              EIGRP_TLEN_SEQUENCE;
+          }
+        }
     }
   }
 
   /* Computing the checksum. */
   eigrp->check    = o->bogus_csum ? 
-    __16BIT_RND(0) : 
-    cksum(eigrp, offset);
+    __16BIT_RND(0) : cksum(eigrp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

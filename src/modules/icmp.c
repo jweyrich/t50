@@ -37,6 +37,8 @@ int icmp(const socket_t fd, const struct config_options *o)
   /* ICMP header. */
   struct icmphdr * icmp;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   packet_size = sizeof(struct iphdr) + 
                 greoptlen            + 
@@ -63,15 +65,14 @@ int icmp(const socket_t fd, const struct config_options *o)
       (o->icmp.code == ICMP_REDIR_HOST ||
        o->icmp.code == ICMP_REDIR_NET))
     icmp->un.gateway = INADDR_RND(o->icmp.gateway);
-  icmp->checksum         =  0;
+  icmp->checksum = 0;
 
   /* Computing the Packet offset. */
   offset = sizeof(struct icmphdr);
 
   /* Computing the checksum. */
   icmp->checksum = o->bogus_csum ? 
-                   __16BIT_RND(0) : 
-                   cksum(icmp, offset);
+    __16BIT_RND(0) : cksum(icmp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

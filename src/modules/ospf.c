@@ -35,7 +35,9 @@ int ospf(const socket_t fd, const struct config_options *o)
          ospf_length, /* OSPF header length. */
          packet_size,
          offset,
-         counter;
+         counter,
+         stemp;
+
   uint8_t ospf_options, /* OSPF options? */
           lls;          /* OSPF LLS header? */
 
@@ -53,6 +55,8 @@ int ospf(const socket_t fd, const struct config_options *o)
   struct ospf_auth_hdr * ospf_auth;
   struct ospf_lsa_hdr * ospf_lsa;
   struct ospf_lls_hdr * ospf_lls;
+
+  assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   ospf_options = __8BIT_RND(o->ospf.options);
@@ -74,7 +78,7 @@ int ospf(const socket_t fd, const struct config_options *o)
   ip = ip_header(packet, packet_size, o);
 
   gre_encapsulation(packet, o, 
-        sizeof(struct iphdr) + 
+        sizeof(struct iphdr)           + 
         sizeof(struct ospf_hdr)        + 
         sizeof(struct ospf_auth_hdr)   + 
         ospf_length                    + 
@@ -82,9 +86,10 @@ int ospf(const socket_t fd, const struct config_options *o)
         ospf_tlv_len(o->ospf.type, lls, o->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
-  ospf          = (struct ospf_hdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  ospf          = (struct ospf_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   ospf->version = OSPFVERSION;
   ospf->type    = o->ospf.type;
+
   /*
    * OSPF Version 2 (RFC 2328)
    *
@@ -106,7 +111,9 @@ int ospf(const socket_t fd, const struct config_options *o)
 
   /* OSPF Authentication Header structure making a pointer to OSPF Header structure. */
   ospf_auth       = (struct ospf_auth_hdr *)((void *)ospf + sizeof(struct ospf_hdr));
+
   /* Identifiyingt whether to use Authentication or not. */
+  ospf_auth->reserved = FIELD_MUST_BE_ZERO;
   if (o->ospf.auth)
   {
     /*
@@ -123,7 +130,7 @@ int ospf(const socket_t fd, const struct config_options *o)
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     ospf->autype        = htons(AUTH_TYPE_HMACMD5);
-    ospf_auth->reserved = FIELD_MUST_BE_ZERO;
+    //ospf_auth->reserved = FIELD_MUST_BE_ZERO;
     ospf_auth->key_id   = __8BIT_RND(o->ospf.key_id);
     ospf_auth->length   = auth_hmac_md5_len(o->ospf.auth);
     ospf_auth->sequence = htonl(__32BIT_RND(o->ospf.sequence));
@@ -144,16 +151,14 @@ int ospf(const socket_t fd, const struct config_options *o)
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     ospf->autype        = AUTH_TYPE_HMACNUL;
-    ospf_auth->reserved = FIELD_MUST_BE_ZERO;
+    //ospf_auth->reserved = FIELD_MUST_BE_ZERO;
     ospf_auth->key_id   = FIELD_MUST_BE_ZERO;
     ospf_auth->length   = FIELD_MUST_BE_ZERO;
     ospf_auth->sequence = FIELD_MUST_BE_ZERO;
   }
 
-  /* Computing the Checksum offset. */
   offset = sizeof(struct ospf_auth_hdr);
 
-  /* Storing both Checksum and Packet. */
   buffer.ptr = (void *)ospf_auth + offset;
 
   /* Identifying the OSPF Type and building it. */
@@ -189,14 +194,13 @@ int ospf(const socket_t fd, const struct config_options *o)
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->ospf.hello_dead));
       *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.hello_design);
       *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.hello_backup);
-      /* Computing the Checksum offset. */
+
       offset += OSPF_TLEN_HELLO;
 
       /* Dealing with neighbor address(es). */
       for (counter = 0; counter < o->ospf.neighbor; counter++)
         *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.address[counter]);
 
-      /* Computing the Checksum offset. */
       offset += OSPF_TLEN_NEIGHBOR(o->ospf.neighbor);
       break;
 
@@ -228,7 +232,7 @@ int ospf(const socket_t fd, const struct config_options *o)
       *buffer.byte_ptr++ = ospf_options;
       *buffer.byte_ptr++ = __3BIT_RND(o->ospf.dd_dbdesc);
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->ospf.dd_sequence));
-      /* Computing the Checksum offset. */
+
       offset += OSPF_TLEN_DD;
       break;
 
@@ -251,7 +255,7 @@ int ospf(const socket_t fd, const struct config_options *o)
       *buffer.dword_ptr++ = htonl(o->ospf.lsa_type);
       *buffer.dword_ptr++ = htonl(__32BIT_RND(o->ospf.lsa_lsid));
       *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.lsa_router);
-      /* Computing the Checksum offset. */
+
       offset += OSPF_TLEN_LSREQUEST;
       break;
 
@@ -309,9 +313,9 @@ build_ospf_lsupdate:
         *buffer.byte_ptr++ = __8BIT_RND(o->ospf.lsa_link_type);
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(__16BIT_RND(o->ospf.lsa_metric));
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_ROUTER;
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER;
+
         /* Computing the checksum. */
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
@@ -338,9 +342,9 @@ build_ospf_lsupdate:
          */
         *buffer.inaddr_ptr++ = NETMASK_RND(o->ospf.netmask);
         *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.lsa_attached);
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_NETWORK;
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
+
         /* Computing the checksum. */
         ospf_lsa->check      =  o->bogus_csum  ? 
           __16BIT_RND(0) : 
@@ -369,12 +373,12 @@ build_ospf_lsupdate:
         *buffer.inaddr_ptr++ = NETMASK_RND(o->ospf.netmask);
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.dword_ptr++ = htonl(__24BIT_RND(o->ospf.lsa_metric) << 8);
-        buffer.byte_ptr--;
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_SUMMARY;
+        buffer.ptr--;  /* NOTE: From the previous code... Is this correct?! */
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY;
+
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum ? 
+        ospf_lsa->check =  o->bogus_csum ? 
           __16BIT_RND(0) : 
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
       }
@@ -409,12 +413,12 @@ build_ospf_lsupdate:
         *buffer.inaddr_ptr++ = NETMASK_RND(o->ospf.netmask);
         *buffer.byte_ptr++ = (o->ospf.lsa_larger ? 0x80 : 0);
         *buffer.dword_ptr++ = htonl(__24BIT_RND(o->ospf.lsa_metric) << 8);
-        buffer.byte_ptr--;
+        buffer.ptr--;    /* NOTE: From previous code. Is this correct?! */
         *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.lsa_forward);
         *buffer.dword_ptr++ = htonl(__32BIT_RND(o->ospf.lsa_external));
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_ASBR;
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR;
+
         /* Computing the checksum. */
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
@@ -441,9 +445,9 @@ build_ospf_lsupdate:
          */
         *buffer.dword_ptr++ = htonl(__2BIT_RND(o->ospf.vertex_type));
         *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.vertex_id);
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_MULTICAST;
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST;
+
         /* Computing the checksum. */
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
@@ -456,9 +460,9 @@ build_ospf_lsupdate:
         ospf_lsa->length     = htons(o->ospf.length ? 
             o->ospf.length : 
             LSA_TLEN_GENERIC(0));
-        /* Computing the Checksum offset. */
-        offset += OSPF_TLEN_LSUPDATE;
-        offset += LSA_TLEN_GENERIC(0);
+
+        offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0);
+
         /* Computing the checksum. */
         ospf_lsa->check      =  o->bogus_csum ? 
           __16BIT_RND(0) : 
@@ -511,17 +515,20 @@ build_ospf_lsa:
       ospf_lsa->age        = htons(__16BIT_RND(o->ospf.lsa_age));
       /* Deciding whether age or not. */
       if (o->ospf.lsa_dage)
-        ospf_lsa->age        |= 0x80;
+        ospf_lsa->age     |= 0x80;
       ospf_lsa->type       = o->ospf.lsa_type;
       ospf_lsa->options    = ospf_options;
       ospf_lsa->lsid       = INADDR_RND(o->ospf.lsa_lsid);
       ospf_lsa->router     = INADDR_RND(o->ospf.lsa_router);
       ospf_lsa->sequence   = htonl(__32BIT_RND(o->ospf.lsa_sequence));
       ospf_lsa->check      = 0;
+
       buffer.ptr += sizeof(struct ospf_lsa_hdr);
+
       /* Returning to the OSPF type LSUpdate and continue builing it. */
       if (o->ospf.type == OSPF_TYPE_LSUPDATE)
         goto build_ospf_lsupdate;
+
       /*
        * At this point, the code does not need to build the entiry LSA Type
        * Header. It just needs to set the correct OSPF LSA Header length.
@@ -552,8 +559,9 @@ build_ospf_lsa:
         ospf_lsa->length     = htons(o->ospf.length ? 
             o->ospf.length : 
             LSA_TLEN_GENERIC(0));
-      /* Computing the Checksum offset. */
+
       offset += LSA_TLEN_GENERIC(0);
+
       /* Computing the checksum. */
       ospf_lsa->check      =  o->bogus_csum ? 
         __16BIT_RND(0) : 
@@ -564,10 +572,11 @@ build_ospf_lsa:
   /*
    * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
    */
-  for (counter = 0; counter < auth_hmac_md5_len(o->ospf.auth); counter++)
+  stemp = auth_hmac_md5_len(o->ospf.auth);
+  for (counter = 0; counter < stemp; counter++)
     *buffer.byte_ptr++ = __8BIT_RND(0);
-  /* Computing the Checksum offset. */
-  offset += auth_hmac_md5_len(o->ospf.auth);
+
+  offset += stemp;
 
   /*
    * OSPF Link-Local Signaling (RFC 5613)
@@ -588,7 +597,9 @@ build_ospf_lsa:
           o->ospf.length : 
           ospf_tlv_len(o->ospf.type, lls, o->ospf.auth)/4);
       ospf_lls->check  = 0;
+
       buffer.ptr += sizeof(struct ospf_lls_hdr);
+
       /*
        * OSPF Link-Local Signaling (RFC 5613)
        *
@@ -605,6 +616,7 @@ build_ospf_lsa:
       *buffer.word_ptr++ = htons(OSPF_TLV_EXTENDED);
       *buffer.word_ptr++ = htons(OSPF_LEN_EXTENDED);
       *buffer.dword_ptr++ = htonl(o->ospf.lls_options);
+
       /*
        * OSPF Link-Local Signaling (RFC 5613)
        *
@@ -646,11 +658,14 @@ build_ospf_lsa:
         *buffer.word_ptr++ = htons(OSPF_TLV_CRYPTO);
         *buffer.word_ptr++ = htons(OSPF_LEN_CRYPTO);
         *buffer.dword_ptr++ = htonl(__32BIT_RND(o->ospf.sequence));
+
         /*
          * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
          */
-        for (counter = 0; counter < auth_hmac_md5_len(o->ospf.auth); counter++)
+        stemp = auth_hmac_md5_len(o->ospf.auth);
+        for (counter = 0; counter < stemp; counter++)
           *buffer.byte_ptr++ = __8BIT_RND(0);
+
         /*
          * OSPF Link-Local Signaling (RFC 5613)
          *
@@ -670,7 +685,6 @@ build_ospf_lsa:
           cksum(ospf_lls, ospf_tlv_len(o->ospf.type, lls, o->ospf.auth));
       }
 
-      /* Computing the Checksum offset. */
       offset += ospf_tlv_len(o->ospf.type, lls, o->ospf.auth);
     }
   }

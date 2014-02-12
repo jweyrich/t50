@@ -40,6 +40,8 @@ int igmpv3(const socket_t fd, const struct config_options *o)
   struct igmpv3_report * igmpv3_report;
   struct igmpv3_grec * igmpv3_grec;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   packet_size = sizeof(struct iphdr) + 
     greoptlen            + 
@@ -50,9 +52,6 @@ int igmpv3(const socket_t fd, const struct config_options *o)
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
@@ -69,6 +68,7 @@ int igmpv3(const socket_t fd, const struct config_options *o)
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
     igmpv3_report->ngrec    = htons(1);
     igmpv3_report->csum     = 0;
+
     /* Computing the Checksum offset. */
     offset  = sizeof(struct igmpv3_report);
 
@@ -82,14 +82,13 @@ int igmpv3(const socket_t fd, const struct config_options *o)
     igmpv3_grec->grec_nsrcs    = htons(o->igmp.sources);
     igmpv3_grec->grec_mca      = INADDR_RND(o->igmp.grec_mca);
     buffer.ptr += sizeof(struct igmpv3_grec);
-    /* Computing the Checksum offset. */
+
     offset += sizeof(struct igmpv3_grec);
 
     /* Dealing with source address(es). */
     for (counter = 0; counter < o->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(o->igmp.address[counter]);
 
-    /* Computing the Checksum offset. */
     offset += IGMPV3_TLEN_NSRCS(o->igmp.sources);
 
     /* Computing the checksum. */
@@ -110,7 +109,6 @@ int igmpv3(const socket_t fd, const struct config_options *o)
     igmpv3_query->nsrcs    = htons(o->igmp.sources);
     igmpv3_query->csum     = 0;
 
-    /* Computing the Checksum offset. */
     offset  = sizeof(struct igmpv3_query);
 
     /* Storing both Checksum and Packet. */
@@ -120,8 +118,8 @@ int igmpv3(const socket_t fd, const struct config_options *o)
     for (counter = 0; counter < o->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(o->igmp.address[counter]);
 
-    /* Computing the Checksum offset. */
     offset += IGMPV3_TLEN_NSRCS(o->igmp.sources);
+
     /* Computing the checksum. */
     igmpv3_query->csum     = o->bogus_csum ? 
       __16BIT_RND(0) : 

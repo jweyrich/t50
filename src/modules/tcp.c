@@ -33,7 +33,6 @@ int tcp(const socket_t fd, const struct config_options *o)
 {
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */
-         tcpopad,     /* TCP options padding. */
          tcpopt,      /* TCP options total size. */
          packet_size,
          offset,
@@ -52,10 +51,11 @@ int tcp(const socket_t fd, const struct config_options *o)
   struct tcphdr *tcp;
   struct psdhdr *pseudo;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   tcpolen = tcp_options_len(o->tcp.options, o->tcp.md5, o->tcp.auth);
-  tcpopad = TCPOLEN_PADDING(tcpolen);
-  tcpopt = tcpolen + tcpopad;
+  tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
   packet_size = sizeof(struct iphdr) + 
     greoptlen             + 
     sizeof(struct tcphdr) + 
@@ -108,10 +108,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   tcp->window  = htons(__16BIT_RND(o->tcp.window));
   tcp->check   = 0;
 
-  offset = sizeof(struct tcphdr);
-
-  /* Building TCP Options and storing both Checksum and Packet. */
-  buffer.ptr = (void *)tcp + offset;
+  buffer.ptr = (void *)tcp + sizeof(struct tcphdr);
 
   /*
    * Transmission Control Protocol (TCP) (RFC 793)
@@ -374,12 +371,15 @@ int tcp(const socket_t fd, const struct config_options *o)
    */
   if (o->tcp.md5)
   {
+    size_t stemp;
+
     *buffer.byte_ptr++ = TCPOPT_MD5;
     *buffer.byte_ptr++ = TCPOLEN_MD5;
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    for (counter = 0; counter < auth_hmac_md5_len(o->tcp.md5); counter++)
+    stemp = auth_hmac_md5_len(o->tcp.md5);
+    for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = __8BIT_RND(0);
   }
 
@@ -406,6 +406,8 @@ int tcp(const socket_t fd, const struct config_options *o)
    */
   if (o->tcp.auth)
   {
+    size_t stemp;
+
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
     *buffer.byte_ptr++ = __8BIT_RND(o->tcp.key_id);
@@ -413,7 +415,8 @@ int tcp(const socket_t fd, const struct config_options *o)
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    for (counter = 0; counter < auth_hmac_md5_len(o->tcp.auth); counter++)
+    stemp = auth_hmac_md5_len(o->tcp.auth);
+    for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = __8BIT_RND(0);
   }
 
@@ -421,8 +424,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   for (; tcpolen & 3; tcpolen++)
     *buffer.byte_ptr++ = o->tcp.nop;
 
-  /* Computing the Checksum offset. */
-  offset += tcpolen;
+  offset = sizeof(struct tcphdr) + tcpolen;
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = (struct psdhdr *)buffer.ptr;
@@ -432,7 +434,6 @@ int tcp(const socket_t fd, const struct config_options *o)
   pseudo->protocol = o->ip.protocol;
   pseudo->len      = htons(offset);
 
-  /* Computing the Checksum offset. */
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */

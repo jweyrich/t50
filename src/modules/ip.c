@@ -24,6 +24,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   struct iphdr *ip;
 
   assert(buffer != NULL);
+  assert(o != NULL);
 
   ip = (struct iphdr *)buffer;
   ip->version  = IPVERSION;
@@ -36,7 +37,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip->protocol = o->encapsulated ? IPPROTO_GRE : o->ip.protocol;
   ip->saddr    = INADDR_RND(o->ip.saddr);
   ip->daddr    = o->ip.daddr;
-  /* The code does not have to handle this, Kernel will do-> */
+  /* The code does not have to handle the checksum. Kernel will do */
   ip->check    = 0;
 
   return ip;

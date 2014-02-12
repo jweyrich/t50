@@ -24,8 +24,7 @@ Description:   This function configures and sends the IGMPv1 packet header. */
 int igmpv1(const socket_t fd, const struct config_options *o)
 {
   size_t greoptlen,     /* GRE options size. */
-         packet_size,
-         offset;
+         packet_size;
 
   /* Socket address, IP header and IGMPv1 header. */
   struct sockaddr_in sin;
@@ -33,6 +32,8 @@ int igmpv1(const socket_t fd, const struct config_options *o)
 
   /* IGMPv1 header. */
   struct igmphdr * igmpv1;
+
+  assert(o != NULL);
 
   /* GRE options size. */
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
@@ -59,13 +60,11 @@ int igmpv1(const socket_t fd, const struct config_options *o)
   igmpv1->code  = o->igmp.code;
   igmpv1->group = INADDR_RND(o->igmp.group);
   igmpv1->csum  = 0;
-  /* Computing the Packet offset. */
-  offset = sizeof(struct igmphdr);
 
   /* Computing the checksum. */
   igmpv1->csum  = o->bogus_csum ? 
     __16BIT_RND(0) : 
-    cksum(igmpv1, offset);
+    cksum(igmpv1, sizeof(struct igmphdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

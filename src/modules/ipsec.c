@@ -44,11 +44,13 @@ int ipsec(const socket_t fd, const struct config_options *o)
   struct ip_auth_hdr * ip_auth;
   struct ip_esp_hdr * ip_esp;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
   packet_size = sizeof(struct iphdr) + 
-    greoptlen             + 
+    greoptlen                  + 
     sizeof(struct ip_auth_hdr) + 
     ip_ah_icv                  +
     sizeof(struct ip_esp_hdr)  + 
@@ -76,10 +78,8 @@ int ipsec(const socket_t fd, const struct config_options *o)
   ip_auth->spi     = htonl(__32BIT_RND(o->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__32BIT_RND(o->ipsec.ah_sequence));
 
-  /* Computing the Checksum offset. */
   offset = sizeof(struct ip_auth_hdr);
 
-  /* Storing both Checksum and Packet. */
   buffer.ptr = (void *)ip_auth + offset;
 
   /*
@@ -109,9 +109,9 @@ int ipsec(const socket_t fd, const struct config_options *o)
   ip_esp         = (struct ip_esp_hdr *)buffer.ptr;
   ip_esp->spi    = htonl(__32BIT_RND(o->ipsec.esp_spi));
   ip_esp->seq_no = htonl(__32BIT_RND(o->ipsec.esp_sequence));
-  /* Computing the Checksum offset. */
+
   offset += sizeof(struct ip_esp_hdr);
-  /* Carrying forward the Checksum. */
+
   buffer.ptr += sizeof(struct ip_esp_hdr);
 
   /* Setting a fake encrypted content. */

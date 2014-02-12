@@ -32,6 +32,9 @@ SRC=$(shell find $(SRCDIR) -type f -name '*.c')
 all:
 	$(CC) $(CFLAGS) $(INCLUDES) $(DFLAGS) $(SRC) -o t50
 	gzip -c -9 $(DOCDIR)/t50.1 > $(DOCDIR)/t50.8.gz
+
+#debug:
+#	$(CC) $(CFLAGS) $(INCLUDES) $(DFLAGS) -masm=intel -fverbose-asm -S $(SRC)
 	
 clean:
 	rm -f t50 doc/t50.8.gz

@@ -45,7 +45,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
 /* This code prefers to use Linux headers rather than BSD favored */
 #include <linux/ip.h>
 #include <linux/tcp.h>

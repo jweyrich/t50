@@ -32,7 +32,6 @@ int ripv1(const socket_t fd, const struct config_options *o)
          packet_size,
          offset;
 
-  /* Packet and Checksum. */
   mptr_t buffer;
 
   /* Socket address, IP header. */
@@ -45,6 +44,8 @@ int ripv1(const socket_t fd, const struct config_options *o)
   /* UDP header and PSEUDO header. */
   struct udphdr * udp;
   struct psdhdr * pseudo;
+
+  assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   packet_size = sizeof(struct iphdr)  + 
@@ -65,17 +66,14 @@ int ripv1(const socket_t fd, const struct config_options *o)
         rip_hdr_len(0));
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = (struct udphdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
+  udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   udp->source = htons(IPPORT_RIP); 
   udp->dest   = htons(IPPORT_RIP);
-  udp->len    = htons(sizeof(struct udphdr) + 
-      rip_hdr_len(0));
+  udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
-  /* Computing the Checksum offset. */
 
   offset = sizeof(struct udphdr);
 
-  /* Storing both Checksum and Packet. */
   buffer.ptr = (void *)udp + offset;
 
   /*
@@ -102,8 +100,6 @@ int ripv1(const socket_t fd, const struct config_options *o)
   *buffer.byte_ptr++ = o->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  /* Computing the Checksum offset. */
-  offset += RIP_HEADER_LENGTH;	
 
   *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.family));
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
@@ -111,8 +107,8 @@ int ripv1(const socket_t fd, const struct config_options *o)
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = htonl(__32BIT_RND(o->rip.metric));
-  /* Computing the Checksum offset. */
-  offset += RIP_MESSAGE_LENGTH;
+
+  offset += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH;
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = (struct psdhdr *)buffer.ptr;
@@ -121,7 +117,7 @@ int ripv1(const socket_t fd, const struct config_options *o)
   pseudo->zero     = 0;
   pseudo->protocol = o->ip.protocol;
   pseudo->len      = htons(offset);
-  /* Computing the Checksum offset. */
+
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */

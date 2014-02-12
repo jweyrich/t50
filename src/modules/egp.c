@@ -38,6 +38,8 @@ int egp(const socket_t fd, const struct config_options *o)
   struct egp_hdr * egp;
   struct egp_acq_hdr * egp_acq;
 
+  assert(o != NULL);
+
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   packet_size = sizeof(struct iphdr)   + 
     greoptlen              + 
@@ -71,14 +73,13 @@ int egp(const socket_t fd, const struct config_options *o)
   egp->sequence = __16BIT_RND(o->egp.sequence);
   egp->check    = 0;
 
-  /* Computing the Checksum offset. */
   offset  = sizeof(struct egp_hdr);
 
-  /* EGP Acquire Header structure making a pointer to Checksum. */
+  /* EGP Acquire Header structure. */
   egp_acq        = (struct egp_acq_hdr *)((void *)egp + offset);
   egp_acq->hello = __16BIT_RND(o->egp.hello);
   egp_acq->poll  = __16BIT_RND(o->egp.poll);
-  /* Computing the Checksum offset. */
+
   offset += sizeof(struct egp_acq_hdr);
 
   /* Computing the checksum. */
