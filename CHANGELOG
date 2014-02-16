@@ -19,6 +19,7 @@ T50 5.5 - March ?, 2014
     due to restricted stack space. Buffer reallocation on heap fix this problem.
  * cksum() 5 times faster.
  * Using a trick to deal with pointers of multiple types on modules functions.
+ * New Makefile.
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.

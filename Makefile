@@ -1,47 +1,85 @@
+#
+# Variables that can be defined in DFLAGS, below.
+#
 # __HAVE_TURBO__ - turbo mode enable --turbo option. This makes
 # T50 create a child process to improve performance.
 #
 # __HAVE_DEBUG__ - debug mode makes T50 print the source filename
 # and line when an error occurs. This is a good idea if you're
-# experiencing problems.
-	
-PREFIX=/usr
-MANDIR=/usr/share/man/man8
-SRCDIR=./src
-DOCDIR=./doc
+# experiencing problems. It is proper to undefine NDEBUG.
+#
 
-# NOTE: Now llvm's clang 3.x works fine!
+SRC_DIR=./src
+OBJ_DIR=./build
+RELEASE_DIR=./release
+MAN_DIR=/usr/share/man/man8
+INCLUDE_DIR=$(SRC_DIR)/include
+
+TARGET=$(RELEASE_DIR)/t50
+
+OBJS=$(OBJ_DIR)/modules/ip.o \
+$(OBJ_DIR)/modules/igmpv3.o \
+$(OBJ_DIR)/modules/dccp.o \
+$(OBJ_DIR)/modules/ripv2.o \
+$(OBJ_DIR)/modules/udp.o \
+$(OBJ_DIR)/modules/tcp.o \
+$(OBJ_DIR)/modules/ospf.o \
+$(OBJ_DIR)/modules/ripv1.o \
+$(OBJ_DIR)/modules/egp.o \
+$(OBJ_DIR)/modules/rsvp.o \
+$(OBJ_DIR)/modules/ipsec.o \
+$(OBJ_DIR)/modules/eigrp.o \
+$(OBJ_DIR)/modules/gre.o \
+$(OBJ_DIR)/modules/igmpv1.o \
+$(OBJ_DIR)/modules/icmp.o \
+$(OBJ_DIR)/common.o \
+$(OBJ_DIR)/cksum.o \
+$(OBJ_DIR)/cidr.o \
+$(OBJ_DIR)/t50.o \
+$(OBJ_DIR)/resolv.o \
+$(OBJ_DIR)/sock.o \
+$(OBJ_DIR)/usage.o \
+$(OBJ_DIR)/config.o \
+$(OBJ_DIR)/check.o
+
+# Get architecture
+ARCH=$(shell arch)
+ifeq ($(ARCH),x86_64)
+	ADDITIONAL_COPTS=
+else
+	ADDITIONAL_COPTS=-msse
+endif
+
+# OBS: Using Linker Time Optiomizer!
+#      -O3 and -fuse-linker-plugin needed on link time to use lto.
 CC=gcc
-#CC=clang
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\" -DNDEBUG
+COPTS=-Wall -Wextra -mtune=native -flto $(ADDITIONAL_COPTS) -O3 -ffast-math -I$(INCLUDE_DIR) $(DFLAGS)
+LDOPTS=-s -O3 -fuse-linker-plugin -flto
 
-# If you want to use SSE instructions on x86 architecture, remove the comment below.
-# There is no need to enable SSE for x86-64 architecture.
-#USE_SSE=-msse -mfpmath=sse
+.PHONY: clean install
 
-STRIP=-s
-CFLAGS=-W -std=gnu99 -Wall -Wextra -mtune=native -O3 $(USE_SSE) -ffast-math $(STRIP)
-INCLUDES=-I$(SRCDIR)/include
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
+# link
 
-# If you want debug info on executable, remove the comment below (and comment NDEBUG definition)
-#DFLAGS+=-D__HAVE_DEBUG__
-DFLAGS+=-DNDEBUG
+$(TARGET): $(OBJS)
+	$(CC) $(LDOPTS) $^ -o $@
 
-SRC=$(shell find $(SRCDIR) -type f -name '*.c')
-	
-all:
-	$(CC) $(CFLAGS) $(INCLUDES) $(DFLAGS) $(SRC) -o t50
-	gzip -c -9 $(DOCDIR)/t50.1 > $(DOCDIR)/t50.8.gz
+# Compile main
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(COPTS) $(DFLAGS) -c -o $@ $<
 
-#debug:
-#	$(CC) $(CFLAGS) $(INCLUDES) $(DFLAGS) -masm=intel -fverbose-asm -S $(SRC)
-	
+# Compile modules
+$(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
+	$(CC) $(COPTS) $(DFLAGS) -c -o $@ $<
+
+$(RELEASE_DIR) $(OBJ_DIR):
+	mkdir -p $(RELEASE_DIR)/ $(OBJ_DIR)/modules/
+
 clean:
-	rm -f t50 doc/t50.8.gz
-	
-install: 
-	install t50 $(PREFIX)/sbin
-	install $(DOCDIR)/t50.8.gz $(MANDIR)/t50.8.gz
-	
-uninstall:
-	rm -f $(PREFIX)/sbin/t50 $(MANDIR)/t50.8.gz
+	@rm -rf $(RELEASE_DIR)/ $(OBJ_DIR)/
+	@echo Binary executable, temporary files and packed manual file deleted.
+
+install:
+	gzip -9 $(RELEASE_DIR)/t50.8.gz ./doc/t50.1
+	install $(RELEASE_DIR)/t50 /usr/sbin/
+	install $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
