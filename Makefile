@@ -72,11 +72,8 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(COPTS) $(DFLAGS) -c -o $@ $<
 
-$(RELEASE_DIR) $(OBJ_DIR):
-	mkdir -p $(RELEASE_DIR)/ $(OBJ_DIR)/modules/
-
 clean:
-	@rm -rf $(RELEASE_DIR)/ $(OBJ_DIR)/
+	@rm -rf $(RELEASE_DIR)/* $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
