@@ -263,6 +263,7 @@ static const struct option long_opt[] = {
 #ifdef  __HAVE_TURBO__
   { "turbo",                  no_argument,       NULL, OPTION_TURBO                  },
 #endif  /* __HAVE_TURBO__ */
+  { "version",                no_argument,       NULL, 'v'                           },
   { "help",                   no_argument,       NULL, 'h'                           },
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                                       */
   { "gre-seq-present",        no_argument,       NULL, OPTION_GRE_SEQUENCE_PRESENT   },
@@ -506,13 +507,9 @@ struct config_options *getConfigOptions(int argc, char ** argv)
   int opt_ind;
 
   /* Checking command line interface options. */
-  for (;;)
+  opt_ind = 1;
+  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, &opt_ind)) != -1)
   {
-    opt_ind = 0;
-
-    if ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bh?", long_opt, &opt_ind)) == -1 )
-      break;
-
     switch (cli_opts)
     {
       /* XXX COMMON OPTIONS */
@@ -1187,6 +1184,10 @@ struct config_options *getConfigOptions(int argc, char ** argv)
         o.ospf.key_id = atoi(optarg); break;
       case OPTION_OSPF_AUTH_SEQUENCE:
         o.ospf.sequence = atol(optarg); break;
+
+      case 'v':
+        show_version();
+        exit(EXIT_FAILURE);
 
       /* XXX HELP/USAGE MESSAGE */
       case 'h':

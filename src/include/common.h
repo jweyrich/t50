@@ -232,6 +232,8 @@ extern struct config_options *getConfigOptions(int, char **);
 extern in_addr_t resolv(char *);
 /* Socket configuration. */
 extern socket_t sock(void);
+/* Show version info */
+extern void show_version(void);
 /* Help and usage message. */
 extern void usage(void);
 

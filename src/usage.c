@@ -19,15 +19,21 @@
 
 #include <common.h>
 
-/* Help and usage message */
-void usage()
+void show_version(void)
 {
   printf("T50 Experimental Mixed Packet Injector Tool %s\n"
          "Originally created by Nelson Brito <nbrito@sekure.org>\n"
-         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n\n",
+         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
          VERSION);
-  
-  printf("Usage: t50 <host> [/CIDR] [options]\n\n");
+}
+
+/* Help and usage message */
+void usage(void)
+{
+  show_version();  
+
+  printf("\n"
+         "Usage: t50 <host> [/CIDR] [options]\n\n");
 
   printf("Common Options:\n"
          "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
