@@ -4,6 +4,8 @@
 #
 # Delete __HAVE_TURBO__ definition, below, if you don't need it.
 #
+# The final executable will be created at release/ sub-directory.
+#
 
 SRC_DIR=./src
 OBJ_DIR=./build
