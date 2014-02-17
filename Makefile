@@ -1,12 +1,8 @@
 #
-# Variables that can be defined in DFLAGS, below.
+# if DEBUG is defined on make call (ex: make DEBUG=1), then compile with
+# __HAVE_DEBUG__ defined, asserts and debug information.
 #
-# __HAVE_TURBO__ - turbo mode enable --turbo option. This makes
-# T50 create a child process to improve performance.
-#
-# __HAVE_DEBUG__ - debug mode makes T50 print the source filename
-# and line when an error occurs. This is a good idea if you're
-# experiencing problems. It is proper to undefine NDEBUG.
+# Delete __HAVE_TURBO__ definition, below, if you don't need it.
 #
 
 SRC_DIR=./src
@@ -42,20 +38,30 @@ $(OBJ_DIR)/usage.o \
 $(OBJ_DIR)/config.o \
 $(OBJ_DIR)/check.o
 
-# Get architecture
-ARCH=$(shell arch)
-ifeq ($(ARCH),x86_64)
-	ADDITIONAL_COPTS=
-else
-	ADDITIONAL_COPTS=-msse
-endif
 
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.
 CC=gcc
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\" -DNDEBUG
-COPTS=-Wall -Wextra -mtune=native -flto $(ADDITIONAL_COPTS) -O3 -ffast-math -I$(INCLUDE_DIR) $(DFLAGS)
-LDOPTS=-s -O3 -fuse-linker-plugin -flto
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\" 
+
+COPTS=-Wall -Wextra -I$(INCLUDE_DIR)
+ifdef DEBUG
+	COPTS+=-O0
+	DFLAGS+=-D__HAVE_DEBUG__ -g
+	LDOPTS=
+else
+	COPTS+=-O3 -mtune=native -flto -ffast-math
+
+	# Get architecture
+	ARCH=$(shell arch)
+	ifneq ($(ARCH),x86_64)
+		COPTS+=-msse		
+	endif
+
+  DFLAGS+=-DNDEBUG
+	LDOPTS=-s -O3 -fuse-linker-plugin -flto
+endif
+COPTS+=$(DFLAGS)
 
 .PHONY: clean install
 
@@ -66,11 +72,11 @@ $(TARGET): $(OBJS)
 
 # Compile main
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(COPTS) $(DFLAGS) -c -o $@ $<
+	$(CC) $(COPTS) -c -o $@ $<
 
 # Compile modules
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
-	$(CC) $(COPTS) $(DFLAGS) -c -o $@ $<
+	$(CC) $(COPTS) -c -o $@ $<
 
 clean:
 	@rm -rf $(RELEASE_DIR)/* $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
