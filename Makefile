@@ -52,12 +52,12 @@ ifdef DEBUG
 	DFLAGS+=-D__HAVE_DEBUG__ -g
 	LDOPTS=
 else
-	COPTS+=-O3 -mtune=native -flto -ffast-math
+	COPTS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
 
 	# Get architecture
 	ARCH=$(shell arch)
 	ifneq ($(ARCH),x86_64)
-		COPTS+=-msse		
+		COPTS+=-msse -mfpmath=sse		
 	endif
 
   DFLAGS+=-DNDEBUG
