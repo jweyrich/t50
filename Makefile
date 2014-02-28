@@ -81,10 +81,10 @@ $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(COPTS) -c -o $@ $<
 
 clean:
-	@rm -rf $(RELEASE_DIR)/* $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
+	@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
 	gzip -9 $(RELEASE_DIR)/t50.8.gz ./doc/t50.1
 	install $(RELEASE_DIR)/t50 /usr/sbin/
-	install $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
+	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
