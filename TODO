@@ -1,5 +1,25 @@
 T50 - Experimental Mixed Packet Injector
 
+Legend:
+ - Code unrelated
+ + Code related
+ * Ideas (t50 code unrelated)
+ % Ideas (t50 code related)
+
 March 1st, 2014
- *
+ - Improve t50 manpage documentation
+ - Create some standard test scripts
+ - Prepare project to use GNU build standard (use ./configure script)
+ - Create DEB and RPM packaging (binary, dev and source packages. Maybe an PPA for Ununtu and repository for Debian too!)
+ - Incorporate packaging on Makefile
+ + Support for IPv6?
+ + Are there any new protocols to implement?
+ + Support for OS/X and BSD (and, "maybe", Windows)?
+ % Add criteria "tcpdump" like on command line?
+ % Change "fork()" use to pthreads (thinking on Windows port)?
+ * Non Web GUI (using GTK+, since there is support for "Windows"!)?
+
+ 
+ 
+ 
 
