@@ -6,20 +6,22 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
-T50 5.5 - March ?, 2014
+T50 5.5 - March 1, 2014
  * Code compiles fine with LLVM clang 3.x;
  * SSE is enabled by default in x86-64 architecture (commented on Makefile);
- * Changed return type of module funcions to avoid minor common behaviors;
+ * Changed return type of module funcions;
  * Small corrections on modules functions;
  * All files were converted to UNIX text format;
  - gre_encapsulation() was still not used on ospf.c;
  - Calls to sendto with second parameter wrong;
  * Function ip_header() added to modules/ip.c.
  - On embeded systems the use of VLAs on modules functions can be hazardous
-    due to restricted stack space. Buffer reallocation on heap fix this problem.
- * cksum() 5 times faster.
+    due to restricted stack space. "Differential" buffer reallocation on heap fix this problem.
+ * cksum() 5 times faster now.
  * Using a trick to deal with pointers of multiple types on modules functions.
  * New Makefile.
+ * Minor fix on getOrdinalSuffix() function, no t50.c (11, 12 & 13 have a "th" suffix!).
+ + Added comments with FIX, FIXME, NOTE prefix for better code reading.
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.
