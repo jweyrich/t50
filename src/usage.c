@@ -83,7 +83,7 @@ void usage(void)
          "TCP Options:\n"
          "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
-         "    --data-offset NUM         TCP data offset                  (default %u)\n", (sizeof(struct tcphdr)/4));
+         "    --data-offset NUM         TCP data offset                  (default %d)\n", (int)(sizeof(struct tcphdr)/4));
   printf(" -F,--fin                     TCP FIN flag                     (default OFF)\n"
          " -S,--syn                     TCP SYN flag                     (default OFF)\n"
          " -R,--rst                     TCP RST flag                     (default OFF)\n"

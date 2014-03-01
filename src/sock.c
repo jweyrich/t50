@@ -19,6 +19,8 @@
 
 #include <common.h>
 
+/* FIXME: Is it not better to substitute ERROR() macros for perror() calls? */
+
 /* Socket configuration */
 socket_t sock(void)
 {
@@ -58,7 +60,9 @@ socket_t sock(void)
 		/* Setting SO_SNDBUF. */
 		if( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, len) < 0 )
 		{
-			if(errno == ENOBUFS)	break;
+			if(errno == ENOBUFS)	
+				break;
+
 			ERROR("error setting socket buffer");
 			exit(EXIT_FAILURE);
 		}

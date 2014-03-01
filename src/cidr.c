@@ -65,6 +65,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 		{
 			ERROR("internal error detecded -- please, report");
 			ERROR("cidr.hostid > MAXIMUM_IP_ADDRESSES: Probably a specific platform error");
+
 			exit(EXIT_FAILURE);
 		}
   }

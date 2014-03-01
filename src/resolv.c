@@ -46,7 +46,10 @@ in_addr_t resolv(char *name)
     for (res = res0; res; res = res->ai_next)
     {
       target = (struct sockaddr_in *) res->ai_addr;
-      if(target)
+
+			/* FIXME: Is this safe? The return type is
+                in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */
+      if (target)
       {
          switch (res->ai_family)
          {

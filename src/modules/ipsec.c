@@ -69,19 +69,6 @@ int ipsec(const socket_t fd, const struct config_options *o)
         sizeof(struct ip_esp_hdr)  + 
         esp_data);
 
-  /* IPSec AH Header structure making a pointer to IP Header structure. */
-  ip_auth          = (struct ip_auth_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  ip_auth->nexthdr = IPPROTO_ESP;
-  ip_auth->hdrlen  = o->ipsec.ah_length ? 
-    o->ipsec.ah_length : 
-    (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
-  ip_auth->spi     = htonl(__32BIT_RND(o->ipsec.ah_spi));
-  ip_auth->seq_no  = htonl(__32BIT_RND(o->ipsec.ah_sequence));
-
-  offset = sizeof(struct ip_auth_hdr);
-
-  buffer.ptr = (void *)ip_auth + offset;
-
   /*
    * IP Authentication Header (RFC 2402)
    *
@@ -101,6 +88,20 @@ int ipsec(const socket_t fd, const struct config_options *o)
    * |                                                               |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
+
+  /* IPSec AH Header structure making a pointer to IP Header structure. */
+  ip_auth          = (struct ip_auth_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  ip_auth->nexthdr = IPPROTO_ESP;
+  ip_auth->hdrlen  = o->ipsec.ah_length ? 
+    o->ipsec.ah_length : 
+    (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
+  ip_auth->spi     = htonl(__32BIT_RND(o->ipsec.ah_spi));
+  ip_auth->seq_no  = htonl(__32BIT_RND(o->ipsec.ah_sequence));
+
+  offset = sizeof(struct ip_auth_hdr);
+
+  buffer.ptr = (void *)ip_auth + offset;
+
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < ip_ah_icv; counter++)
     *buffer.byte_ptr++ = __8BIT_RND(0);
@@ -111,13 +112,13 @@ int ipsec(const socket_t fd, const struct config_options *o)
   ip_esp->seq_no = htonl(__32BIT_RND(o->ipsec.esp_sequence));
 
   offset += sizeof(struct ip_esp_hdr);
-
   buffer.ptr += sizeof(struct ip_esp_hdr);
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)
     *buffer.byte_ptr++ = __8BIT_RND(0);
 
+	/* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
 

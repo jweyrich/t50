@@ -76,6 +76,7 @@ void alloc_packet(size_t new_packet_size)
 {
   void *p;
 
+	/* Because 0 will free the buffer!!! */
   assert(new_packet_size != 0);
 
   if (new_packet_size > current_packet_size)

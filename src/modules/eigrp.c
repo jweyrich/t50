@@ -162,6 +162,9 @@ int eigrp(const socket_t fd, const struct config_options *o)
       for (counter = 0; counter < stemp; counter++)
         *buffer.byte_ptr++ = __8BIT_RND(0);
 
+			/* FIXME: Is this correct?! 
+                The code, above seems to use a variable size for digest (stemp)
+                and length (if o->eigrp_length != 0). */
       offset += EIGRP_TLEN_AUTH;
     }
   }

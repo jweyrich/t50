@@ -37,8 +37,9 @@ int checkConfigOptions(const struct config_options *o)
   }
 
   /* Sanitizing the CIDR. */
-  if (((o->bits < CIDR_MINIMUM) || (o->bits > CIDR_MAXIMUM)) && (o->bits != 0))
+  if ((o->bits != 0) && ((o->bits < CIDR_MINIMUM) || (o->bits > CIDR_MAXIMUM)))
   {
+		/* NOTE: Arbitrary array size... 48 is qword aligned on stack, i suppose! */
     char errstr[48];
 
     sprintf(errstr, "CIDR must be beewten %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
@@ -95,7 +96,7 @@ int checkConfigOptions(const struct config_options *o)
 #endif  /* __HAVE_TURBO__ */
 
     /* Warning CIDR mode. */
-    if (o->bits) 
+    if (o->bits != 0) 
       printf("performing DDoS...\n");
 
     printf("hit CTRL+C to break.\n");

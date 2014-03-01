@@ -69,6 +69,12 @@ static void ctrlc(int32_t signal)
   }
 #endif
 
+	/* FIXME: Is returning EXIT_SUCCESS a good idea?
+            Maybe we should return something like "2" to
+            represent an interruption...
+
+            If so, must change "initializeSignalHandlers()", below, to
+            treat some traps differently. */
   exit(EXIT_SUCCESS);
 }
 
@@ -152,11 +158,9 @@ int main(int argc, char *argv[])
   /* Setting socket file descriptor. */
   fd = sock();
 
-  /* Starting time counting. */
+  /* Initializing random seed. */
   gettimeofday(&seed, NULL);
-
-  /* Using microseconds as seed. */
-  srand((unsigned) seed.tv_usec);
+  srand((unsigned)seed.tv_usec);
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
@@ -186,6 +190,7 @@ int main(int argc, char *argv[])
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
+		/* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
@@ -257,6 +262,7 @@ int main(int argc, char *argv[])
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
+		/* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
