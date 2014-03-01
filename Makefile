@@ -85,6 +85,6 @@ clean:
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
-	gzip -9 $(RELEASE_DIR)/t50.8.gz ./doc/t50.1
+	gzip -9c ./doc/t50.8 > $(RELEASE_DIR)/t50.8.gz  
 	install $(RELEASE_DIR)/t50 /usr/sbin/
 	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
