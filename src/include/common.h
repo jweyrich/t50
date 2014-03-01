@@ -215,9 +215,11 @@ extern uint32_t NETMASK_RND(uint32_t);
 #define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s); fflush(stderr);
 #endif
 
+/* The packet buffer. Reallocated as needed! */
 extern uint8_t *packet;
 extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
 
+/* Realloc packet as needed. Used on module functions. */
 extern void alloc_packet(size_t);
 
 /* Common routines used by code */

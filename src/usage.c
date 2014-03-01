@@ -43,8 +43,7 @@ void usage(void)
 #ifdef  __HAVE_TURBO__
   			"    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */
-	);
-  printf(" -v,--version                 Print version and exit \n"
+        " -v,--version                 Print version and exit \n"
   			" -h,--help                    Display this help and exit\n\n"
          "GRE Options:\n"
          "    --gre-seq-present         GRE sequence # present           (default OFF)\n"
@@ -84,7 +83,7 @@ void usage(void)
          "TCP Options:\n"
          "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
-         "    --data-offset NUM         TCP data offset                  (default %d)\n", (uint32_t)(sizeof(struct tcphdr)/4));
+         "    --data-offset NUM         TCP data offset                  (default %u)\n", (sizeof(struct tcphdr)/4));
   printf(" -F,--fin                     TCP FIN flag                     (default OFF)\n"
          " -S,--syn                     TCP SYN flag                     (default OFF)\n"
          " -R,--rst                     TCP RST flag                     (default OFF)\n"
