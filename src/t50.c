@@ -113,11 +113,13 @@ static const char *getOrdinalSuffix(unsigned int n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
-  switch (n % 10) {
-    case 1: return suffixes[0];
-		case 2: return suffixes[1]; 
-    case 3: return suffixes[2];
-  }
+	/* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
+	if ((n < 11) || (n > 13))
+		switch (n % 10) {
+			case 1: return suffixes[0];
+			case 2: return suffixes[1]; 
+			case 3: return suffixes[2];
+		}
 
   return suffixes[3];
 }
