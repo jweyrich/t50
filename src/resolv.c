@@ -32,7 +32,9 @@ in_addr_t resolv(char *name)
     
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = 0;
-    error = getaddrinfo(name, "http", &hints, &res0);
+
+		/* FIX: The "service" is not important here! */
+    error = getaddrinfo(name, NULL, &hints, &res0);
     
     if (error)
     {
