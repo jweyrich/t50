@@ -133,8 +133,9 @@ int main(int argc, char *argv[])
   /* Command line interface options. */
   struct config_options *o;
 
+	/* NOTE: Random seed don't need to be so precise! */
   /* Seed to use with 'srand()'. */
-  struct timeval seed;
+  //struct timeval seed;
 
   /* Counter and random destination address. */
   uint32_t rand_daddr;
@@ -160,9 +161,11 @@ int main(int argc, char *argv[])
   /* Setting socket file descriptor. */
   fd = sock();
 
+	/* NOTE: Random seed don't need to be so precise! */
   /* Initializing random seed. */
-  gettimeofday(&seed, NULL);
-  srand((unsigned)seed.tv_usec);
+  //gettimeofday(&seed, NULL);
+  //srand((unsigned)seed.tv_usec);
+  srand(time(NULL));
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
