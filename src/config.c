@@ -250,7 +250,7 @@ static struct config_options o = {
     0,                          /* default LSS Extended TLV options       */
     0,                          /* do not use authentication by default   */
     1,                          /* default authentication key ID          */
-    0 },                        /* default authentication sequence        */
+    0 }                         /* default authentication sequence        */
 };
 
 /* NOTE: Declare long_opt[] here as static makes sense! */
@@ -493,7 +493,7 @@ static const struct option long_opt[] = {
   { "ospf-authentication",    no_argument,       NULL, OPTION_OSPF_AUTHENTICATION    },
   { "ospf-auth-key-id",       required_argument, NULL, OPTION_OSPF_AUTH_KEY_ID       },
   { "ospf-auth-sequence",     required_argument, NULL, OPTION_OSPF_AUTH_SEQUENCE     },
-  { 0,                        0,                 NULL, 0                             },
+  { 0,                        0,                 NULL, 0                             }
 };
 
 /* CLI options configuration */
