@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
   }
   
   /* Execute if flood or while threshold greater than 0. */
-  while(o->flood || o->threshold--)
+  while (o->flood || o->threshold--)
   {
     /* Setting the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
