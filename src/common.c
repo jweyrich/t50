@@ -33,6 +33,7 @@ char *mod_acronyms[]   = {
 				"IPSEC",
 				"EIGRP",
 				"OSPF",
+				/* Add new acronyms here */
 				"T50",
 				NULL
 };
@@ -51,13 +52,14 @@ char *mod_names[] = {
 				"Internet Protocol Security (AH/ESP)",
 				"Enhanced Interior Gateway Routing Protocol",
 				"Open Shortest Path First",
+				/* Add new "names" here */
 				NULL
 };
 
 uint8_t *packet = NULL;
 size_t current_packet_size = 0;
 
-/* NOTE: This routine cannot be inlined due to its compliexity. */
+/* NOTE: This routine shouldn't be inlined due to its compliexity. */
 uint32_t NETMASK_RND(uint32_t foo)
 {
   uint32_t t;
