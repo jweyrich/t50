@@ -28,31 +28,6 @@ static const char *const months[] =
   { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
 
-static struct launch_t50_modules 
-{
-  int32_t proto;
-  /* NOTE: Return type of modules changed to centralize error handling. */
-  int (*raw) (const socket_t, const struct config_options *);
-} t50[] = 
-  {
-    /* NOTE: casting to (void *) unecessary! */
-    { IPPROTO_ICMP,  icmp   },
-    { IPPROTO_IGMP,  igmpv1 },
-    { IPPROTO_IGMP,  igmpv3 },
-    { IPPROTO_TCP,   tcp    },
-    { IPPROTO_EGP,   egp    },
-    { IPPROTO_UDP,   udp    },
-    { IPPROTO_UDP,   ripv1  },
-    { IPPROTO_UDP,   ripv2  },
-    { IPPROTO_DCCP,  dccp   },
-    { IPPROTO_RSVP,  rsvp   },
-    { IPPROTO_AH,    ipsec  },
-    { IPPROTO_EIGRP, eigrp  },
-    { IPPROTO_OSPF,  ospf   },
-    { 0, NULL }
-  };
-#define NUM_MODULES ((sizeof(t50) / sizeof(t50[0])) - 1)
-
 /* This function handles Control-C (^C) */
 static void ctrlc(int32_t signal)
 {
@@ -143,6 +118,8 @@ int main(int argc, char *argv[])
   /* CIDR host identifier and first IP address. */
   struct cidr *cidr_ptr;
 
+	int num_modules;
+
   initializeSignalHandlers();
 
   /* Configuring command line interface options. */
@@ -154,9 +131,11 @@ int main(int argc, char *argv[])
   if (!checkConfigOptions(o))
     exit(EXIT_FAILURE);
 
+	num_modules = getNumberOfRegisteredModules();
+
   /* Sanitizing the threshold. */
   if (o->ip.protocol == IPPROTO_T50)
-    o->threshold -= (o->threshold % NUM_MODULES);
+    o->threshold -= (o->threshold % num_modules);
 
   /* Setting socket file descriptor. */
   fd = sock();
@@ -219,10 +198,10 @@ int main(int argc, char *argv[])
     if (o->ip.protocol != IPPROTO_T50)
     {
       /* Getting the correct protocol. */
-      o->ip.protocol = t50[o->ip.protoname].proto;
+      o->ip.protocol = mod_table[o->ip.protoname].protocol_id;
 
       /* Launching t50 module. */
-      if (t50[o->ip.protoname].raw(fd, o))
+      if (mod_table[o->ip.protoname].func(fd, o))
       {
         perror("Error sending packet");
         close(fd);
@@ -233,16 +212,16 @@ int main(int argc, char *argv[])
     {
       /* NOTE: Using single pointer instead of calculating
                the pointers in every iteration. */               
-      struct launch_t50_modules *p;
+      modules_table_t *p;
 
       /* Sending T50 packets. */ 
-      for (p = t50; p->raw != NULL; p++)
+      for (p = mod_table; p->func != NULL; p++)
       {
         /* Getting the correct protocol. */
-        o->ip.protocol = p->proto;
+        o->ip.protocol = p->protocol_id;
 
         /* Launching t50 module. */
-        if (p->raw(fd, o))
+        if (p->func(fd, o))
         {
           perror("Error sending packet");
           close(fd);
@@ -251,7 +230,7 @@ int main(int argc, char *argv[])
       }
 
       /* Sanitizing the threshold. */
-      o->threshold -= NUM_MODULES - 1;
+      o->threshold -= num_modules - 1;
 
       /* Reseting protocol. */
       o->ip.protocol = IPPROTO_T50;

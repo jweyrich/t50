@@ -19,44 +19,6 @@
 
 #include <common.h>
 
-char *mod_acronyms[]   = {
-				"ICMP",
-				"IGMPv1",
-				"IGMPv3",
-				"TCP",
-				"EGP",
-				"UDP",
-				"RIPv1",
-				"RIPv2",
-				"DCCP",
-				"RSVP",
-				"IPSEC",
-				"EIGRP",
-				"OSPF",
-				/* Add new acronyms here */
-				"T50",
-				NULL
-};
-
-char *mod_names[] = {
-				"Internet Control Message Protocol",
-				"Internet Group Message Protocol v1",
-				"Internet Group Message Protocol v3",
-				"Transmission Control Protocol",
-				"Exterior Gateway Protocol",
-				"User Datagram Protocol",
-				"Routing Information Protocol v1",
-				"Routing Information Protocol v2",
-				"Datagram Congestion Control Protocol",
-				"Resource ReSerVation Protocol",
-				"Internet Protocol Security (AH/ESP)",
-				"Enhanced Interior Gateway Routing Protocol",
-				"Open Shortest Path First",
-				/* Add new "names" here */
-				"T50 \'Protocol\'",		/* This was missing from list! */
-				NULL
-};
-
 uint8_t *packet = NULL;
 size_t current_packet_size = 0;
 
@@ -94,3 +56,15 @@ void alloc_packet(size_t new_packet_size)
     current_packet_size = new_packet_size;
   }
 }
+
+/* Scan the list of modules, returning the number of itens in the list. */
+int getNumberOfRegisteredModules(void)
+{
+	int n;
+	modules_table_t *ptbl;
+
+	for (n = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, n++);
+
+	return n;
+}
+

@@ -79,7 +79,7 @@ int checkConfigOptions(const struct config_options *o)
       fprintf(stderr,
           "%s: protocol %s cannot have threshold smaller than %d\n",
           PACKAGE,
-          mod_acronyms[o->ip.protoname],
+          mod_table[o->ip.protoname].acronym,
           T50_THRESHOLD_MIN);
       fflush(stderr);
       return 0;

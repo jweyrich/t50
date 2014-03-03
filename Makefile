@@ -38,8 +38,8 @@ $(OBJ_DIR)/resolv.o \
 $(OBJ_DIR)/sock.o \
 $(OBJ_DIR)/usage.o \
 $(OBJ_DIR)/config.o \
-$(OBJ_DIR)/check.o
-
+$(OBJ_DIR)/check.o \
+$(OBJ_DIR)/modules.o
 
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.

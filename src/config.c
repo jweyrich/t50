@@ -496,6 +496,44 @@ static const struct option long_opt[] = {
   { 0,                        0,                 NULL, 0                             }
 };
 
+/* Used on getsubopt(), below */
+/* NOTE: This is called just once! */
+static char **getTokensList(void)
+{
+	modules_table_t *ptbl;
+	char **p;
+	int items, i;
+
+	/* Includes T50 and NULL tokens. */
+	items = 2 + getNumberOfRegisteredModules();
+
+	/* create and fills tokens list */
+	p = (char **)malloc(sizeof(char *) * items);
+	for (i = 0, ptbl = mod_table; ptbl->acronym != NULL; ptbl++, i++)
+		p[i] = ptbl->acronym;
+	p[i++] = "T50";
+	p[i] = NULL;
+
+	/* NOTE: Just remember to free this list! */
+	return p;
+}
+
+/* List procotolos on modules table */
+static void listProtocols(void)
+{
+	modules_table_t *ptbl;
+	int counter;
+
+  printf("List of supported protocols:\n");
+
+	for (counter = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, counter++)
+    printf("\t%2d PROTO = %-6s (%s)\n",
+           counter,
+           ptbl->acronym,
+           ptbl->description);
+
+}
+
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char ** argv) 
 {
@@ -504,6 +542,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
   /* The following variables will be used by 'getsubopt()'. */
   char  *optionp, *valuep, *tmp_ptr;
+	char **tokens;
   int opt_ind;
 
   /* Checking command line interface options. */
@@ -533,14 +572,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 #endif  /* __HAVE_TURBO__ */
 
       case OPTION_LIST_PROTOCOL:
-        fprintf(stdout,
-            "List of supported protocols:\n");
-        for (counter = 0; mod_acronyms[counter] != NULL ; counter++)
-          fprintf(stdout,
-              "\t%2d PROTO = %-6s (%s)\n",
-              counter+1,
-              mod_acronyms[counter],
-              mod_names[counter]);
+				listProtocols();
         exit(EXIT_SUCCESS);
         break;
 
@@ -597,9 +629,11 @@ struct config_options *getConfigOptions(int argc, char ** argv)
       case OPTION_IP_PROTOCOL:
         optionp = optarg;
 
+				tokens = getTokensList();
+
         while (*optionp != '\0')
         {
-          switch (counter = getsubopt(&optionp, mod_acronyms, &valuep))
+          switch (counter = getsubopt(&optionp, tokens, &valuep))
           {
             case MODULE_ICMP:
               o.ip.protocol  = IPPROTO_ICMP;
@@ -651,6 +685,8 @@ struct config_options *getConfigOptions(int argc, char ** argv)
               fflush(stderr);
               exit(EXIT_FAILURE);
           }
+
+					free(tokens); /* Don't need it anymore! */
         } 
         break;
 

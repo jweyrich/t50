@@ -67,6 +67,7 @@
 #include <protocol/rsvp.h>
 #include <protocol/eigrp.h>
 #include <protocol/tcp_options.h>
+/* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
 /* NOTE: This will do nothing. Used only to prevent warnings. */
 #define UNUSED_PARAM(x) { (x) = (x); }
@@ -77,6 +78,9 @@
 /* Data types */
 typedef uint32_t in_addr_t;
 typedef int socket_t;
+
+/* NOTE: This is HERE just to not redefine socket_t! */
+#include <modules.h>
 
 /* This will ease the buffers pointers manipulations. */
 typedef union {
@@ -98,9 +102,7 @@ typedef union {
 /* #define INADDR_ANY ((in_addr_t) 0) */ /* NOTE: Already defined @ linux/in.h */
 #define IPPORT_ANY ((uint16_t) 0)
 
-extern char *mod_acronyms[];
-extern char *mod_names[];
-
+/* FIXME: I will get rid of this soon (FRED). */
 /* OBS: Used only in config.c.
         Isn't better to move this definitions?! */
 enum t50_module
@@ -223,6 +225,8 @@ extern size_t current_packet_size; /* available if necessary! updated by alloc_p
 extern void alloc_packet(size_t);
 
 /* Common routines used by code */
+int getNumberOfRegisteredModules(void);
+
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
 /* Command line interface options validation. */
 extern int checkConfigOptions(const struct config_options *);
