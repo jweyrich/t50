@@ -426,7 +426,7 @@ int tcp(const socket_t fd, const struct config_options *o)
 
   offset = sizeof(struct tcphdr) + tcpolen;
 
-  /* PSEUDO Header structure making a pointer to Checksum. */
+  /* Fill PSEUDO Header structure. */
   pseudo           = (struct psdhdr *)buffer.ptr;
   pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
