@@ -22,6 +22,8 @@
 /* Validate options */
 int checkConfigOptions(const struct config_options *o)
 {
+	int minThreshold;
+
   /* Check if we have root priviledges. */
   if ( getuid() != 0 )
   {
@@ -74,13 +76,15 @@ int checkConfigOptions(const struct config_options *o)
 #endif  /* __HAVE_TURBO__ */
 
     /* Sanitizing the threshold. */
-    if ((o->ip.protocol == IPPROTO_T50) && (o->threshold < T50_THRESHOLD_MIN))
+		minThreshold = getNumberOfRegisteredModules();
+
+    if ((o->ip.protocol == IPPROTO_T50) && (o->threshold < (unsigned)minThreshold))
     {
       fprintf(stderr,
           "%s: protocol %s cannot have threshold smaller than %d\n",
           PACKAGE,
           mod_table[o->ip.protoname].acronym,
-          T50_THRESHOLD_MIN);
+          minThreshold);
       fflush(stderr);
       return 0;
     }

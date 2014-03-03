@@ -102,43 +102,6 @@ typedef union {
 /* #define INADDR_ANY ((in_addr_t) 0) */ /* NOTE: Already defined @ linux/in.h */
 #define IPPORT_ANY ((uint16_t) 0)
 
-/* FIXME: I will get rid of this soon (FRED). */
-/* OBS: Used only in config.c.
-        Isn't better to move this definitions?! */
-enum t50_module
-{
-  MODULE_ICMP           = 0,
-#define MODULE_ICMP     MODULE_ICMP
-  MODULE_IGMPv1,
-#define MODULE_IGMPv1   MODULE_IGMPv1
-  MODULE_IGMPv3,
-#define MODULE_IGMPv3   MODULE_IGMPv3
-  MODULE_TCP,
-#define MODULE_TCP      MODULE_TCP
-  MODULE_EGP,
-#define MODULE_EGP      MODULE_EGP
-  MODULE_UDP,
-#define MODULE_UDP      MODULE_UDP
-  MODULE_RIPv1,
-#define MODULE_RIPv1    MODULE_RIPv1
-  MODULE_RIPv2,
-#define MODULE_RIPv2    MODULE_RIPv2
-  MODULE_DCCP,
-#define MODULE_DCCP     MODULE_DCCP
-  MODULE_RSVP,
-#define MODULE_RSVP     MODULE_RSVP
-  MODULE_IPSEC,
-#define MODULE_IPSEC    MODULE_IPSEC
-  MODULE_EIGRP,
-#define MODULE_EIGRP    MODULE_EIGRP
-  MODULE_OSPF,
-#define MODULE_OSPF     MODULE_OSPF
-
-  MODULE_T50,
-# define MODULE_T50        MODULE_T50
-# define T50_THRESHOLD_MIN MODULE_T50
-};
-
 /* Global common protocol definitions used by code */
 #define AUTH_TYPE_HMACNUL 0x0000
 #define AUTH_TYPE_HMACMD5 0x0002

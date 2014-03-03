@@ -39,8 +39,8 @@ static struct config_options o = {
     0,                          /* default identification                 */
     0,                          /* default fragmentation offset           */
     255,                        /* default time to live                   */
-    IPPROTO_TCP,                /* default packet protocol                */
-    MODULE_TCP,                 /* default protocol name                  */
+    0 /*IPPROTO_TCP*/,          /* default packet protocol                */
+    0 /*MODULE_TCP*/,           /* default protocol name                  */
     INADDR_ANY,                 /* source address                         */
     INADDR_ANY },               /* destination address                    */
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                                  */
@@ -534,6 +534,22 @@ static void listProtocols(void)
 
 }
 
+static void setDefaultModuleOption(void)
+{
+  modules_table_t *p;
+  int index;
+
+  for (index = 0, p = mod_table; p->func != NULL; p++, index++)
+  {
+    if (strcmp(p->acronym, "TCP") == 0)
+    {
+      o.ip.protocol = p->protocol_id;
+      o.ip.protoname = index;
+      break;
+    }
+  }
+}
+
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char ** argv) 
 {
@@ -544,6 +560,8 @@ struct config_options *getConfigOptions(int argc, char ** argv)
   char  *optionp, *valuep, *tmp_ptr;
 	char **tokens;
   int opt_ind;
+
+  setDefaultModuleOption();
 
   /* Checking command line interface options. */
   opt_ind = 1;
@@ -633,61 +651,25 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
         while (*optionp != '\0')
         {
-          switch (counter = getsubopt(&optionp, tokens, &valuep))
-          {
-            case MODULE_ICMP:
-              o.ip.protocol  = IPPROTO_ICMP;
-              o.ip.protoname = counter; break;
-            case MODULE_IGMPv1:
-              o.ip.protocol  = IPPROTO_IGMP;
-              o.ip.protoname = counter; break;
-            case MODULE_IGMPv3:
-              o.ip.protocol  = IPPROTO_IGMP;
-              o.ip.protoname = counter; break;
-            case MODULE_TCP:
-              o.ip.protocol  = IPPROTO_TCP;
-              o.ip.protoname = counter; break;
-            case MODULE_EGP:
-              o.ip.protocol  = IPPROTO_EGP;
-              o.ip.protoname = counter; break;
-            case MODULE_UDP:
-              o.ip.protocol  = IPPROTO_UDP;
-              o.ip.protoname = counter; break;
-            case MODULE_RIPv1:
-              o.ip.protocol  = IPPROTO_UDP;
-              o.ip.protoname = counter; break;
-            case MODULE_RIPv2:
-              o.ip.protocol  = IPPROTO_UDP;
-              o.ip.protoname = counter; break;
-            case MODULE_DCCP:
-              o.ip.protocol  = IPPROTO_DCCP;
-              o.ip.protoname = counter; break;
-            case MODULE_RSVP:
-              o.ip.protocol  = IPPROTO_RSVP;
-              o.ip.protoname = counter; break;
-            case MODULE_IPSEC:
-              o.ip.protocol  = IPPROTO_AH;
-              o.ip.protoname = counter; break;
-            case MODULE_EIGRP:
-              o.ip.protocol  = IPPROTO_EIGRP;
-              o.ip.protoname = counter; break;
-            case MODULE_OSPF:
-              o.ip.protocol  = IPPROTO_OSPF;
-              o.ip.protoname = counter; break;
-            case MODULE_T50:
-              o.ip.protocol  = IPPROTO_T50;
-              o.ip.protoname = counter; break;
-            default:
-              fprintf(stderr,
-                  "%s(): Protocol %s is not implemented\n",
-                  __FUNCTION__,
-                  optarg);
-              fflush(stderr);
-              exit(EXIT_FAILURE);
-          }
+					counter = getsubopt(&optionp, tokens, &valuep);
+					if (counter == -1)
+					{
+            fprintf(stderr,
+                "%s(): Protocol %s is not implemented\n",
+                __FUNCTION__,
+                optarg);
+            fflush(stderr);
+            exit(EXIT_FAILURE);
+					}
 
-					free(tokens); /* Don't need it anymore! */
+					if (strcmp(tokens[counter], "T50") == 0)
+						o.ip.protocol = IPPROTO_T50;
+					else
+						o.ip.protocol = mod_table[counter].protocol_id;
+					o.ip.protoname = counter;
         } 
+
+        free(tokens); /* Don't need it anymore! */
         break;
 
       /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
