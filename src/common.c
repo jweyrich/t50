@@ -53,6 +53,7 @@ char *mod_names[] = {
 				"Enhanced Interior Gateway Routing Protocol",
 				"Open Shortest Path First",
 				/* Add new "names" here */
+				"T50 \'Protocol\'",		/* This was missing from list! */
 				NULL
 };
 
