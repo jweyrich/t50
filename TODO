@@ -6,6 +6,10 @@ Legend:
  * Ideas (t50 code unrelated)
  % Ideas (t50 code related)
 
+March 3rd, 2014
+ + Change the way modules are declared (MFC style, maybe?).
+     And change config.c and common.c too.
+
 March 1st, 2014
  - Improve t50 manpage documentation
  - Create some standard test scripts
