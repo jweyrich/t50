@@ -23,6 +23,7 @@ T50 5.5 - March 1, 2014
  * Minor fix on getOrdinalSuffix() function, no t50.c (11, 12 & 13 have a "th" suffix!).
  + Added comments with FIX, FIXME, NOTE prefix for better code reading.
  * Changed the way modules table are declared. See modules.c for advice.
+ * Module table are not order dependant anymore!
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.
