@@ -22,7 +22,7 @@
 /* FIXME: Is it not better to substitute ERROR() macros for perror() calls? */
 
 /* Socket configuration */
-socket_t sock(void)
+socket_t createSocket(void)
 {
 	socket_t fd;
 	uint32_t len;

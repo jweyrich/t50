@@ -155,7 +155,7 @@ struct psdhdr
   uint16_t  len;                    /* header length               */
 };
 
-/* Common macros used by code */
+/* Randomizer macros and function */
 #define __32BIT_RND(foo) ((foo) == 0 ? (uint32_t)rand() : (uint32_t)(foo))
 #define __24BIT_RND(foo) ((foo) == 0 ? rand() >> 8 : (foo))
 #define __16BIT_RND(foo) ((foo) == 0 ? rand() >> 16 : (foo))
@@ -166,12 +166,12 @@ struct psdhdr
 #define __4BIT_RND(foo)  ((foo) == 0 ? rand() >> 28 : (foo))
 #define __3BIT_RND(foo)  ((foo) == 0 ? rand() >> 29 : (foo))
 #define __2BIT_RND(foo)  ((foo) == 0 ? (uint32_t)(rand() >> 30) : (uint32_t)(foo))
-
 #define INADDR_RND(foo) __32BIT_RND(foo)
 #define IPPORT_RND(foo) __16BIT_RND(foo)
 
 extern uint32_t NETMASK_RND(uint32_t);
 
+/* ERROR macro */
 #ifdef __HAVE_DEBUG__
 #define ERROR(s) \
   fprintf(stderr, "%s: %s at %s, line %d\n", PACKAGE, s, __FILE__, \
@@ -189,7 +189,6 @@ extern void alloc_packet(size_t);
 
 /* Common routines used by code */
 int getNumberOfRegisteredModules(void);
-
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
 /* Command line interface options validation. */
 extern int checkConfigOptions(const struct config_options *);
@@ -200,7 +199,7 @@ extern struct config_options *getConfigOptions(int, char **);
 /* IP address and name resolve. */
 extern in_addr_t resolv(char *);
 /* Socket configuration. */
-extern socket_t sock(void);
+extern socket_t createSocket(void);
 /* Show version info */
 extern void show_version(void);
 /* Help and usage message. */

@@ -108,16 +108,13 @@ int main(int argc, char *argv[])
   /* Command line interface options. */
   struct config_options *o;
 
-	/* NOTE: Random seed don't need to be so precise! */
-  /* Seed to use with 'srand()'. */
-  //struct timeval seed;
-
   /* Counter and random destination address. */
   uint32_t rand_daddr;
 
   /* CIDR host identifier and first IP address. */
   struct cidr *cidr_ptr;
 
+	modules_table_t *ptbl;
 	int num_modules;
 
   initializeSignalHandlers();
@@ -138,12 +135,9 @@ int main(int argc, char *argv[])
     o->threshold -= (o->threshold % num_modules);
 
   /* Setting socket file descriptor. */
-  fd = sock();
+  fd = createSocket();
 
 	/* NOTE: Random seed don't need to be so precise! */
-  /* Initializing random seed. */
-  //gettimeofday(&seed, NULL);
-  //srand((unsigned)seed.tv_usec);
   srand(time(NULL));
 
 #ifdef  __HAVE_TURBO__
@@ -194,14 +188,16 @@ int main(int argc, char *argv[])
 	  	o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
     }   
 
-    /* Sending ICMP/IGMP/TCP/UDP packets. */
+    /* Sending ICMP/IGMP/TCP/UDP/... packets. */
     if (o->ip.protocol != IPPROTO_T50)
     {
+			ptbl = &mod_table[o->ip.protoname];
+
       /* Getting the correct protocol. */
-      o->ip.protocol = mod_table[o->ip.protoname].protocol_id;
+      o->ip.protocol = ptbl->protocol_id;
 
       /* Launching t50 module. */
-      if (mod_table[o->ip.protoname].func(fd, o))
+      if (ptbl->func(fd, o))
       {
         perror("Error sending packet");
         close(fd);
@@ -212,16 +208,14 @@ int main(int argc, char *argv[])
     {
       /* NOTE: Using single pointer instead of calculating
                the pointers in every iteration. */               
-      modules_table_t *p;
-
       /* Sending T50 packets. */ 
-      for (p = mod_table; p->func != NULL; p++)
+      for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
       {
         /* Getting the correct protocol. */
-        o->ip.protocol = p->protocol_id;
+        o->ip.protocol = ptbl->protocol_id;
 
         /* Launching t50 module. */
-        if (p->func(fd, o))
+        if (ptbl->func(fd, o))
         {
           perror("Error sending packet");
           close(fd);

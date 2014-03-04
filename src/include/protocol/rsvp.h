@@ -51,6 +51,7 @@ enum rsvp_type{
 	RSVP_MESSAGE_TYPE_NOTIFY,
 #define RSVP_MESSAGE_TYPE_NOTIFY      RSVP_MESSAGE_TYPE_NOTIFY
 };
+
 /*
  * Resource ReSerVation Protocol (RSVP) (RFC 2205)
  *
@@ -71,6 +72,7 @@ enum rsvp_type{
 #define RSVP_OBJECT_HEADER_LENGTH \
 			(sizeof(uint16_t) + \
 			(sizeof(uint8_t) * 2))
+
 /* RSVP Object Class */
 enum rsvp_object_class{
 	RSVP_OBJECT_SESSION         = 1,
@@ -128,6 +130,7 @@ enum tspec_service{
 			TSPEC_TOKEN_BUCKET_LENGTH : \
 		0)
 };
+
 /* RSVP ADSPEC Class Service */
 enum adspec_service{
 #define ADSPEC_MESSAGE_HEADER  4
@@ -162,7 +165,6 @@ enum adspec_service{
 				ADSPEC_CONTROLLED_LENGTH : \
 			0))
 };
-
 
 /* RSVP PROTOCOL STRUCTURES
 

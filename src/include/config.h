@@ -244,7 +244,6 @@ enum {
 	OPTION_OSPF_AUTH_SEQUENCE,
 };
 
-
 /* Config structures */
 struct cidr{
 	uint32_t  hostid;                 /* hosts identifiers           */

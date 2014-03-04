@@ -536,14 +536,15 @@ static void listProtocols(void)
 
 static void setDefaultModuleOption(void)
 {
-  modules_table_t *p;
+  modules_table_t *ptbl;
   int index;
 
-  for (index = 0, p = mod_table; p->func != NULL; p++, index++)
+  for (index = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, index++)
   {
-    if (strcmp(p->acronym, "TCP") == 0)
+		/* FIXME: Is string comparison the best way?! */
+    if (strcmp(ptbl->acronym, "TCP") == 0)
     {
-      o.ip.protocol = p->protocol_id;
+      o.ip.protocol = ptbl->protocol_id;
       o.ip.protoname = index;
       break;
     }
@@ -565,7 +566,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
   /* Checking command line interface options. */
   opt_ind = 1;
-  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, &opt_ind)) != -1)
+  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, &opt_ind)) != -1 )
   {
     switch (cli_opts)
     {
