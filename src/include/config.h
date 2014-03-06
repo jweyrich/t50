@@ -245,7 +245,7 @@ enum {
 };
 
 /* Config structures */
-struct cidr{
+struct cidr {
 	uint32_t  hostid;                 /* hosts identifiers           */
 	in_addr_t __1st_addr;             /* first IP address            */
 };
@@ -518,4 +518,5 @@ struct config_options {
 		uint32_t  sequence;       /* authentication sequence     */
 	} ospf;
 };
+
 #endif /* CONFIG_H */

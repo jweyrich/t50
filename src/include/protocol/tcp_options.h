@@ -22,22 +22,27 @@
 
 #include <common.h>
 
-enum tcp_option{
-	TCPOPT_EOL                  = 0,
-#define TCPOPT_EOL                    TCPOPT_EOL
-	TCPOPT_NOP,
-#define TCPOPT_NOP                    TCPOPT_NOP
-	TCPOPT_MSS,
-#define TCPOPT_MSS                    TCPOPT_MSS
-#define TCPOLEN_MSS            4
-	TCPOPT_WSOPT,
-#define TCPOPT_WSOPT                  TCPOPT_WSOPT
-#define TCPOLEN_WSOPT          3
-	TCPOPT_SACK_OK,
-#define TCPOPT_SACK_OK                TCPOPT_SACK_OK
-#define TCPOLEN_SACK_OK        2
-	TCPOPT_SACK_EDGE,
-#define TCPOPT_SACK_EDGE              TCPOPT_SACK_EDGE
+#define TCPOPT_EOL        0
+#define TCPOPT_NOP        1
+#define TCPOPT_MSS        2
+#define TCPOPT_WSOPT      3
+#define TCPOPT_SACK_OK    4
+#define TCPOPT_SACK_EDGE  5
+#define TCPOPT_TSOPT      8
+#define TCPOPT_CC         11
+#define TCPOPT_CC_NEW     12
+#define TCPOPT_CC_ECHO    13
+#define TCPOPT_MD5        19
+#define TCPOPT_AO         29
+
+#define TCPOLEN_MSS       4
+#define TCPOLEN_WSOPT     3
+#define TCPOLEN_SACK_OK   2
+#define TCPOLEN_TSOPT     10
+#define TCPOLEN_CC        6
+#define TCPOLEN_MD5       18
+#define TCPOLEN_AO        20
+
 /*
  * TCP Selective Acknowledgement Options (SACK) (RFC 2018)
  *
@@ -49,24 +54,8 @@ enum tcp_option{
  * of 3 SACK blocks will be allowed in this case.
  */
 #define TCPOLEN_SACK_EDGE(foo) \
-			((foo * (sizeof(uint32_t) * 2)) + \
+			(((foo) * (sizeof(uint32_t) * 2)) + \
 			TCPOLEN_SACK_OK)
-	TCPOPT_TSOPT                = 8,
-#define TCPOPT_TSOPT                  TCPOPT_TSOPT
-#define TCPOLEN_TSOPT          10
-	TCPOPT_CC                   = 11,
-#define TCPOPT_CC                     TCPOPT_CC
-	TCPOPT_CC_NEW,
-#define TCPOPT_CC_NEW                 TCPOPT_CC_NEW
-	TCPOPT_CC_ECHO,
-#define TCPOPT_CC_ECHO                TCPOPT_CC_ECHO
-#define TCPOLEN_CC             6
-	TCPOPT_MD5                  = 19,
-#define TCPOPT_MD5                    TCPOPT_MD5
-#define TCPOLEN_MD5            18
-	TCPOPT_AO                   = 29,
-#define TCPOPT_AO                     TCPOPT_AO
-#define TCPOLEN_AO             20
 
 /*
  * Transmission Control Protocol (TCP) (RFC 793)
@@ -78,26 +67,15 @@ enum tcp_option{
  *  zeros.
  */
 #define TCPOLEN_PADDING(foo) \
-			((foo & 3) ? \
-				sizeof(uint32_t) - (foo & 3) : \
-			0)
-};
+			(((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
+
 /* TCP Options bitmask. */
-enum tcp_option_bitmask{
-	TCP_OPTION_MSS              = 0x01,
-#define TCP_OPTION_MSS                TCP_OPTION_MSS
-	TCP_OPTION_WSOPT            = 0x02,
-#define TCP_OPTION_WSOPT              TCP_OPTION_WSOPT
-	TCP_OPTION_TSOPT            = 0x04,
-#define TCP_OPTION_TSOPT              TCP_OPTION_TSOPT
-	TCP_OPTION_SACK_OK          = 0x08,
-#define TCP_OPTION_SACK_OK            TCP_OPTION_SACK_OK
-	TCP_OPTION_CC               = 0x10,
-#define TCP_OPTION_CC                 TCP_OPTION_CC
-	TCP_OPTION_CC_NEXT          = 0x20,
-#define TCP_OPTION_CC_NEXT            TCP_OPTION_CC_NEXT
-	TCP_OPTION_SACK_EDGE        = 0x40,
-#define TCP_OPTION_SACK_EDGE          TCP_OPTION_SACK_EDGE
-};
+#define TCP_OPTION_MSS        0x01
+#define TCP_OPTION_WSOPT      0x02
+#define TCP_OPTION_TSOPT      0x04
+#define TCP_OPTION_SACK_OK    0x08
+#define TCP_OPTION_CC         0x10
+#define TCP_OPTION_CC_NEXT    0x20
+#define TCP_OPTION_SACK_EDGE  0x40
 
 #endif  /* __TCP_OPTIONS_H */

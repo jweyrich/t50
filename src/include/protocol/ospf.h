@@ -69,6 +69,7 @@
 #define LSA_TLEN_GENERIC(foo) \
       (sizeof(struct ospf_lsa_hdr) + \
       ((foo) * sizeof(uint32_t)))
+
 #define LSA_TLEN_ROUTER        LSA_TLEN_GENERIC(4)
 #define LSA_TLEN_NETWORK       LSA_TLEN_GENERIC(2)
 #define LSA_TLEN_SUMMARY       LSA_TLEN_GENERIC(2)
@@ -92,6 +93,7 @@
 /* OSPF Group-LSA Type */
 #define VERTEX_TYPE_ROUTER     1
 #define VERTEX_TYPE_NETWORK    2
+
 #define OSPF_TLV_HEADER        sizeof(struct ospf_lls_hdr)
 
 /* OSPF LLS Type/Length/Value */
@@ -105,13 +107,13 @@
 #define OSPF_LEN_CRYPTO        ( OSPF_TLV_HEADER + AUTH_TLEN_HMACMD5 )
 
 /* Calculating OSPF LLS Type/Length/Value length */
-#  define ospf_tlv_len(foo, bar, baz) \
-      (foo == OSPF_TYPE_HELLO || \
-       foo == OSPF_TYPE_DD ? \
-        (bar ? \
+#define ospf_tlv_len(foo, bar, baz) \
+      ((((foo) == OSPF_TYPE_HELLO) || \
+        ((foo) == OSPF_TYPE_DD)) ? \
+        ((bar) ? \
           OSPF_TLV_HEADER * 2 + \
           OSPF_LEN_EXTENDED   + \
-          (baz ? \
+          ((baz) ? \
             OSPF_TLV_HEADER + \
             OSPF_LEN_CRYPTO : \
           0) : \
@@ -139,12 +141,12 @@
  *  |           Checksum            |             AuType            |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_hdr{
+struct ospf_hdr {
   uint16_t version:8,              /* version                     */
-          type:8;                 /* type                        */
+           type:8;                 /* type                        */
   uint16_t length;                 /* length                      */
-  in_addr_t rid;                    /* router ID                   */
-  in_addr_t aid;                    /* area ID                     */
+  in_addr_t rid;                   /* router ID                   */
+  in_addr_t aid;                   /* area ID                     */
   uint16_t check;                  /* checksum                    */
   uint16_t autype;                 /* authentication type         */
   uint8_t  __ospf_auth[0];         /* authentication header       */
@@ -174,7 +176,7 @@ struct ospf_hdr{
  *  |                 Cryptographic sequence number                 |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_auth_hdr{
+struct ospf_auth_hdr {
   uint16_t reserved;               /* reserved must be zero       */
   uint16_t key_id:8,               /* authentication key ID       */
             length:8;               /* authentication length       */
@@ -200,7 +202,7 @@ struct ospf_auth_hdr{
  *  |         LS checksum           |             length            |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_lsa_hdr{
+struct ospf_lsa_hdr {
   uint16_t age;                    /* LSA age                     */
   uint8_t  options;                /* LSA options                 */
   uint8_t  type;                   /* LSA type                    */
@@ -228,7 +230,7 @@ struct ospf_lsa_hdr{
  *  .                                                               .
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_lls_hdr{
+struct ospf_lls_hdr {
   uint16_t check;                  /* LLS checksum                */
   uint16_t length;                 /* LLS length                  */
 };
