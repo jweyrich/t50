@@ -84,7 +84,6 @@ int tcp(const socket_t fd, const struct config_options *o)
         "%s(): TCP Options size (%u bytes) is bigger than two times TCP Header size\n",
         __FUNCTION__,
         (unsigned int)tcpopt);
-    fflush(stderr);
     exit(EXIT_FAILURE);
   }
 

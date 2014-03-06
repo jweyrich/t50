@@ -85,25 +85,24 @@ int checkConfigOptions(const struct config_options *o)
           PACKAGE,
           mod_table[o->ip.protoname].acronym,
           minThreshold);
-      fflush(stderr);
       return 0;
     }
   }
   else /* if (o->flood) isn't 0 */
   {
     /* Warning FLOOD mode. */
-    printf("entering in flood mode...\n");
+    puts("entering in flood mode...");
 
 #ifdef  __HAVE_TURBO__
     if (o->turbo) 
-      printf("activating turbo...\n");
+      puts("activating turbo...");
 #endif  /* __HAVE_TURBO__ */
 
     /* Warning CIDR mode. */
     if (o->bits != 0) 
-      printf("performing DDoS...\n");
+      puts("performing DDoS...");
 
-    printf("hit CTRL+C to break.\n");
+    puts("hit CTRL+C to break.");
   }
 
   /* Returning. */

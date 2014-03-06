@@ -659,7 +659,6 @@ struct config_options *getConfigOptions(int argc, char ** argv)
                 "%s(): Protocol %s is not implemented\n",
                 __FUNCTION__,
                 optarg);
-            fflush(stderr);
             exit(EXIT_FAILURE);
 					}
 
