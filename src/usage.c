@@ -33,9 +33,9 @@ void usage(void)
   show_version();  
 
   printf("\n"
-         "Usage: t50 <host>[/CIDR] [options]\n\n");
+         "Usage: t50 <host>[/CIDR] [options]\n\n"
 
-  printf("Common Options:\n"
+         "Common Options:\n"
          "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
          "    --flood                   This option supersedes the \'threshold\'\n"
          "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
@@ -317,5 +317,6 @@ void usage(void)
          " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n", 
          PACKAGE, SITE, PACKAGE, PACKAGE);
 
+  fflush(stdout);
   exit(EXIT_FAILURE);
 }
