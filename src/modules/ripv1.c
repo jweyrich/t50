@@ -101,12 +101,12 @@ int ripv1(const socket_t fd, const struct config_options *o)
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
 
-  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.family));
+  *buffer.word_ptr++ = htons(__RND(o->rip.family));
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = INADDR_RND(o->rip.address);
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = htonl(__32BIT_RND(o->rip.metric));
+  *buffer.inaddr_ptr++ = htonl(__RND(o->rip.metric));
 
   offset += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH;
 
@@ -122,7 +122,7 @@ int ripv1(const socket_t fd, const struct config_options *o)
 
   /* Computing the checksum. */
   udp->check  = o->bogus_csum ? 
-                __16BIT_RND(0) : 
+                random() : 
                 cksum((uint16_t *)udp, offset);
 
   /* GRE Encapsulation takes place. */

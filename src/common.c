@@ -30,7 +30,7 @@ uint32_t NETMASK_RND(uint32_t foo)
   if (foo != INADDR_ANY)
     t = foo;
   else
-    t = ~(0xffffffffUL >> (8 + ((rand() >> 27) % 23)));
+    t = ~(0xffffffffUL >> (8 + (random() % 23)));
 
   return htonl(t);
 }

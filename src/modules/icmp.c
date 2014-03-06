@@ -59,8 +59,8 @@ int icmp(const socket_t fd, const struct config_options *o)
   icmp                   = (struct icmphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   icmp->type             = o->icmp.type;
   icmp->code             = o->icmp.code;
-  icmp->un.echo.id       = htons(__16BIT_RND(o->icmp.id));
-  icmp->un.echo.sequence = htons(__16BIT_RND(o->icmp.sequence));
+  icmp->un.echo.id       = htons(__RND(o->icmp.id));
+  icmp->un.echo.sequence = htons(__RND(o->icmp.sequence));
   if (o->icmp.type == ICMP_REDIRECT   &&
       (o->icmp.code == ICMP_REDIR_HOST ||
        o->icmp.code == ICMP_REDIR_NET))
@@ -72,7 +72,7 @@ int icmp(const socket_t fd, const struct config_options *o)
 
   /* Computing the checksum. */
   icmp->checksum = o->bogus_csum ? 
-    __16BIT_RND(0) : cksum(icmp, offset);
+    random() : cksum(icmp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

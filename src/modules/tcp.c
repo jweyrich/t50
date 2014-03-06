@@ -96,16 +96,16 @@ int tcp(const socket_t fd, const struct config_options *o)
   tcp->doff    = o->tcp.doff ? o->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
   tcp->fin     = o->tcp.fin;
   tcp->syn     = o->tcp.syn;
-  tcp->seq     = o->tcp.syn ? htonl(__32BIT_RND(o->tcp.sequence)) : 0;
+  tcp->seq     = o->tcp.syn ? htonl(__RND(o->tcp.sequence)) : 0;
   tcp->rst     = o->tcp.rst;
   tcp->psh     = o->tcp.psh;
   tcp->ack     = o->tcp.ack;
-  tcp->ack_seq = o->tcp.ack ? htonl(__32BIT_RND(o->tcp.acknowledge)) : 0;
+  tcp->ack_seq = o->tcp.ack ? htonl(__RND(o->tcp.acknowledge)) : 0;
   tcp->urg     = o->tcp.urg;
-  tcp->urg_ptr = o->tcp.urg ? htons(__16BIT_RND(o->tcp.urg_ptr)) : 0;
+  tcp->urg_ptr = o->tcp.urg ? htons(__RND(o->tcp.urg_ptr)) : 0;
   tcp->ece     = o->tcp.ece;
   tcp->cwr     = o->tcp.cwr;
-  tcp->window  = htons(__16BIT_RND(o->tcp.window));
+  tcp->window  = htons(__RND(o->tcp.window));
   tcp->check   = 0;
 
   buffer.ptr = (void *)tcp + sizeof(struct tcphdr);
@@ -127,7 +127,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   {
     *buffer.byte_ptr++ = TCPOPT_MSS;
     *buffer.byte_ptr++ = TCPOLEN_MSS;
-    *buffer.word_ptr++ = htons(__16BIT_RND(o->tcp.mss));
+    *buffer.word_ptr++ = htons(__RND(o->tcp.mss));
   }
 
   /*
@@ -147,7 +147,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   {
     *buffer.byte_ptr++ = TCPOPT_WSOPT;
     *buffer.byte_ptr++ = TCPOLEN_WSOPT;
-    *buffer.byte_ptr++ = __8BIT_RND(o->tcp.wsopt);
+    *buffer.byte_ptr++ = __RND(o->tcp.wsopt);
   }
 
   /*
@@ -192,8 +192,8 @@ int tcp(const socket_t fd, const struct config_options *o)
         *buffer.byte_ptr++ = TCPOPT_NOP;
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->tcp.tsval));
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->tcp.tsecr));
+    *buffer.dword_ptr++ = htonl(__RND(o->tcp.tsval));
+    *buffer.dword_ptr++ = htonl(__RND(o->tcp.tsecr));
   }
 
   /*
@@ -215,7 +215,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   {
     *buffer.byte_ptr++ = TCPOPT_CC;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->tcp.cc));
+    *buffer.dword_ptr++ = htonl(__RND(o->tcp.cc));
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -228,7 +228,7 @@ int tcp(const socket_t fd, const struct config_options *o)
      *  value from the sender's TCB.
      */
     tcp->syn     = 1;
-    tcp->seq     = htonl(__32BIT_RND(o->tcp.sequence));
+    tcp->seq     = htonl(__RND(o->tcp.sequence));
   }
 
   /*
@@ -263,10 +263,10 @@ int tcp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = o->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++ = TCPOLEN_CC;
     *buffer.dword_ptr++ = htonl(o->tcp.cc_new ? 
-      __32BIT_RND(o->tcp.cc_new) : __32BIT_RND(o->tcp.cc_echo));
+      __RND(o->tcp.cc_new) : __RND(o->tcp.cc_echo));
 
     tcp->syn = 1;
-    tcp->seq = htonl(__32BIT_RND(o->tcp.sequence));
+    tcp->seq = htonl(__RND(o->tcp.sequence));
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -292,7 +292,7 @@ int tcp(const socket_t fd, const struct config_options *o)
        * from the initial SYN.
        */
       tcp->ack     = 1;
-      tcp->ack_seq = htonl(__32BIT_RND(o->tcp.acknowledge));
+      tcp->ack_seq = htonl(__RND(o->tcp.acknowledge));
     }
   }
 
@@ -344,8 +344,8 @@ int tcp(const socket_t fd, const struct config_options *o)
   {
     *buffer.byte_ptr++ = TCPOPT_SACK_EDGE;
     *buffer.byte_ptr++ = TCPOLEN_SACK_EDGE(1);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->tcp.sack_left));
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->tcp.sack_right));
+    *buffer.dword_ptr++ = htonl(__RND(o->tcp.sack_left));
+    *buffer.dword_ptr++ = htonl(__RND(o->tcp.sack_right));
   }
 
   /*
@@ -380,7 +380,7 @@ int tcp(const socket_t fd, const struct config_options *o)
      */
     stemp = auth_hmac_md5_len(o->tcp.md5);
     for (counter = 0; counter < stemp; counter++)
-      *buffer.byte_ptr++ = __8BIT_RND(0);
+      *buffer.byte_ptr++ = random();
   }
 
   /*
@@ -410,14 +410,14 @@ int tcp(const socket_t fd, const struct config_options *o)
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
-    *buffer.byte_ptr++ = __8BIT_RND(o->tcp.key_id);
-    *buffer.byte_ptr++ = __8BIT_RND(o->tcp.next_key);
+    *buffer.byte_ptr++ = __RND(o->tcp.key_id);
+    *buffer.byte_ptr++ = __RND(o->tcp.next_key);
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
     stemp = auth_hmac_md5_len(o->tcp.auth);
     for (counter = 0; counter < stemp; counter++)
-      *buffer.byte_ptr++ = __8BIT_RND(0);
+      *buffer.byte_ptr++ = random();
   }
 
   /* Padding the TCP Options. */
@@ -437,7 +437,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  tcp->check   = o->bogus_csum ? __16BIT_RND(0) : cksum(tcp, offset);
+  tcp->check   = o->bogus_csum ? random() : cksum(tcp, offset);
 
   gre_checksum(packet, o, packet_size);
 

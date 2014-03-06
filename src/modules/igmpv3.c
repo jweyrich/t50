@@ -77,7 +77,7 @@ int igmpv3(const socket_t fd, const struct config_options *o)
 
     /* IGMPv3 Group Record Header structure making a pointer to Checksum. */
     igmpv3_grec                = (struct igmpv3_grec *)(buffer.ptr + (offset - sizeof(struct igmpv3_report)));
-    igmpv3_grec->grec_type     = __8BIT_RND(o->igmp.grec_type);
+    igmpv3_grec->grec_type     = __RND(o->igmp.grec_type);
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
     igmpv3_grec->grec_nsrcs    = htons(o->igmp.sources);
     igmpv3_grec->grec_mca      = INADDR_RND(o->igmp.grec_mca);
@@ -93,7 +93,7 @@ int igmpv3(const socket_t fd, const struct config_options *o)
 
     /* Computing the checksum. */
     igmpv3_report->csum     = o->bogus_csum ? 
-      __16BIT_RND(0) : 
+      random() : 
       cksum(igmpv3_report, offset);
   }
   else
@@ -104,8 +104,8 @@ int igmpv3(const socket_t fd, const struct config_options *o)
     igmpv3_query->code     = o->igmp.code;
     igmpv3_query->group    = INADDR_RND(o->igmp.group);
     igmpv3_query->suppress = o->igmp.suppress;
-    igmpv3_query->qrv      = __3BIT_RND(o->igmp.qrv);
-    igmpv3_query->qqic     = __8BIT_RND(o->igmp.qqic);
+    igmpv3_query->qrv      = __RND(o->igmp.qrv);
+    igmpv3_query->qqic     = __RND(o->igmp.qqic);
     igmpv3_query->nsrcs    = htons(o->igmp.sources);
     igmpv3_query->csum     = 0;
 
@@ -122,7 +122,7 @@ int igmpv3(const socket_t fd, const struct config_options *o)
 
     /* Computing the checksum. */
     igmpv3_query->csum     = o->bogus_csum ? 
-      __16BIT_RND(0) : 
+      random() : 
       cksum(igmpv3_query, offset);
   }
 

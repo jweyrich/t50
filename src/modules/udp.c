@@ -70,7 +70,7 @@ int udp(const socket_t fd, const struct config_options *o)
   pseudo->len      = htons(sizeof(struct udphdr));
 
   /* Computing the checksum. */
-  udp->check  = o->bogus_csum ? __16BIT_RND(0) : 
+  udp->check  = o->bogus_csum ? random() : 
     cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
 
   gre_checksum(packet, o, packet_size);

@@ -156,18 +156,9 @@ struct psdhdr
 };
 
 /* Randomizer macros and function */
-#define __32BIT_RND(foo) ((foo) == 0 ? (uint32_t)rand() : (uint32_t)(foo))
-#define __24BIT_RND(foo) ((foo) == 0 ? rand() >> 8 : (foo))
-#define __16BIT_RND(foo) ((foo) == 0 ? rand() >> 16 : (foo))
-#define __8BIT_RND(foo)  ((foo) == 0 ? rand() >> 24 : (foo))
-#define __7BIT_RND(foo)  ((foo) == 0 ? rand() >> 25 : (foo))
-#define __6BIT_RND(foo)  ((foo) == 0 ? rand() >> 26 : (foo))
-#define __5BIT_RND(foo)  ((foo) == 0 ? rand() >> 27 : (foo))
-#define __4BIT_RND(foo)  ((foo) == 0 ? rand() >> 28 : (foo))
-#define __3BIT_RND(foo)  ((foo) == 0 ? rand() >> 29 : (foo))
-#define __2BIT_RND(foo)  ((foo) == 0 ? (uint32_t)(rand() >> 30) : (uint32_t)(foo))
-#define INADDR_RND(foo) __32BIT_RND(foo)
-#define IPPORT_RND(foo) __16BIT_RND(foo)
+#define __RND(foo) (((foo) == 0) ? random() : (foo))
+#define INADDR_RND(foo) __RND((foo))
+#define IPPORT_RND(foo) __RND((foo))
 
 extern uint32_t NETMASK_RND(uint32_t);
 

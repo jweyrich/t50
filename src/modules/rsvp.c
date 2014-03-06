@@ -69,10 +69,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
 
   /* RSVP Header structure making a pointer to IP Header structure. */
   rsvp           = (struct rsvp_common_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  rsvp->flags    = __4BIT_RND(o->rsvp.flags);
+  rsvp->flags    = __RND(o->rsvp.flags);
   rsvp->version  = RSVPVERSION;
   rsvp->type     = o->rsvp.type;
-  rsvp->ttl      = __8BIT_RND(o->rsvp.ttl);
+  rsvp->ttl      = __RND(o->rsvp.ttl);
   rsvp->length   = htons(sizeof(struct rsvp_common_hdr) + objects_length);
   rsvp->reserved = FIELD_MUST_BE_ZERO;
   rsvp->check    = 0;
@@ -102,9 +102,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
   *buffer.byte_ptr++ = RSVP_OBJECT_SESSION;
   *buffer.byte_ptr++ = 1;
   *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.session_addr);
-  *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.session_proto);
-  *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.session_flags);
-  *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.session_port));
+  *buffer.byte_ptr++ = __RND(o->rsvp.session_proto);
+  *buffer.byte_ptr++ = __RND(o->rsvp.session_flags);
+  *buffer.word_ptr++ = htons(__RND(o->rsvp.session_port));
 
   offset += RSVP_LENGTH_SESSION;
 
@@ -141,7 +141,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = RSVP_OBJECT_RESV_HOP;
     *buffer.byte_ptr++ = 1;
     *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.hop_addr);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.hop_iface));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.hop_iface));
 
     offset += RSVP_LENGTH_RESV_HOP;
   }
@@ -170,7 +170,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_TIME_VALUES);
     *buffer.byte_ptr++ = RSVP_OBJECT_TIME_VALUES;
     *buffer.byte_ptr++ = 1;
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.time_refresh));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.time_refresh));
 
     offset += RSVP_LENGTH_TIME_VALUES;
   }
@@ -204,9 +204,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = RSVP_OBJECT_ERROR_SPEC;
     *buffer.byte_ptr++ = 1;
     *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.error_addr);
-    *buffer.byte_ptr++ = __3BIT_RND(o->rsvp.error_flags);
-    *buffer.byte_ptr++ = __8BIT_RND(o->rsvp.error_code);
-    *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.error_value));
+    *buffer.byte_ptr++ = __RND(o->rsvp.error_flags);
+    *buffer.byte_ptr++ = __RND(o->rsvp.error_code);
+    *buffer.word_ptr++ = htons(__RND(o->rsvp.error_value));
 
     offset += RSVP_LENGTH_ERROR_SPEC;
   }
@@ -248,7 +248,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = 1;
     *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.sender_addr);
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons(__16BIT_RND(o->rsvp.sender_port));
+    *buffer.word_ptr++ = htons(__RND(o->rsvp.sender_port));
 
     offset += RSVP_LENGTH_SENDER_TEMPLATE;
 
@@ -309,11 +309,11 @@ int rsvp(const socket_t fd, const struct config_options *o)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
               TSPEC_MESSAGE_HEADER)/4);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_r));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_b));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_p));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_m));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.tspec_M));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_r));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_b));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_p));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_m));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_M));
         break;
     }
 
@@ -399,19 +399,19 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_ISHOPCNT;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_hop));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_hop));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_BANDWIDTH;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_path));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_path));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_LATENCY;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_minimum));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_minimum));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_COMPMTU;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_mtu));
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_mtu));
 
     offset += ADSPEC_PARAMETER_LENGTH;
 
@@ -457,19 +457,19 @@ int rsvp(const socket_t fd, const struct config_options *o)
         *buffer.byte_ptr++ = 133;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Ctot));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Ctot));
         *buffer.byte_ptr++ = 134;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Dtot));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Dtot));
         *buffer.byte_ptr++ = 135;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Csum));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Csum));
         *buffer.byte_ptr++ = 136;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rsvp.adspec_Dsum));
+        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Dsum));
 
         offset += ADSPEC_GUARANTEED_LENGTH;
 
@@ -596,14 +596,14 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = RSVP_OBJECT_STYLE;
     *buffer.byte_ptr++ = 1;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.dword_ptr++ = htonl(__24BIT_RND(o->rsvp.style_opt) << 8);
+    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.style_opt) << 8);
 
     offset += RSVP_LENGTH_STYLE;
   }
 
   /* Computing the checksum. */
   rsvp->check   = o->bogus_csum ? 
-    __16BIT_RND(0) : 
+    random() : 
     cksum(rsvp, offset);
 
   /* GRE Encapsulation takes place. */

@@ -65,7 +65,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *o, ui
       struct gre_key_hdr *gre_key;
 
       gre_key      = (struct gre_key_hdr *)(buffer + offset);
-      gre_key->key = htonl(__32BIT_RND(o->gre.key));
+      gre_key->key = htonl(__RND(o->gre.key));
 
       offset += GRE_OPTLEN_KEY;
     }
@@ -77,7 +77,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *o, ui
       struct gre_seq_hdr *gre_seq;
 
       gre_seq          = (struct gre_seq_hdr *)(buffer + offset);
-      gre_seq->sequence = htonl(__32BIT_RND(o->gre.sequence));
+      gre_seq->sequence = htonl(__RND(o->gre.sequence));
 
       offset += GRE_OPTLEN_SEQUENCE;
     }
@@ -109,7 +109,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *o, ui
 
     /* Computing the checksum. */
     gre_ip->check    = o->bogus_csum ? 
-      __16BIT_RND(0) : cksum(gre_ip, sizeof(struct iphdr));
+      random() : cksum(gre_ip, sizeof(struct iphdr));
 
     return gre_ip;
   }
@@ -134,7 +134,7 @@ void gre_checksum(void *buffer, const struct config_options *o, uint32_t packet_
     /* Computing the checksum. */
     if (TEST_BITS(o->gre.options, GRE_OPTION_CHECKSUM))
       gre_sum->check  = o->bogus_csum ? 
-        __16BIT_RND(0) : 
+        random() : 
         cksum(gre, packet_size - sizeof(struct iphdr));
   }
 }

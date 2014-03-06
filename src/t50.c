@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
   fd = createSocket();
 
 	/* NOTE: Random seed don't need to be so precise! */
-  srand(time(NULL));
+  srandom(time(NULL));
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
     {
       /* Generation RANDOM position for computed IP addresses. */
       /* FIX: No floating point! >-| */
-      rand_daddr = rand() % cidr_ptr->hostid;
+      rand_daddr = random() % cidr_ptr->hostid;
 
   		/* FIX: No addresses array needed */
 	  	o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);

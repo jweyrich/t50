@@ -63,7 +63,7 @@ int igmpv1(const socket_t fd, const struct config_options *o)
 
   /* Computing the checksum. */
   igmpv1->csum  = o->bogus_csum ? 
-    __16BIT_RND(0) : 
+    random() : 
     cksum(igmpv1, sizeof(struct igmphdr));
 
   /* GRE Encapsulation takes place. */

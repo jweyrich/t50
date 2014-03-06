@@ -69,22 +69,22 @@ int egp(const socket_t fd, const struct config_options *o)
   egp->type     = o->egp.type;
   egp->code     = o->egp.code;
   egp->status   = o->egp.status;
-  egp->as       = __16BIT_RND(o->egp.as);
-  egp->sequence = __16BIT_RND(o->egp.sequence);
+  egp->as       = __RND(o->egp.as);
+  egp->sequence = __RND(o->egp.sequence);
   egp->check    = 0;
 
   offset  = sizeof(struct egp_hdr);
 
   /* EGP Acquire Header structure. */
   egp_acq        = (struct egp_acq_hdr *)((void *)egp + offset);
-  egp_acq->hello = __16BIT_RND(o->egp.hello);
-  egp_acq->poll  = __16BIT_RND(o->egp.poll);
+  egp_acq->hello = __RND(o->egp.hello);
+  egp_acq->poll  = __RND(o->egp.poll);
 
   offset += sizeof(struct egp_acq_hdr);
 
   /* Computing the checksum. */
   egp->check    = o->bogus_csum ? 
-    __16BIT_RND(0) : 
+    random() : 
     cksum(egp, offset);
 
   /* GRE Encapsulation takes place. */

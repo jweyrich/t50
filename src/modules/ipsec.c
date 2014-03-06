@@ -95,8 +95,8 @@ int ipsec(const socket_t fd, const struct config_options *o)
   ip_auth->hdrlen  = o->ipsec.ah_length ? 
     o->ipsec.ah_length : 
     (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
-  ip_auth->spi     = htonl(__32BIT_RND(o->ipsec.ah_spi));
-  ip_auth->seq_no  = htonl(__32BIT_RND(o->ipsec.ah_sequence));
+  ip_auth->spi     = htonl(__RND(o->ipsec.ah_spi));
+  ip_auth->seq_no  = htonl(__RND(o->ipsec.ah_sequence));
 
   offset = sizeof(struct ip_auth_hdr);
 
@@ -104,19 +104,19 @@ int ipsec(const socket_t fd, const struct config_options *o)
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < ip_ah_icv; counter++)
-    *buffer.byte_ptr++ = __8BIT_RND(0);
+    *buffer.byte_ptr++ = random();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
   ip_esp         = (struct ip_esp_hdr *)buffer.ptr;
-  ip_esp->spi    = htonl(__32BIT_RND(o->ipsec.esp_spi));
-  ip_esp->seq_no = htonl(__32BIT_RND(o->ipsec.esp_sequence));
+  ip_esp->spi    = htonl(__RND(o->ipsec.esp_spi));
+  ip_esp->seq_no = htonl(__RND(o->ipsec.esp_sequence));
 
   offset += sizeof(struct ip_esp_hdr);
   buffer.ptr += sizeof(struct ip_esp_hdr);
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)
-    *buffer.byte_ptr++ = __8BIT_RND(0);
+    *buffer.byte_ptr++ = random();
 
 	/* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */

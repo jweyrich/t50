@@ -32,7 +32,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip->tos      = o->ip.tos;
   ip->frag_off = htons(o->ip.frag_off ? (o->ip.frag_off >> 3) | IP_MF : o->ip.frag_off | IP_DF);
   ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__16BIT_RND(o->ip.id));
+  ip->id       = htons(__RND(o->ip.id));
   ip->ttl      = o->ip.ttl;
   ip->protocol = o->encapsulated ? IPPROTO_GRE : o->ip.protocol;
   ip->saddr    = INADDR_RND(o->ip.saddr);

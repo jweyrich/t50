@@ -111,7 +111,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
    */
   *buffer.byte_ptr++ = o->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
-  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.domain));
+  *buffer.word_ptr++ = htons(__RND(o->rip.domain));
   
   offset += RIP_HEADER_LENGTH;	
 
@@ -166,7 +166,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
         RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = o->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
-    *buffer.dword_ptr++ = htonl(__32BIT_RND(o->rip.sequence));
+    *buffer.dword_ptr++ = htonl(__RND(o->rip.sequence));
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
 
@@ -202,12 +202,12 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   |                                                               |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.family));
-  *buffer.word_ptr++ = htons(__16BIT_RND(o->rip.tag));
+  *buffer.word_ptr++ = htons(__RND(o->rip.family));
+  *buffer.word_ptr++ = htons(__RND(o->rip.tag));
   *buffer.inaddr_ptr++ = INADDR_RND(o->rip.address);
   *buffer.inaddr_ptr++ = NETMASK_RND(htonl(o->rip.netmask));
   *buffer.inaddr_ptr++ = INADDR_RND(o->rip.next_hop);
-  *buffer.inaddr_ptr++ = htonl(__32BIT_RND(o->rip.metric));
+  *buffer.inaddr_ptr++ = htonl(__RND(o->rip.metric));
 
   offset += RIP_MESSAGE_LENGTH;
 
@@ -236,7 +236,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
      */
     size = auth_hmac_md5_len(o->rip.auth);
     for (counter = 0; counter < size; counter++)
-      *buffer.byte_ptr++ = __8BIT_RND(0);
+      *buffer.byte_ptr++ = random();
 
     offset += RIP_TRAILER_LENGTH + size;
   }
@@ -253,7 +253,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
 
   /* Computing the checksum. */
   udp->check  = o->bogus_csum ? 
-    __16BIT_RND(0) : 
+    random() : 
     cksum(udp, offset);
 
   /* GRE Encapsulation takes place. */

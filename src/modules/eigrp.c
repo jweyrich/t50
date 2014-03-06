@@ -53,7 +53,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  prefix = __5BIT_RND(o->eigrp.prefix);
+  prefix = __RND(o->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(o->eigrp.opcode, o->eigrp.type, prefix, o->eigrp.auth);
   packet_size = sizeof(struct iphdr)     + 
     greoptlen                + 
@@ -86,12 +86,12 @@ int eigrp(const socket_t fd, const struct config_options *o)
    */
   eigrp              = (struct eigrp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   eigrp->version     = o->eigrp.ver_minor ? o->eigrp.ver_minor : EIGRPVERSION;
-  eigrp->opcode      = __8BIT_RND(o->eigrp.opcode);
-  eigrp->flags       = htonl(__32BIT_RND(o->eigrp.flags));
-  eigrp->sequence    = htonl(__32BIT_RND(o->eigrp.sequence));
+  eigrp->opcode      = __RND(o->eigrp.opcode);
+  eigrp->flags       = htonl(__RND(o->eigrp.flags));
+  eigrp->sequence    = htonl(__RND(o->eigrp.sequence));
   eigrp->acknowledge = o->eigrp.type == EIGRP_TYPE_SEQUENCE ? 
-    htonl(__32BIT_RND(o->eigrp.acknowledge)) : 0;
-  eigrp->as          = htonl(__32BIT_RND(o->eigrp.as));
+    htonl(__RND(o->eigrp.acknowledge)) : 0;
+  eigrp->as          = htonl(__RND(o->eigrp.as));
   eigrp->check       = 0;
 
   offset  = sizeof(struct eigrp_hdr);
@@ -151,7 +151,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
       *buffer.word_ptr++ = htons(o->eigrp.length ? o->eigrp.length : EIGRP_TLEN_AUTH);
       *buffer.word_ptr++ = htons(AUTH_TYPE_HMACMD5);
       *buffer.word_ptr++ = htons(stemp);
-      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.key_id));
+      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.key_id));
 
       for (counter = 0; counter < EIGRP_PADDING_BLOCK; counter++)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
@@ -160,7 +160,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
       for (counter = 0; counter < stemp; counter++)
-        *buffer.byte_ptr++ = __8BIT_RND(0);
+        *buffer.byte_ptr++ = random();
 
 			/* FIXME: Is this correct?! 
                 The code, above seems to use a variable size for digest (stemp)
@@ -269,23 +269,23 @@ int eigrp(const socket_t fd, const struct config_options *o)
       if (o->eigrp.type == EIGRP_TYPE_EXTERNAL)
       {
         *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.src_router);
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.src_as));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.tag));
-        *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.proto_metric));
+        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.src_as));
+        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.tag));
+        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.proto_metric));
         *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
           FIELD_MUST_BE_ZERO : htons(0x0004);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.proto_id);
-        *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ext_flags);
+        *buffer.byte_ptr++ = __RND(o->eigrp.proto_id);
+        *buffer.byte_ptr++ = __RND(o->eigrp.ext_flags);
       }
 
       dest = INADDR_RND(o->eigrp.dest);
 
-      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.delay));
-      *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.bandwidth));
-      *buffer.dword_ptr++ = htonl(__24BIT_RND(o->eigrp.mtu) << 8);
-      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.hop_count);
-      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.reliability);
-      *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.load);
+      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.delay));
+      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.bandwidth));
+      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.mtu) << 8);
+      *buffer.byte_ptr++ = __RND(o->eigrp.hop_count);
+      *buffer.byte_ptr++ = __RND(o->eigrp.reliability);
+      *buffer.byte_ptr++ = __RND(o->eigrp.load);
       *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ? 
         FIELD_MUST_BE_ZERO : htons(0x0004);
       *buffer.byte_ptr++ = prefix;
@@ -335,15 +335,15 @@ int eigrp(const socket_t fd, const struct config_options *o)
         *buffer.word_ptr++ = htons(o->eigrp.length ? 
             o->eigrp.length : EIGRP_TLEN_PARAMETER);
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ? 
-          __8BIT_RND(o->eigrp.k1) : o->eigrp.k1;
+          __RND(o->eigrp.k1) : o->eigrp.k1;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ? 
-          __8BIT_RND(o->eigrp.k2) : o->eigrp.k2;
+          __RND(o->eigrp.k2) : o->eigrp.k2;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ? 
-          __8BIT_RND(o->eigrp.k3) : o->eigrp.k3;
+          __RND(o->eigrp.k3) : o->eigrp.k3;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ? 
-          __8BIT_RND(o->eigrp.k4) : o->eigrp.k4;
+          __RND(o->eigrp.k4) : o->eigrp.k4;
         *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ? 
-          __8BIT_RND(o->eigrp.k5) : o->eigrp.k5;
+          __RND(o->eigrp.k5) : o->eigrp.k5;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(o->eigrp.hold);
 
@@ -369,10 +369,10 @@ int eigrp(const socket_t fd, const struct config_options *o)
           *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
           *buffer.word_ptr++ = htons(o->eigrp.length ? 
               o->eigrp.length : EIGRP_TLEN_SOFTWARE);
-          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_major);
-          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ios_minor);
-          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_major);
-          *buffer.byte_ptr++ = __8BIT_RND(o->eigrp.ver_minor);
+          *buffer.byte_ptr++ = __RND(o->eigrp.ios_major);
+          *buffer.byte_ptr++ = __RND(o->eigrp.ios_minor);
+          *buffer.byte_ptr++ = __RND(o->eigrp.ver_major);
+          *buffer.byte_ptr++ = __RND(o->eigrp.ver_minor);
           
           offset += EIGRP_TLEN_SOFTWARE;
 
@@ -418,7 +418,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
             *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
             *buffer.word_ptr++ = htons(o->eigrp.length ? 
                 o->eigrp.length : EIGRP_TLEN_MULTICAST);
-            *buffer.dword_ptr++ = htonl(__32BIT_RND(o->eigrp.multicast));
+            *buffer.dword_ptr++ = htonl(__RND(o->eigrp.multicast));
 
             offset += EIGRP_TLEN_MULTICAST + 
               EIGRP_TLEN_SEQUENCE;
@@ -429,7 +429,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
 
   /* Computing the checksum. */
   eigrp->check    = o->bogus_csum ? 
-    __16BIT_RND(0) : cksum(eigrp, offset);
+    random() : cksum(eigrp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
