@@ -224,6 +224,7 @@ int main(int argc, char *argv[])
       }
 
       /* Sanitizing the threshold. */
+      /* FIXME: Is this correct? */
       o->threshold -= num_modules - 1;
 
       /* Reseting protocol. */

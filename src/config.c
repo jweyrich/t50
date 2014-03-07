@@ -22,265 +22,87 @@
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
          make sure that all fields are initialized correctly. */
-/* FIXME: It is possible to supress the fields initialized with 0 to make this
-          shorter! */
+/* NOTE: As C standandard goes, any field not explicitly initialized
+         will be filled by zero. */
 static struct config_options o = {
   /* XXX COMMON OPTIONS                                                         */
   .threshold = 1000,                  /* default threshold                      */
-  .flood = FALSE,                     /* do not flood                           */
-  .encapsulated = FALSE,              /* no GRE encapsulation by default        */
-  .bogus_csum = FALSE,                /* do not use bogus checksum              */
-#ifdef  __HAVE_TURBO__
-  .turbo = FALSE,                     /* do not duplicate the attack            */
-#endif  /* __HAVE_TURBO__ */
-
-  /* XXX DCCP, TCP & UDP HEADER OPTIONS                                         */
-  .source = IPPORT_ANY,               /* no default source port                 */
-  .dest = IPPORT_ANY,                 /* no default destination port            */
-
-  /* Classless Interdomain Routing (CIDR)                                       */
-  .bits = 0,                          /* no default CIDR bits                   */
 
   /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                                    */
   .ip = {
     .tos = IPTOS_PREC_IMMEDIATE,      /* default type of service                */
-    .id = 0,                          /* default identification                 */
-    .frag_off = 0,                    /* default fragmentation offset           */
-    .ttl = 255,                       /* default time to live                   */
-    .protocol = 0 /*IPPROTO_TCP*/,    /* default packet protocol                */
-    .protoname = 0 /*MODULE_TCP*/,    /* default protocol name                  */
-    .saddr = INADDR_ANY,              /* source address                         */
-    .daddr = INADDR_ANY },            /* destination address                    */
-
-  /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                                  */
-  .gre = {
-    .options = 0,                    /* no GRE options by default              */
-    .S = FALSE,                      /* default sequence number present        */
-    .K = FALSE,                      /* default key present                    */
-    .C = FALSE,                      /* default checksum present               */
-    .key = 0,                        /* default key                            */
-    .sequence = 0,                   /* default sequence number                */
-    .saddr = INADDR_ANY,             /* GRE source address                     */
-    .daddr = INADDR_ANY },           /* GRE destination address                */
+    .ttl = 255 },                     /* default time to live                   */
 
   /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1)                                 */
-  .icmp = {
-    .type = ICMP_ECHO,               /* default type                           */
-    .code = 0,                       /* default code                           */
-    .id = 0,                         /* default identification                 */
-    .sequence = 0,                   /* default sequence                       */
-    .gateway = INADDR_ANY },         /* destination gateway address            */
+  .icmp = { .type = ICMP_ECHO },     /* default type                           */
 
   /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2)                                 */
   .igmp = {
     .type = IGMP_HOST_MEMBERSHIP_QUERY, /* default type                           */
-    .code = 0,                          /* default code                           */
-    .group = INADDR_ANY,                /* default address                        */
-    .qrv = 0,                           /* default querier robustness variable    */
-    .suppress = FALSE,                  /* default suppress router-side process   */
-    .qqic = 0,                          /* default querier query interv. code     */
     .grec_type = 1,                     /* default group record type              */
-    .sources = 2,                       /* default number of sources              */
-    .grec_mca = INADDR_ANY,             /* default group record multicast address */
-    .address = { INADDR_ANY } },        /* default source address(es)             */
+    .sources = 2 },                     /* default number of sources              */
 
   /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6)                                   */
   .tcp = {
-    .sequence = 0,                   /* default sequence number                */
-    .acknowledge = 0,                /* default acknowledgment sequence        */
-    .doff = 0,                       /* default data offset                    */
-    .fin = FALSE,                    /* default end of data flag               */
-    .syn = FALSE,                    /* default synchronize ISN flag           */
-    .rst = FALSE,                    /* default reset connection flag          */
-    .psh = FALSE,                    /* default push flag                      */
-    .ack = FALSE,                    /* default acknowledgment # valid flag    */
-    .urg = FALSE,                    /* default urgent pointer valid flag      */
-    .ece = FALSE,                    /* default ecn-echo                       */
-    .cwr = FALSE,                    /* default congestion windows reduced     */
-    .window = 0,                     /* default window size                    */
-    .urg_ptr = 0,                    /* default urgent pointer data            */
-    .options = 0,                    /* no TCP options by default              */
-    .mss = 0,                        /* default MSS option        (RFC793)     */
-    .wsopt = 0,                      /* default WSOPT option      (RFC1323)    */
-    .tsval = 0,                      /* default TSval option      (RFC1323)    */
-    .tsecr = 0,                      /* default TSecr option      (RFC1323)    */
-    .cc = 0,                         /* default T/TCP CC          (RFC1644)    */
-    .cc_new = 0,                     /* default T/TCP CC.NEW      (RFC1644)    */
-    .cc_echo = 0,                    /* default T/TCP CC.ECHO     (RFC1644)    */
-    .sack_left = 0,                  /* default SACK-Left option  (RFC2018)    */
-    .sack_right = 0,                 /* default SACK-Right option (RFC2018)    */
-    .md5 = FALSE,                    /* do not use MD5 option by default       */
-    .auth = FALSE,                   /* do not use AO option by default        */
     .key_id = 1,                     /* default AO key ID         (RFC5925)    */
     .next_key = 1,                   /* default AO next key ID    (RFC5925)    */
     .nop = TCPOPT_EOL },             /* default NOP option        (RFC793)     */
 
   /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8)                                   */
   .egp = {
-    .type = EGP_NEIGHBOR_ACQUISITION,   /* default type                           */
-    .code = EGP_ACQ_CODE_CEASE_CMD,     /* default code                           */
-    .status = EGP_ACQ_STAT_ACTIVE_MODE, /* default status                         */
-    .as = 0,                            /* default autonomous system              */
-    .sequence = 0,                      /* default sequence number                */
-    .hello = 0,                         /* default hello interval                 */
-    .poll = 0 },                        /* default poll interval                  */
+    .type = EGP_NEIGHBOR_ACQUISITION,     /* default type                           */
+    .code = EGP_ACQ_CODE_CEASE_CMD,       /* default code                           */
+    .status = EGP_ACQ_STAT_ACTIVE_MODE }, /* default status                         */
 
   /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17)                                  */
   .rip = {
     .command = 2,                    /* default command                        */
     .family = AF_INET,               /* default address family identifier      */
-    .address = INADDR_ANY,           /* default IP address                     */
-    .metric = 0,                     /* default metric                         */
-    .domain = 0,                     /* default router domain                  */
-    .tag = 0,                        /* default router tag                     */
-    .netmask = INADDR_ANY,           /* default subnet mask                    */
-    .next_hop = 0,                   /* default next hop                       */
-    .auth = FALSE,                   /* do not use authentication by default   */
-    .key_id = 1,                     /* default authentication key ID          */
-    .sequence = 0 },                 /* default authentication sequence        */
+    .key_id = 1 },                   /* default authentication key ID          */
 
   /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33)                                */
-  .dccp = {
-    .doff = 0,                       /* default data offset                    */
-    .cscov = 0,                      /* default checksum coverage              */
-    .ccval = 0,                      /* default HC-sender CCID                 */
-    .type = DCCP_PKT_REQUEST,        /* default type                           */
-    .ext = FALSE,                    /* default extend sequence number         */
-    .sequence_01 = 0,                /* default sequence number                */
-    .sequence_02 = 0,                /* default extended sequence number       */
-    .sequence_03 = 0,                /* default sequence low number            */
-    .service = 0,                    /* default service code                   */
-    .acknowledge_01 = 0,             /* default acknowledgment # high          */
-    .acknowledge_02 = 0,             /* default acknowledgment # low           */
-    .rst_code = 0 },                 /* default reset code                     */
+  .dccp = { .type = DCCP_PKT_REQUEST }, /* default type                           */
 
   /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46)                                */
   .rsvp = {
     .flags = 1,                      /* default flags                          */
     .type = RSVP_MESSAGE_TYPE_PATH,  /* default message type                   */
     .ttl = 254,                      /* default time to live                   */
-    .session_addr = INADDR_ANY,      /* default SESSION destination address    */
     .session_proto = 1,              /* default SESSION protocol ID            */
     .session_flags = 1,              /* default SESSION flags                  */
-    .session_port = IPPORT_ANY,      /* default SESSION destination port       */
-    .hop_addr = INADDR_ANY,          /* default HOP neighbor address           */
-    .hop_iface = 0,                  /* default HOP logical interface          */
     .time_refresh = 360,             /* default TIME refresh interval          */
-    .error_addr = INADDR_ANY,        /* default ERROR node address             */
     .error_flags = 2,                /* default ERROR flags                    */
     .error_code = 2,                 /* default ERROR code                     */
     .error_value = 8,                /* default ERROR value                    */
     .scope = 1,                      /* default number of SCOPE(s)             */
-    .address = { INADDR_ANY },       /* default SCOPE address(es)              */
     .style_opt = 18,                 /* default STYLE option vector            */
-    .sender_addr = INADDR_ANY,       /* default SENDER TEMPLATE address        */
-    .sender_port = IPPORT_ANY,       /* default SENDER TEMPLATE port           */
-    .tspec = 6,                      /* default TSPEC service                  */
-    .tspec_r = 0,                    /* default TSPEC Token Bucket Rate        */
-    .tspec_b = 0,                    /* default TSPEC Token Bucket Size        */
-    .tspec_p = 0,                    /* default TSPEC Peak Data Rate           */
-    .tspec_m = 0,                    /* default TSEPC Minimum Policed Unit     */
-    .tspec_M = 0,                    /* default TSPEC Maximum Packet Size      */
-    .adspec_hop = 0,                 /* default ADSPEC IS HOP cnt              */
-    .adspec_path = 0,                /* default ADSPEC Path b/w estimate       */
-    .adspec_minimum = 0,             /* default ADSPEC Minimum Path Latency    */
-    .adspec_mtu = 0,                 /* default ADSPEC Composed MTU            */
-    .adspec = 0,                     /* no default ADSPEC service              */
-    .adspec_Ctot = 0,                /* default ADSPEC ETE composed value C    */
-    .adspec_Dtot = 0,                /* default ADSPEC ETE composed value D    */
-    .adspec_Csum = 0,                /* default ADSPEC SLR point composed C    */
-    .adspec_Dsum = 0,                /* default ADSPEC SLR point composed D    */
-    .confirm_addr = INADDR_ANY },    /* default CONFIRM receiver address       */
-
-  /* XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROTO_ESP = 50)              */
-  .ipsec = {
-    .ah_length = 0,                  /* default AH header length               */
-    .ah_spi = 0,                     /* default AH SPI                         */
-    .ah_sequence = 0,                /* default AH sequence number             */
-    .esp_spi = 0,                    /* default ESP SPI                        */
-    .esp_sequence = 0 },             /* default ESP sequence number            */
+    .tspec = 6 },                    /* default TSPEC service                  */
 
   /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88)                              */
   .eigrp = {
     .opcode = EIGRP_OPCODE_UPDATE,   /* default opcode                         */
-    .flags = 0,                      /* default flags                          */
-    .sequence = 0,                   /* default sequence number                */
-    .acknowledge = 0,                /* default acknowledgment sequence #      */
-    .as = 0,                         /* default autonomous system              */
     .type = EIGRP_TYPE_INTERNAL,     /* default type                           */
-    .length = 0,                     /* default length                         */
-    .values = 0,                     /* no EIGRP K Values by default           */
     .k1 = 1,                         /* default K1 value                       */
-    .k2 = 0,                         /* default K2 value                       */
     .k3 = 1,                         /* default K3 value                       */
-    .k4 = 0,                         /* default K4 value                       */
-    .k5 = 0,                         /* default K5 value                       */
     .hold = 360,                     /* default hold time                      */
     .ios_major = 12,                 /* default IOS Major Version              */
     .ios_minor = 4,                  /* default IOS Minor Version              */
     .ver_major = 1,                  /* default EIGRP Major Version            */
     .ver_minor = 2,                  /* default EIGRP Minor Version            */
-    .next_hop = INADDR_ANY,          /* default next hop address               */
-    .delay = 0,                      /* default delay                          */
-    .bandwidth = 0,                  /* default bandwidth                      */
     .mtu = 1500,                     /* default maximum transmission unit      */
-    .hop_count = 0,                  /* default hop count                      */
-    .load = 0,                       /* default load                           */
-    .reliability = 0,                /* default reliability                    */
-    .prefix = 0,                     /* default subnet prefix - aka CIDR       */
-    .dest = INADDR_ANY,              /* default destination address            */
-    .src_router = INADDR_ANY,        /* default originating router             */
-    .src_as = 0,                     /* default originating autonomous system  */
-    .tag = 0,                        /* default arbitrary tag                  */
-    .proto_metric = 0,               /* default external protocol metric       */
     .proto_id = 2,                   /* default external protocol ID           */
-    .ext_flags = 0,                  /* default external flags                 */
-    .address = INADDR_ANY,           /* default IP address sequence            */
-    .multicast = 0,                  /* default multicast sequence             */
-    .auth = FALSE,                   /* do not use authentication by default   */
     .key_id = 1 },                   /* default authentication key ID          */
 
   /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89)                                */
   .ospf = {
     .type = OSPF_TYPE_HELLO,         /* default type                           */
-    .length = 0,                     /* default length                         */
-    .rid = INADDR_ANY,               /* default router ID                      */
-    .aid = INADDR_ANY,               /* default area ID                        */
-    .AID = FALSE,                    /* no default area ID is set              */
-    .options = 0,                    /* no default option is set               */
-    .netmask = INADDR_ANY,           /* default subnet mask                    */
-    .hello_interval = 0,             /* default HELLO interval                 */
     .hello_priority = 1,             /* default HELLO router priority          */
     .hello_dead = 360,               /* default HELLO router dead interval     */
-    .hello_design = INADDR_ANY,      /* default HELLO designated router        */
-    .hello_backup = INADDR_ANY,      /* default HELLO backup designated        */
-    .neighbor = 0,                   /* default HELLO number of neighbors      */
-    .address = { INADDR_ANY },       /* default HELLO neighbor address(es)     */
     .dd_mtu = 1500,                  /* default DD MTU                         */
-    .dd_dbdesc = 0,                  /* no default DD option is set            */
-    .dd_sequence = 0,                /* default DD sequence number             */
-    .dd_include_lsa = 0,             /* do not use DD LSA Header by default    */
     .lsa_age = 360,                  /* default LSA age                        */
-    .lsa_dage = FALSE,               /* age LSA by default                     */
     .lsa_type = LSA_TYPE_ROUTER,     /* default LSA header type                */
-    .lsa_lsid = INADDR_ANY,          /* default LSA ID                         */
-    .lsa_router = INADDR_ANY,        /* default LSA advertising router         */
-    .lsa_sequence = 0,               /* default LSA sequence number            */
-    .lsa_metric = 0,                 /* default LSA metric                     */
-    .lsa_flags = 0,                  /* no default Router-LSA flag is set      */
-    .lsa_link_id = INADDR_ANY,       /* default Router-LSA link ID             */
-    .lsa_link_data = INADDR_ANY,     /* default Router-LSA link data           */
     .lsa_link_type = LINK_TYPE_PTP,  /* default Router-LSA link type           */
-    .lsa_attached = INADDR_ANY,      /* default Network-LSA attached router    */
-    .lsa_larger = FALSE,             /* default ASBR/NSSA-LSA ext, larger      */
-    .lsa_forward = INADDR_ANY,       /* default ASBR/NSSA-LSA forward          */
-    .lsa_external = INADDR_ANY,      /* default ASBR/NSSA-LSA external         */
-    .vertex_type = 0,                /* default Group-LSA vertex type          */
-    .vertex_id = INADDR_ANY,         /* default Group-LSA vertex ID            */
-    .lls_options = 0,                /* default LSS Extended TLV options       */
-    .auth = FALSE,                   /* do not use authentication by default   */
-    .key_id = 1,                     /* default authentication key ID          */
-    .sequence = 0 }                  /* default authentication sequence        */
+    .key_id = 1 }                     /* default authentication key ID          */
 
     /* NOTE: Add configuration structured values for new protocols here! */
 };
