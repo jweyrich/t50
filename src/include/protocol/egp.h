@@ -90,20 +90,20 @@
  *
  * Autonomous System #     assigned   number   identifying  the  particular
  *                         autonomous system
- * 
+ *
  * Sequence #              send state variable (commands) or  receive state
  *                         variable (responses and indications)
  */
- 
+
 struct egp_hdr {
-	uint8_t  version;                /* version                     */
-	uint8_t  type;                   /* type                        */
-	uint8_t  code;                   /* code                        */
-	uint8_t  status;                 /* status                      */
-	uint16_t check;                  /* checksum                    */
-	uint16_t as;                     /* autonomous system           */
-	uint16_t sequence;               /* sequence number             */
-	uint8_t  __data[0];              /* data                        */
+  uint8_t  version;                /* version                     */
+  uint8_t  type;                   /* type                        */
+  uint8_t  code;                   /* code                        */
+  uint8_t  status;                 /* status                      */
+  uint16_t check;                  /* checksum                    */
+  uint16_t as;                     /* autonomous system           */
+  uint16_t sequence;               /* sequence number             */
+  uint8_t  __data[0];              /* data                        */
 };
 
 /*
@@ -147,10 +147,10 @@ struct egp_hdr {
  *
  * Poll Interval           minimum Poll command polling interval (seconds)
  */
- 
+
 struct egp_acq_hdr {
-	__be16	  hello;                  /* hello interval              */
-	__be16	  poll;                   /* poll interval               */
+  __be16    hello;                  /* hello interval              */
+  __be16    poll;                   /* poll interval               */
 };
 
 #endif  /* __EGP_H */

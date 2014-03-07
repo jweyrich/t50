@@ -39,8 +39,8 @@ int igmpv1(const socket_t fd, const struct config_options *o)
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
 
   /* Packet size. */
-  packet_size = sizeof(struct iphdr) + 
-    greoptlen            + 
+  packet_size = sizeof(struct iphdr) +
+    greoptlen            +
     sizeof(struct igmphdr);
 
   /* Try to reallocate packet, if necessary */
@@ -51,7 +51,7 @@ int igmpv1(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
-        sizeof(struct iphdr) + 
+        sizeof(struct iphdr) +
         sizeof(struct igmphdr));
 
   /* IGMPv1 Header structure making a pointer to Packet. */
@@ -62,9 +62,7 @@ int igmpv1(const socket_t fd, const struct config_options *o)
   igmpv1->csum  = 0;
 
   /* Computing the checksum. */
-  igmpv1->csum  = o->bogus_csum ? 
-    random() : 
-    cksum(igmpv1, sizeof(struct igmphdr));
+  igmpv1->csum  = o->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

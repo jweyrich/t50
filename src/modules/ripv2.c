@@ -49,9 +49,9 @@ int ripv2(const socket_t fd, const struct config_options *o)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  packet_size = sizeof(struct iphdr)  + 
-    greoptlen             + 
-    sizeof(struct udphdr) + 
+  packet_size = sizeof(struct iphdr)  +
+    greoptlen             +
+    sizeof(struct udphdr) +
     rip_hdr_len(o->rip.auth);
 
   /* Try to reallocate packet, if necessary */
@@ -62,15 +62,15 @@ int ripv2(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, o,
-        sizeof(struct iphdr) + 
-        sizeof(struct udphdr) + 
+        sizeof(struct iphdr) +
+        sizeof(struct udphdr) +
         rip_hdr_len(o->rip.auth));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  udp->source = htons(IPPORT_RIP); 
+  udp->source = htons(IPPORT_RIP);
   udp->dest   = htons(IPPORT_RIP);
-  udp->len    = htons(sizeof(struct udphdr) + 
+  udp->len    = htons(sizeof(struct udphdr) +
       rip_hdr_len(o->rip.auth));
   udp->check  = 0;
 
@@ -112,8 +112,8 @@ int ripv2(const socket_t fd, const struct config_options *o)
   *buffer.byte_ptr++ = o->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = htons(__RND(o->rip.domain));
-  
-  offset += RIP_HEADER_LENGTH;	
+
+  offset += RIP_HEADER_LENGTH;
 
   /*
    * RIP-2 MD5 Authentication (RFC 2082)
@@ -162,7 +162,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
   {
     *buffer.word_ptr++ = htons(0xffff);
     *buffer.word_ptr++ = htons(0x0003);
-    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + 
+    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH +
         RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = o->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
@@ -171,7 +171,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
 
     offset += RIP_AUTH_LENGTH;
-  }		
+  }
 
   /*
    * XXX Playing with:
@@ -252,9 +252,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  udp->check  = o->bogus_csum ? 
-    random() : 
-    cksum(udp, offset);
+  udp->check  = o->bogus_csum ? random() : cksum(udp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

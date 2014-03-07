@@ -18,8 +18,3 @@ March 1st, 2014
  % Add criteria "tcpdump" like on command line?
  % Change "fork()" use to pthreads (thinking on Windows port)?
  * Non Web GUI (using GTK+, since there is support for "Windows"!)?
-
- 
- 
- 
-

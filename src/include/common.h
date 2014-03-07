@@ -75,6 +75,12 @@
 /* NOTE: Macro used to test bitmasks */
 #define TEST_BITS(x,bits) ((x) & (bits))
 
+/* NOTE: Used to set/reset individual bits */
+#define TRUE  1
+#define FALSE 0
+#define ON    1
+#define OFF   0
+
 /* Data types */
 typedef uint32_t in_addr_t;
 typedef int socket_t;
@@ -132,7 +138,7 @@ typedef union {
  * length.   This information gives protection against misrouted datagrams.
  * This checksum procedure is the same as is used in TCP.
  *
- *                   0      7 8     15 16    23 24    31 
+ *                   0      7 8     15 16    23 24    31
  *                  +--------+--------+--------+--------+
  *                  |          source address           |
  *                  +--------+--------+--------+--------+
@@ -144,9 +150,9 @@ typedef union {
  * If the computed  checksum  is zero,  it is transmitted  as all ones (the
  * equivalent  in one's complement  arithmetic).   An all zero  transmitted
  * checksum  value means that the transmitter  generated  no checksum  (for
- * debugging or for higher level protocols that don't care). 
+ * debugging or for higher level protocols that don't care).
  */
-struct psdhdr 
+struct psdhdr
 {
   in_addr_t saddr;                  /* source address              */
   in_addr_t daddr;                  /* destination address         */

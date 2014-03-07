@@ -26,7 +26,7 @@ Description:   This function configures and sends the EGP packet header.
 Targets:       N/A */
 int egp(const socket_t fd, const struct config_options *o)
 {
-  size_t greoptlen,   /* GRE options size. */ 
+  size_t greoptlen,   /* GRE options size. */
          packet_size,
          offset;
 
@@ -41,9 +41,9 @@ int egp(const socket_t fd, const struct config_options *o)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  packet_size = sizeof(struct iphdr)   + 
-    greoptlen              + 
-    sizeof(struct egp_hdr) + 
+  packet_size = sizeof(struct iphdr)   +
+    greoptlen              +
+    sizeof(struct egp_hdr) +
     sizeof(struct egp_acq_hdr);
 
   /* Try to reallocate packet, if necessary */
@@ -54,8 +54,8 @@ int egp(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
-        sizeof(struct iphdr) + 
-        sizeof(struct egp_hdr)     + 
+        sizeof(struct iphdr) +
+        sizeof(struct egp_hdr)     +
         sizeof(struct egp_acq_hdr));
 
   /*
@@ -65,7 +65,7 @@ int egp(const socket_t fd, const struct config_options *o)
    */
   /* EGP Header structure making a pointer to Packet. */
   egp           = (struct egp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  egp->version  = EGPVERSION; 
+  egp->version  = EGPVERSION;
   egp->type     = o->egp.type;
   egp->code     = o->egp.code;
   egp->status   = o->egp.status;
@@ -83,9 +83,7 @@ int egp(const socket_t fd, const struct config_options *o)
   offset += sizeof(struct egp_acq_hdr);
 
   /* Computing the checksum. */
-  egp->check    = o->bogus_csum ? 
-    random() : 
-    cksum(egp, offset);
+  egp->check    = o->bogus_csum ? random() : cksum(egp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

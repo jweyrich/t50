@@ -44,7 +44,7 @@ $(OBJ_DIR)/modules.o
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.
 CC=gcc
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\" 
+DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
 
 COPTS=-Wall -Wextra -I$(INCLUDE_DIR)
 ifdef DEBUG
@@ -85,6 +85,6 @@ clean:
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
-	gzip -9c ./doc/t50.8 > $(RELEASE_DIR)/t50.8.gz  
+	gzip -9c ./doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
 	install $(RELEASE_DIR)/t50 /usr/sbin/
 	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/

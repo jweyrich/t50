@@ -33,7 +33,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
          packet_size,
-         offset, 
+         offset,
          counter;
 
   /* Packet and Checksum. */
@@ -50,9 +50,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   objects_length = rsvp_objects_len(o->rsvp.type, o->rsvp.scope, o->rsvp.adspec, o->rsvp.tspec);
-  packet_size = sizeof(struct iphdr) + 
-    sizeof(struct rsvp_common_hdr) + 
-    greoptlen                      + 
+  packet_size = sizeof(struct iphdr) +
+    sizeof(struct rsvp_common_hdr) +
+    greoptlen                      +
     objects_length;
 
   /* Try to reallocate the packet, if necessary */
@@ -63,7 +63,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
-        sizeof(struct iphdr)           + 
+        sizeof(struct iphdr)           +
         sizeof(struct rsvp_common_hdr) +
         objects_length);
 
@@ -108,7 +108,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
 
   offset += RSVP_LENGTH_SESSION;
 
-  /* 
+  /*
    * The RESV_HOP Object Class is present for the following:
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
@@ -146,7 +146,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     offset += RSVP_LENGTH_RESV_HOP;
   }
 
-  /* 
+  /*
    * The TIME_VALUES Object Class is present for the following:
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
@@ -175,7 +175,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     offset += RSVP_LENGTH_TIME_VALUES;
   }
 
-  /* 
+  /*
    * The ERROR_SPEC Object Class is present for the following:
    * 3.1.5 Path Teardown Messages
    * 3.1.8 Resv Error Messages
@@ -211,7 +211,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     offset += RSVP_LENGTH_ERROR_SPEC;
   }
 
-  /* 
+  /*
    * The SENDER_TEMPLATE,  SENDER_TSPEC and  ADSPEC Object Classes are
    * present for the following:
    * 3.1.3 Path Messages
@@ -264,7 +264,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * The contents and encoding rules for this object are specified
      * in documents prepared by the int-serv working group.
      */
-    *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TSPEC + 
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TSPEC +
         TSPEC_SERVICES(o->rsvp.tspec));
     *buffer.byte_ptr++ = RSVP_OBJECT_SENDER_TSPEC;
     *buffer.byte_ptr++ = 2;
@@ -294,7 +294,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
+    *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) -
           RSVP_LENGTH_SENDER_TSPEC)/4);
     *buffer.byte_ptr++ = o->rsvp.tspec;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
@@ -307,7 +307,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
       case TSPEC_GUARANTEED_SERVICE:
         *buffer.byte_ptr++ = TSPECT_TOKEN_BUCKET_SERVICE;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) - 
+        *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) -
               TSPEC_MESSAGE_HEADER)/4);
         *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_r));
         *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_b));
@@ -331,7 +331,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * The contents and format for this object are specified in
      * documents prepared by the int-serv working group.
      */
-    *buffer.word_ptr++ = htons(RSVP_LENGTH_ADSPEC + 
+    *buffer.word_ptr++ = htons(RSVP_LENGTH_ADSPEC +
         ADSPEC_SERVICES(o->rsvp.adspec));
     *buffer.byte_ptr++ = RSVP_OBJECT_ADSPEC;
     *buffer.byte_ptr++ = 2;
@@ -362,7 +362,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons((ADSPEC_SERVICES(o->rsvp.adspec) - 
+    *buffer.word_ptr++ = htons((ADSPEC_SERVICES(o->rsvp.adspec) -
           ADSPEC_MESSAGE_HEADER)/4);
 
     offset += RSVP_LENGTH_ADSPEC;
@@ -501,7 +501,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     }
   }
 
-  /* 
+  /*
    * The RESV_CONFIRM Object Class is present for the following:
    * 3.1.4 Resv Messages
    * 3.1.9 Confirmation Messages
@@ -530,7 +530,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     offset += RSVP_LENGTH_RESV_CONFIRM;
   }
 
-  /* 
+  /*
    * The STYLE Object Classes is present for the following:
    * 3.1.4 Resv Messages
    * 3.1.6 Resv Teardown Messages
@@ -542,7 +542,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
       o->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR  ||
       o->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
   {
-    /* 
+    /*
      * The SCOPE Object Classes is present for the following:
      * 3.1.4 Resv Messages
      * 3.1.6 Resv Teardown Messages
@@ -602,8 +602,8 @@ int rsvp(const socket_t fd, const struct config_options *o)
   }
 
   /* Computing the checksum. */
-  rsvp->check   = o->bogus_csum ? 
-    random() : 
+  rsvp->check   = o->bogus_csum ?
+    random() :
     cksum(rsvp, offset);
 
   /* GRE Encapsulation takes place. */
@@ -634,13 +634,13 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * The code starts with the size of SESSION Object Class  (according
    * to the RFC 2205, this is required in every RSVP message), and, if
    * the appropriate RSVP Message type matches,  size  accumulates the
-   * corresponded Object Class(s)  size  to build the appropriate RSVP 
+   * corresponded Object Class(s)  size  to build the appropriate RSVP
    * message.  Otherwise,   it just returns the size of SESSION Object
    * Class.
    */
   size = RSVP_LENGTH_SESSION;
 
-  /* 
+  /*
    * The RESV_HOP Object Class is present for the following:
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
@@ -655,7 +655,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       foo == RSVP_MESSAGE_TYPE_RESVERR)
     size += RSVP_LENGTH_RESV_HOP;
 
-  /* 
+  /*
    * The TIME_VALUES Object Class is present for the following:
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
@@ -664,7 +664,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       foo == RSVP_MESSAGE_TYPE_RESV)
     size += RSVP_LENGTH_TIME_VALUES;
 
-  /* 
+  /*
    * The ERROR_SPEC Object Class is present for the following:
    * 3.1.5 Path Teardown Messages
    * 3.1.8 Resv Error Messages
@@ -675,7 +675,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       foo == RSVP_MESSAGE_TYPE_RESVCONF)
     size += RSVP_LENGTH_ERROR_SPEC;
 
-  /* 
+  /*
    * The SENDER_TEMPLATE,  SENDER_TSPEC and  ADSPEC Object Classes are
    * present for the following:
    * 3.1.3 Path Messages
@@ -693,7 +693,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
     size += ADSPEC_SERVICES(baz);
   }
 
-  /* 
+  /*
    * The RESV_CONFIRM Object Class is present for the following:
    * 3.1.4 Resv Messages
    * 3.1.9 Confirmation Messages
@@ -702,7 +702,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       foo == RSVP_MESSAGE_TYPE_RESVCONF)
     size += RSVP_LENGTH_RESV_CONFIRM;
 
-  /* 
+  /*
    * The STYLE Object Classes is present for the following:
    * 3.1.4 Resv Messages
    * 3.1.6 Resv Teardown Messages
@@ -714,7 +714,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       foo == RSVP_MESSAGE_TYPE_RESVERR  ||
       foo == RSVP_MESSAGE_TYPE_RESVCONF)
   {
-    /* 
+    /*
      * The SCOPE Object Classes is present for the following:
      * 3.1.4 Resv Messages
      * 3.1.6 Resv Teardown Messages
@@ -726,7 +726,7 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
       size += RSVP_LENGTH_SCOPE(bar);
 
     size += RSVP_LENGTH_STYLE;
-  } 
+  }
 
   return size;
 }

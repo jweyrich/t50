@@ -30,7 +30,7 @@ void show_version(void)
 /* Help and usage message */
 void usage(void)
 {
-  show_version();  
+  show_version();
 
   printf("\n"
          "Usage: t50 <host>[/CIDR] [options]\n\n"
@@ -58,7 +58,7 @@ void usage(void)
          "    --dport NUM               DCCP|TCP|UDP destination port    (default RANDOM)\n\n"
          "IP Options:\n"
          " -s,--saddr ADDR              IP source IP address             (default RANDOM)\n"
-         "    --tos NUM                 IP type of service               (default 0x%x)\n"                        
+         "    --tos NUM                 IP type of service               (default 0x%x)\n"
          "    --id NUM                  IP identification                (default RANDOM)\n"
          "    --frag-offset NUM         IP fragmentation offset          (default 0)\n"
          "    --ttl NUM                 IP time to live                  (default 255)\n"
@@ -310,11 +310,11 @@ void usage(void)
 
   printf("Some considerations while running this program:\n"
          " 1. There is no limitation of using as many options as possible.\n"
-         " 2. Report %s bugs at %s.\n"  
+         " 2. Report %s bugs at %s.\n"
          " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
          " 4. Mandatory arguments to long options are mandatory for short options too.\n"
-         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"                           
-         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n", 
+         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"
+         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n",
          PACKAGE, SITE, PACKAGE, PACKAGE);
 
   fflush(stdout);

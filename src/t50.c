@@ -20,11 +20,11 @@
 #include <common.h>
 
 /* Global variables */
-static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */ 
+static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */
 static socket_t fd;
 
 /* Months */
-static const char *const months[] = 
+static const char *const months[] =
   { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
 
@@ -44,7 +44,7 @@ static void ctrlc(int32_t signal)
   }
 #endif
 
-	/* FIXME: Is returning EXIT_SUCCESS a good idea?
+  /* FIXME: Is returning EXIT_SUCCESS a good idea?
             Maybe we should return something like "2" to
             represent an interruption...
 
@@ -88,13 +88,13 @@ static const char *getOrdinalSuffix(unsigned int n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
-	/* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
-	if ((n < 11) || (n > 13))
-		switch (n % 10) {
-			case 1: return suffixes[0];
-			case 2: return suffixes[1]; 
-			case 3: return suffixes[2];
-		}
+  /* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
+  if ((n < 11) || (n > 13))
+    switch (n % 10) {
+      case 1: return suffixes[0];
+      case 2: return suffixes[1];
+      case 3: return suffixes[2];
+    }
 
   return suffixes[3];
 }
@@ -114,8 +114,8 @@ int main(int argc, char *argv[])
   /* CIDR host identifier and first IP address. */
   struct cidr *cidr_ptr;
 
-	modules_table_t *ptbl;
-	int num_modules;
+  modules_table_t *ptbl;
+  int num_modules;
 
   initializeSignalHandlers();
 
@@ -123,12 +123,12 @@ int main(int argc, char *argv[])
   o = getConfigOptions(argc, argv);
 
   /* NOTE: checkConfigOptions now returns TRUE or FALSE, instead of
-           EXIT_FAILURE or EXIT_SUCCESS. Makes more sense! */  
+           EXIT_FAILURE or EXIT_SUCCESS. Makes more sense! */
   /* Validating command line interface options. */
   if (!checkConfigOptions(o))
     exit(EXIT_FAILURE);
 
-	num_modules = getNumberOfRegisteredModules();
+  num_modules = getNumberOfRegisteredModules();
 
   /* Sanitizing the threshold. */
   if (o->ip.protocol == IPPROTO_T50)
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   /* Setting socket file descriptor. */
   fd = createSocket();
 
-	/* NOTE: Random seed don't need to be so precise! */
+  /* NOTE: Random seed don't need to be so precise! */
   srandom(time(NULL));
 
 #ifdef  __HAVE_TURBO__
@@ -161,19 +161,19 @@ int main(int argc, char *argv[])
 
   /* Calculating CIDR for destination address. */
   cidr_ptr = config_cidr(o->bits, o->ip.daddr);
-  
+
   /* "pid" is zero only for child processes */
   if (pid)
   {
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
-		/* FIXME: Why use '\b\r' at the beginning?! */
+    /* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
-  
+
   /* Execute if flood or while threshold greater than 0. */
   while (o->flood || o->threshold--)
   {
@@ -184,14 +184,14 @@ int main(int argc, char *argv[])
       /* FIX: No floating point! >-| */
       rand_daddr = random() % cidr_ptr->hostid;
 
-  		/* FIX: No addresses array needed */
-	  	o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
-    }   
+      /* FIX: No addresses array needed */
+      o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
+    }
 
     /* Sending ICMP/IGMP/TCP/UDP/... packets. */
     if (o->ip.protocol != IPPROTO_T50)
     {
-			ptbl = &mod_table[o->ip.protoname];
+      ptbl = &mod_table[o->ip.protoname];
 
       /* Getting the correct protocol. */
       o->ip.protocol = ptbl->protocol_id;
@@ -207,8 +207,8 @@ int main(int argc, char *argv[])
     else
     {
       /* NOTE: Using single pointer instead of calculating
-               the pointers in every iteration. */               
-      /* Sending T50 packets. */ 
+               the pointers in every iteration. */
+      /* Sending T50 packets. */
       for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
       {
         /* Getting the correct protocol. */
@@ -234,17 +234,17 @@ int main(int argc, char *argv[])
   /* Closing the socket. */
   close(fd);
 
-  /* NOTE: pid is zero only for child processes. */  
+  /* NOTE: pid is zero only for child processes. */
   if (pid)
   {
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
-		/* FIXME: Why use '\b\r' at the beginning?! */
+    /* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
-  
+
   return(EXIT_SUCCESS);
 }

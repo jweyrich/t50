@@ -49,11 +49,11 @@ int ipsec(const socket_t fd, const struct config_options *o)
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
-  packet_size = sizeof(struct iphdr) + 
-    greoptlen                  + 
-    sizeof(struct ip_auth_hdr) + 
+  packet_size = sizeof(struct iphdr) +
+    greoptlen                  +
+    sizeof(struct ip_auth_hdr) +
     ip_ah_icv                  +
-    sizeof(struct ip_esp_hdr)  + 
+    sizeof(struct ip_esp_hdr)  +
     esp_data;
 
   /* Try to reallocate packet, if necessary */
@@ -63,10 +63,10 @@ int ipsec(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
-        sizeof(struct iphdr) + 
-        sizeof(struct ip_auth_hdr) + 
+        sizeof(struct iphdr) +
+        sizeof(struct ip_auth_hdr) +
         ip_ah_icv                  +
-        sizeof(struct ip_esp_hdr)  + 
+        sizeof(struct ip_esp_hdr)  +
         esp_data);
 
   /*
@@ -92,8 +92,8 @@ int ipsec(const socket_t fd, const struct config_options *o)
   /* IPSec AH Header structure making a pointer to IP Header structure. */
   ip_auth          = (struct ip_auth_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   ip_auth->nexthdr = IPPROTO_ESP;
-  ip_auth->hdrlen  = o->ipsec.ah_length ? 
-    o->ipsec.ah_length : 
+  ip_auth->hdrlen  = o->ipsec.ah_length ?
+    o->ipsec.ah_length :
     (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
   ip_auth->spi     = htonl(__RND(o->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__RND(o->ipsec.ah_sequence));
@@ -118,7 +118,7 @@ int ipsec(const socket_t fd, const struct config_options *o)
   for (counter = 0; counter < esp_data; counter++)
     *buffer.byte_ptr++ = random();
 
-	/* FIXME: Is this correct?! */
+  /* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);
 

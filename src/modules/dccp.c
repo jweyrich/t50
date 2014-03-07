@@ -58,10 +58,10 @@ int dccp(const socket_t fd, const struct config_options *o)
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   dccp_length = dccp_packet_hdr_len(o->dccp.type);
   dccp_ext_length = (o->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
-  packet_size = sizeof(struct iphdr) + 
-    greoptlen               + 
-    sizeof(struct dccp_hdr) + 
-    dccp_ext_length         + 
+  packet_size = sizeof(struct iphdr) +
+    greoptlen               +
+    sizeof(struct dccp_hdr) +
+    dccp_ext_length         +
     dccp_length;
 
   /* Try to reallocate packet, if necessary */
@@ -71,15 +71,15 @@ int dccp(const socket_t fd, const struct config_options *o)
   ip = ip_header(packet, packet_size, o);
 
   /* Prepare GRE encapsulation, if needed */
-  gre_ip = gre_encapsulation(packet, o, 
-        sizeof(struct iphdr) + 
-        sizeof(struct dccp_hdr) + 
-        dccp_ext_length         + 
+  gre_ip = gre_encapsulation(packet, o,
+        sizeof(struct iphdr) +
+        sizeof(struct dccp_hdr) +
+        dccp_ext_length         +
         dccp_length);
 
   /* DCCP Header structure making a pointer to Packet. */
   dccp                 = (struct dccp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  dccp->dccph_sport    = htons(IPPORT_RND(o->source)); 
+  dccp->dccph_sport    = htons(IPPORT_RND(o->source));
   dccp->dccph_dport    = htons(IPPORT_RND(o->dest));
 
   /*
@@ -91,7 +91,7 @@ int dccp(const socket_t fd, const struct config_options *o)
    *     ignore packets whose Data Offset is smaller than the minimum-sized
    *     header for the given Type or larger than the DCCP packet itself.
    */
-  dccp->dccph_doff    = o->dccp.doff ? 
+  dccp->dccph_doff    = o->dccp.doff ?
     o->dccp.doff : (sizeof(struct dccp_hdr) + dccp_length + dccp_ext_length) / 4;
   dccp->dccph_type    = o->dccp.type;
   dccp->dccph_ccval   = __RND(o->dccp.ccval);
@@ -107,14 +107,14 @@ int dccp(const socket_t fd, const struct config_options *o)
    *
    *   CsCov = 0      The  Checksum  field  covers  the  DCCP  header, DCCP
    *                  options,    network-layer   pseudoheader,   and   all
-   *                  application  data  in the packet,  possibly padded on 
+   *                  application  data  in the packet,  possibly padded on
    *                  the right with zeros to an even number of bytes.
    *
    *   CsCov = 1-15   The  Checksum  field  covers  the  DCCP  header, DCCP
    *                  options,  network-layer pseudoheader, and the initial
    *                  (CsCov-1)*4 bytes of the packet's application data.
    */
-  dccp->dccph_cscov    = o->dccp.cscov ? 
+  dccp->dccph_cscov    = o->dccp.cscov ?
     (o->dccp.cscov - 1) * 4 : (o->bogus_csum ? random() : o->dccp.cscov);
 
   /*
@@ -242,9 +242,7 @@ int dccp(const socket_t fd, const struct config_options *o)
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  dccp->dccph_checksum = o->bogus_csum ? 
-    random() : 
-    cksum(dccp, offset);
+  dccp->dccph_checksum = o->bogus_csum ? random() : cksum(dccp, offset);
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, o, packet_size);

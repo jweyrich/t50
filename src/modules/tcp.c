@@ -56,9 +56,9 @@ int tcp(const socket_t fd, const struct config_options *o)
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
   tcpolen = tcp_options_len(o->tcp.options, o->tcp.md5, o->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
-  packet_size = sizeof(struct iphdr) + 
-    greoptlen             + 
-    sizeof(struct tcphdr) + 
+  packet_size = sizeof(struct iphdr) +
+    greoptlen             +
+    sizeof(struct tcphdr) +
     tcpopt;
 
   /* Try to reallocate packet, if necessary */
@@ -67,14 +67,14 @@ int tcp(const socket_t fd, const struct config_options *o)
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
 
-  gre_ip = gre_encapsulation(packet, o, 
-        sizeof(struct iphdr) + 
-        sizeof(struct tcphdr) + 
+  gre_ip = gre_encapsulation(packet, o,
+        sizeof(struct iphdr) +
+        sizeof(struct tcphdr) +
         tcpopt);
 
-  /* 
+  /*
    * The RFC 793 has defined a 4-bit field in the TCP header which encodes the size
-   * of the header in 4-byte words.  Thus the maximum header size is 15*4=60 bytes. 
+   * of the header in 4-byte words.  Thus the maximum header size is 15*4=60 bytes.
    * Of this, 20 bytes are taken up by non-options fields of the TCP header,  which
    * leaves 40 bytes (TCP header * 2) for options.
    */
@@ -261,7 +261,7 @@ int tcp(const socket_t fd, const struct config_options *o)
   {
     *buffer.byte_ptr++ = o->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(o->tcp.cc_new ? 
+    *buffer.dword_ptr++ = htonl(o->tcp.cc_new ?
       __RND(o->tcp.cc_new) : __RND(o->tcp.cc_echo));
 
     tcp->syn = 1;
@@ -272,7 +272,7 @@ int tcp(const socket_t fd, const struct config_options *o)
      *
      * 3.1  Data Structures
      *
-     * This  option  may be sent instead of a CC option in an  initial  <SYN> 
+     * This  option  may be sent instead of a CC option in an  initial  <SYN>
      * segment (i.e., SYN but not ACK bit), to indicate that the SEG.CC value
      * may not be larger than the previous value.   Its  SEG.CC  value is the
      * TCB.CCsend value from the sender's TCB.
@@ -284,8 +284,8 @@ int tcp(const socket_t fd, const struct config_options *o)
        *
        * 3.1  Data Structures
        *
-       * This  option  may be sent instead of a CC option in an  initial  <SYN> 
-       * This  option must be sent  (in addition to a CC option)  in a  segment 
+       * This  option  may be sent instead of a CC option in an  initial  <SYN>
+       * This  option must be sent  (in addition to a CC option)  in a  segment
        * containing both a  SYN and an  ACK bit,  if  the initial  SYN  segment
        * contained a CC or CC.NEW option.  Its SEG.CC value is the SEG.CC value
        * from the initial SYN.
@@ -470,54 +470,54 @@ static size_t tcp_options_len(const uint8_t foo, const uint8_t bar, const uint8_
   /*
    * TCP Options has Maximum Segment Size (MSS) Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_MSS)) 
+  if (TEST_BITS(foo, TCP_OPTION_MSS))
     size += TCPOLEN_MSS;
 
   /*
    * TCP Options has Window Scale (WSopt) Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_WSOPT)) 
+  if (TEST_BITS(foo, TCP_OPTION_WSOPT))
     size += TCPOLEN_WSOPT;
 
   /*
    * TCP Options has Timestamp (TSopt) Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_TSOPT)) 
+  if (TEST_BITS(foo, TCP_OPTION_TSOPT))
     size += TCPOLEN_TSOPT;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK-Permitted) Option
    * defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_SACK_OK)) 
+  if (TEST_BITS(foo, TCP_OPTION_SACK_OK))
     size += TCPOLEN_SACK_OK;
 
   /*
    * TCP Options has Connection Count (CC) Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_CC)) 
+  if (TEST_BITS(foo, TCP_OPTION_CC))
     size += TCPOLEN_CC;
 
   /*
    * TCP Options has CC.NEW or CC.ECHO Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_CC_NEXT)) 
+  if (TEST_BITS(foo, TCP_OPTION_CC_NEXT))
     size += TCPOLEN_CC;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK) Option defined.
    */
-  if (TEST_BITS(foo, TCP_OPTION_SACK_EDGE)) 
+  if (TEST_BITS(foo, TCP_OPTION_SACK_EDGE))
     size += TCPOLEN_SACK_EDGE(1);
 
   /*
    * Defining it the size should use MD5 Signature Option or the brand
    * new TCP Authentication Option (TCP-AO).
    */
-  if (bar) 
+  if (bar)
     size += TCPOLEN_MD5;
 
-  if (baz) 
+  if (baz)
     size += TCPOLEN_AO;
 
   return size;

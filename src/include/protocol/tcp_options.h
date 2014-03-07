@@ -48,14 +48,14 @@
  *
  * A SACK option that specifies n blocks will  have a length of 8*n+2
  * bytes,  so  the  40 bytes  available for TCP options can specify a
- * maximum of 4 blocks.   It is expected that SACK will often be used 
+ * maximum of 4 blocks.   It is expected that SACK will often be used
  * in conjunction with the Timestamp option used for RTTM,which takes
  * an additional 10 bytes (plus two bytes of padding); thus a maximum
  * of 3 SACK blocks will be allowed in this case.
  */
 #define TCPOLEN_SACK_EDGE(foo) \
-			(((foo) * (sizeof(uint32_t) * 2)) + \
-			TCPOLEN_SACK_OK)
+      (((foo) * (sizeof(uint32_t) * 2)) + \
+      TCPOLEN_SACK_OK)
 
 /*
  * Transmission Control Protocol (TCP) (RFC 793)
@@ -67,7 +67,7 @@
  *  zeros.
  */
 #define TCPOLEN_PADDING(foo) \
-			(((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
+      (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
 
 /* TCP Options bitmask. */
 #define TCP_OPTION_MSS        0x01

@@ -40,8 +40,8 @@ int icmp(const socket_t fd, const struct config_options *o)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  packet_size = sizeof(struct iphdr) + 
-                greoptlen            + 
+  packet_size = sizeof(struct iphdr) +
+                greoptlen            +
                 sizeof(struct icmphdr);
 
   /* Try to reallocate packet, if necessary */
@@ -52,7 +52,7 @@ int icmp(const socket_t fd, const struct config_options *o)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, o,
-        sizeof(struct iphdr) + 
+        sizeof(struct iphdr) +
         sizeof(struct icmphdr));
 
   /* ICMP Header structure making a pointer to Packet. */
@@ -71,8 +71,7 @@ int icmp(const socket_t fd, const struct config_options *o)
   offset = sizeof(struct icmphdr);
 
   /* Computing the checksum. */
-  icmp->checksum = o->bogus_csum ? 
-    random() : cksum(icmp, offset);
+  icmp->checksum = o->bogus_csum ? random() : cksum(icmp, offset);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, o, packet_size);

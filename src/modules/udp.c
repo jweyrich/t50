@@ -56,7 +56,7 @@ int udp(const socket_t fd, const struct config_options *o)
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  udp->source = htons(IPPORT_RND(o->source)); 
+  udp->source = htons(IPPORT_RND(o->source));
   udp->dest   = htons(IPPORT_RND(o->dest));
   udp->len    = htons(sizeof(struct udphdr));
   udp->check  = 0;
@@ -70,7 +70,7 @@ int udp(const socket_t fd, const struct config_options *o)
   pseudo->len      = htons(sizeof(struct udphdr));
 
   /* Computing the checksum. */
-  udp->check  = o->bogus_csum ? random() : 
+  udp->check  = o->bogus_csum ? random() :
     cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
 
   gre_checksum(packet, o, packet_size);

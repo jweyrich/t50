@@ -63,12 +63,12 @@ int ospf(const socket_t fd, const struct config_options *o)
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
   ospf_length = ospf_hdr_len(o->ospf.type, o->ospf.neighbor, o->ospf.lsa_type, o->ospf.dd_include_lsa);
 
-  packet_size = sizeof(struct iphdr) + 
-    greoptlen                      + 
-    sizeof(struct ospf_hdr)        + 
-    sizeof(struct ospf_auth_hdr)   + 
-    ospf_length                    + 
-    auth_hmac_md5_len(o->ospf.auth) + 
+  packet_size = sizeof(struct iphdr) +
+    greoptlen                      +
+    sizeof(struct ospf_hdr)        +
+    sizeof(struct ospf_auth_hdr)   +
+    ospf_length                    +
+    auth_hmac_md5_len(o->ospf.auth) +
     ospf_tlv_len(o->ospf.type, lls, o->ospf.auth);
 
   /* Try to reallocate packet, if necessary */
@@ -77,12 +77,12 @@ int ospf(const socket_t fd, const struct config_options *o)
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, packet_size, o);
 
-  gre_encapsulation(packet, o, 
-        sizeof(struct iphdr)           + 
-        sizeof(struct ospf_hdr)        + 
-        sizeof(struct ospf_auth_hdr)   + 
-        ospf_length                    + 
-        auth_hmac_md5_len(o->ospf.auth) + 
+  gre_encapsulation(packet, o,
+        sizeof(struct iphdr)           +
+        sizeof(struct ospf_hdr)        +
+        sizeof(struct ospf_auth_hdr)   +
+        ospf_length                    +
+        auth_hmac_md5_len(o->ospf.auth) +
         ospf_tlv_len(o->ospf.type, lls, o->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
@@ -100,10 +100,10 @@ int ospf(const socket_t fd, const struct config_options *o)
    * is not included in the OSPF header's packet length, although it
    * is included in the packet's IP header length field.
    */
-  ospf->length  = htons(o->ospf.length ? 
-      o->ospf.length : 
-      sizeof(struct ospf_hdr) + 
-      sizeof(struct ospf_auth_hdr)  + 
+  ospf->length  = htons(o->ospf.length ?
+      o->ospf.length :
+      sizeof(struct ospf_hdr) +
+      sizeof(struct ospf_auth_hdr)  +
       ospf_length);
   ospf->rid     = INADDR_RND(o->ospf.rid);
   ospf->aid     = o->ospf.AID ? INADDR_RND(o->ospf.aid) : o->ospf.aid;
@@ -285,8 +285,8 @@ build_ospf_lsupdate:
       if (o->ospf.lsa_type == LSA_TYPE_ROUTER)
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_ROUTER);
         /*
          * The OSPF Not-So-Stubby Area (NSSA) Option (RFC 3101)
@@ -306,7 +306,7 @@ build_ospf_lsupdate:
          *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
         *buffer.byte_ptr++ = __RND(o->ospf.lsa_flags);
-        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO; 
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(1);
         *buffer.inaddr_ptr++ = INADDR_RND(o->ospf.lsa_link_id);
         *buffer.inaddr_ptr++ = NETMASK_RND(o->ospf.lsa_link_data);
@@ -317,15 +317,15 @@ build_ospf_lsupdate:
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER;
 
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum ? 
-          random() : 
+        ospf_lsa->check      =  o->bogus_csum ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
-      } 
+      }
       else if (o->ospf.lsa_type == LSA_TYPE_NETWORK)
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_NETWORK);
         /*
          * OSPF Version 2 (RFC 2328)
@@ -346,16 +346,16 @@ build_ospf_lsupdate:
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
 
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum  ? 
-          random() : 
+        ospf_lsa->check      =  o->bogus_csum  ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
       }
       else if (o->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
           o->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_SUMMARY);
         /*
          * OSPF Version 2 (RFC 2328)
@@ -378,16 +378,16 @@ build_ospf_lsupdate:
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY;
 
         /* Computing the checksum. */
-        ospf_lsa->check =  o->bogus_csum ? 
-          random() : 
+        ospf_lsa->check =  o->bogus_csum ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
       }
       else if (o->ospf.lsa_type == LSA_TYPE_ASBR ||
           o->ospf.lsa_type == LSA_TYPE_NSSA)
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_ASBR);
         /*
          * OSPF Version 2 (RFC 2328)
@@ -420,15 +420,15 @@ build_ospf_lsupdate:
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR;
 
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum ? 
-          random() : 
+        ospf_lsa->check      =  o->bogus_csum ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
       }
       else if (o->ospf.lsa_type == LSA_TYPE_MULTICAST)
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_MULTICAST);
         /*
          * Multicast Extensions to OSPF (RFC 1584)
@@ -449,23 +449,23 @@ build_ospf_lsupdate:
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST;
 
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum ? 
-          random() : 
+        ospf_lsa->check      =  o->bogus_csum ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
         /* Building a generic OSPF LSA Header. */
       }
       else
       {
         /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_GENERIC(0));
 
         offset += OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0);
 
         /* Computing the checksum. */
-        ospf_lsa->check      =  o->bogus_csum ? 
-          random() : 
+        ospf_lsa->check      =  o->bogus_csum ?
+          random() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0));
       }
       break;
@@ -510,7 +510,7 @@ build_ospf_lsupdate:
     if (o->ospf.dd_include_lsa)
     {
       /* OSPF LSA Header structure making a pointer to Checksum. */
-build_ospf_lsa:   
+build_ospf_lsa:
       ospf_lsa             = (struct ospf_lsa_hdr *)buffer.ptr;
       ospf_lsa->age        = htons(__RND(o->ospf.lsa_age));
       /* Deciding whether age or not. */
@@ -534,37 +534,37 @@ build_ospf_lsa:
        * Header. It just needs to set the correct OSPF LSA Header length.
        */
       if (o->ospf.lsa_type == LSA_TYPE_ROUTER)
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_ROUTER);
       else if (o->ospf.lsa_type == LSA_TYPE_NETWORK)
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_NETWORK);
       else if (o->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
           o->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_SUMMARY);
       else if (o->ospf.lsa_type == LSA_TYPE_ASBR ||
           o->ospf.lsa_type == LSA_TYPE_NSSA)
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_ASBR);
       else if (o->ospf.lsa_type == LSA_TYPE_MULTICAST)
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_MULTICAST);
       else
-        ospf_lsa->length     = htons(o->ospf.length ? 
-            o->ospf.length : 
+        ospf_lsa->length     = htons(o->ospf.length ?
+            o->ospf.length :
             LSA_TLEN_GENERIC(0));
 
       offset += LSA_TLEN_GENERIC(0);
 
       /* Computing the checksum. */
-      ospf_lsa->check      =  o->bogus_csum ? 
-        random() : 
+      ospf_lsa->check      =  o->bogus_csum ?
+        random() :
         cksum(ospf_lsa, LSA_TLEN_GENERIC(0));
     }
   }
@@ -593,8 +593,8 @@ build_ospf_lsa:
     {
       /* OSPF LLS TLVs structure making a pointer to Checksum. */
       ospf_lls         = (struct ospf_lls_hdr *)buffer.ptr;
-      ospf_lls->length = htons(o->ospf.length ? 
-          o->ospf.length : 
+      ospf_lls->length = htons(o->ospf.length ?
+          o->ospf.length :
           ospf_tlv_len(o->ospf.type, lls, o->ospf.auth)/4);
       ospf_lls->check  = 0;
 
@@ -651,8 +651,8 @@ build_ospf_lsa:
          * enabled on the corresponding interface.
          *
          * The CA-TLV MUST NOT appear more than once in the LLS block.  Also,
-         * when present,  this TLV MUST be the last TLV in the LLS block.  If 
-         * it appears more than once,  only the first occurrence is processed 
+         * when present,  this TLV MUST be the last TLV in the LLS block.  If
+         * it appears more than once,  only the first occurrence is processed
          * and any others MUST be ignored.
          */
         *buffer.word_ptr++ = htons(OSPF_TLV_CRYPTO);
@@ -680,8 +680,8 @@ build_ospf_lsa:
       else
       {
         /* Computing the checksum. */
-        ospf_lls->check  =  o->bogus_csum ? 
-          random() : 
+        ospf_lls->check  =  o->bogus_csum ?
+          random() :
           cksum(ospf_lls, ospf_tlv_len(o->ospf.type, lls, o->ospf.auth));
       }
 
@@ -699,8 +699,8 @@ build_ospf_lsa:
    */
   if (!o->ospf.auth)
     /* Computing the checksum. */
-    ospf->check   = o->bogus_csum ? 
-      random() : 
+    ospf->check   = o->bogus_csum ?
+      random() :
       cksum(ospf, sizeof(struct ospf_hdr) + offset);
 
   gre_checksum(packet, o, packet_size);
@@ -743,7 +743,7 @@ static size_t ospf_hdr_len(const uint8_t foo, const uint8_t bar, const uint8_t b
       size += OSPF_TLEN_NEIGHBOR(bar);
       break;
       /*
-       * The size of a Database Description (DD)  Message Type may vary 
+       * The size of a Database Description (DD)  Message Type may vary
        * based on the presence of a LSA Header,  depending on the case,
        * it may or may not be included.
        */
