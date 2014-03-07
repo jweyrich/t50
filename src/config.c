@@ -22,6 +22,8 @@
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
          make sure that all fields are initialized correctly. */
+/* FIXME: It is possible to supress the fields initialized with 0 to make this
+          shorter! */
 static struct config_options o = {
   /* XXX COMMON OPTIONS                                                         */
   .threshold = 1000,                  /* default threshold                      */
