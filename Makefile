@@ -68,7 +68,6 @@ CFLAGS+=$(DFLAGS)
 .PHONY: clean install
 
 # link
-
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
