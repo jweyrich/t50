@@ -58,14 +58,17 @@ static void initializeSignalHandlers(void)
   /* NOTE: See 'man 2 signal' */
   struct sigaction sa;
 
-  memset(&sa, 0, sizeof(sa));
+  /* Using sig*() functions for compability. */
   sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART; /* signal() semantics */
 
   /* Ignoring signals. */
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
   sa.sa_handler = ctrlc;
+
   /* Handling signals. */
   sigaction(SIGINT,  &sa, NULL);
   //sigaction(SIGILL, &sa, NULL); /* not necessary */
