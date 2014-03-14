@@ -46,39 +46,39 @@ $(OBJ_DIR)/modules.o
 CC=gcc
 DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
 
-COPTS=-Wall -Wextra -I$(INCLUDE_DIR)
+CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR)
 ifdef DEBUG
-	COPTS+=-O0
+	CFLAGS+=-O0
 	DFLAGS+=-D__HAVE_DEBUG__ -g
-	LDOPTS=
+	LDFLAGS=
 else
-	COPTS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
+	CFLAGS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
 
 	# Get architecture
 	ARCH=$(shell arch)
 	ifneq ($(ARCH),x86_64)
-		COPTS+=-msse -mfpmath=sse		
+		CFLAGS+=-msse -mfpmath=sse		
 	endif
 
   DFLAGS+=-DNDEBUG
-	LDOPTS=-s -O3 -fuse-linker-plugin -flto
+	LDFLAGS=-s -O3 -fuse-linker-plugin -flto
 endif
-COPTS+=$(DFLAGS)
+CFLAGS+=$(DFLAGS)
 
 .PHONY: clean install
 
 # link
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDOPTS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 # Compile main
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(COPTS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Compile modules
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
-	$(CC) $(COPTS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
