@@ -23,7 +23,8 @@ void show_version(void)
 {
   printf("T50 Experimental Mixed Packet Injector Tool %s\n"
          "Originally created by Nelson Brito <nbrito@sekure.org>\n"
-         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
+         "Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
+         "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>\n"
          VERSION);
 }
 
