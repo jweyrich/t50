@@ -25,53 +25,28 @@
 #include <common.h>
 
 /* EGP Message Types */
-enum egp_type {
-	EGP_NEIGHBOR_UPDATE_RESP    = 1,
-#define EGP_NEIGHBOR_UPDATE_RESP      EGP_NEIGHBOR_UPDATE_RESP
-	EGP_NEIGHBOR_POLL_COMMAND,
-#define EGP_NEIGHBOR_POLL_COMMAND     EGP_NEIGHBOR_POLL_COMMAND
-	EGP_NEIGHBOR_ACQUISITION,
-#define EGP_NEIGHBOR_ACQUISITION      EGP_NEIGHBOR_ACQUISITION
-	EGP_NEIGHBOR_REACHABILITY   = 5,
-#define EGP_NEIGHBOR_REACHABILITY     EGP_NEIGHBOR_REACHABILITY
-	EGP_NEIGHBOR_ERROR_RESP     = 8
-#define EGP_NEIGHBOR_ERROR_RESP       EGP_NEIGHBOR_ERROR_RESP
-};
+#define EGP_NEIGHBOR_UPDATE_RESP  1
+#define EGP_NEIGHBOR_POLL_COMMAND 2
+#define EGP_NEIGHBOR_ACQUISITION  3
+#define EGP_NEIGHBOR_REACHABILITY 5
+#define EGP_NEIGHBOR_ERROR_RESP   8
 
 /* EGP Message Neighbor Acquisition Codes */
-enum acquisition_code {
-	EGP_ACQ_CODE_REQUEST_CMD    = 0,
-#define EGP_ACQ_CODE_REQUEST_CMD      EGP_ACQ_CODE_REQUEST_CMD
-	EGP_ACQ_CODE_CONFIRM_RESP,
-#define EGP_ACQ_CODE_CONFIRM_RESP     EGP_ACQ_CODE_CONFIRM_RESP
-	EGP_ACQ_CODE_REFUSE_RESP,
-#define EGP_ACQ_CODE_REFUSE_RESP      EGP_ACQ_CODE_REFUSE_RESP
-	EGP_ACQ_CODE_CEASE_CMD,
-#define EGP_ACQ_CODE_CEASE_CMD        EGP_ACQ_CODE_CEASE_CMD
-	EGP_ACQ_CODE_CEASE_ACKCMD,
-#define EGP_ACQ_CODE_CEASE_ACKCMD     EGP_ACQ_CODE_CEASE_ACKCMD
-
-};
+#define EGP_ACQ_CODE_REQUEST_CMD  0
+#define EGP_ACQ_CODE_CONFIRM_RESP 1
+#define EGP_ACQ_CODE_REFUSE_RESP  2
+#define EGP_ACQ_CODE_CEASE_CMD    3
+#define EGP_ACQ_CODE_CEASE_ACKCMD 4
 
 /* EGP Message Neighbor Acquisition Type */
-enum egp_acq_status {
-	EGP_ACQ_STAT_UNSPECIFIED    = 0,
-#define EGP_ACQ_STAT_UNSPECIFIED      EGP_ACQ_STAT_UNSPECIFIED
-	EGP_ACQ_STAT_ACTIVE_MODE,
-#define EGP_ACQ_STAT_ACTIVE_MODE      EGP_ACQ_STAT_ACTIVE_MODE
-	EGP_ACQ_STAT_PASSIVE_MODE,
-#define EGP_ACQ_STAT_PASSIVE_MODE     EGP_ACQ_STAT_PASSIVE_MODE
-	EGP_ACQ_STAT_INSUFFICIENT,
-#define EGP_ACQ_STAT_INSUFFICIENT     EGP_ACQ_STAT_INSUFFICIENT
-	EGP_ACQ_STAT_ADM_PROHIBIT,
-#define EGP_ACQ_STAT_ADM_PROHIBIT     EGP_ACQ_STAT_ADM_PROHIBIT
-	EGP_ACQ_STAT_GOING_DOWN,
-#define EGP_ACQ_STAT_GOING_DOWN       EGP_ACQ_STAT_GOING_DOWN
-	EGP_ACQ_STAT_PARAMETER,
-#define EGP_ACQ_STAT_PARAMETER        EGP_ACQ_STAT_PARAMETER
-	EGP_ACQ_STAT_VIOLATION,
-#define EGP_ACQ_STAT_VIOLATION        EGP_ACQ_STAT_VIOLATION
-};
+#define EGP_ACQ_STAT_UNSPECIFIED  0
+#define EGP_ACQ_STAT_ACTIVE_MODE  1
+#define EGP_ACQ_STAT_PASSIVE_MODE 2
+#define EGP_ACQ_STAT_INSUFFICIENT 3
+#define EGP_ACQ_STAT_ADM_PROHIBIT 4
+#define EGP_ACQ_STAT_GOING_DOWN   5
+#define EGP_ACQ_STAT_PARAMETER    6
+#define EGP_ACQ_STAT_VIOLATION    7
 
 /* EGP PROTOCOL STRUCTURES
 
@@ -115,20 +90,20 @@ enum egp_acq_status {
  *
  * Autonomous System #     assigned   number   identifying  the  particular
  *                         autonomous system
- * 
+ *
  * Sequence #              send state variable (commands) or  receive state
  *                         variable (responses and indications)
  */
- 
+
 struct egp_hdr {
-	uint8_t  version;                /* version                     */
-	uint8_t  type;                   /* type                        */
-	uint8_t  code;                   /* code                        */
-	uint8_t  status;                 /* status                      */
-	uint16_t check;                  /* checksum                    */
-	uint16_t as;                     /* autonomous system           */
-	uint16_t sequence;               /* sequence number             */
-	uint8_t  __data[0];              /* data                        */
+  uint8_t  version;                /* version                     */
+  uint8_t  type;                   /* type                        */
+  uint8_t  code;                   /* code                        */
+  uint8_t  status;                 /* status                      */
+  uint16_t check;                  /* checksum                    */
+  uint16_t as;                     /* autonomous system           */
+  uint16_t sequence;               /* sequence number             */
+  uint8_t  __data[0];              /* data                        */
 };
 
 /*
@@ -172,10 +147,10 @@ struct egp_hdr {
  *
  * Poll Interval           minimum Poll command polling interval (seconds)
  */
- 
+
 struct egp_acq_hdr {
-	__be16	  hello;                  /* hello interval              */
-	__be16	  poll;                   /* poll interval               */
+  __be16    hello;                  /* hello interval              */
+  __be16    poll;                   /* poll interval               */
 };
 
 #endif  /* __EGP_H */

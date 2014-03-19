@@ -19,17 +19,23 @@
 
 #include <common.h>
 
-/* Help and usage message */
-void usage()
+void show_version(void)
 {
   printf("T50 Experimental Mixed Packet Injector Tool %s\n"
          "Originally created by Nelson Brito <nbrito@sekure.org>\n"
-         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n\n",
+         "Maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
          VERSION);
-  
-  printf("Usage: t50 <host> [/CIDR] [options]\n\n");
+}
 
-  printf("Common Options:\n"
+/* Help and usage message */
+void usage(void)
+{
+  show_version();
+
+  printf("\n"
+         "Usage: t50 <host>[/CIDR] [options]\n\n"
+
+         "Common Options:\n"
          "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
          "    --flood                   This option supersedes the \'threshold\'\n"
          "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
@@ -37,8 +43,7 @@ void usage()
 #ifdef  __HAVE_TURBO__
   			"    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */
-	);
-  printf(" -v,--version                 Print version and exit \n"
+        " -v,--version                 Print version and exit \n"
   			" -h,--help                    Display this help and exit\n\n"
          "GRE Options:\n"
          "    --gre-seq-present         GRE sequence # present           (default OFF)\n"
@@ -53,20 +58,26 @@ void usage()
          "    --dport NUM               DCCP|TCP|UDP destination port    (default RANDOM)\n\n"
          "IP Options:\n"
          " -s,--saddr ADDR              IP source IP address             (default RANDOM)\n"
-         "    --tos NUM                 IP type of service               (default 0x%x)\n", IPTOS_PREC_IMMEDIATE);
-  printf("    --id NUM                  IP identification                (default RANDOM)\n"
+         "    --tos NUM                 IP type of service               (default 0x%x)\n"
+         "    --id NUM                  IP identification                (default RANDOM)\n"
          "    --frag-offset NUM         IP fragmentation offset          (default 0)\n"
          "    --ttl NUM                 IP time to live                  (default 255)\n"
-         "    --protocol PROTO          IP protocol                      (default TCP)\n\n"
-         "ICMP Options:\n"
-         "    --icmp-type NUM           ICMP type                        (default %d)\n", ICMP_ECHO);
-  printf("    --icmp-code NUM           ICMP code                        (default 0)\n"
+         "    --protocol PROTO          IP protocol                      (default TCP)\n\n",
+         IPTOS_PREC_IMMEDIATE);
+
+  /* FIXME: Future call: icmp_usage(); */
+  printf("ICMP Options:\n"
+         "    --icmp-type NUM           ICMP type                        (default %d)\n"
+         "    --icmp-code NUM           ICMP code                        (default 0)\n"
          "    --icmp-gateway ADDR       ICMP redirect gateway            (default RANDOM)\n"
          "    --icmp-id NUM             ICMP identification              (default RANDOM)\n"
-         "    --icmp-sequence NUM       ICMP sequence #                  (default RANDOM)\n\n"
-         "IGMP Options:\n"
-         "    --igmp-type NUM           IGMPv1/v3 type                   (default 0x%x)\n", IGMP_HOST_MEMBERSHIP_QUERY);
-  printf("    --igmp-code NUM           IGMPv1/v3 code                   (default 0)\n"
+         "    --icmp-sequence NUM       ICMP sequence #                  (default RANDOM)\n\n",
+         ICMP_ECHO);
+
+  /* FIXME: Future call: igmp_usage(); */
+  printf("IGMP Options:\n"
+         "    --igmp-type NUM           IGMPv1/v3 type                   (default 0x%x)\n"
+         "    --igmp-code NUM           IGMPv1/v3 code                   (default 0)\n"
          "    --igmp-group ADDR         IGMPv1/v3 address                (default RANDOM)\n"
          "    --igmp-qrv NUM            IGMPv3 QRV                       (default RANDOM)\n"
          "    --igmp-suppress           IGMPv3 suppress router-side      (default OFF)\n"
@@ -74,12 +85,15 @@ void usage()
          "    --igmp-grec-type NUM      IGMPv3 group record type         (default 1)\n"
          "    --igmp-sources NUM        IGMPv3 # of sources              (default 2)\n"
          "    --igmp-multicast ADDR     IGMPv3 group record multicast    (default RANDOM)\n"
-         "    --igmp-address ADDR,...   IGMPv3 source address(es)        (default RANDOM)\n\n"
-         "TCP Options:\n"
+         "    --igmp-address ADDR,...   IGMPv3 source address(es)        (default RANDOM)\n\n",
+         IGMP_HOST_MEMBERSHIP_QUERY);
+
+  /* FIXME: Future call: tcp_usage(); */
+  printf("TCP Options:\n"
          "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
-         "    --data-offset NUM         TCP data offset                  (default %d)\n", (uint32_t)(sizeof(struct tcphdr)/4));
-  printf(" -F,--fin                     TCP FIN flag                     (default OFF)\n"
+         "    --data-offset NUM         TCP data offset                  (default %d)\n"
+         " -F,--fin                     TCP FIN flag                     (default OFF)\n"
          " -S,--syn                     TCP SYN flag                     (default OFF)\n"
          " -R,--rst                     TCP RST flag                     (default OFF)\n"
          " -P,--psh                     TCP PSH flag                     (default OFF)\n"
@@ -101,19 +115,27 @@ void usage()
          "    --authentication          TCP-AO authentication included   (default OFF)\n"
          "    --auth-key-id NUM         TCP-AO authentication key ID     (default 1)\n"
          "    --auth-next-key NUM       TCP-AO authentication next key   (default 1)\n"
-         "    --nop                     TCP No-Operation                 (default EOL)\n\n"
-         "EGP Options:\n"
-         "    --egp-type NUM            EGP type                         (default %d)\n", EGP_NEIGHBOR_ACQUISITION);
-  printf("    --egp-code NUM            EGP code                         (default %d)\n", EGP_ACQ_CODE_CEASE_CMD);
-  printf("    --egp-status NUM          EGP status                       (default %d)\n", EGP_ACQ_STAT_ACTIVE_MODE);
-  printf("    --egp-as NUM              EGP autonomous system            (default RANDOM)\n"
+         "    --nop                     TCP No-Operation                 (default EOL)\n\n",
+         (int)(sizeof(struct tcphdr) / 4));
+
+  /* FIXME: Future call: egp_usage(); */
+  printf("EGP Options:\n"
+         "    --egp-type NUM            EGP type                         (default %d)\n"
+         "    --egp-code NUM            EGP code                         (default %d)\n"
+         "    --egp-status NUM          EGP status                       (default %d)\n"
+         "    --egp-as NUM              EGP autonomous system            (default RANDOM)\n"
          "    --egp-sequence NUM        EGP sequence #                   (default RANDOM)\n"
          "    --egp-hello NUM           EGP hello interval               (default RANDOM)\n"
-         "    --egp-poll NUM            EGP poll interval                (default RANDOM)\n\n"
-         "RIP Options:\n"
+         "    --egp-poll NUM            EGP poll interval                (default RANDOM)\n\n",
+         EGP_NEIGHBOR_ACQUISITION,
+         EGP_ACQ_CODE_CEASE_CMD,
+         EGP_ACQ_STAT_ACTIVE_MODE);
+
+  /* FIXME: Future call: rip_usage(); */
+  printf("RIP Options:\n"
          "    --rip-command NUM         RIPv1/v2 command                 (default 2)\n"
-         "    --rip-family NUM          RIPv1/v2 address family          (default %d)\n", AF_INET);
-  printf("    --rip-address ADDR        RIPv1/v2 router address          (default RANDOM)\n"
+         "    --rip-family NUM          RIPv1/v2 address family          (default %d)\n"
+         "    --rip-address ADDR        RIPv1/v2 router address          (default RANDOM)\n"
          "    --rip-metric NUM          RIPv1/v2 router metric           (default RANDOM)\n"
          "    --rip-domain NUM          RIPv2 router domain              (default RANDOM)\n"
          "    --rip-tag NUM             RIPv2 router tag                 (default RANDOM)\n"
@@ -121,21 +143,27 @@ void usage()
          "    --rip-next-hop ADDR       RIPv2 router next hop            (default RANDOM)\n"
          "    --rip-authentication      RIPv2 authentication included    (default OFF)\n"
          "    --rip-auth-key-id NUM     RIPv2 authentication key ID      (default 1)\n"
-         "    --rip-auth-sequence NUM   RIPv2 authentication sequence #  (default RANDOM)\n\n"
-         "DCCP Options:\n"
+         "    --rip-auth-sequence NUM   RIPv2 authentication sequence #  (default RANDOM)\n\n",
+         AF_INET);
+
+  /* FIXME: Future call: dccp_usage(); */
+  printf("DCCP Options:\n"
          "    --dccp-data-offset NUM    DCCP data offset                 (default VARY)\n"
          "    --dccp-cscov NUM          DCCP checksum coverage           (default 0)\n"
          "    --dccp-ccval NUM          DCCP HC-Sender CCID              (default RANDOM)\n"
-         "    --dccp-type NUM           DCCP type                        (default %d)\n", DCCP_PKT_REQUEST);
-  printf("    --dccp-extended           DCCP extend for sequence #       (default OFF)\n"
+         "    --dccp-type NUM           DCCP type                        (default %d)\n"
+         "    --dccp-extended           DCCP extend for sequence #       (default OFF)\n"
          "    --dccp-sequence-1 NUM     DCCP sequence #                  (default RANDOM)\n"
          "    --dccp-sequence-2 NUM     DCCP extended sequence #         (default RANDOM)\n"
          "    --dccp-sequence-3 NUM     DCCP sequence # low              (default RANDOM)\n"
          "    --dccp-service NUM        DCCP service code                (default RANDOM)\n"
          "    --dccp-acknowledge-1 NUM  DCCP acknowledgment # high       (default RANDOM)\n"
          "    --dccp-acknowledge-2 NUM  DCCP acknowledgment # low        (default RANDOM)\n"
-         "    --dccp-reset-code NUM     DCCP reset code                  (default RANDOM)\n\n"
-         "RSVP Options:\n"
+         "    --dccp-reset-code NUM     DCCP reset code                  (default RANDOM)\n\n",
+         DCCP_PKT_REQUEST);
+
+  /* FIXME: Future call: rsvp_usage(); */
+  printf("RSVP Options:\n"
          "    --rsvp-flags NUM          RSVP flags                       (default 1)\n"
          "    --rsvp-type NUM           RSVP message type                (default 1)\n"
          "    --rsvp-ttl NUM            RSVP time to live                (default 254)\n"
@@ -172,21 +200,25 @@ void usage()
          "    --rsvp-adspec-Csum NUM    RSVP ADSPEC SLR point composed C (default RANDOM)\n"
          "    --rsvp-adspec-Dsum NUM    RSVP ADSPEC SLR point composed D (default RANDOM)\n"
          "    --rsvp-adspec-controlled  RSVP ADSPEC service controlled   (default OFF)\n"
-         "    --rsvp-confirm-addr ADDR  RSVP CONFIRM receiver address    (default RANDOM)\n\n"
-         "IPSEC Options:\n"
+         "    --rsvp-confirm-addr ADDR  RSVP CONFIRM receiver address    (default RANDOM)\n\n");
+
+  /* FIXME: Future call: ipsec_usage(); */
+  printf("IPSEC Options:\n"
          "    --ipsec-ah-length NUM     IPSec AH header length           (default NONE)\n"
          "    --ipsec-ah-spi NUM        IPSec AH SPI                     (default RANDOM)\n"
          "    --ipsec-ah-sequence NUM   IPSec AH sequence #              (default RANDOM)\n"
          "    --ipsec-esp-spi NUM       IPSec ESP SPI                    (default RANDOM)\n"
-         "    --ipsec-esp-sequence NUM  IPSec ESP sequence #             (default RANDOM)\n\n"
-         "EIGRP Options:\n"
-         "    --eigrp-opcode NUM        EIGRP opcode                     (default %d)\n", EIGRP_OPCODE_UPDATE);
-  printf("    --eigrp-flags NUM         EIGRP flags                      (default RANDOM)\n"
+         "    --ipsec-esp-sequence NUM  IPSec ESP sequence #             (default RANDOM)\n\n");
+
+  /* FIXME: Future call: eigrp_usage(); */
+  printf("EIGRP Options:\n"
+         "    --eigrp-opcode NUM        EIGRP opcode                     (default %d)\n"
+         "    --eigrp-flags NUM         EIGRP flags                      (default RANDOM)\n"
          "    --eigrp-sequence NUM      EIGRP sequence #                 (default RANDOM)\n"
          "    --eigrp-acknowledge NUM   EIGRP acknowledgment #           (default RANDOM)\n"
          "    --eigrp-as NUM            EIGRP autonomous system          (default RANDOM)\n"
-         "    --eigrp-type NUM          EIGRP type                       (default %d)\n", EIGRP_TYPE_INTERNAL);
-  printf("    --eigrp-length NUM        EIGRP length                     (default NONE)\n"
+         "    --eigrp-type NUM          EIGRP type                       (default %d)\n"
+         "    --eigrp-length NUM        EIGRP length                     (default NONE)\n"
          "    --eigrp-k1 NUM            EIGRP parameter K1 value         (default 1)\n"
          "    --eigrp-k2 NUM            EIGRP parameter K2 value         (default 0)\n"
          "    --eigrp-k3 NUM            EIGRP parameter K3 value         (default 1)\n"
@@ -212,10 +244,14 @@ void usage()
          "    --eigrp-address ADDR      EIGRP multicast sequence address (default RANDOM)\n"
          "    --eigrp-multicast NUM     EIGRP multicast sequence #       (default RANDOM)\n"
          "    --eigrp-authentication    EIGRP authentication included    (default OFF)\n"
-         "    --eigrp-auth-key-id NUM   EIGRP authentication key ID      (default 1)\n\n"
-         "OSPF Options:\n"
-         "    --ospf-type NUM           OSPF type                        (default %d)\n", OSPF_TYPE_HELLO);
-  printf("    --ospf-length NUM         OSPF length                      (default NONE)\n"
+         "    --eigrp-auth-key-id NUM   EIGRP authentication key ID      (default 1)\n\n",
+         EIGRP_OPCODE_UPDATE,
+         EIGRP_TYPE_INTERNAL);
+
+  /* FIXME: Future call: ospf_usage(); */
+  printf("OSPF Options:\n"
+         "    --ospf-type NUM           OSPF type                        (default %d)\n"
+         "    --ospf-length NUM         OSPF length                      (default NONE)\n"
          "    --ospf-router-id ADDR     OSPF router ID                   (default RANDOM)\n"
          "    --ospf-area-id ADDR       OSPF area ID                     (default 0.0.0.0)\n"
          " -1,--ospf-option-MT          OSPF multi-topology / TOS-based  (default RANDOM)\n"
@@ -243,8 +279,8 @@ void usage()
          "    --ospf-dd-include-lsa     OSPF DD include LSA header       (default OFF)\n"
          "    --ospf-lsa-age NUM        OSPF LSA age                     (default 360)\n"
          "    --ospf-lsa-do-not-age     OSPF LSA do not age              (default OFF)\n"
-         "    --ospf-lsa-type NUM       OSPF LSA type                    (default %d)\n", LSA_TYPE_ROUTER);
-  printf("    --ospf-lsa-id ADDR        OSPF LSA ID address              (default RANDOM)\n"
+         "    --ospf-lsa-type NUM       OSPF LSA type                    (default %d)\n"
+         "    --ospf-lsa-id ADDR        OSPF LSA ID address              (default RANDOM)\n"
          "    --ospf-lsa-router ADDR    OSPF LSA advertising router      (default RANDOM)\n"
          "    --ospf-lsa-sequence NUM   OSPF LSA sequence #              (default RANDOM)\n"
          "    --ospf-lsa-metric NUM     OSPF LSA metric                  (default RANDOM)\n"
@@ -255,8 +291,8 @@ void usage()
          "    --ospf-lsa-flag-NT        OSPF Router-LSA NSSA translation (default RANDOM)\n"
          "    --ospf-lsa-link-id ADDR   OSPF Router-LSA link ID          (default RANDOM)\n"
          "    --ospf-lsa-link-data ADDR OSPF Router-LSA link data        (default RANDOM)\n"
-         "    --ospf-lsa-link-type NUM  OSPF Router-LSA link type        (default %d)\n", LINK_TYPE_PTP);
-  printf("    --ospf-lsa-attached ADDR  OSPF Network-LSA attached router (default RANDOM)\n"
+         "    --ospf-lsa-link-type NUM  OSPF Router-LSA link type        (default %d)\n"
+         "    --ospf-lsa-attached ADDR  OSPF Network-LSA attached router (default RANDOM)\n"
          "    --ospf-lsa-larger         OSPF ASBR/NSSA-LSA ext. larger   (default OFF)\n"
          "    --ospf-lsa-forward ADDR   OSPF ASBR/NSSA-LSA forward       (default RANDOM)\n"
          "    --ospf-lsa-external ADDR  OSPF ASBR/NSSA-LSA external      (default RANDOM)\n"
@@ -267,15 +303,20 @@ void usage()
          "    --ospf-lls-extended-RS    OSPF LLS Extended option RS      (default OFF)\n"
          "    --ospf-authentication     OSPF authentication included     (default OFF)\n"
          "    --ospf-auth-key-id NUM    OSPF authentication key ID       (default 1)\n"
-         "    --ospf-auth-sequence NUM  OSPF authentication sequence #   (default RANDOM)\n\n"
-         "Some considerations while running this program:\n"
+         "    --ospf-auth-sequence NUM  OSPF authentication sequence #   (default RANDOM)\n\n",
+         OSPF_TYPE_HELLO,
+         LSA_TYPE_ROUTER,
+         LINK_TYPE_PTP);
+
+  printf("Some considerations while running this program:\n"
          " 1. There is no limitation of using as many options as possible.\n"
-         " 2. Report %s bugs at %s.\n"  
+         " 2. Report %s bugs at %s.\n"
          " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
          " 4. Mandatory arguments to long options are mandatory for short options too.\n"
-         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"                           
-         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n", 
+         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"
+         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n",
          PACKAGE, SITE, PACKAGE, PACKAGE);
 
+  fflush(stdout);
   exit(EXIT_FAILURE);
 }

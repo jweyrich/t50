@@ -19,45 +19,10 @@
 
 #include <common.h>
 
-char *mod_acronyms[]   = {
-				"ICMP",
-				"IGMPv1",
-				"IGMPv3",
-				"TCP",
-				"EGP",
-				"UDP",
-				"RIPv1",
-				"RIPv2",
-				"DCCP",
-				"RSVP",
-				"IPSEC",
-				"EIGRP",
-				"OSPF",
-				"T50",
-				NULL
-};
-
-char *mod_names[] = {
-				"Internet Control Message Protocol",
-				"Internet Group Message Protocol v1",
-				"Internet Group Message Protocol v3",
-				"Transmission Control Protocol",
-				"Exterior Gateway Protocol",
-				"User Datagram Protocol",
-				"Routing Information Protocol v1",
-				"Routing Information Protocol v2",
-				"Datagram Congestion Control Protocol",
-				"Resource ReSerVation Protocol",
-				"Internet Protocol Security (AH/ESP)",
-				"Enhanced Interior Gateway Routing Protocol",
-				"Open Shortest Path First",
-				NULL
-};
-
 uint8_t *packet = NULL;
 size_t current_packet_size = 0;
 
-/* NOTE: This routine cannot be inlined due to its compliexity. */
+/* NOTE: This routine shouldn't be inlined due to its compliexity. */
 uint32_t NETMASK_RND(uint32_t foo)
 {
   uint32_t t;
@@ -65,7 +30,7 @@ uint32_t NETMASK_RND(uint32_t foo)
   if (foo != INADDR_ANY)
     t = foo;
   else
-    t = ~(0xffffffffUL >> (8 + ((rand() >> 27) % 23)));
+    t = ~(0xffffffffUL >> (8 + (random() % 23)));
 
   return htonl(t);
 }
@@ -76,6 +41,7 @@ void alloc_packet(size_t new_packet_size)
 {
   void *p;
 
+	/* Because 0 will free the buffer!!! */
   assert(new_packet_size != 0);
 
   if (new_packet_size > current_packet_size)
@@ -90,3 +56,15 @@ void alloc_packet(size_t new_packet_size)
     current_packet_size = new_packet_size;
   }
 }
+
+/* Scan the list of modules, returning the number of itens in the list. */
+int getNumberOfRegisteredModules(void)
+{
+	int n;
+	modules_table_t *ptbl;
+
+	for (n = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, n++);
+
+	return n;
+}
+

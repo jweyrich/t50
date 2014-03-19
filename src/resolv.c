@@ -27,13 +27,15 @@ in_addr_t resolv(char *name)
     struct sockaddr_in * target = NULL;
     char tmp[46];
     int error;
-    
+
     memset(&hints, 0, sizeof(struct addrinfo));
-    
+
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = 0;
-    error = getaddrinfo(name, "http", &hints, &res0);
-    
+
+    /* FIX: The "service" is not important here! */
+    error = getaddrinfo(name, NULL, &hints, &res0);
+
     if (error)
     {
         if (res0)
@@ -42,30 +44,30 @@ in_addr_t resolv(char *name)
         /* NOTE: Added proper error reporting. */
         fprintf(stderr, "Error resolv.c. getaddrinfo() error: %s\n", gai_strerror(error));
     }
-    
+
     for (res = res0; res; res = res->ai_next)
     {
       target = (struct sockaddr_in *) res->ai_addr;
-      if(target)
+
+      /* FIXME: Is this safe? The return type is
+                in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */
+      if (target)
       {
          switch (res->ai_family)
          {
           case AF_INET:
             inet_ntop(AF_INET,&target->sin_addr,tmp,46);
             return inet_addr(tmp);
-            
-          // portable to IPV6
+
           case AF_INET6:
-          // cast struct to ipv6
             inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr,tmp,46);
             return inet_addr(tmp);
-         
-         }  
+         }
       }
     }
-    
+
     if (res0)
-      freeaddrinfo(res0);	
-    
+      freeaddrinfo(res0);
+
     return 0;
 }

@@ -28,66 +28,44 @@
 #include <common.h>
 
 /* EIGRP Message Opcode */
-enum eigrp_opcode {
-	EIGRP_OPCODE_UPDATE         = 1,
-#define EIGRP_OPCODE_UPDATE           EIGRP_OPCODE_UPDATE
-	EIGRP_OPCODE_REQUEST,
-#define EIGRP_OPCODE_REQUEST          EIGRP_OPCODE_REQUEST
-	EIGRP_OPCODE_QUERY,
-#define EIGRP_OPCODE_QUERY            EIGRP_OPCODE_QUERY
-	EIGRP_OPCODE_REPLY,
-#define EIGRP_OPCODE_REPLY            EIGRP_OPCODE_REPLY
-	EIGRP_OPCODE_HELLO,
-#define EIGRP_OPCODE_HELLO            EIGRP_OPCODE_HELLO
-	EIGRP_OPCODE_IPX_SAP,
-#define EIGRP_OPCODE_IPX_SAP          EIGRP_OPCODE_IPX_SAP
-};
+#define EIGRP_OPCODE_UPDATE   1
+#define EIGRP_OPCODE_REQUEST  2
+#define EIGRP_OPCODE_QUERY    3
+#define EIGRP_OPCODE_REPLY    4
+#define EIGRP_OPCODE_HELLO    5
+#define EIGRP_OPCODE_IPX_SAP  6
 
 /* EIGRP Message Type/Length/Value */
-enum eigrp_tlv {
-	EIGRP_TYPE_PARAMETER        = 0x0001,
-#define EIGRP_TYPE_PARAMETER          EIGRP_TYPE_PARAMETER
+#define EIGRP_TYPE_PARAMETER  1
+#define EIGRP_TYPE_AUTH       2
+#define EIGRP_TYPE_SEQUENCE   3
+#define EIGRP_TYPE_SOFTWARE   4
+#define EIGRP_TYPE_MULTICAST  5
+#define EIGRP_TYPE_INTERNAL   0x102
+#define EIGRP_TYPE_EXTERNAL   0x103
+
 #define EIGRP_TLEN_PARAMETER   12
-	EIGRP_TYPE_AUTH,
-#define EIGRP_TYPE_AUTH               EIGRP_TYPE_AUTH
 #define EIGRP_TLEN_AUTH        40
 #define EIGRP_PADDING_BLOCK    12
 #define EIGRP_MAXIMUM_KEYID    2147483647
-	EIGRP_TYPE_SEQUENCE,
-#define EIGRP_TYPE_SEQUENCE           EIGRP_TYPE_SEQUENCE
 #define EIGRP_TLEN_SEQUENCE    9
-	EIGRP_TYPE_SOFTWARE,
-#define EIGRP_TYPE_SOFTWARE           EIGRP_TYPE_SOFTWARE
 #define EIGRP_TLEN_SOFTWARE    8
-	EIGRP_TYPE_MULTICAST,
-#define EIGRP_TYPE_MULTICAST          EIGRP_TYPE_MULTICAST
 #define EIGRP_TLEN_MULTICAST   8
-	EIGRP_TYPE_INTERNAL         = 0x0102,
-#define EIGRP_TYPE_INTERNAL           EIGRP_TYPE_INTERNAL
 #define EIGRP_TLEN_INTERNAL    25
-	EIGRP_TYPE_EXTERNAL         = 0x0103,
-#define EIGRP_TYPE_EXTERNAL           EIGRP_TYPE_EXTERNAL
 #define EIGRP_TLEN_EXTERNAL    45
+
 #define EIGRP_DADDR_BUILD(foo, bar) \
-			(foo &= htonl(~(0xffffffff >> ((bar >> 3) * 8))))
+      ((foo) &= htonl(~(0xffffffff >> (((bar) >> 3) * 8))))
 
 #define EIGRP_DADDR_LENGTH(foo) \
-			(((foo >> 3) & 3) + (foo % 8 ? 1 : 0))
-};
+      ((((foo) >> 3) & 3) + ((foo) % 8 ? 1 : 0))
 
 /* EIGRP K Values bitmask */
-enum eigrp_kvalue_bitmask{
-	EIGRP_KVALUE_K1             = 0x01,
-#define EIGRP_KVALUE_K1               EIGRP_KVALUE_K1
-	EIGRP_KVALUE_K2             = 0x02,
-#define EIGRP_KVALUE_K2               EIGRP_KVALUE_K2
-	EIGRP_KVALUE_K3             = 0x04,
-#define EIGRP_KVALUE_K3               EIGRP_KVALUE_K3
-	EIGRP_KVALUE_K4             = 0x08,
-#define EIGRP_KVALUE_K4               EIGRP_KVALUE_K4
-	EIGRP_KVALUE_K5             = 0x10,
-#define EIGRP_KVALUE_K5               EIGRP_KVALUE_K5
-};
+#define EIGRP_KVALUE_K1   0x01
+#define EIGRP_KVALUE_K2   0x02
+#define EIGRP_KVALUE_K3   0x04
+#define EIGRP_KVALUE_K4   0x08
+#define EIGRP_KVALUE_K5   0x10
 
 /*
  * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -119,17 +97,17 @@ enum eigrp_kvalue_bitmask{
  * http://packetlife.net/captures/category/cisco-proprietary/
  * http://oreilly.com/catalog/iprouting/chapter/ch04.html
  */
- 
+
 /* EIGRP PROTOCOL STRUCTURES */
 struct eigrp_hdr {
-	uint16_t version:8,              /* version                     */
-	          opcode:8;               /* opcode                      */
-	uint16_t check;                  /* checksum                    */
-	uint32_t flags;                  /* flags                       */
-	uint32_t sequence;               /* sequence number             */
-	uint32_t acknowledge;            /* acknowledgment sequence #   */
-	uint32_t as;                     /* autonomous system           */
-	uint8_t  __tlv[0];               /* TLV (Type/Length/Value)     */
+  uint16_t version:8,              /* version                     */
+            opcode:8;               /* opcode                      */
+  uint16_t check;                  /* checksum                    */
+  uint32_t flags;                  /* flags                       */
+  uint32_t sequence;               /* sequence number             */
+  uint32_t acknowledge;            /* acknowledgment sequence #   */
+  uint32_t as;                     /* autonomous system           */
+  uint8_t  __tlv[0];               /* TLV (Type/Length/Value)     */
 };
 
 #endif  /* __EIGRP_H */

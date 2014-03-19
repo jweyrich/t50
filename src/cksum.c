@@ -17,7 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h> 
+#include <common.h>
 
 /* Calculates checksum */
 /* This function is 5 times faster than the "official" rfc 1071 implementation (and shortter too!). */
@@ -26,7 +26,7 @@ uint16_t cksum(void *data, size_t length)
   uint64_t sum, *p = data;
   uint32_t t1, t2;
   uint16_t t3, t4;
-  
+
   sum = 0;
 
   /* Sums 8 bytes at a time... */

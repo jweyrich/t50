@@ -1,9 +1,9 @@
   ___________._______________
   \__    ___/|   ____/\   _  \   the fatest network packet injector
-    |    |   |____  \ /  /_\  \                 
+    |    |   |____  \ /  /_\  \
     |    |   /       \\  \_/   \
-    |____|  /______  / \_____  / 
-                   \/        \/ 
+    |____|  /______  / \_____  /
+                   \/        \/
 
 T50 (f.k.a. F22 Raptor) is a tool designed to perform "Stress Testing".
 The concept started on 2001, right after release 'nb-isakmp.c', and
@@ -11,7 +11,7 @@ the main goal was:
   - Having a tool to perform TCP/IP protocol fuzzer,  covering common regular
     protocols, such as: ICMP, TCP and UDP.
 
-Things  have  changed,  and the  T50 became a good unique resource capable to 
+Things  have  changed,  and the  T50 became a good unique resource capable to
 perform "Stress Testing". And, after checking the "/usr/include/linux",  some
 protocols were chosen to be part of its coverage:
   a) ICMP   - Internet Control Message Protocol
@@ -28,11 +28,11 @@ infra-structure (eg. Datacenter serving to Cloud Computing) they think about:
   d) Disaster Recovery
   e) Data Redundancy
   f) Service Level Agreements
-  g) Etc... 
+  g) Etc...
 
 But almost nobody thinks about "Stress Testing", or even performs any test to
-check how the networks infra-structure behaves under stress,  under overload, 
-and under attack.  Even during a Penetration Test,  people prefer not running 
+check how the networks infra-structure behaves under stress,  under overload,
+and under attack.  Even during a Penetration Test,  people prefer not running
 any kind of Denial-of-Service testing.  Even worse,  those people are missing
 one of the three key concepts of security that are common to risk management:
   - Confidentiality
@@ -42,7 +42,7 @@ one of the three key concepts of security that are common to risk management:
 T50 was designed to perform “Stress Testing”  on a variety of infra-structure
 network devices (Version 2.45), using widely implemented protocols, and after
 some requests it was was re-designed to extend the tests (as of Version 5.3),
-covering some regular protocols (ICMP,  TCP  and  UDP),  some infra-structure 
+covering some regular protocols (ICMP,  TCP  and  UDP),  some infra-structure
 specific protocols (GRE,  IPSec  and  RSVP), and some routing protocols (RIP,
 EIGRP and OSPF).
 
@@ -82,7 +82,7 @@ T50 is a powerful and unique packet injector tool, which is capable to:
      within Generic Routing Encapsulation (GRE).
 
   c) Send an (quite) incredible amount of  packets per second,  making  it  a
-     "second to none" tool: 
+     "second to none" tool:
     -> More than 1,000,000 pps of SYN Flood  (+50% of the network uplink)  in
        a 1000BASE-T Network (Gigabit Ethernet).
     -> More than 120,000 pps of SYN Flood  (+60% of the network uplink)  in a

@@ -26,76 +26,59 @@ Description:   This function configures and sends the UDP packet header.
 Targets:       N/A */
 int udp(const socket_t fd, const struct config_options *o)
 {
-  /* GRE options size. */
-  size_t greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-
-  /* Packet size. */
-  const uint32_t packet_size = sizeof(struct iphdr)  + 
-    greoptlen             + 
-    sizeof(struct udphdr);
-
-  /* Checksum offset and GRE offset. */
-  uint32_t offset;
-
-  /* Packet and Checksum. */
-  uint8_t *checksum;
+  size_t greoptlen,   /* GRE options size. */
+         packet_size;
 
   /* Socket address, IP header, UDP header and PSEUDO header. */
   struct sockaddr_in sin;
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* GRE Encapsulated IP Header. */
-  struct iphdr * gre_ip;
+  struct iphdr *gre_ip;
 
   /* UDP header and PSEUDO header. */
-  struct udphdr * udp;
-  struct psdhdr * pseudo;
+  struct udphdr *udp;
+  struct psdhdr *pseudo;
+
+  assert(o != NULL);
+
+  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  packet_size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr);
+
+  /* Try to reallocate packet, if necessary */
+  alloc_packet(packet_size);
+
+  /* Fill IP header. */
+  ip = ip_header(packet, packet_size, o);
+
+  gre_ip = gre_encapsulation(packet, o,
+    sizeof(struct iphdr) + sizeof(struct udphdr));
+
+  /* UDP Header structure making a pointer to  IP Header structure. */
+  udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  udp->source = htons(IPPORT_RND(o->source));
+  udp->dest   = htons(IPPORT_RND(o->dest));
+  udp->len    = htons(sizeof(struct udphdr));
+  udp->check  = 0;
+
+  /* Fill PSEUDO Header structure. */
+  pseudo           = (struct psdhdr *)((void *)udp + sizeof(struct udphdr));
+  pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
+  pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
+  pseudo->zero     = 0;
+  pseudo->protocol = o->ip.protocol;
+  pseudo->len      = htons(sizeof(struct udphdr));
+
+  /* Computing the checksum. */
+  udp->check  = o->bogus_csum ? random() :
+    cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
+
+  gre_checksum(packet, o, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
   sin.sin_port        = htons(IPPORT_RND(o->dest));
   sin.sin_addr.s_addr = o->ip.daddr;
-
-  /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
-
-  /* IP Header structure making a pointer to Packet. */
-  ip           = ip_header(packet, packet_size, o);
-
-  /* Computing the GRE Offset. */
-  offset = sizeof(struct iphdr);
-
-  gre_ip = gre_encapsulation(packet, o,
-   sizeof(struct iphdr) + sizeof(struct udphdr));
-
-  /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((uint8_t *)ip + sizeof(struct iphdr) + greoptlen);
-  udp->source = htons(IPPORT_RND(o->source)); 
-  udp->dest   = htons(IPPORT_RND(o->dest));
-  udp->len    = htons(sizeof(struct udphdr));
-  udp->check  = 0;
-  /* Computing the Checksum offset. */
-  offset = sizeof(struct udphdr);
-
-  /* Storing both Checksum and Packet. */
-  checksum = (uint8_t *) udp + offset;
-
-  /* PSEUDO Header structure making a pointer to Checksum. */
-  pseudo           = (struct psdhdr *)(checksum + (offset - sizeof(struct udphdr)));
-  pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
-  pseudo->zero     = 0;
-  pseudo->protocol = o->ip.protocol;
-  pseudo->len      = htons(offset);
-  /* Computing the Checksum offset. */
-  offset  += sizeof(struct psdhdr);
-
-  /* Computing the checksum. */
-  udp->check  = o->bogus_csum ? 
-    __16BIT_RND(0) : 
-    cksum((uint16_t *)udp, offset);
-
-  gre_checksum(packet, o, packet_size);
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

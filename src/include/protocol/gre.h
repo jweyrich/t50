@@ -25,21 +25,15 @@
 #define GREVERSION             0
 
 /* GRE Options */
-enum gre_option{
-	GRE_OPTION_STRICT           = 0x01,
-#define GRE_OPTION_STRICT             GRE_OPTION_STRICT
-	GRE_OPTION_SEQUENCE         = 0x02,
-#define GRE_OPTION_SEQUENCE           GRE_OPTION_SEQUENCE
-#define GRE_OPTLEN_SEQUENCE    sizeof (struct gre_seq_hdr)
-	GRE_OPTION_KEY              = 0x04,
-#define GRE_OPTION_KEY                GRE_OPTION_KEY
+#define GRE_OPTION_STRICT   0x01
+#define GRE_OPTION_SEQUENCE 0x02
+#define GRE_OPTION_KEY      0x04
+#define GRE_OPTION_ROUTING  0x08
+#define GRE_OPTION_CHECKSUM 0x10
+
+#define GRE_OPTLEN_SEQUENCE    sizeof(struct gre_seq_hdr)
 #define GRE_OPTLEN_KEY         sizeof(struct gre_key_hdr)
-	GRE_OPTION_ROUTING          = 0x08,
-#define GRE_OPTION_ROUTING            GRE_OPTION_ROUTING
-	GRE_OPTION_CHECKSUM         = 0x10,
-#define GRE_OPTION_CHECKSUM           GRE_OPTION_CHECKSUM
 #define GRE_OPTLEN_CHECKSUM    sizeof(struct gre_sum_hdr)
-};
 
 
 /* GRE PROTOCOL STRUCTURES
@@ -124,10 +118,11 @@ struct gre_hdr{
  *    contains  valid  information  only if the Checksum Present bit is set
  *    to 1.
  */
-struct gre_sum_hdr{
+struct gre_sum_hdr {
 	uint16_t check;                  /* checksum                    */
 	uint16_t offset;                 /* offset                      */
 };
+
 /*
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
@@ -139,9 +134,10 @@ struct gre_sum_hdr{
  *    outside of the scope of this document.  The Key field is only present
  *    if the Key Present field is set to 1.
  */
-struct gre_key_hdr{
+struct gre_key_hdr {
 	uint32_t key;                    /* key                         */
 };
+
 /*
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
@@ -154,7 +150,7 @@ struct gre_key_hdr{
  *    of  the  Sequence  Number  and  the  semantics  of their reception is 
  *    outside of the scope of this document.
  */
-struct gre_seq_hdr{
+struct gre_seq_hdr {
 	uint32_t sequence;          /* sequence number             */
 };	
 

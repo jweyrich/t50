@@ -20,38 +20,13 @@
 #include <common.h>
 
 /* Global variables */
-static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */ 
+static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */
 static socket_t fd;
 
 /* Months */
-static const char *const months[] = 
+static const char *const months[] =
   { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
-
-static struct launch_t50_modules 
-{
-  int32_t proto;
-  /* NOTE: Return type of modules changed to centralize error handling. */
-  int (*raw) (const socket_t, const struct config_options *);
-} t50[] = 
-  {
-    /* NOTE: casting to (void *) unecessary! */
-    { IPPROTO_ICMP,  icmp   },
-    { IPPROTO_IGMP,  igmpv1 },
-    { IPPROTO_IGMP,  igmpv3 },
-    { IPPROTO_TCP,   tcp    },
-    { IPPROTO_EGP,   egp    },
-    { IPPROTO_UDP,   udp    },
-    { IPPROTO_UDP,   ripv1  },
-    { IPPROTO_UDP,   ripv2  },
-    { IPPROTO_DCCP,  dccp   },
-    { IPPROTO_RSVP,  rsvp   },
-    { IPPROTO_AH,    ipsec  },
-    { IPPROTO_EIGRP, eigrp  },
-    { IPPROTO_OSPF,  ospf   },
-    { 0, NULL }
-  };
-#define NUM_MODULES ((sizeof(t50) / sizeof(t50[0])) - 1)
 
 /* This function handles Control-C (^C) */
 static void ctrlc(int32_t signal)
@@ -69,6 +44,12 @@ static void ctrlc(int32_t signal)
   }
 #endif
 
+  /* FIXME: Is returning EXIT_SUCCESS a good idea?
+            Maybe we should return something like "2" to
+            represent an interruption...
+
+            If so, must change "initializeSignalHandlers()", below, to
+            treat some traps differently. */
   exit(EXIT_SUCCESS);
 }
 
@@ -77,14 +58,17 @@ static void initializeSignalHandlers(void)
   /* NOTE: See 'man 2 signal' */
   struct sigaction sa;
 
-  memset(&sa, 0, sizeof(sa));
+  /* Using sig*() functions for compability. */
   sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART; /* signal() semantics */
 
   /* Ignoring signals. */
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
   sa.sa_handler = ctrlc;
+
   /* Handling signals. */
   sigaction(SIGINT,  &sa, NULL);
   //sigaction(SIGILL, &sa, NULL); /* not necessary */
@@ -107,11 +91,13 @@ static const char *getOrdinalSuffix(unsigned int n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
-  switch (n % 10) {
-    case 1: return suffixes[0];
-		case 2: return suffixes[1]; 
-    case 3: return suffixes[2];
-  }
+  /* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
+  if ((n < 11) || (n > 13))
+    switch (n % 10) {
+      case 1: return suffixes[0];
+      case 2: return suffixes[1];
+      case 3: return suffixes[2];
+    }
 
   return suffixes[3];
 }
@@ -125,14 +111,14 @@ int main(int argc, char *argv[])
   /* Command line interface options. */
   struct config_options *o;
 
-  /* Seed to use with 'srand()'. */
-  struct timeval seed;
-
   /* Counter and random destination address. */
   uint32_t rand_daddr;
 
   /* CIDR host identifier and first IP address. */
   struct cidr *cidr_ptr;
+
+  modules_table_t *ptbl;
+  int num_modules;
 
   initializeSignalHandlers();
 
@@ -140,23 +126,22 @@ int main(int argc, char *argv[])
   o = getConfigOptions(argc, argv);
 
   /* NOTE: checkConfigOptions now returns TRUE or FALSE, instead of
-           EXIT_FAILURE or EXIT_SUCCESS. Makes more sense! */  
+           EXIT_FAILURE or EXIT_SUCCESS. Makes more sense! */
   /* Validating command line interface options. */
   if (!checkConfigOptions(o))
     exit(EXIT_FAILURE);
 
+  num_modules = getNumberOfRegisteredModules();
+
   /* Sanitizing the threshold. */
   if (o->ip.protocol == IPPROTO_T50)
-    o->threshold -= (o->threshold % NUM_MODULES);
+    o->threshold -= (o->threshold % num_modules);
 
   /* Setting socket file descriptor. */
-  fd = sock();
+  fd = createSocket();
 
-  /* Starting time counting. */
-  gettimeofday(&seed, NULL);
-
-  /* Using microseconds as seed. */
-  srand((unsigned) seed.tv_usec);
+  /* NOTE: Random seed don't need to be so precise! */
+  srandom(time(NULL));
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
@@ -179,40 +164,43 @@ int main(int argc, char *argv[])
 
   /* Calculating CIDR for destination address. */
   cidr_ptr = config_cidr(o->bits, o->ip.daddr);
-  
+
   /* "pid" is zero only for child processes */
   if (pid)
   {
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
+    /* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
-  
+
   /* Execute if flood or while threshold greater than 0. */
-  while(o->flood || o->threshold--)
+  while (o->flood || o->threshold--)
   {
     /* Setting the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
     {
       /* Generation RANDOM position for computed IP addresses. */
       /* FIX: No floating point! >-| */
-      rand_daddr = rand() % cidr_ptr->hostid;
+      rand_daddr = random() % cidr_ptr->hostid;
 
-  		/* FIX: No addresses array needed */
-	  	o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
-    }   
+      /* FIX: No addresses array needed */
+      o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
+    }
 
-    /* Sending ICMP/IGMP/TCP/UDP packets. */
+    /* Sending ICMP/IGMP/TCP/UDP/... packets. */
     if (o->ip.protocol != IPPROTO_T50)
     {
+      ptbl = &mod_table[o->ip.protoname];
+
       /* Getting the correct protocol. */
-      o->ip.protocol = t50[o->ip.protoname].proto;
+      o->ip.protocol = ptbl->protocol_id;
 
       /* Launching t50 module. */
-      if (t50[o->ip.protoname].raw(fd, o))
+      if (ptbl->func(fd, o))
       {
         perror("Error sending packet");
         close(fd);
@@ -222,17 +210,15 @@ int main(int argc, char *argv[])
     else
     {
       /* NOTE: Using single pointer instead of calculating
-               the pointers in every iteration. */               
-      struct launch_t50_modules *p;
-
-      /* Sending T50 packets. */ 
-      for (p = t50; p->raw != NULL; p++)
+               the pointers in every iteration. */
+      /* Sending T50 packets. */
+      for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
       {
         /* Getting the correct protocol. */
-        o->ip.protocol = p->proto;
+        o->ip.protocol = ptbl->protocol_id;
 
         /* Launching t50 module. */
-        if (p->raw(fd, o))
+        if (ptbl->func(fd, o))
         {
           perror("Error sending packet");
           close(fd);
@@ -241,7 +227,8 @@ int main(int argc, char *argv[])
       }
 
       /* Sanitizing the threshold. */
-      o->threshold -= NUM_MODULES - 1;
+      /* FIXME: Is this correct? */
+      o->threshold -= num_modules - 1;
 
       /* Reseting protocol. */
       o->ip.protocol = IPPROTO_T50;
@@ -251,16 +238,17 @@ int main(int argc, char *argv[])
   /* Closing the socket. */
   close(fd);
 
-  /* NOTE: pid is zero only for child processes. */  
+  /* NOTE: pid is zero only for child processes. */
   if (pid)
   {
     /* Getting the local time. */
     lt = time(NULL); tm = localtime(&lt);
 
+    /* FIXME: Why use '\b\r' at the beginning?! */
     printf("\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
-  
+
   return(EXIT_SUCCESS);
 }

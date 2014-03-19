@@ -45,7 +45,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
 /* This code prefers to use Linux headers rather than BSD favored */
 #include <linux/ip.h>
 #include <linux/tcp.h>
@@ -68,6 +67,7 @@
 #include <protocol/rsvp.h>
 #include <protocol/eigrp.h>
 #include <protocol/tcp_options.h>
+/* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
 /* NOTE: This will do nothing. Used only to prevent warnings. */
 #define UNUSED_PARAM(x) { (x) = (x); }
@@ -75,58 +75,40 @@
 /* NOTE: Macro used to test bitmasks */
 #define TEST_BITS(x,bits) ((x) & (bits))
 
+/* NOTE: Used to set/reset individual bits */
+#define TRUE  1
+#define FALSE 0
+#define ON    1
+#define OFF   0
+
 /* Data types */
 typedef uint32_t in_addr_t;
 typedef int socket_t;
+
+/* NOTE: This is HERE just to not redefine socket_t! */
+#include <modules.h>
+
+/* This will ease the buffers pointers manipulations. */
+typedef union {
+  void    *ptr;
+  uint8_t *byte_ptr;
+  uint16_t *word_ptr;
+  uint32_t *dword_ptr;
+  in_addr_t *inaddr_ptr;
+  uint64_t *qword_ptr;
+} mptr_t;
 
 /* Limits */
 
 /* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */
 #define CIDR_MINIMUM 8
 #define CIDR_MAXIMUM 30
+
+/* 24 bits?! */
 #define MAXIMUM_IP_ADDRESSES  16777215
 
-/* #define INADDR_ANY ((in_addr_t) 0) */ /* NOTE: Already defined @ linux/in.h */
-#define IPPORT_ANY ((uint16_t) 0)
-
-extern char *mod_acronyms[];
-extern char *mod_names[];
-
-/* OBS: Used only in config.c.
-        Isn't better to move this definitions?! */
-enum t50_module
-{
-  MODULE_ICMP           = 0,
-#define MODULE_ICMP     MODULE_ICMP
-  MODULE_IGMPv1,
-#define MODULE_IGMPv1   MODULE_IGMPv1
-  MODULE_IGMPv3,
-#define MODULE_IGMPv3   MODULE_IGMPv3
-  MODULE_TCP,
-#define MODULE_TCP      MODULE_TCP
-  MODULE_EGP,
-#define MODULE_EGP      MODULE_EGP
-  MODULE_UDP,
-#define MODULE_UDP      MODULE_UDP
-  MODULE_RIPv1,
-#define MODULE_RIPv1    MODULE_RIPv1
-  MODULE_RIPv2,
-#define MODULE_RIPv2    MODULE_RIPv2
-  MODULE_DCCP,
-#define MODULE_DCCP     MODULE_DCCP
-  MODULE_RSVP,
-#define MODULE_RSVP     MODULE_RSVP
-  MODULE_IPSEC,
-#define MODULE_IPSEC    MODULE_IPSEC
-  MODULE_EIGRP,
-#define MODULE_EIGRP    MODULE_EIGRP
-  MODULE_OSPF,
-#define MODULE_OSPF     MODULE_OSPF
-
-  MODULE_T50,
-# define MODULE_T50        MODULE_T50
-# define T50_THRESHOLD_MIN MODULE_T50
-};
+/* #define INADDR_ANY 0 */ /* NOTE: Already defined @ linux/in.h */
+#define IPPORT_ANY 0
 
 /* Global common protocol definitions used by code */
 #define AUTH_TYPE_HMACNUL 0x0000
@@ -135,7 +117,10 @@ enum t50_module
 #define AUTH_TLEN_HMACMD5 16
 #define auth_hmac_md5_len(foo) ((foo) ? AUTH_TLEN_HMACMD5 : 0)
 
-#define IPVERSION 4
+/* #define IPVERSION 4 */ /* NOTE: Already defined in netinet/in.h. */
+
+/* NOTE: Both IP_MF & IP_DF are defined in netinet/ip.h. 
+         But, since we are using linux/ip.h, they are needed here. */
 #define IP_MF 0x2000
 #define IP_DF 0x4000
 
@@ -158,7 +143,7 @@ enum t50_module
  * length.   This information gives protection against misrouted datagrams.
  * This checksum procedure is the same as is used in TCP.
  *
- *                   0      7 8     15 16    23 24    31 
+ *                   0      7 8     15 16    23 24    31
  *                  +--------+--------+--------+--------+
  *                  |          source address           |
  *                  +--------+--------+--------+--------+
@@ -170,9 +155,9 @@ enum t50_module
  * If the computed  checksum  is zero,  it is transmitted  as all ones (the
  * equivalent  in one's complement  arithmetic).   An all zero  transmitted
  * checksum  value means that the transmitter  generated  no checksum  (for
- * debugging or for higher level protocols that don't care). 
+ * debugging or for higher level protocols that don't care).
  */
-struct psdhdr 
+struct psdhdr
 {
   in_addr_t saddr;                  /* source address              */
   in_addr_t daddr;                  /* destination address         */
@@ -181,37 +166,29 @@ struct psdhdr
   uint16_t  len;                    /* header length               */
 };
 
-/* Common macros used by code */
-#define __32BIT_RND(foo) ((foo) == 0 ? (uint32_t)rand() : (uint32_t)(foo))
-#define __24BIT_RND(foo) ((foo) == 0 ? rand() >> 8 : (foo))
-#define __16BIT_RND(foo) ((foo) == 0 ? rand() >> 16 : (foo))
-#define __8BIT_RND(foo)  ((foo) == 0 ? rand() >> 24 : (foo))
-#define __7BIT_RND(foo)  ((foo) == 0 ? rand() >> 25 : (foo))
-#define __6BIT_RND(foo)  ((foo) == 0 ? rand() >> 26 : (foo))
-#define __5BIT_RND(foo)  ((foo) == 0 ? rand() >> 27 : (foo))
-#define __4BIT_RND(foo)  ((foo) == 0 ? rand() >> 28 : (foo))
-#define __3BIT_RND(foo)  ((foo) == 0 ? rand() >> 29 : (foo))
-#define __2BIT_RND(foo)  ((foo) == 0 ? (uint32_t)(rand() >> 30) : (uint32_t)(foo))
-
-#define INADDR_RND(foo) __32BIT_RND(foo)
-#define IPPORT_RND(foo) __16BIT_RND(foo)
+/* Randomizer macros and function */
+#define __RND(foo) (((foo) == 0) ? random() : (foo))
+#define INADDR_RND(foo) __RND((foo))
+#define IPPORT_RND(foo) __RND((foo))
 
 extern uint32_t NETMASK_RND(uint32_t);
 
+/* ERROR macro */
 #ifdef __HAVE_DEBUG__
-#define ERROR(s) \
-  fprintf(stderr, "%s: %s at %s, line %d\n", PACKAGE, s, __FILE__, \
-    __LINE__); fflush(stderr);
+#define ERROR(s) fprintf(stderr, "%s: %s at %s, line %d\n", PACKAGE, s, __FILE__, __LINE__);
 #else
-#define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s); fflush(stderr);
+#define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s);
 #endif
 
+/* The packet buffer. Reallocated as needed! */
 extern uint8_t *packet;
 extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
 
+/* Realloc packet as needed. Used on module functions. */
 extern void alloc_packet(size_t);
 
 /* Common routines used by code */
+int getNumberOfRegisteredModules(void);
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
 /* Command line interface options validation. */
 extern int checkConfigOptions(const struct config_options *);
@@ -222,7 +199,9 @@ extern struct config_options *getConfigOptions(int, char **);
 /* IP address and name resolve. */
 extern in_addr_t resolv(char *);
 /* Socket configuration. */
-extern socket_t sock(void);
+extern socket_t createSocket(void);
+/* Show version info */
+extern void show_version(void);
 /* Help and usage message. */
 extern void usage(void);
 

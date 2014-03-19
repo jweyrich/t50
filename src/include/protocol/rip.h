@@ -29,10 +29,10 @@
 #define RIP_TRAILER_LENGTH     4
 
 /* Calculating RIP Header length */
-#	define rip_hdr_len(foo) \
+#define rip_hdr_len(foo) \
 			(RIP_HEADER_LENGTH + \
-			RIP_MESSAGE_LENGTH + \
-			(foo ? \
+			 RIP_MESSAGE_LENGTH + \
+			((foo) ? \
 				RIP_AUTH_LENGTH + \
 				RIP_TRAILER_LENGTH + \
 				AUTH_TLEN_HMACMD5 : \
