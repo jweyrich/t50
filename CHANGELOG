@@ -24,6 +24,7 @@ T50 5.5 - March 1, 2014
  + Added comments with FIX, FIXME, NOTE prefix for better code reading.
  * Changed the way modules table are declared. See modules.c for advice.
  * Module table are not order dependant anymore!
+ * Created src/help directory and src/include/help.h header to improve module modularity.
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.
