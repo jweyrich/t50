@@ -39,7 +39,18 @@ $(OBJ_DIR)/sock.o \
 $(OBJ_DIR)/usage.o \
 $(OBJ_DIR)/config.o \
 $(OBJ_DIR)/check.o \
-$(OBJ_DIR)/modules.o
+$(OBJ_DIR)/modules.o \
+$(OBJ_DIR)/help/general_help.o \
+$(OBJ_DIR)/help/gre_help.o \
+$(OBJ_DIR)/help/tcp_udp_dccp_help.o \
+$(OBJ_DIR)/help/ip_help.o \
+$(OBJ_DIR)/help/icmp_help.o \
+$(OBJ_DIR)/help/egp_help.o \
+$(OBJ_DIR)/help/rip_help.o \
+$(OBJ_DIR)/help/rsvp_help.o \
+$(OBJ_DIR)/help/ipsec_help.o \
+$(OBJ_DIR)/help/eigrp_help.o \
+$(OBJ_DIR)/help/ospf_help.o
 
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.
@@ -75,12 +86,16 @@ $(TARGET): $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+# Compile Help
+$(OBJ_DIR)/help/%.o: $(SRC_DIR)/help/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 # Compile modules
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o
+	@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:

@@ -57,6 +57,8 @@
 /* Purpose-built config library to be used by T50 modules */
 #include <config.h>
 
+#include <help.h>
+
 /* Purpose-built protocol libraries to be used by T50 modules */
 #include <protocol/ip.h>
 #include <protocol/egp.h>
