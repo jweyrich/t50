@@ -278,7 +278,7 @@ struct config_options {
   /* XXX DCCP, TCP & UDP HEADER OPTIONS                            */
   uint16_t  source;                 /* general source port         */
   uint16_t  dest;                   /* general destination port    */
-  uint32_t  bits:5;                 /* CIDR bits                   */
+  uint32_t  bits;                   /* CIDR bits                   */
 
   /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                       */
   struct {

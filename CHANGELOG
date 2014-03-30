@@ -25,6 +25,8 @@ T50 5.5 - March 1, 2014
  * Changed the way modules table are declared. See modules.c for advice.
  * Module table are not order dependant anymore!
  * Created src/help directory and src/include/help.h header to improve module modularity.
+ * Host name now can be a partial IP or name, optionally followed by "/cidr".
+   Partial IP have the format 'a(.b(.c(.d)))'. Formats as 'a.b./cidr' are invalid.
 
 T50 5.4.1 - August 11, 2013
  - Fixed bug in option parsing.

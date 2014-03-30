@@ -18,6 +18,13 @@
 */
 
 #include <common.h>
+#include <regex.h>    /* there is regex in libc6! */
+
+/* structure used in getIpAndCidrFromString(); */
+struct addr_t {
+  unsigned addr;
+  unsigned cidr;
+};
 
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
@@ -420,6 +427,123 @@ static void setDefaultModuleOption(void)
   }
 }
 
+/* Regular Expression used to match IP addresses with optional CIDR. */
+#define IP_REGEX "^([1-2]*[0-9]{1,2})" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(/[0-9]{1,2}){0,1}$"
+
+/* Auxiliary "match" macros. */
+#define MATCH(a)        ((a).rm_so >= 0)
+#define MATCH_LENGTH(a) ((a).rm_eo - (a).rm_so)
+
+/* NOTE: There is a bug in strncpy() function.
+         '\0' is not set at the end of copyed substring. */
+#define COPY_SUBSTRING(d, s, len) { \
+  strncpy((d), (s), (len)); \
+  *((char *)(d) + (len)) = '\0'; \
+}
+
+static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_ptr)
+{
+  regex_t re;
+  regmatch_t rm[6];
+  unsigned matches[5];
+  int i, len;
+  char *t;
+
+  addr_ptr->addr = addr_ptr->cidr = 0;
+
+  /* Try to compile the regular expression. */
+  if (regcomp(&re, IP_REGEX, REG_EXTENDED))
+    return 0;
+
+  /* Try to execute regex against the addr string. */
+  if (regexec(&re, addr, 6, rm, 0))
+  {
+    regfree(&re);
+    return 0;
+  }
+
+  /* Allocate enough space for temporary string. */
+  t = strdup(addr);
+  if (t  == NULL)
+  {
+    perror("Cannot allocate temporary string");
+    abort();
+  }
+
+  /* Convert IP octects matches. */
+  if (MATCH(rm[1]))
+  {
+    len = MATCH_LENGTH(rm[1]);
+    COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
+    matches[0] = atoi(t);
+  }
+  else  
+    matches[0] = 0;
+
+  for (i = 2; i <= 4; i++)
+  {
+    if (MATCH(rm[i]))
+    {
+      len = MATCH_LENGTH(rm[i]) - 1;
+      COPY_SUBSTRING(t, addr + rm[i].rm_so + 1, len);
+      matches[i-1] = atoi(t);
+    }
+    else
+      matches[i-1] = 0;
+  }
+
+  /* Convert cidr match. */
+  if (MATCH(rm[5]))
+  {
+    len = MATCH_LENGTH(rm[5]) - 1;
+    COPY_SUBSTRING(t, addr + rm[5].rm_so + 1, len);
+
+    if ((matches[4] = atoi(t)) == 0)
+    {
+      /* if cidr is actually '0', then it is an error! */
+      free(t);
+      regfree(&re);
+      return 0;
+    }
+  }
+  else
+    matches[4] = 32;
+
+  /* We don't need 't' string anymore. */
+  free(t);
+
+  /* Validate ip octects */
+  for (i = 0; i < 4; i++)
+    if (matches[i] > 255)
+    {
+      regfree(&re);
+      return 0;
+    }
+
+  /* Validate cidr. */
+  if (matches[4] > 32)
+  {
+    regfree(&re);
+    return 0;
+  }
+
+  /* Prepare CIDR structure */
+  addr_ptr->cidr = matches[4];
+  addr_ptr->addr = (((matches[3] & 0xff))       |
+                    ((matches[2] & 0xff) << 8)  |
+                    ((matches[1] & 0xff) << 16) |
+                    ((matches[0] & 0xff) << 24)) &
+                      (0xffffffff << (32 - addr_ptr->cidr));
+
+  regfree(&re);
+
+  return 1;
+}
+
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char ** argv)
 {
@@ -430,6 +554,9 @@ struct config_options *getConfigOptions(int argc, char ** argv)
   char  *optionp, *valuep, *tmp_ptr;
   char **tokens;
   int opt_ind;
+
+  /* Used by getIpAndCidrFromString() */
+  struct addr_t addr;
 
   setDefaultModuleOption();
 
@@ -560,13 +687,12 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
         if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
         {
-          uint32_t t;
+          long t;
 
           if ((t = atol(tmp_ptr + 1)) != 0)
             o.tcp.tsecr = t;
 
           tmp_ptr     = strtok(optarg, ":");
-
           if (tmp_ptr != NULL)
             o.tcp.tsval = atol(tmp_ptr);
         }
@@ -583,10 +709,11 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
         if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
         {
-          uint32_t t;
+          long t;
 
           if ((t = atol(tmp_ptr + 1)) != 0)
             o.tcp.sack_right = t;
+
           tmp_ptr          = strtok(optarg, ":");
           if (tmp_ptr != NULL)
             o.tcp.sack_left = atol(tmp_ptr);
@@ -657,7 +784,9 @@ struct config_options *getConfigOptions(int argc, char ** argv)
         tmp_ptr = strtok(optarg, ",");
         for (counter=0; counter < (int)(sizeof(o.rsvp.address)/sizeof(in_addr_t)); counter++)
         {
-          if (tmp_ptr == NULL) break;
+          if (tmp_ptr == NULL) 
+            break;
+
           o.rsvp.address[counter] = resolv(tmp_ptr);
           tmp_ptr = strtok(NULL, ",");
         }
@@ -727,6 +856,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
           if ((t = atoi(tmp_ptr + 1)) != 0)
             o.eigrp.ios_minor = t;
+
           tmp_ptr           = strtok(optarg, ".");
           if (tmp_ptr != NULL)
             o.eigrp.ios_major = atoi(tmp_ptr);
@@ -739,6 +869,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
 
           if ((t = atoi(tmp_ptr + 1)) != 0)
             o.eigrp.ver_minor = t;
+
           tmp_ptr           = strtok(optarg, ".");
           if (tmp_ptr != NULL)
             o.eigrp.ver_major = atoi(tmp_ptr);
@@ -861,14 +992,23 @@ struct config_options *getConfigOptions(int argc, char ** argv)
     exit(EXIT_FAILURE);
   }
 
-  if ((tmp_ptr = (char *) strchr(argv[optind], '/')) == NULL)
-    o.ip.daddr = resolv(argv[optind]);
+  /* Get host and cidr. */
+  if (getIpAndCidrFromString(argv[optind], &addr))
+  {
+    /* If ok, then set values directly to "options" structure. */
+    o.bits = addr.cidr;
+    o.ip.daddr = htonl(addr.addr);
+  }
   else
   {
-    o.bits     = atoi(tmp_ptr + 1);
-    tmp_ptr   = strtok(argv[optind], "/");
-    if (tmp_ptr != NULL)
-      o.ip.daddr = resolv(tmp_ptr);
+    /* Otherwise, probably it's a name. Try to resolve it. 
+       '/' still marks the optional cidr here. */
+    tmp_ptr = strtok(argv[optind], "/");
+    o.ip.daddr = resolv(tmp_ptr);
+    if ((tmp_ptr = strtok(NULL, "/")) != NULL)
+      o.bits = atoi(tmp_ptr);
+    else
+      o.bits = 32;
   }
 
   return &o;
