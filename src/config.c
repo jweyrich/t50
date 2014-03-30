@@ -452,7 +452,7 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
   unsigned matches[5];
   int i, len;
   char *t;
-  int bits = 32;
+  int bits;
 
   addr_ptr->addr = addr_ptr->cidr = 0;
 
@@ -480,6 +480,7 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
   COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
   matches[0] = atoi(t);
 
+  bits = 32;  /* default is 32 bits netmask. */
   for (i = 2; i <= 4; i++)
   {
     if (MATCH(rm[i]))
@@ -490,6 +491,7 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
     }
     else
     {
+      /* if octect is missing, decrease 8 bits from netmask */
       bits -= 8;
       matches[i-1] = 0;
     }
@@ -510,7 +512,10 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
     }
   }
   else
+  {
+    /* if cidr is not given, use the calculated one. */
     matches[4] = bits;
+  }
 
   /* We don't need 't' string anymore. */
   free(t);
