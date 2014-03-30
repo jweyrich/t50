@@ -452,6 +452,7 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
   unsigned matches[5];
   int i, len;
   char *t;
+  int bits = 32;
 
   addr_ptr->addr = addr_ptr->cidr = 0;
 
@@ -475,14 +476,9 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
   }
 
   /* Convert IP octects matches. */
-  if (MATCH(rm[1]))
-  {
-    len = MATCH_LENGTH(rm[1]);
-    COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
-    matches[0] = atoi(t);
-  }
-  else  
-    matches[0] = 0;
+  len = MATCH_LENGTH(rm[1]);
+  COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
+  matches[0] = atoi(t);
 
   for (i = 2; i <= 4; i++)
   {
@@ -493,7 +489,10 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
       matches[i-1] = atoi(t);
     }
     else
+    {
+      bits -= 8;
       matches[i-1] = 0;
+    }
   }
 
   /* Convert cidr match. */
@@ -511,7 +510,7 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
     }
   }
   else
-    matches[4] = 32;
+    matches[4] = bits;
 
   /* We don't need 't' string anymore. */
   free(t);
@@ -533,11 +532,11 @@ static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_p
 
   /* Prepare CIDR structure */
   addr_ptr->cidr = matches[4];
-  addr_ptr->addr = (((matches[3] & 0xff))       |
-                    ((matches[2] & 0xff) << 8)  |
-                    ((matches[1] & 0xff) << 16) |
-                    ((matches[0] & 0xff) << 24)) &
-                      (0xffffffff << (32 - addr_ptr->cidr));
+  addr_ptr->addr = ( matches[3]        |
+                    (matches[2] << 8)  |
+                    (matches[1] << 16) |
+                    (matches[0] << 24)) &
+                      (0xffffffffUL << (32 - addr_ptr->cidr));
 
   regfree(&re);
 
