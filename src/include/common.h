@@ -21,7 +21,7 @@
 #define __COMMON_H
 
 #define PACKAGE "T50"
-#define SITE "http://github.com/merces/t50"
+#define SITE "http://github.com/fredericopissarra/t50"
 
 #if !(linux) || !(__linux__)
 # error "Sorry! The T50 was only tested under Linux!"
