@@ -27,6 +27,8 @@
 # error "Sorry! The T50 was only tested under Linux!"
 #endif  /* __linux__ */
 
+#define _GNU_SOURCE
+
 #include <assert.h> /* for debugging purposes only */
 #include <time.h>
 #include <stdio.h>

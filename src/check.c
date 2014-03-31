@@ -24,13 +24,6 @@ int checkConfigOptions(const struct config_options *o)
 {
   int minThreshold;
 
-  /* Check if we have root priviledges. */
-  if ( getuid() != 0 )
-  {
-    ERROR("you must have root privilege");
-    return 0;
-  }
-
   /* Warning missed target. */
   if (o->ip.daddr == INADDR_ANY)
   {
@@ -91,18 +84,18 @@ int checkConfigOptions(const struct config_options *o)
   else /* if (o->flood) isn't 0 */
   {
     /* Warning FLOOD mode. */
-    puts("entering in flood mode...");
+    puts("Entering in flood mode...");
 
 #ifdef  __HAVE_TURBO__
     if (o->turbo)
-      puts("activating turbo...");
+      puts("Activating turbo...");
 #endif  /* __HAVE_TURBO__ */
 
     /* Warning CIDR mode. */
     if (o->bits != 0)
-      puts("performing DDoS...");
+      puts("Performing DDoS...");
 
-    puts("hit CTRL+C to break.");
+    puts("Hit CTRL+C to break.");
   }
 
   /* Returning. */

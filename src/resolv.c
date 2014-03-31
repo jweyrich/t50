@@ -22,7 +22,7 @@
 /* IP address and name resolving */
 in_addr_t resolv(char *name)
 {
-/*   try this method to follow posix, so i try with getaddinfo()  ;-)*/
+   /* try this method to follow posix, so i try with getaddinfo()  ;-) */
     struct addrinfo hints, * res, * res0 = NULL;
     struct sockaddr_in * target = NULL;
     char tmp[46];
@@ -38,16 +38,20 @@ in_addr_t resolv(char *name)
 
     if (error)
     {
-        if (res0)
-            freeaddrinfo(res0);
+      char *stmp;
 
-        /* NOTE: Added proper error reporting. */
-        fprintf(stderr, "Error resolv.c. getaddrinfo() error: %s\n", gai_strerror(error));
+      if (res0)
+         freeaddrinfo(res0);
+
+      /* NOTE: Added proper error reporting. */
+      asprintf(&stmp, "Error on resolv(). getaddrinfo() reports: %s\n", gai_strerror(error));
+      ERROR(stmp);
+      free(stmp);
     }
 
     for (res = res0; res; res = res->ai_next)
     {
-      target = (struct sockaddr_in *) res->ai_addr;
+      target = (struct sockaddr_in *)res->ai_addr;
 
       /* FIXME: Is this safe? The return type is
                 in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */

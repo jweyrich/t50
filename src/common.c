@@ -19,6 +19,7 @@
 
 #include <common.h>
 
+/* Actual packet buffer. Allocated dynamically. */
 uint8_t *packet = NULL;
 size_t current_packet_size = 0;
 
@@ -52,7 +53,7 @@ void alloc_packet(size_t new_packet_size)
       exit(EXIT_FAILURE);
     }
 
-    packet = (uint8_t *)p;
+    packet = p;
     current_packet_size = new_packet_size;
   }
 }

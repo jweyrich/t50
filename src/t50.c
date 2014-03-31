@@ -18,6 +18,7 @@
 */
 
 #include <common.h>
+#include <sys/wait.h>
 
 /* Global variables */
 static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */
@@ -59,28 +60,20 @@ static void initializeSignalHandlers(void)
   struct sigaction sa;
 
   /* Using sig*() functions for compability. */
-  sa.sa_handler = SIG_IGN;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART; /* signal() semantics */
 
-  /* Ignoring signals. */
+
+  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV */
+  sa.sa_handler = ctrlc;
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
-
-  sa.sa_handler = ctrlc;
-
-  /* Handling signals. */
   sigaction(SIGINT,  &sa, NULL);
-  //sigaction(SIGILL, &sa, NULL); /* not necessary */
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGTRAP, &sa, NULL);
-  //sigaction(SIGKILL, &sa, NULL); /* SIGKILL & SIGSTOP cannot be caught or ignored */
-  //sigaction(SIGSTOP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGTSTP, &sa, NULL);
-  //sigaction(SIGSEGV, &sa, NULL); /* segmentation fault is a severe error. */
-                                   /* Don't need to be caught here! */
 #ifdef  __HAVE_TURBO__
   sigaction(SIGCHLD, &sa, NULL);
 #endif
@@ -105,31 +98,28 @@ static const char *getOrdinalSuffix(unsigned int n)
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
 {
-  time_t lt;
-  struct tm *tm;
+  struct config_options *o; /* Pointer to options. */
+  struct cidr *cidr_ptr; /* Pointer to cidr host id and 1st ip address. */
 
-  /* Command line interface options. */
-  struct config_options *o;
-
-  /* Counter and random destination address. */
-  uint32_t rand_daddr;
-
-  /* CIDR host identifier and first IP address. */
-  struct cidr *cidr_ptr;
-
-  modules_table_t *ptbl;
-  int num_modules;
+  modules_table_t *ptbl; /* Pointer to modules table */
+  int num_modules;       /* Holds number of modules in modules table. */
 
   initializeSignalHandlers();
 
   /* Configuring command line interface options. */
   o = getConfigOptions(argc, argv);
 
-  /* NOTE: checkConfigOptions now returns TRUE or FALSE, instead of
-           EXIT_FAILURE or EXIT_SUCCESS. Makes more sense! */
+  /* This is a requirement of t50. Previously on checkConfigOptions(). */
+  if (!getuid())
+  {
+    ERROR("User muse have root priviledge to run.");
+    return EXIT_FAILURE;
+  }
+
   /* Validating command line interface options. */
+  /* NOTE: checkConfigOptions now returns 0 if failure. Makes more sense! */
   if (!checkConfigOptions(o))
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
 
   num_modules = getNumberOfRegisteredModules();
 
@@ -138,8 +128,10 @@ int main(int argc, char *argv[])
     o->threshold -= (o->threshold % num_modules);
 
   /* Setting socket file descriptor. */
+  /* NOTE: createSocket() handles its errors before returning. */
   fd = createSocket();
 
+  /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
   srandom(time(NULL));
 
@@ -150,29 +142,34 @@ int main(int argc, char *argv[])
     if ((pid = fork()) == -1)
     {
       perror("Error creating child process. Exiting...");
-      exit(EXIT_FAILURE);
+      return EXIT_FAILURE;
     }
 
-    /* Setting the priority to lowest (?) one. */
+    /* Setting the priority to both parent and child process to highly favorable scheduling value. */
+    /* FIXME: Why not setup this value when t50 runs as a single process? */
     if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
     {
       perror("Error setting process priority. Exiting...");
-      exit(EXIT_FAILURE);
+      return EXIT_FAILURE;
     }
   }
 #endif  /* __HAVE_TURBO__ */
 
-  /* Calculating CIDR for destination address. */
+  /* Calculates CIDR for destination address. */
   cidr_ptr = config_cidr(o->bits, o->ip.daddr);
 
-  /* "pid" is zero only for child processes */
+  /* Show launch info only for parent process. */
   if (pid)
   {
+    time_t lt;
+    struct tm *tm;
+
     /* Getting the local time. */
-    lt = time(NULL); tm = localtime(&lt);
+    lt = time(NULL); 
+    tm = localtime(&lt);
 
     /* FIXME: Why use '\b\r' at the beginning?! */
-    printf("\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    fprintf(stderr, "\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
@@ -180,31 +177,25 @@ int main(int argc, char *argv[])
   /* Execute if flood or while threshold greater than 0. */
   while (o->flood || o->threshold--)
   {
-    /* Setting the destination IP address to RANDOM IP address. */
+    /* Set the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
-    {
-      /* Generation RANDOM position for computed IP addresses. */
-      /* FIX: No floating point! >-| */
-      rand_daddr = random() % cidr_ptr->hostid;
-
-      /* FIX: No addresses array needed */
-      o->ip.daddr = htonl(cidr_ptr->__1st_addr + rand_daddr);
-    }
+      o->ip.daddr = htonl(cidr_ptr->__1st_addr + 
+        (random() % cidr_ptr->hostid));
 
     /* Sending ICMP/IGMP/TCP/UDP/... packets. */
     if (o->ip.protocol != IPPROTO_T50)
     {
+      /* Get the protocol. */
       ptbl = &mod_table[o->ip.protoname];
-
-      /* Getting the correct protocol. */
       o->ip.protocol = ptbl->protocol_id;
 
-      /* Launching t50 module. */
+      /* Launch t50 module. */
       if (ptbl->func(fd, o))
       {
-        perror("Error sending packet");
+        ERROR("Error sending packet");
         close(fd);
-        exit(EXIT_FAILURE);
+
+        return EXIT_FAILURE;
       }
     }
     else
@@ -220,9 +211,10 @@ int main(int argc, char *argv[])
         /* Launching t50 module. */
         if (ptbl->func(fd, o))
         {
-          perror("Error sending packet");
+          ERROR("Error sending packet");
           close(fd);
-          exit(EXIT_FAILURE);
+
+          return EXIT_FAILURE;
         }
       }
 
@@ -235,20 +227,34 @@ int main(int argc, char *argv[])
     }
   }
 
+#ifdef  __HAVE_TURBO__
+  /* Make sure the child process have exited. */
+  if (o->turbo)
+  {
+    int status;
+
+    waitpid(-1, &status, 0);
+  }
+#endif
+
   /* Closing the socket. */
   close(fd);
 
-  /* NOTE: pid is zero only for child processes. */
+  /* Show termination message only for parent process. */
   if (pid)
   {
+    time_t lt;
+    struct tm *tm;
+
     /* Getting the local time. */
-    lt = time(NULL); tm = localtime(&lt);
+    lt = time(NULL); 
+    tm = localtime(&lt);
 
     /* FIXME: Why use '\b\r' at the beginning?! */
-    printf("\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    fprintf(stderr, "\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
 
-  return(EXIT_SUCCESS);
+  return 0;
 }

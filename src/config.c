@@ -398,30 +398,31 @@ static char **getTokensList(void)
 static void listProtocols(void)
 {
   modules_table_t *ptbl;
-  int counter;
+  int i;
 
   fprintf(stderr, "List of supported protocols:\n");
 
-  for (counter = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, counter++)
+  for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
     fprintf(stderr, "\t%2d PROTO = %-6s (%s)\n",
-           counter,
+           i,
            ptbl->acronym,
            ptbl->description);
 
 }
 
+/* NOTE: Ugly hack, but necessary! */
 static void setDefaultModuleOption(void)
 {
   modules_table_t *ptbl;
-  int index;
+  int i;
 
-  for (index = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, index++)
+  for (i = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
   {
     /* FIXME: Is string comparison the best way?! */
-    if (strcmp(ptbl->acronym, "TCP") == 0)
+    if (strcasecmp(ptbl->acronym, "TCP") == 0)
     {
       o.ip.protocol = ptbl->protocol_id;
-      o.ip.protoname = index;
+      o.ip.protoname = i;
       break;
     }
   }
@@ -1012,7 +1013,7 @@ struct config_options *getConfigOptions(int argc, char ** argv)
     if ((tmp_ptr = strtok(NULL, "/")) != NULL)
       o.bits = atoi(tmp_ptr);
     else
-      o.bits = 32;
+      o.bits = 32;  /* FIXME: Should be CIDR_MAXIMUM?! */ 
   }
 
   return &o;

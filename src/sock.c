@@ -29,16 +29,16 @@ socket_t createSocket(void)
 	uint32_t n = 1, *nptr = &n;
 
 	/* Setting SOCKET RAW. */
-	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
+	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
 	{
-		ERROR("error opening raw socket");
+		perror("error opening raw socket");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Setting IP_HDRINCL. */
-	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, nptr, sizeof(n)) < 0 )
+	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, nptr, sizeof(n)) == -1 )
 	{
-		ERROR("error setting socket options");
+		perror("error setting socket options");
 		exit(EXIT_FAILURE);
 	}
 
@@ -46,24 +46,24 @@ socket_t createSocket(void)
 #ifdef SO_SNDBUF
 	len = sizeof(n);
 	/* Getting SO_SNDBUF. */
-	if( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) < 0 )
+	if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
 	{
-		ERROR("error getting socket buffer");
+		perror("error getting socket buffer");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Setting the maximum SO_SNDBUF in bytes.
 	 * 128      =  1 kilobit
 	 * 10485760 = 10 megabytes */
-	for(n+=128; n<10485760; n+=128)
+	for (n += 128; n < 10485760; n += 128)
 	{
 		/* Setting SO_SNDBUF. */
-		if( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, len) < 0 )
+		if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, len) == -1 )
 		{
 			if(errno == ENOBUFS)	
 				break;
 
-			ERROR("error setting socket buffer");
+			perror("error setting socket buffer");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -71,15 +71,15 @@ socket_t createSocket(void)
 
 #ifdef SO_BROADCAST
 	/* Setting SO_BROADCAST. */
-	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, nptr, sizeof(n)) < 0 )
+	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, nptr, sizeof(n)) == -1 )
 	{
-		ERROR("error setting socket broadcast");
+		perror("error setting socket broadcast");
 		exit(EXIT_FAILURE);
 	}
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
-	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, nptr, sizeof(n)) < 0 )
+	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, nptr, sizeof(n)) == -1 )
 	{
 		perror("error setting socket priority");
 		exit(EXIT_FAILURE);
