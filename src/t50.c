@@ -110,9 +110,9 @@ int main(int argc, char *argv[])
   o = getConfigOptions(argc, argv);
 
   /* This is a requirement of t50. Previously on checkConfigOptions(). */
-  if (!getuid())
+  if (getuid())
   {
-    ERROR("User muse have root priviledge to run.");
+    ERROR("User must have root priviledge to run.");
     return EXIT_FAILURE;
   }
 
