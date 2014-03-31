@@ -37,7 +37,7 @@ int checkConfigOptions(const struct config_options *o)
     /* NOTE: Arbitrary array size... 48 is qword aligned on stack, i suppose! */
     char errstr[48];
 
-    sprintf(errstr, "CIDR must be beewten %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
+    sprintf(errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
     ERROR(errstr);
     return 0;
   }
