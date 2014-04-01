@@ -59,7 +59,6 @@ static void initializeSignalHandlers(void)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART; /* signal() semantics */
 
-
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV */
   sa.sa_handler = ctrlc;
   sigaction(SIGHUP,  &sa, NULL);
@@ -94,7 +93,7 @@ static const char *getOrdinalSuffix(unsigned int n)
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
 {
-  struct config_options *o; /* Pointer to options. */
+  struct config_options *co; /* Pointer to options. */
   struct cidr *cidr_ptr; /* Pointer to cidr host id and 1st ip address. */
 
   modules_table_t *ptbl; /* Pointer to modules table */
@@ -103,7 +102,7 @@ int main(int argc, char *argv[])
   initializeSignalHandlers();
 
   /* Configuring command line interface options. */
-  o = getConfigOptions(argc, argv);
+  co = getConfigOptions(argc, argv);
 
   /* This is a requirement of t50. Previously on checkConfigOptions(). */
   if (getuid())
@@ -114,14 +113,14 @@ int main(int argc, char *argv[])
 
   /* Validating command line interface options. */
   /* NOTE: checkConfigOptions now returns 0 if failure. Makes more sense! */
-  if (!checkConfigOptions(o))
+  if (!checkConfigOptions(co))
     return EXIT_FAILURE;
 
   num_modules = getNumberOfRegisteredModules();
 
   /* Sanitizing the threshold. */
-  if (o->ip.protocol == IPPROTO_T50)
-    o->threshold -= (o->threshold % num_modules);
+  if (co->ip.protocol == IPPROTO_T50)
+    co->threshold -= (co->threshold % num_modules);
 
   /* Setting socket file descriptor. */
   /* NOTE: createSocket() handles its errors before returning. */
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
-  if (o->turbo)
+  if (co->turbo)
   {
     if ((pid = fork()) == -1)
     {
@@ -152,7 +151,7 @@ int main(int argc, char *argv[])
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
-  cidr_ptr = config_cidr(o->bits, o->ip.daddr);
+  cidr_ptr = config_cidr(co->bits, co->ip.daddr);
 
   /* Show launch info only for parent process. */
   if (pid)
@@ -171,22 +170,22 @@ int main(int argc, char *argv[])
   }
 
   /* Execute if flood or while threshold greater than 0. */
-  while (o->flood || o->threshold--)
+  while (co->flood || co->threshold--)
   {
     /* Set the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
-      o->ip.daddr = htonl(cidr_ptr->__1st_addr + 
+      co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
         (random() % cidr_ptr->hostid));
 
     /* Sending ICMP/IGMP/TCP/UDP/... packets. */
-    if (o->ip.protocol != IPPROTO_T50)
+    if (co->ip.protocol != IPPROTO_T50)
     {
       /* Get the protocol. */
-      ptbl = &mod_table[o->ip.protoname];
-      o->ip.protocol = ptbl->protocol_id;
+      ptbl = &mod_table[co->ip.protoname];
+      co->ip.protocol = ptbl->protocol_id;
 
       /* Launch t50 module. */
-      if (ptbl->func(fd, o))
+      if (ptbl->func(fd, co))
       {
         ERROR("Error sending packet");
         close(fd);
@@ -202,10 +201,10 @@ int main(int argc, char *argv[])
       for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
       {
         /* Getting the correct protocol. */
-        o->ip.protocol = ptbl->protocol_id;
+        co->ip.protocol = ptbl->protocol_id;
 
         /* Launching t50 module. */
-        if (ptbl->func(fd, o))
+        if (ptbl->func(fd, co))
         {
           ERROR("Error sending packet");
           close(fd);
@@ -216,20 +215,20 @@ int main(int argc, char *argv[])
 
       /* Sanitizing the threshold. */
       /* FIXME: Is this correct? */
-      o->threshold -= num_modules - 1;
+      co->threshold -= num_modules - 1;
 
       /* Reseting protocol. */
-      o->ip.protocol = IPPROTO_T50;
+      co->ip.protocol = IPPROTO_T50;
     }
   }
 
 #ifdef  __HAVE_TURBO__
   /* Make sure the child process have exited. */
-  if (o->turbo)
+  if (co->turbo)
   {
     int status;
 
-    waitpid(-1, &status, 0);
+    wait(&status);
   }
 #endif
 

@@ -28,7 +28,7 @@ static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, con
 Description:   This function configures and sends the RSVP packet header.
 
 Targets:       N/A */
-int rsvp(const socket_t fd, const struct config_options *o)
+int rsvp(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
@@ -48,8 +48,8 @@ int rsvp(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  objects_length = rsvp_objects_len(o->rsvp.type, o->rsvp.scope, o->rsvp.adspec, o->rsvp.tspec);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  objects_length = rsvp_objects_len(co->rsvp.type, co->rsvp.scope, co->rsvp.adspec, co->rsvp.tspec);
   packet_size = sizeof(struct iphdr) +
     sizeof(struct rsvp_common_hdr) +
     greoptlen                      +
@@ -59,20 +59,20 @@ int rsvp(const socket_t fd, const struct config_options *o)
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, o,
+  gre_encapsulation(packet, co,
         sizeof(struct iphdr)           +
         sizeof(struct rsvp_common_hdr) +
         objects_length);
 
   /* RSVP Header structure making a pointer to IP Header structure. */
   rsvp           = (struct rsvp_common_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  rsvp->flags    = __RND(o->rsvp.flags);
+  rsvp->flags    = __RND(co->rsvp.flags);
   rsvp->version  = RSVPVERSION;
-  rsvp->type     = o->rsvp.type;
-  rsvp->ttl      = __RND(o->rsvp.ttl);
+  rsvp->type     = co->rsvp.type;
+  rsvp->ttl      = __RND(co->rsvp.ttl);
   rsvp->length   = htons(sizeof(struct rsvp_common_hdr) + objects_length);
   rsvp->reserved = FIELD_MUST_BE_ZERO;
   rsvp->check    = 0;
@@ -101,10 +101,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
   *buffer.word_ptr++ = htons(RSVP_LENGTH_SESSION);
   *buffer.byte_ptr++ = RSVP_OBJECT_SESSION;
   *buffer.byte_ptr++ = 1;
-  *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.session_addr);
-  *buffer.byte_ptr++ = __RND(o->rsvp.session_proto);
-  *buffer.byte_ptr++ = __RND(o->rsvp.session_flags);
-  *buffer.word_ptr++ = htons(__RND(o->rsvp.session_port));
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.session_addr);
+  *buffer.byte_ptr++ = __RND(co->rsvp.session_proto);
+  *buffer.byte_ptr++ = __RND(co->rsvp.session_flags);
+  *buffer.word_ptr++ = htons(__RND(co->rsvp.session_port));
 
   offset += RSVP_LENGTH_SESSION;
 
@@ -116,11 +116,11 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.6 Resv Teardown Messages
    * 3.1.8 Resv Error Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_PATH ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESV ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_PATHTEAR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_PATH ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESV ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_PATHTEAR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR)
   {
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -140,8 +140,8 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_RESV_HOP);
     *buffer.byte_ptr++ = RSVP_OBJECT_RESV_HOP;
     *buffer.byte_ptr++ = 1;
-    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.hop_addr);
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.hop_iface));
+    *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.hop_addr);
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.hop_iface));
 
     offset += RSVP_LENGTH_RESV_HOP;
   }
@@ -151,8 +151,8 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_PATH ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESV)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_PATH ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESV)
   {
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -170,7 +170,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_TIME_VALUES);
     *buffer.byte_ptr++ = RSVP_OBJECT_TIME_VALUES;
     *buffer.byte_ptr++ = 1;
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.time_refresh));
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.time_refresh));
 
     offset += RSVP_LENGTH_TIME_VALUES;
   }
@@ -181,9 +181,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.8 Resv Error Messages
    * 3.1.9 Confirmation Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_PATHERR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_PATHERR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
   {
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -203,10 +203,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_ERROR_SPEC);
     *buffer.byte_ptr++ = RSVP_OBJECT_ERROR_SPEC;
     *buffer.byte_ptr++ = 1;
-    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.error_addr);
-    *buffer.byte_ptr++ = __RND(o->rsvp.error_flags);
-    *buffer.byte_ptr++ = __RND(o->rsvp.error_code);
-    *buffer.word_ptr++ = htons(__RND(o->rsvp.error_value));
+    *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.error_addr);
+    *buffer.byte_ptr++ = __RND(co->rsvp.error_flags);
+    *buffer.byte_ptr++ = __RND(co->rsvp.error_code);
+    *buffer.word_ptr++ = htons(__RND(co->rsvp.error_value));
 
     offset += RSVP_LENGTH_ERROR_SPEC;
   }
@@ -218,9 +218,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.5 Path Teardown Messages
    * 3.1.7 Path Error Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_PATH     ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_PATHTEAR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_PATHERR)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_PATH     ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_PATHTEAR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_PATHERR)
   {
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -246,9 +246,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TEMPLATE);
     *buffer.byte_ptr++ = RSVP_OBJECT_SENDER_TEMPLATE;
     *buffer.byte_ptr++ = 1;
-    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.sender_addr);
+    *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.sender_addr);
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons(__RND(o->rsvp.sender_port));
+    *buffer.word_ptr++ = htons(__RND(co->rsvp.sender_port));
 
     offset += RSVP_LENGTH_SENDER_TEMPLATE;
 
@@ -265,7 +265,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * in documents prepared by the int-serv working group.
      */
     *buffer.word_ptr++ = htons(RSVP_LENGTH_SENDER_TSPEC +
-        TSPEC_SERVICES(o->rsvp.tspec));
+        TSPEC_SERVICES(co->rsvp.tspec));
     *buffer.byte_ptr++ = RSVP_OBJECT_SENDER_TSPEC;
     *buffer.byte_ptr++ = 2;
 
@@ -294,30 +294,30 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) -
+    *buffer.word_ptr++ = htons((TSPEC_SERVICES(co->rsvp.tspec) -
           RSVP_LENGTH_SENDER_TSPEC)/4);
-    *buffer.byte_ptr++ = o->rsvp.tspec;
+    *buffer.byte_ptr++ = co->rsvp.tspec;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons(TSPEC_SERVICES(o->rsvp.tspec)/4);
+    *buffer.word_ptr++ = htons(TSPEC_SERVICES(co->rsvp.tspec)/4);
 
     /* Identifying the RSVP TSPEC and building it. */
-    switch (o->rsvp.tspec)
+    switch (co->rsvp.tspec)
     {
       case TSPEC_TRAFFIC_SERVICE:
       case TSPEC_GUARANTEED_SERVICE:
         *buffer.byte_ptr++ = TSPECT_TOKEN_BUCKET_SERVICE;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons((TSPEC_SERVICES(o->rsvp.tspec) -
+        *buffer.word_ptr++ = htons((TSPEC_SERVICES(co->rsvp.tspec) -
               TSPEC_MESSAGE_HEADER)/4);
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_r));
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_b));
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_p));
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_m));
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.tspec_M));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_r));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_b));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_p));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_m));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_M));
         break;
     }
 
-    offset += RSVP_LENGTH_SENDER_TSPEC + TSPEC_SERVICES(o->rsvp.tspec);
+    offset += RSVP_LENGTH_SENDER_TSPEC + TSPEC_SERVICES(co->rsvp.tspec);
 
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -332,7 +332,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * documents prepared by the int-serv working group.
      */
     *buffer.word_ptr++ = htons(RSVP_LENGTH_ADSPEC +
-        ADSPEC_SERVICES(o->rsvp.adspec));
+        ADSPEC_SERVICES(co->rsvp.adspec));
     *buffer.byte_ptr++ = RSVP_OBJECT_ADSPEC;
     *buffer.byte_ptr++ = 2;
 
@@ -362,7 +362,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
      *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons((ADSPEC_SERVICES(o->rsvp.adspec) -
+    *buffer.word_ptr++ = htons((ADSPEC_SERVICES(co->rsvp.adspec) -
           ADSPEC_MESSAGE_HEADER)/4);
 
     offset += RSVP_LENGTH_ADSPEC;
@@ -399,24 +399,24 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_ISHOPCNT;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_hop));
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_hop));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_BANDWIDTH;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_path));
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_path));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_LATENCY;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_minimum));
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_minimum));
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_COMPMTU;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_mtu));
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_mtu));
 
     offset += ADSPEC_PARAMETER_LENGTH;
 
     /* Identifying the ADSPEC and building it. */
-    switch (o->rsvp.adspec)
+    switch (co->rsvp.adspec)
     {
       case ADSPEC_GUARANTEED_SERVICE:
       case ADSPEC_CONTROLLED_SERVICE:
@@ -457,24 +457,24 @@ int rsvp(const socket_t fd, const struct config_options *o)
         *buffer.byte_ptr++ = 133;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Ctot));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Ctot));
         *buffer.byte_ptr++ = 134;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Dtot));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dtot));
         *buffer.byte_ptr++ = 135;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Csum));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Csum));
         *buffer.byte_ptr++ = 136;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
-        *buffer.dword_ptr++ = htonl(__RND(o->rsvp.adspec_Dsum));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dsum));
 
         offset += ADSPEC_GUARANTEED_LENGTH;
 
-        /* Going to the next ADSPEC, if it needs to do so-> */
-        if (o->rsvp.adspec == ADSPEC_CONTROLLED_SERVICE)
+        /* Going to the next ADSPEC, if it needs to do sco-> */
+        if (co->rsvp.adspec == ADSPEC_CONTROLLED_SERVICE)
         {
           /*
            * The Use of RSVP with IETF Integrated Services (RFC 2210)
@@ -506,8 +506,8 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.4 Resv Messages
    * 3.1.9 Confirmation Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_RESV ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_RESV ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
   {
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -525,7 +525,7 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.word_ptr++ = htons(RSVP_LENGTH_RESV_CONFIRM);
     *buffer.byte_ptr++ = RSVP_OBJECT_RESV_CONFIRM;
     *buffer.byte_ptr++ = 1;
-    *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.confirm_addr);
+    *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.confirm_addr);
 
     offset += RSVP_LENGTH_RESV_CONFIRM;
   }
@@ -537,10 +537,10 @@ int rsvp(const socket_t fd, const struct config_options *o)
    * 3.1.8 Resv Error Messages
    * 3.1.9 Confirmation Messages
    */
-  if (o->rsvp.type == RSVP_MESSAGE_TYPE_RESV     ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR  ||
-      o->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (co->rsvp.type == RSVP_MESSAGE_TYPE_RESV     ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR  ||
+      co->rsvp.type == RSVP_MESSAGE_TYPE_RESVCONF)
   {
     /*
      * The SCOPE Object Classes is present for the following:
@@ -548,9 +548,9 @@ int rsvp(const socket_t fd, const struct config_options *o)
      * 3.1.6 Resv Teardown Messages
      * 3.1.8 Resv Error Messages
      */
-    if (o->rsvp.type == RSVP_MESSAGE_TYPE_RESV     ||
-        o->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
-        o->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR)
+    if (co->rsvp.type == RSVP_MESSAGE_TYPE_RESV     ||
+        co->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+        co->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR)
     {
       /*
        * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -569,15 +569,15 @@ int rsvp(const socket_t fd, const struct config_options *o)
        * |                IPv4 Src Address (4 bytes)             |
        * +-------------+-------------+-------------+-------------+
        */
-      *buffer.word_ptr++ = htons(RSVP_LENGTH_SCOPE(o->rsvp.scope));
+      *buffer.word_ptr++ = htons(RSVP_LENGTH_SCOPE(co->rsvp.scope));
       *buffer.byte_ptr++ = RSVP_OBJECT_SCOPE;
       *buffer.byte_ptr++ = 1;
 
       /* Dealing with scope address(es). */
-      for(counter = 0; counter < o->rsvp.scope ; counter ++)
-        *buffer.inaddr_ptr++ = INADDR_RND(o->rsvp.address[counter]);
+      for(counter = 0; counter < co->rsvp.scope ; counter ++)
+        *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.address[counter]);
 
-      offset += RSVP_LENGTH_SCOPE(o->rsvp.scope);
+      offset += RSVP_LENGTH_SCOPE(co->rsvp.scope);
     }
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -596,23 +596,23 @@ int rsvp(const socket_t fd, const struct config_options *o)
     *buffer.byte_ptr++ = RSVP_OBJECT_STYLE;
     *buffer.byte_ptr++ = 1;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.dword_ptr++ = htonl(__RND(o->rsvp.style_opt) << 8);
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.style_opt) << 8);
 
     offset += RSVP_LENGTH_STYLE;
   }
 
   /* Computing the checksum. */
-  rsvp->check   = o->bogus_csum ?
+  rsvp->check   = co->bogus_csum ?
     random() :
     cksum(rsvp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

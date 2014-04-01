@@ -56,15 +56,19 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
      *     for the CIDR.
      */
     netmask = ~(0xffffffffUL >> bits);
-    cidr.hostid = (uint32_t) (1 << (32 - bits)) - 2;
+    cidr.hostid = (1UL << (32 - bits)) - 2;
     cidr.__1st_addr = (ntohl(address) & netmask) + 1;
 
     /* XXX Sanitizing the maximum host identifier's IP addresses.
      * XXX Should never reaches here!!! */
     if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
     {
-      ERROR("internal error detecded -- please, report.\n"
-            "cidr.hostid > MAXIMUM_IP_ADDRESSES: Probably a specific platform error");
+      char *errstr;
+      asprintf(&errstr, "internal error detecded -- please, report.\n"
+                        "cidr.hostid > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
+                        MAXIMUM_IP_ADDRESSES);
+      ERROR(errstr);
+      free(errstr);
 
       exit(EXIT_FAILURE);
     }

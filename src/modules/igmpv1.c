@@ -21,7 +21,7 @@
 
 /* Function Name: IGMPv1 packet header configuration.
 Description:   This function configures and sends the IGMPv1 packet header. */
-int igmpv1(const socket_t fd, const struct config_options *o)
+int igmpv1(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,     /* GRE options size. */
          packet_size;
@@ -36,7 +36,7 @@ int igmpv1(const socket_t fd, const struct config_options *o)
   assert(o != NULL);
 
   /* GRE options size. */
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
 
   /* Packet size. */
   packet_size = sizeof(struct iphdr) +
@@ -47,30 +47,30 @@ int igmpv1(const socket_t fd, const struct config_options *o)
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, o,
+  gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct igmphdr));
 
   /* IGMPv1 Header structure making a pointer to Packet. */
   igmpv1        = (struct igmphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  igmpv1->type  = o->igmp.type;
-  igmpv1->code  = o->igmp.code;
-  igmpv1->group = INADDR_RND(o->igmp.group);
+  igmpv1->type  = co->igmp.type;
+  igmpv1->code  = co->igmp.code;
+  igmpv1->group = INADDR_RND(co->igmp.group);
   igmpv1->csum  = 0;
 
   /* Computing the checksum. */
-  igmpv1->csum  = o->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));
+  igmpv1->csum  = co->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

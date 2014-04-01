@@ -20,48 +20,49 @@
 #include <common.h>
 
 /* Validate options */
-int checkConfigOptions(const struct config_options *o)
+int checkConfigOptions(const struct config_options *co)
 {
   int minThreshold;
 
   /* Warning missed target. */
-  if (o->ip.daddr == INADDR_ANY)
+  if (co->ip.daddr == INADDR_ANY)
   {
     ERROR("Need target address. Try --help for usage");
     return 0;
   }
 
   /* Sanitizing the CIDR. */
-  if ((o->bits != 0) && ((o->bits < CIDR_MINIMUM) || (o->bits > CIDR_MAXIMUM)))
-  {
-    /* NOTE: Arbitrary array size... 48 is qword aligned on stack, i suppose! */
-    char errstr[48];
+  if (co->bits != 0) 
+    if ((co->bits < CIDR_MINIMUM) || (co->bits > CIDR_MAXIMUM))
+    {
+      char *errstr;
 
-    sprintf(errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
-    ERROR(errstr);
-    return 0;
-  }
+      asprintf(&errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
+      ERROR(errstr);
+      free(errstr);
+      return 0;
+    }
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_OK) &&
-      TEST_BITS(o->tcp.options, TCP_OPTION_SACK_EDGE))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
+      TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
   {
     ERROR("TCP options SACK-Permitted and SACK Edges are not allowed");
     return 0;
   }
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC) && (o->tcp.cc_echo))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
   {
     ERROR("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
     return 0;
   }
 
-  if (!o->flood)
+  if (!co->flood)
   {
 #ifdef  __HAVE_TURBO__
     /* Sanitizing TURBO mode. */
-    if (o->turbo)
+    if (co->turbo)
     {
       ERROR("turbo mode is only available in flood mode");
       return 0;
@@ -71,28 +72,28 @@ int checkConfigOptions(const struct config_options *o)
     /* Sanitizing the threshold. */
     minThreshold = getNumberOfRegisteredModules();
 
-    if ((o->ip.protocol == IPPROTO_T50) && (o->threshold < (unsigned)minThreshold))
+    if ((co->ip.protocol == IPPROTO_T50) && (co->threshold < (unsigned)minThreshold))
     {
       fprintf(stderr,
           "%s: protocol %s cannot have threshold smaller than %d\n",
           PACKAGE,
-          mod_table[o->ip.protoname].acronym,
+          mod_table[co->ip.protoname].acronym,
           minThreshold);
       return 0;
     }
   }
-  else /* if (o->flood) isn't 0 */
+  else /* if (co->flood) isn't 0 */
   {
     /* Warning FLOOD mode. */
     puts("Entering in flood mode...");
 
 #ifdef  __HAVE_TURBO__
-    if (o->turbo)
+    if (co->turbo)
       puts("Activating turbo...");
 #endif  /* __HAVE_TURBO__ */
 
     /* Warning CIDR mode. */
-    if (o->bits != 0)
+    if (co->bits != 0)
       puts("Performing DDoS...");
 
     puts("Hit CTRL+C to break.");

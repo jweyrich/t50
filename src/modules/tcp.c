@@ -29,7 +29,7 @@ static size_t tcp_options_len(const uint8_t, const uint8_t, const uint8_t);
 Description:   This function configures and sends the TCP packet header.
 
 Targets:       N/A */
-int tcp(const socket_t fd, const struct config_options *o)
+int tcp(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */
@@ -53,8 +53,8 @@ int tcp(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  tcpolen = tcp_options_len(o->tcp.options, o->tcp.md5, o->tcp.auth);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
   packet_size = sizeof(struct iphdr) +
     greoptlen             +
@@ -65,9 +65,9 @@ int tcp(const socket_t fd, const struct config_options *o)
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
-  gre_ip = gre_encapsulation(packet, o,
+  gre_ip = gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct tcphdr) +
         tcpopt);
@@ -89,22 +89,22 @@ int tcp(const socket_t fd, const struct config_options *o)
 
   /* TCP Header structure making a pointer to IP Header structure. */
   tcp          = (struct tcphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  tcp->source  = htons(IPPORT_RND(o->source));
-  tcp->dest    = htons(IPPORT_RND(o->dest));
+  tcp->source  = htons(IPPORT_RND(co->source));
+  tcp->dest    = htons(IPPORT_RND(co->dest));
   tcp->res1    = TCP_RESERVED_BITS;
-  tcp->doff    = o->tcp.doff ? o->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
-  tcp->fin     = o->tcp.fin;
-  tcp->syn     = o->tcp.syn;
-  tcp->seq     = o->tcp.syn ? htonl(__RND(o->tcp.sequence)) : 0;
-  tcp->rst     = o->tcp.rst;
-  tcp->psh     = o->tcp.psh;
-  tcp->ack     = o->tcp.ack;
-  tcp->ack_seq = o->tcp.ack ? htonl(__RND(o->tcp.acknowledge)) : 0;
-  tcp->urg     = o->tcp.urg;
-  tcp->urg_ptr = o->tcp.urg ? htons(__RND(o->tcp.urg_ptr)) : 0;
-  tcp->ece     = o->tcp.ece;
-  tcp->cwr     = o->tcp.cwr;
-  tcp->window  = htons(__RND(o->tcp.window));
+  tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
+  tcp->fin     = co->tcp.fin;
+  tcp->syn     = co->tcp.syn;
+  tcp->seq     = co->tcp.syn ? htonl(__RND(co->tcp.sequence)) : 0;
+  tcp->rst     = co->tcp.rst;
+  tcp->psh     = co->tcp.psh;
+  tcp->ack     = co->tcp.ack;
+  tcp->ack_seq = co->tcp.ack ? htonl(__RND(co->tcp.acknowledge)) : 0;
+  tcp->urg     = co->tcp.urg;
+  tcp->urg_ptr = co->tcp.urg ? htons(__RND(co->tcp.urg_ptr)) : 0;
+  tcp->ece     = co->tcp.ece;
+  tcp->cwr     = co->tcp.cwr;
+  tcp->window  = htons(__RND(co->tcp.window));
   tcp->check   = 0;
 
   buffer.ptr = (void *)tcp + sizeof(struct tcphdr);
@@ -122,11 +122,11 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |00000010|00000100|   max seg size   |
    *    +--------+--------+---------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_MSS))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_MSS))
   {
     *buffer.byte_ptr++ = TCPOPT_MSS;
     *buffer.byte_ptr++ = TCPOLEN_MSS;
-    *buffer.word_ptr++ = htons(__RND(o->tcp.mss));
+    *buffer.word_ptr++ = htons(__RND(co->tcp.mss));
   }
 
   /*
@@ -142,11 +142,11 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |00000011|00000011| shift  |
    *    +--------+--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_WSOPT))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_WSOPT))
   {
     *buffer.byte_ptr++ = TCPOPT_WSOPT;
     *buffer.byte_ptr++ = TCPOLEN_WSOPT;
-    *buffer.byte_ptr++ = __RND(o->tcp.wsopt);
+    *buffer.byte_ptr++ = __RND(co->tcp.wsopt);
   }
 
   /*
@@ -166,7 +166,7 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |       TS Echo Reply (TSecr)       |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_TSOPT))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_TSOPT))
   {
     /*
      * TCP Extensions for High Performance (RFC 1323)
@@ -186,13 +186,13 @@ int tcp(const socket_t fd, const struct config_options *o)
      *       |          TSecr   timestamp        |
      *       +--------+--------+--------+--------+
      */
-    if (!o->tcp.syn)
+    if (!co->tcp.syn)
       for (; tcpolen & 3; tcpolen++)
         *buffer.byte_ptr++ = TCPOPT_NOP;
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
-    *buffer.dword_ptr++ = htonl(__RND(o->tcp.tsval));
-    *buffer.dword_ptr++ = htonl(__RND(o->tcp.tsecr));
+    *buffer.dword_ptr++ = htonl(__RND(co->tcp.tsval));
+    *buffer.dword_ptr++ = htonl(__RND(co->tcp.tsecr));
   }
 
   /*
@@ -210,11 +210,11 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC))
   {
     *buffer.byte_ptr++ = TCPOPT_CC;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(__RND(o->tcp.cc));
+    *buffer.dword_ptr++ = htonl(__RND(co->tcp.cc));
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -227,7 +227,7 @@ int tcp(const socket_t fd, const struct config_options *o)
      *  value from the sender's TCB.
      */
     tcp->syn     = 1;
-    tcp->seq     = htonl(__RND(o->tcp.sequence));
+    tcp->seq     = htonl(__RND(co->tcp.sequence));
   }
 
   /*
@@ -257,15 +257,15 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_CC_NEXT))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC_NEXT))
   {
-    *buffer.byte_ptr++ = o->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
+    *buffer.byte_ptr++ = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(o->tcp.cc_new ?
-      __RND(o->tcp.cc_new) : __RND(o->tcp.cc_echo));
+    *buffer.dword_ptr++ = htonl(co->tcp.cc_new ?
+      __RND(co->tcp.cc_new) : __RND(co->tcp.cc_echo));
 
     tcp->syn = 1;
-    tcp->seq = htonl(__RND(o->tcp.sequence));
+    tcp->seq = htonl(__RND(co->tcp.sequence));
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -277,7 +277,7 @@ int tcp(const socket_t fd, const struct config_options *o)
      * may not be larger than the previous value.   Its  SEG.CC  value is the
      * TCB.CCsend value from the sender's TCB.
      */
-    if (!o->tcp.cc_new)
+    if (!co->tcp.cc_new)
     {
       /*
        * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -291,7 +291,7 @@ int tcp(const socket_t fd, const struct config_options *o)
        * from the initial SYN.
        */
       tcp->ack     = 1;
-      tcp->ack_seq = htonl(__RND(o->tcp.acknowledge));
+      tcp->ack_seq = htonl(__RND(co->tcp.acknowledge));
     }
   }
 
@@ -308,7 +308,7 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |00000100|00000010|
    *    +--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_OK))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK))
   {
     *buffer.byte_ptr++ = TCPOPT_SACK_OK;
     *buffer.byte_ptr++ = TCPOLEN_SACK_OK;
@@ -339,12 +339,12 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |      Right Edge of nth Block      |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(o->tcp.options, TCP_OPTION_SACK_EDGE))
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
   {
     *buffer.byte_ptr++ = TCPOPT_SACK_EDGE;
     *buffer.byte_ptr++ = TCPOLEN_SACK_EDGE(1);
-    *buffer.dword_ptr++ = htonl(__RND(o->tcp.sack_left));
-    *buffer.dword_ptr++ = htonl(__RND(o->tcp.sack_right));
+    *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_left));
+    *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_right));
   }
 
   /*
@@ -368,7 +368,7 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |...digest (con't)|
    *    +-----------------+
    */
-  if (o->tcp.md5)
+  if (co->tcp.md5)
   {
     size_t stemp;
 
@@ -377,7 +377,7 @@ int tcp(const socket_t fd, const struct config_options *o)
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    stemp = auth_hmac_md5_len(o->tcp.md5);
+    stemp = auth_hmac_md5_len(co->tcp.md5);
     for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = random();
   }
@@ -403,47 +403,47 @@ int tcp(const socket_t fd, const struct config_options *o)
    *    |    ... MAC      |
    *    +-----------------+
    */
-  if (o->tcp.auth)
+  if (co->tcp.auth)
   {
     size_t stemp;
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
-    *buffer.byte_ptr++ = __RND(o->tcp.key_id);
-    *buffer.byte_ptr++ = __RND(o->tcp.next_key);
+    *buffer.byte_ptr++ = __RND(co->tcp.key_id);
+    *buffer.byte_ptr++ = __RND(co->tcp.next_key);
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    stemp = auth_hmac_md5_len(o->tcp.auth);
+    stemp = auth_hmac_md5_len(co->tcp.auth);
     for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = random();
   }
 
   /* Padding the TCP Options. */
   for (; tcpolen & 3; tcpolen++)
-    *buffer.byte_ptr++ = o->tcp.nop;
+    *buffer.byte_ptr++ = co->tcp.nop;
 
   offset = sizeof(struct tcphdr) + tcpolen;
 
   /* Fill PSEUDO Header structure. */
   pseudo           = (struct psdhdr *)buffer.ptr;
-  pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
+  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
+  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
-  pseudo->protocol = o->ip.protocol;
+  pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(offset);
 
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  tcp->check   = o->bogus_csum ? random() : cksum(tcp, offset);
+  tcp->check   = co->bogus_csum ? random() : cksum(tcp, offset);
 
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

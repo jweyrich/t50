@@ -24,7 +24,7 @@
 Description:   This function configures and sends the EGP packet header.
 
 Targets:       N/A */
-int egp(const socket_t fd, const struct config_options *o)
+int egp(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,   /* GRE options size. */
          packet_size,
@@ -40,7 +40,7 @@ int egp(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   packet_size = sizeof(struct iphdr)   +
     greoptlen              +
     sizeof(struct egp_hdr) +
@@ -50,10 +50,10 @@ int egp(const socket_t fd, const struct config_options *o)
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, o,
+  gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct egp_hdr)     +
         sizeof(struct egp_acq_hdr));
@@ -66,32 +66,32 @@ int egp(const socket_t fd, const struct config_options *o)
   /* EGP Header structure making a pointer to Packet. */
   egp           = (struct egp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   egp->version  = EGPVERSION;
-  egp->type     = o->egp.type;
-  egp->code     = o->egp.code;
-  egp->status   = o->egp.status;
-  egp->as       = __RND(o->egp.as);
-  egp->sequence = __RND(o->egp.sequence);
+  egp->type     = co->egp.type;
+  egp->code     = co->egp.code;
+  egp->status   = co->egp.status;
+  egp->as       = __RND(co->egp.as);
+  egp->sequence = __RND(co->egp.sequence);
   egp->check    = 0;
 
   offset  = sizeof(struct egp_hdr);
 
   /* EGP Acquire Header structure. */
   egp_acq        = (struct egp_acq_hdr *)((void *)egp + offset);
-  egp_acq->hello = __RND(o->egp.hello);
-  egp_acq->poll  = __RND(o->egp.poll);
+  egp_acq->hello = __RND(co->egp.hello);
+  egp_acq->poll  = __RND(co->egp.poll);
 
   offset += sizeof(struct egp_acq_hdr);
 
   /* Computing the checksum. */
-  egp->check    = o->bogus_csum ? random() : cksum(egp, offset);
+  egp->check    = co->bogus_csum ? random() : cksum(egp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

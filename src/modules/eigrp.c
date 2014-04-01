@@ -29,7 +29,7 @@ static  size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, cons
 Description:   This function configures and sends the EIGRP packet header.
 
 Targets:       N/A */
-int eigrp(const socket_t fd, const struct config_options *o)
+int eigrp(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,     /* GRE options size. */
          eigrp_tlv_len, /* EIGRP TLV size. */
@@ -52,9 +52,9 @@ int eigrp(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
-  prefix = __RND(o->eigrp.prefix);
-  eigrp_tlv_len = eigrp_hdr_len(o->eigrp.opcode, o->eigrp.type, prefix, o->eigrp.auth);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  prefix = __RND(co->eigrp.prefix);
+  eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
   packet_size = sizeof(struct iphdr)     +
     greoptlen                +
     sizeof(struct eigrp_hdr) +
@@ -64,10 +64,10 @@ int eigrp(const socket_t fd, const struct config_options *o)
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, o,
+  gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct eigrp_hdr) +
         eigrp_tlv_len);
@@ -85,13 +85,13 @@ int eigrp(const socket_t fd, const struct config_options *o)
    * EIGRP Header structure.
    */
   eigrp              = (struct eigrp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
-  eigrp->version     = o->eigrp.ver_minor ? o->eigrp.ver_minor : EIGRPVERSION;
-  eigrp->opcode      = __RND(o->eigrp.opcode);
-  eigrp->flags       = htonl(__RND(o->eigrp.flags));
-  eigrp->sequence    = htonl(__RND(o->eigrp.sequence));
-  eigrp->acknowledge = o->eigrp.type == EIGRP_TYPE_SEQUENCE ?
-    htonl(__RND(o->eigrp.acknowledge)) : 0;
-  eigrp->as          = htonl(__RND(o->eigrp.as));
+  eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
+  eigrp->opcode      = __RND(co->eigrp.opcode);
+  eigrp->flags       = htonl(__RND(co->eigrp.flags));
+  eigrp->sequence    = htonl(__RND(co->eigrp.sequence));
+  eigrp->acknowledge = co->eigrp.type == EIGRP_TYPE_SEQUENCE ?
+    htonl(__RND(co->eigrp.acknowledge)) : 0;
+  eigrp->as          = htonl(__RND(co->eigrp.as));
   eigrp->check       = 0;
 
   offset  = sizeof(struct eigrp_hdr);
@@ -106,17 +106,17 @@ int eigrp(const socket_t fd, const struct config_options *o)
    * 2. Software Version with Parameter TLVs for Hello
    * 3. Next Multicast Sequence TLV for Hello
    */
-  if (o->eigrp.auth)
+  if (co->eigrp.auth)
   {
-    if (o->eigrp.opcode == EIGRP_OPCODE_UPDATE  ||
-        (o->eigrp.opcode == EIGRP_OPCODE_HELLO   &&
-         (o->eigrp.type   == EIGRP_TYPE_MULTICAST ||
-          o->eigrp.type   == EIGRP_TYPE_SOFTWARE)))
+    if (co->eigrp.opcode == EIGRP_OPCODE_UPDATE  ||
+        (co->eigrp.opcode == EIGRP_OPCODE_HELLO   &&
+         (co->eigrp.type   == EIGRP_TYPE_MULTICAST ||
+          co->eigrp.type   == EIGRP_TYPE_SOFTWARE)))
     {
       /* NOTE: stemp used to avoid multiple comparisons on loop below */
       size_t stemp;
 
-      stemp = auth_hmac_md5_len(o->eigrp.auth);
+      stemp = auth_hmac_md5_len(co->eigrp.auth);
 
       /*
        * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -148,10 +148,10 @@ int eigrp(const socket_t fd, const struct config_options *o)
        *   +---------------------------------------------------------------+
        */
       *buffer.word_ptr++ = htons(EIGRP_TYPE_AUTH);
-      *buffer.word_ptr++ = htons(o->eigrp.length ? o->eigrp.length : EIGRP_TLEN_AUTH);
+      *buffer.word_ptr++ = htons(co->eigrp.length ? co->eigrp.length : EIGRP_TLEN_AUTH);
       *buffer.word_ptr++ = htons(AUTH_TYPE_HMACMD5);
       *buffer.word_ptr++ = htons(stemp);
-      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.key_id));
+      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.key_id));
 
       for (counter = 0; counter < EIGRP_PADDING_BLOCK; counter++)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
@@ -164,7 +164,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
 
       /* FIXME: Is this correct?!
                 The code, above seems to use a variable size for digest (stemp)
-                and length (if o->eigrp_length != 0). */
+                and length (if co->eigrp_length != 0). */
       offset += EIGRP_TLEN_AUTH;
     }
   }
@@ -176,13 +176,13 @@ int eigrp(const socket_t fd, const struct config_options *o)
    * instead, it carries Authentication Data, IP Internal and External
    * Routes or nothing (depends on the EIGRP Type).
    */
-  if (o->eigrp.opcode == EIGRP_OPCODE_UPDATE   ||
-      o->eigrp.opcode == EIGRP_OPCODE_REQUEST  ||
-      o->eigrp.opcode == EIGRP_OPCODE_QUERY    ||
-      o->eigrp.opcode == EIGRP_OPCODE_REPLY)
+  if (co->eigrp.opcode == EIGRP_OPCODE_UPDATE   ||
+      co->eigrp.opcode == EIGRP_OPCODE_REQUEST  ||
+      co->eigrp.opcode == EIGRP_OPCODE_QUERY    ||
+      co->eigrp.opcode == EIGRP_OPCODE_REPLY)
   {
-    if (o->eigrp.type == EIGRP_TYPE_INTERNAL ||
-        o->eigrp.type == EIGRP_TYPE_EXTERNAL)
+    if (co->eigrp.type == EIGRP_TYPE_INTERNAL ||
+        co->eigrp.type == EIGRP_TYPE_EXTERNAL)
     {
       /*
        * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -248,51 +248,51 @@ int eigrp(const socket_t fd, const struct config_options *o)
        * The only difference between Internal and External Routes TLVs is 20
        * octets.
        */
-      *buffer.word_ptr++ = htons(o->eigrp.type == EIGRP_TYPE_INTERNAL ?
+      *buffer.word_ptr++ = htons(co->eigrp.type == EIGRP_TYPE_INTERNAL ?
           EIGRP_TYPE_INTERNAL : EIGRP_TYPE_EXTERNAL);
       /*
        * For both Internal and External Routes TLV the code must perform
        * an additional step to compute the EIGRP header length,  because
        * it depends on the the EIGRP Prefix, and it can be 1-4 octets.
        */
-      *buffer.word_ptr++ = htons(o->eigrp.length ?
-          o->eigrp.length :
-          (o->eigrp.type == EIGRP_TYPE_INTERNAL ?
+      *buffer.word_ptr++ = htons(co->eigrp.length ?
+          co->eigrp.length :
+          (co->eigrp.type == EIGRP_TYPE_INTERNAL ?
            EIGRP_TLEN_INTERNAL :
            EIGRP_TLEN_EXTERNAL) +
           EIGRP_DADDR_LENGTH(prefix));
-      *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.next_hop);
+      *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.next_hop);
       /*
        * The only difference between Internal and External Routes TLVs is 20
        * octets. Building 20 extra octets for IP External Routes TLV.
        */
-      if (o->eigrp.type == EIGRP_TYPE_EXTERNAL)
+      if (co->eigrp.type == EIGRP_TYPE_EXTERNAL)
       {
-        *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.src_router);
-        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.src_as));
-        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.tag));
-        *buffer.dword_ptr++ = htonl(__RND(o->eigrp.proto_metric));
-        *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
+        *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.src_router);
+        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.src_as));
+        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.tag));
+        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.proto_metric));
+        *buffer.word_ptr++ = co->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
           FIELD_MUST_BE_ZERO : htons(0x0004);
-        *buffer.byte_ptr++ = __RND(o->eigrp.proto_id);
-        *buffer.byte_ptr++ = __RND(o->eigrp.ext_flags);
+        *buffer.byte_ptr++ = __RND(co->eigrp.proto_id);
+        *buffer.byte_ptr++ = __RND(co->eigrp.ext_flags);
       }
 
-      dest = INADDR_RND(o->eigrp.dest);
+      dest = INADDR_RND(co->eigrp.dest);
 
-      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.delay));
-      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.bandwidth));
-      *buffer.dword_ptr++ = htonl(__RND(o->eigrp.mtu) << 8);
-      *buffer.byte_ptr++ = __RND(o->eigrp.hop_count);
-      *buffer.byte_ptr++ = __RND(o->eigrp.reliability);
-      *buffer.byte_ptr++ = __RND(o->eigrp.load);
-      *buffer.word_ptr++ = o->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
+      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.delay));
+      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.bandwidth));
+      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.mtu) << 8);
+      *buffer.byte_ptr++ = __RND(co->eigrp.hop_count);
+      *buffer.byte_ptr++ = __RND(co->eigrp.reliability);
+      *buffer.byte_ptr++ = __RND(co->eigrp.load);
+      *buffer.word_ptr++ = co->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
         FIELD_MUST_BE_ZERO : htons(0x0004);
       *buffer.byte_ptr++ = prefix;
       *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);
       buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
 
-      offset += (o->eigrp.type == EIGRP_TYPE_INTERNAL ?
+      offset += (co->eigrp.type == EIGRP_TYPE_INTERNAL ?
           EIGRP_TLEN_INTERNAL :
           EIGRP_TLEN_EXTERNAL) +
         EIGRP_DADDR_LENGTH(prefix);
@@ -302,7 +302,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
      * Software Version, Multicast Sequence or nothing (Acknowledge).
      */
   }
-  else if (o->eigrp.opcode == EIGRP_OPCODE_HELLO)
+  else if (co->eigrp.opcode == EIGRP_OPCODE_HELLO)
   {
     /*
      * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
@@ -311,7 +311,7 @@ int eigrp(const socket_t fd, const struct config_options *o)
      * exactly what I saw on live  EIGRP PCAP files.  Read the code and
      * you will understand what I am talking about.
      */
-    switch (o->eigrp.type)
+    switch (co->eigrp.type)
     {
       case EIGRP_TYPE_PARAMETER:
       case EIGRP_TYPE_SOFTWARE:
@@ -332,26 +332,26 @@ int eigrp(const socket_t fd, const struct config_options *o)
          *   +---------------------------------------------------------------+
          */
         *buffer.word_ptr++ = htons(EIGRP_TYPE_PARAMETER);
-        *buffer.word_ptr++ = htons(o->eigrp.length ?
-            o->eigrp.length : EIGRP_TLEN_PARAMETER);
-        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K1) ?
-          __RND(o->eigrp.k1) : o->eigrp.k1;
-        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K2) ?
-          __RND(o->eigrp.k2) : o->eigrp.k2;
-        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K3) ?
-          __RND(o->eigrp.k3) : o->eigrp.k3;
-        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K4) ?
-          __RND(o->eigrp.k4) : o->eigrp.k4;
-        *buffer.byte_ptr++ = TEST_BITS(o->eigrp.values, EIGRP_KVALUE_K5) ?
-          __RND(o->eigrp.k5) : o->eigrp.k5;
+        *buffer.word_ptr++ = htons(co->eigrp.length ?
+            co->eigrp.length : EIGRP_TLEN_PARAMETER);
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K1) ?
+          __RND(co->eigrp.k1) : co->eigrp.k1;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K2) ?
+          __RND(co->eigrp.k2) : co->eigrp.k2;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K3) ?
+          __RND(co->eigrp.k3) : co->eigrp.k3;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K4) ?
+          __RND(co->eigrp.k4) : co->eigrp.k4;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K5) ?
+          __RND(co->eigrp.k5) : co->eigrp.k5;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons(o->eigrp.hold);
+        *buffer.word_ptr++ = htons(co->eigrp.hold);
 
         offset += EIGRP_TLEN_PARAMETER;
 
-        /* Going to the next TLV, if it needs to do so-> */
-        if (o->eigrp.type == EIGRP_TYPE_SOFTWARE ||
-            o->eigrp.type == EIGRP_TYPE_MULTICAST)
+        /* Going to the next TLV, if it needs to do sco-> */
+        if (co->eigrp.type == EIGRP_TYPE_SOFTWARE ||
+            co->eigrp.type == EIGRP_TYPE_MULTICAST)
         {
           /*
            * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -367,17 +367,17 @@ int eigrp(const socket_t fd, const struct config_options *o)
            *   +---------------------------------------------------------------+
            */
           *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
-          *buffer.word_ptr++ = htons(o->eigrp.length ?
-              o->eigrp.length : EIGRP_TLEN_SOFTWARE);
-          *buffer.byte_ptr++ = __RND(o->eigrp.ios_major);
-          *buffer.byte_ptr++ = __RND(o->eigrp.ios_minor);
-          *buffer.byte_ptr++ = __RND(o->eigrp.ver_major);
-          *buffer.byte_ptr++ = __RND(o->eigrp.ver_minor);
+          *buffer.word_ptr++ = htons(co->eigrp.length ?
+              co->eigrp.length : EIGRP_TLEN_SOFTWARE);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ios_major);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ios_minor);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ver_major);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ver_minor);
 
           offset += EIGRP_TLEN_SOFTWARE;
 
-          /* Going to the next TLV, if it needs to do so-> */
-          if (o->eigrp.type == EIGRP_TYPE_MULTICAST)
+          /* Going to the next TLV, if it needs to do sco-> */
+          if (co->eigrp.type == EIGRP_TYPE_MULTICAST)
           {
             /*
              * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -397,10 +397,10 @@ int eigrp(const socket_t fd, const struct config_options *o)
              *   +---------------------------------------------------------------+
              */
             *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
-            *buffer.word_ptr++ = htons(o->eigrp.length ?
-                o->eigrp.length : EIGRP_TLEN_SEQUENCE);
-            *buffer.byte_ptr++ = sizeof(o->eigrp.address);
-            *buffer.inaddr_ptr++ = INADDR_RND(o->eigrp.address);
+            *buffer.word_ptr++ = htons(co->eigrp.length ?
+                co->eigrp.length : EIGRP_TLEN_SEQUENCE);
+            *buffer.byte_ptr++ = sizeof(co->eigrp.address);
+            *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.address);
 
             /*
              * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -416,9 +416,9 @@ int eigrp(const socket_t fd, const struct config_options *o)
              *   +---------------------------------------------------------------+
              */
             *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
-            *buffer.word_ptr++ = htons(o->eigrp.length ?
-                o->eigrp.length : EIGRP_TLEN_MULTICAST);
-            *buffer.dword_ptr++ = htonl(__RND(o->eigrp.multicast));
+            *buffer.word_ptr++ = htons(co->eigrp.length ?
+                co->eigrp.length : EIGRP_TLEN_MULTICAST);
+            *buffer.dword_ptr++ = htonl(__RND(co->eigrp.multicast));
 
             offset += EIGRP_TLEN_MULTICAST +
               EIGRP_TLEN_SEQUENCE;
@@ -428,16 +428,16 @@ int eigrp(const socket_t fd, const struct config_options *o)
   }
 
   /* Computing the checksum. */
-  eigrp->check    = o->bogus_csum ?
+  eigrp->check    = co->bogus_csum ?
     random() : cksum(eigrp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

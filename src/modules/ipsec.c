@@ -24,7 +24,7 @@
 Description:   This function configures and sends the IPSec packet header.
 
 Targets:       N/A */
-int ipsec(const socket_t fd, const struct config_options *o)
+int ipsec(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,   /* GRE options size. */
          ip_ah_icv,   /* IPSec AH Integrity Check Value (ICV). */
@@ -46,7 +46,7 @@ int ipsec(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
   packet_size = sizeof(struct iphdr) +
@@ -59,10 +59,10 @@ int ipsec(const socket_t fd, const struct config_options *o)
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, o,
+  gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct ip_auth_hdr) +
         ip_ah_icv                  +
@@ -92,11 +92,11 @@ int ipsec(const socket_t fd, const struct config_options *o)
   /* IPSec AH Header structure making a pointer to IP Header structure. */
   ip_auth          = (struct ip_auth_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   ip_auth->nexthdr = IPPROTO_ESP;
-  ip_auth->hdrlen  = o->ipsec.ah_length ?
-    o->ipsec.ah_length :
+  ip_auth->hdrlen  = co->ipsec.ah_length ?
+    co->ipsec.ah_length :
     (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
-  ip_auth->spi     = htonl(__RND(o->ipsec.ah_spi));
-  ip_auth->seq_no  = htonl(__RND(o->ipsec.ah_sequence));
+  ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
+  ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
 
   offset = sizeof(struct ip_auth_hdr);
 
@@ -108,8 +108,8 @@ int ipsec(const socket_t fd, const struct config_options *o)
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
   ip_esp         = (struct ip_esp_hdr *)buffer.ptr;
-  ip_esp->spi    = htonl(__RND(o->ipsec.esp_spi));
-  ip_esp->seq_no = htonl(__RND(o->ipsec.esp_sequence));
+  ip_esp->spi    = htonl(__RND(co->ipsec.esp_spi));
+  ip_esp->seq_no = htonl(__RND(co->ipsec.esp_sequence));
 
   offset += sizeof(struct ip_esp_hdr);
   buffer.ptr += sizeof(struct ip_esp_hdr);
@@ -120,12 +120,12 @@ int ipsec(const socket_t fd, const struct config_options *o)
 
   /* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)

@@ -19,7 +19,7 @@
 
 #include <common.h>
 
-struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options *o)
+struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options *co)
 {
   struct iphdr *ip;
 
@@ -29,14 +29,14 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip = (struct iphdr *)buffer;
   ip->version  = IPVERSION;
   ip->ihl      = sizeof(struct iphdr) / 4;
-  ip->tos      = o->ip.tos;
-  ip->frag_off = htons(o->ip.frag_off ? (o->ip.frag_off >> 3) | IP_MF : o->ip.frag_off | IP_DF);
+  ip->tos      = co->ip.tos;
+  ip->frag_off = htons(co->ip.frag_off ? (co->ip.frag_off >> 3) | IP_MF : co->ip.frag_off | IP_DF);
   ip->tot_len  = htons(packet_size);
-  ip->id       = htons(__RND(o->ip.id));
-  ip->ttl      = o->ip.ttl;
-  ip->protocol = o->encapsulated ? IPPROTO_GRE : o->ip.protocol;
-  ip->saddr    = INADDR_RND(o->ip.saddr);
-  ip->daddr    = o->ip.daddr;
+  ip->id       = htons(__RND(co->ip.id));
+  ip->ttl      = co->ip.ttl;
+  ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
+  ip->saddr    = INADDR_RND(co->ip.saddr);
+  ip->daddr    = co->ip.daddr;
   /* The code does not have to handle the checksum. Kernel will do */
   ip->check    = 0;
 

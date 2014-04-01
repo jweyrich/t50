@@ -26,7 +26,7 @@
 Description:   This function configures and sends the RIPv2 packet header.
 
 Targets:       N/A */
-int ripv2(const socket_t fd, const struct config_options *o)
+int ripv2(const socket_t fd, const struct config_options *co)
 {
   size_t greoptlen,     /* GRE options size. */
          packet_size,
@@ -48,30 +48,30 @@ int ripv2(const socket_t fd, const struct config_options *o)
 
   assert(o != NULL);
 
-  greoptlen = gre_opt_len(o->gre.options, o->encapsulated);
+  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   packet_size = sizeof(struct iphdr)  +
     greoptlen             +
     sizeof(struct udphdr) +
-    rip_hdr_len(o->rip.auth);
+    rip_hdr_len(co->rip.auth);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(packet_size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, o);
+  ip = ip_header(packet, packet_size, co);
 
   /* GRE Encapsulation takes place. */
-  gre_ip = gre_encapsulation(packet, o,
+  gre_ip = gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct udphdr) +
-        rip_hdr_len(o->rip.auth));
+        rip_hdr_len(co->rip.auth));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
   udp->source = htons(IPPORT_RIP);
   udp->dest   = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) +
-      rip_hdr_len(o->rip.auth));
+      rip_hdr_len(co->rip.auth));
   udp->check  = 0;
 
   offset = sizeof(struct udphdr);
@@ -109,9 +109,9 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   | Command (1)   | Version (1)   |       Routing Domain (2)      |
    *   +---------------+---------------+-------------------------------+
    */
-  *buffer.byte_ptr++ = o->rip.command;
+  *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
-  *buffer.word_ptr++ = htons(__RND(o->rip.domain));
+  *buffer.word_ptr++ = htons(__RND(co->rip.domain));
 
   offset += RIP_HEADER_LENGTH;
 
@@ -158,15 +158,15 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   |               reserved must be zero                           |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  if (o->rip.auth)
+  if (co->rip.auth)
   {
     *buffer.word_ptr++ = htons(0xffff);
     *buffer.word_ptr++ = htons(0x0003);
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH +
         RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
-    *buffer.byte_ptr++ = o->rip.key_id;
+    *buffer.byte_ptr++ = co->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
-    *buffer.dword_ptr++ = htonl(__RND(o->rip.sequence));
+    *buffer.dword_ptr++ = htonl(__RND(co->rip.sequence));
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
 
@@ -202,12 +202,12 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   |                                                               |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  *buffer.word_ptr++ = htons(__RND(o->rip.family));
-  *buffer.word_ptr++ = htons(__RND(o->rip.tag));
-  *buffer.inaddr_ptr++ = INADDR_RND(o->rip.address);
-  *buffer.inaddr_ptr++ = NETMASK_RND(htonl(o->rip.netmask));
-  *buffer.inaddr_ptr++ = INADDR_RND(o->rip.next_hop);
-  *buffer.inaddr_ptr++ = htonl(__RND(o->rip.metric));
+  *buffer.word_ptr++ = htons(__RND(co->rip.family));
+  *buffer.word_ptr++ = htons(__RND(co->rip.tag));
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
+  *buffer.inaddr_ptr++ = NETMASK_RND(htonl(co->rip.netmask));
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
+  *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
   offset += RIP_MESSAGE_LENGTH;
 
@@ -224,7 +224,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
    *   /  Authentication Data (var. length; 16 bytes with Keyed MD5)   /
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  if (o->rip.auth)
+  if (co->rip.auth)
   {
     size_t size;
 
@@ -234,7 +234,7 @@ int ripv2(const socket_t fd, const struct config_options *o)
     /*
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
      */
-    size = auth_hmac_md5_len(o->rip.auth);
+    size = auth_hmac_md5_len(co->rip.auth);
     for (counter = 0; counter < size; counter++)
       *buffer.byte_ptr++ = random();
 
@@ -243,24 +243,24 @@ int ripv2(const socket_t fd, const struct config_options *o)
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = (struct psdhdr *)buffer.ptr;
-  pseudo->saddr    = o->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = o->encapsulated ? gre_ip->daddr : ip->daddr;
+  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
+  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
-  pseudo->protocol = o->ip.protocol;
+  pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(offset);
 
   offset += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  udp->check  = o->bogus_csum ? random() : cksum(udp, offset);
+  udp->check  = co->bogus_csum ? random() : cksum(udp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, o, packet_size);
+  gre_checksum(packet, co, packet_size);
 
   /* Setting SOCKADDR structure. */
   sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(o->dest));
-  sin.sin_addr.s_addr = o->ip.daddr;
+  sin.sin_port        = htons(IPPORT_RND(co->dest));
+  sin.sin_addr.s_addr = co->ip.daddr;
 
   /* Sending packet. */
   if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
