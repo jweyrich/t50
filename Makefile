@@ -57,6 +57,9 @@ $(OBJ_DIR)/help/ospf_help.o
 CC=gcc
 DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
 
+#
+# You can define DEBUG if you want to use GDB. 
+#
 CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR)
 ifdef DEBUG
 	CFLAGS+=-O0
