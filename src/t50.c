@@ -45,13 +45,9 @@ static void ctrlc(int32_t signal)
   }
 #endif
 
-  /* FIXME: Is returning EXIT_SUCCESS a good idea?
-            Maybe we should return something like "2" to
-            represent an interruption...
-
-            If so, must change "initializeSignalHandlers()", below, to
-            treat some traps differently. */
-  exit(EXIT_SUCCESS);
+  /* FIX: The shell documentation (bash) specifies that a process
+          when exits because a signal, must return 128+signal#. */
+  exit(128+signal);
 }
 
 static void initializeSignalHandlers(void)
