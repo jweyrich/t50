@@ -74,17 +74,12 @@ extern void alloc_packet(size_t);
 
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
-/* Checksum calculation. */
-extern uint16_t cksum(void *, size_t);
-/* IP address and name resolve. */
-extern in_addr_t resolv(char *);
-/* Socket configuration. */
-extern void createSocket(void);
+extern uint16_t cksum(void *, size_t);  /* Checksum calc. */
+extern in_addr_t resolv(char *);  /* Resolve name to ip address. */
+extern void createSocket(void); /* Creates the sending socket */
 /* Send the actual packet from buffer, with size bytes, using config options. */
 extern void sendPacket(const void * const, size_t, const struct config_options * const);
-/* Show version info */
-extern void show_version(void);
-/* Help and usage message. */
-extern void usage(void);
+extern void show_version(void); /* Prints version info. */
+extern void usage(void);        /* Prints usage message */
 
 #endif /* __COMMON_H */

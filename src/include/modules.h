@@ -52,7 +52,8 @@ extern modules_table_t mod_table[];
 
 extern size_t getNumberOfRegisteredModules(void);
 
-/* Modules functions prototypes. */
+/* Modules functions prototypes. 
+   They took 'struct config_options' pointer and returns 'size'. */
 extern void icmp  (const struct config_options const *, size_t *size);
 extern void igmpv1(const struct config_options const *, size_t *size);
 extern void igmpv3(const struct config_options const *, size_t *size);

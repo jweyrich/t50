@@ -19,6 +19,7 @@
 
 #include <common.h>
 
+/* The socket descriptor shold not be accessible to any other functions. */
 static socket_t fd;
 
 /* Socket configuration */
