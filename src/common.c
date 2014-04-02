@@ -23,6 +23,9 @@
 uint8_t *packet = NULL;
 size_t current_packet_size = 0;
 
+/* "private" variable holding the number of modules. Use getNumberOfRegisteredModules() funcion to get it. */
+static size_t numOfModules = 0;
+
 /* NOTE: This routine shouldn't be inlined due to its compliexity. */
 uint32_t NETMASK_RND(uint32_t foo)
 {
@@ -37,12 +40,15 @@ uint32_t NETMASK_RND(uint32_t foo)
 }
 
 /* NOTE: Since VLAs are "dirty" allocations on stack frame, it's not a problem to use
-   the technique below. */
+   the technique below. 
+
+   The function will reallocate memory only if the buffer isn't big enough to acomodate
+   new_packet_size bytes. */
 void alloc_packet(size_t new_packet_size)
 {
   void *p;
 
-	/* Because 0 will free the buffer!!! */
+	/* TEST: Because 0 will free the buffer!!! */
   assert(new_packet_size != 0);
 
   if (new_packet_size > current_packet_size)
@@ -58,14 +64,16 @@ void alloc_packet(size_t new_packet_size)
   }
 }
 
-/* Scan the list of modules, returning the number of itens in the list. */
+/* Scan the list of modules (ONCE!), returning the number of itens in the list. */
+/* Function prototype moved to modules.h. */
+/* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
 int getNumberOfRegisteredModules(void)
 {
-	int n;
 	modules_table_t *ptbl;
 
-	for (n = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, n++);
+  if (numOfModules == 0)
+	  for (ptbl = mod_table; ptbl->func != NULL; ptbl++, numOfModules++);
 
-	return n;
+	return numOfModules;
 }
 

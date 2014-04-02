@@ -20,11 +20,6 @@
 #include <common.h>
 #include <regex.h>    /* there is regex in libc6! */
 
-/* structure used in getIpAndCidrFromString(); */
-struct addr_t {
-  unsigned addr;
-  unsigned cidr;
-};
 
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
@@ -373,181 +368,16 @@ static const struct option long_opt[] = {
   { NULL,                     0,                 NULL, 0                             }
 };
 
-/* Used on getsubopt(), below */
-/* NOTE: This is called just once! */
-static char **getTokensList(void)
-{
-  modules_table_t *ptbl;
-  char **p;
-  int i;
+/* structure used in getConfigOptions() and getIpAndCidrFromString() */
+typedef struct {
+  unsigned addr;
+  unsigned cidr;
+} T50_tmp_addr_t;
 
-  /* Create tokens list. This list have the same number of protocols plus "T50" and the NULL entry. */
-  p = (char **)malloc(sizeof(char *) * (getNumberOfRegisteredModules() + 2));
-
-  /* Fill the token list with pointers to protocol "names". */
-  for (i = 0, ptbl = mod_table; ptbl->acronym != NULL; ptbl++, i++)
-    p[i] = ptbl->acronym;
-  p[i++] = "T50";
-  p[i] = NULL;
-
-  /* NOTE: Just remember to free this list! */
-  return p;
-}
-
-/* List procotolos on modules table */
-static void listProtocols(void)
-{
-  modules_table_t *ptbl;
-  int i;
-
-  fprintf(stderr, "List of supported protocols:\n");
-
-  for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-    fprintf(stderr, "\t%2d PROTO = %-6s (%s)\n",
-           i,
-           ptbl->acronym,
-           ptbl->description);
-
-}
-
-/* NOTE: Ugly hack, but necessary! */
-static void setDefaultModuleOption(void)
-{
-  modules_table_t *ptbl;
-  int i;
-
-  for (i = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-  {
-    /* FIXME: Is string comparison the best way?! */
-    if (strcasecmp(ptbl->acronym, "TCP") == 0)
-    {
-      co.ip.protocol = ptbl->protocol_id;
-      co.ip.protoname = i;
-      break;
-    }
-  }
-}
-
-/* Regular Expression used to match IP addresses with optional CIDR. */
-#define IP_REGEX "^([1-2]*[0-9]{1,2})" \
-                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
-                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
-                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
-                 "(/[0-9]{1,2}){0,1}$"
-
-/* Auxiliary "match" macros. */
-#define MATCH(a)        ((a).rm_so >= 0)
-#define MATCH_LENGTH(a) ((a).rm_eo - (a).rm_so)
-
-/* NOTE: There is a bug in strncpy() function.
-         '\0' is not set at the end of substring. */
-#define COPY_SUBSTRING(d, s, len) { \
-  strncpy((d), (s), (len)); \
-  *((char *)(d) + (len)) = '\0'; \
-}
-
-static int getIpAndCidrFromString(char const * const addr, struct addr_t *addr_ptr)
-{
-  regex_t re;
-  regmatch_t rm[6];
-  unsigned matches[5];
-  int i, len;
-  char *t;
-  int bits;
-
-  addr_ptr->addr = addr_ptr->cidr = 0;
-
-  /* Try to compile the regular expression. */
-  if (regcomp(&re, IP_REGEX, REG_EXTENDED))
-    return 0;
-
-  /* Try to execute regex against the addr string. */
-  if (regexec(&re, addr, 6, rm, 0))
-  {
-    regfree(&re);
-    return 0;
-  }
-
-  /* Allocate enough space for temporary string. */
-  t = strdup(addr);
-  if (t  == NULL)
-  {
-    perror("Cannot allocate temporary string");
-    abort();
-  }
-
-  /* Convert IP octects matches. */
-  len = MATCH_LENGTH(rm[1]);
-  COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
-  matches[0] = atoi(t);
-
-  bits = 32;  /* default is 32 bits netmask. */
-  for (i = 2; i <= 4; i++)
-  {
-    if (MATCH(rm[i]))
-    {
-      len = MATCH_LENGTH(rm[i]) - 1;
-      COPY_SUBSTRING(t, addr + rm[i].rm_so + 1, len);
-      matches[i-1] = atoi(t);
-    }
-    else
-    {
-      /* if octect is missing, decrease 8 bits from netmask */
-      bits -= 8;
-      matches[i-1] = 0;
-    }
-  }
-
-  /* Convert cidr match. */
-  if (MATCH(rm[5]))
-  {
-    len = MATCH_LENGTH(rm[5]) - 1;
-    COPY_SUBSTRING(t, addr + rm[5].rm_so + 1, len);
-
-    if ((matches[4] = atoi(t)) == 0)
-    {
-      /* if cidr is actually '0', then it is an error! */
-      free(t);
-      regfree(&re);
-      return 0;
-    }
-  }
-  else
-  {
-    /* if cidr is not given, use the calculated one. */
-    matches[4] = bits;
-  }
-
-  /* We don't need 't' string anymore. */
-  free(t);
-
-  /* Validate ip octects */
-  for (i = 0; i < 4; i++)
-    if (matches[i] > 255)
-    {
-      regfree(&re);
-      return 0;
-    }
-
-  /* Validate cidr. */
-  if (matches[4] > 32)
-  {
-    regfree(&re);
-    return 0;
-  }
-
-  regfree(&re);
-
-  /* Prepare CIDR structure */
-  addr_ptr->cidr = matches[4];
-  addr_ptr->addr = ( matches[3]        |
-                    (matches[2] << 8)  |
-                    (matches[1] << 16) |
-                    (matches[0] << 24)) &
-                      (0xffffffffUL << (32 - addr_ptr->cidr));
-
-  return 1;
-}
+static char **getTokensList(void);
+static void listProtocols(void);
+static void setDefaultModuleOption(void);
+static int  getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
 
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char **argv)
@@ -561,7 +391,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
   int opt_ind;
 
   /* Used by getIpAndCidrFromString() */
-  struct addr_t addr;
+  T50_tmp_addr_t addr;
 
   setDefaultModuleOption();
 
@@ -1018,3 +848,181 @@ struct config_options *getConfigOptions(int argc, char **argv)
 
   return &co;
 }
+
+/* Used on getsubopt(), below */
+/* NOTE: This is called just once! */
+static char **getTokensList(void)
+{
+  modules_table_t *ptbl;
+  char **p;
+  int i;
+
+  /* Create tokens list. This list have the same number of protocols plus "T50" and the NULL entry. */
+  p = (char **)malloc(sizeof(char *) * (getNumberOfRegisteredModules() + 2));
+
+  /* Fill the token list with pointers to protocol "names". */
+  for (i = 0, ptbl = mod_table; ptbl->acronym != NULL; ptbl++, i++)
+    p[i] = ptbl->acronym;
+  p[i++] = "T50";
+  p[i] = NULL;
+
+  /* NOTE: Just remember to free this list! */
+  return p;
+}
+
+/* List procotolos on modules table */
+static void listProtocols(void)
+{
+  modules_table_t *ptbl;
+  int i;
+
+  fprintf(stderr, "List of supported protocols:\n");
+
+  for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
+    fprintf(stderr, "\t%2d PROTO = %-6s (%s)\n",
+           i,
+           ptbl->acronym,
+           ptbl->description);
+
+}
+
+/* NOTE: Ugly hack, but necessary! */
+static void setDefaultModuleOption(void)
+{
+  modules_table_t *ptbl;
+  int i;
+
+  for (i = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
+  {
+    /* FIXME: Is string comparison the best way?! */
+    if (strcasecmp(ptbl->acronym, "TCP") == 0)
+    {
+      co.ip.protocol = ptbl->protocol_id;
+      co.ip.protoname = i;
+      break;
+    }
+  }
+}
+
+/* Regular Expression used to match IP addresses with optional CIDR. */
+#define IP_REGEX "^([1-2]*[0-9]{1,2})" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(\\.[1-2]*[0-9]{1,2}){0,1}" \
+                 "(/[0-9]{1,2}){0,1}$"
+
+/* Auxiliary "match" macros. */
+#define MATCH(a)        ((a).rm_so >= 0)
+#define MATCH_LENGTH(a) ((a).rm_eo - (a).rm_so)
+
+/* NOTE: There is a bug in strncpy() function.
+         '\0' is not set at the end of substring. */
+#define COPY_SUBSTRING(d, s, len) { \
+  strncpy((d), (s), (len)); \
+  *((char *)(d) + (len)) = '\0'; \
+}
+
+static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_ptr)
+{
+  regex_t re;
+  regmatch_t rm[6];
+  unsigned matches[5];
+  int i, len;
+  char *t;
+  int bits;
+
+  addr_ptr->addr = addr_ptr->cidr = 0;
+
+  /* Try to compile the regular expression. */
+  if (regcomp(&re, IP_REGEX, REG_EXTENDED))
+    return 0;
+
+  /* Try to execute regex against the addr string. */
+  if (regexec(&re, addr, 6, rm, 0))
+  {
+    regfree(&re);
+    return 0;
+  }
+
+  /* Allocate enough space for temporary string. */
+  t = strdup(addr);
+  if (t  == NULL)
+  {
+    perror("Cannot allocate temporary string");
+    abort();
+  }
+
+  /* Convert IP octects matches. */
+  len = MATCH_LENGTH(rm[1]);
+  COPY_SUBSTRING(t, addr+rm[1].rm_so, len);
+  matches[0] = atoi(t);
+
+  bits = 32;  /* default is 32 bits netmask. */
+  for (i = 2; i <= 4; i++)
+  {
+    if (MATCH(rm[i]))
+    {
+      len = MATCH_LENGTH(rm[i]) - 1;
+      COPY_SUBSTRING(t, addr + rm[i].rm_so + 1, len);
+      matches[i-1] = atoi(t);
+    }
+    else
+    {
+      /* if octect is missing, decrease 8 bits from netmask */
+      bits -= 8;
+      matches[i-1] = 0;
+    }
+  }
+
+  /* Convert cidr match. */
+  if (MATCH(rm[5]))
+  {
+    len = MATCH_LENGTH(rm[5]) - 1;
+    COPY_SUBSTRING(t, addr + rm[5].rm_so + 1, len);
+
+    if ((matches[4] = atoi(t)) == 0)
+    {
+      /* if cidr is actually '0', then it is an error! */
+      free(t);
+      regfree(&re);
+      return 0;
+    }
+  }
+  else
+  {
+    /* if cidr is not given, use the calculated one. */
+    matches[4] = bits;
+  }
+
+  /* We don't need 't' string anymore. */
+  free(t);
+
+  /* Validate ip octects */
+  for (i = 0; i < 4; i++)
+    if (matches[i] > 255)
+    {
+      regfree(&re);
+      return 0;
+    }
+
+  /* Validate cidr. */
+  if (matches[4] > 32)
+  {
+    regfree(&re);
+    return 0;
+  }
+
+  regfree(&re);
+
+  /* Prepare CIDR structure */
+  addr_ptr->cidr = matches[4];
+  addr_ptr->addr = ( matches[3]        |
+                    (matches[2] << 8)  |
+                    (matches[1] << 16) |
+                    (matches[0] << 24)) &
+                      (0xffffffffUL << (32 - addr_ptr->cidr));
+
+  return 1;
+}
+
+

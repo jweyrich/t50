@@ -35,11 +35,10 @@ int checkConfigOptions(const struct config_options *co)
   if (co->bits != 0) 
     if ((co->bits < CIDR_MINIMUM) || (co->bits > CIDR_MAXIMUM))
     {
-      char *errstr;
+      char errstr[64];
 
-      asprintf(&errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
+      sprintf(errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
       ERROR(errstr);
-      free(errstr);
       return 0;
     }
 

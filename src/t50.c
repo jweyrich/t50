@@ -20,8 +20,7 @@
 #include <common.h>
 #include <sys/wait.h>
 
-/* Global variables */
-static pid_t pid = 1;  /* NOTE: this is a trick when "turbo" is not used. */
+/* Only the socket descriptor is global to this module. */
 static socket_t fd;
 
 /* Months */
@@ -29,75 +28,19 @@ static const char *const months[] =
   { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
 
-/* This function handles Control-C (^C) */
-static void ctrlc(int32_t signal)
-{
-  UNUSED_PARAM(signal);
-
-  close(fd);
-
-  /* NOTE: SIGSEGV is a fatal signal. I think handle it doesn't make sense! */
-#if 0
-  if (signal == SIGSEGV)
-  {
-      perror("Internal error: buffer overflow. SIGSEGV received.\n");
-      exit(EXIT_FAILURE);
-  }
-#endif
-
-  /* FIX: The shell documentation (bash) specifies that a process
-          when exits because a signal, must return 128+signal#. */
-  exit(128+signal);
-}
-
-static void initializeSignalHandlers(void)
-{
-  /* NOTE: See 'man 2 signal' */
-  struct sigaction sa;
-
-  /* Using sig*() functions for compability. */
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART; /* signal() semantics */
-
-  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV */
-  sa.sa_handler = ctrlc;
-  sigaction(SIGHUP,  &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);
-  sigaction(SIGINT,  &sa, NULL);
-  sigaction(SIGQUIT, &sa, NULL);
-  sigaction(SIGABRT, &sa, NULL);
-  sigaction(SIGTRAP, &sa, NULL);
-  sigaction(SIGTERM, &sa, NULL);
-  sigaction(SIGTSTP, &sa, NULL);
-#ifdef  __HAVE_TURBO__
-  sigaction(SIGCHLD, &sa, NULL);
-#endif
-}
-
-/* Auxiliary function to return the ordinary suffix for a number. */
-static const char *getOrdinalSuffix(unsigned int n)
-{
-  static const char *suffixes[] = { "st", "nd", "rd", "th" };
-
-  /* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
-  if ((n < 11) || (n > 13))
-    switch (n % 10) {
-      case 1: return suffixes[0];
-      case 2: return suffixes[1];
-      case 3: return suffixes[2];
-    }
-
-  return suffixes[3];
-}
+static void initializeSignalHandlers(void);
+static const char *getOrdinalSuffix(unsigned);
 
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
 {
-  struct config_options *co; /* Pointer to options. */
-  struct cidr *cidr_ptr; /* Pointer to cidr host id and 1st ip address. */
+  struct config_options *co;  /* Pointer to options. */
+  struct cidr *cidr_ptr;      /* Pointer to cidr host id and 1st ip address. */
 
-  modules_table_t *ptbl; /* Pointer to modules table */
-  int num_modules;       /* Holds number of modules in modules table. */
+  modules_table_t *ptbl;      /* Pointer to modules table */
+  int num_modules;            /* Holds number of modules in modules table. */
+
+  static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
   initializeSignalHandlers();
 
@@ -253,3 +196,56 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+
+/* This function handles interruptions. */
+static void signal_handler(int signal)
+{
+  /* Make sure the socket descriptor is closed. */
+  close(fd);
+
+  /* FIX: The shell documentation (bash) specifies that a process
+          when exits because a signal, must return 128+signal#. */
+  exit(128 + signal);
+}
+
+static void initializeSignalHandlers(void)
+{
+  /* NOTE: See 'man 2 signal' */
+  struct sigaction sa;
+
+  /* Using sig*() functions for compability. */
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART; /* same signal() semantics?! */
+
+  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV */
+  sa.sa_handler = signal_handler;
+  sigaction(SIGHUP,  &sa, NULL);
+  sigaction(SIGPIPE, &sa, NULL);
+  sigaction(SIGINT,  &sa, NULL);
+  sigaction(SIGQUIT, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
+  sigaction(SIGTRAP, &sa, NULL);
+  sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGTSTP, &sa, NULL);
+#ifdef  __HAVE_TURBO__
+  sigaction(SIGCHLD, &sa, NULL);
+#endif
+}
+
+/* Auxiliary function to return the [constant] ordinary suffix string for a number. */
+static const char *getOrdinalSuffix(unsigned n)
+{
+  static const char *suffixes[] = { "st", "nd", "rd", "th" };
+
+  /* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
+  if ((n < 11) || (n > 13))
+    switch (n % 10) {
+      case 1: return suffixes[0];
+      case 2: return suffixes[1];
+      case 3: return suffixes[2];
+    }
+
+  return suffixes[3];
+}
+
+

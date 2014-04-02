@@ -44,7 +44,12 @@ in_addr_t resolv(char *name)
          freeaddrinfo(res0);
 
       /* NOTE: Added proper error reporting. */
-      asprintf(&stmp, "Error on resolv(). getaddrinfo() reports: %s\n", gai_strerror(error));
+      if (asprintf(&stmp, "Error on resolv(). getaddrinfo() reports: %s\n", gai_strerror(error)) == -1)
+      {
+        perror("Error allocating temporary string.");
+        abort();
+      }
+
       ERROR(stmp);
       free(stmp);
     }

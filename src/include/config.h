@@ -536,4 +536,6 @@ struct config_options {
   /* NOTE: Add structures configuration for new protocols here! */
 };
 
+struct config_options *getConfigOptions(int, char **);
+
 #endif /* CONFIG_H */
