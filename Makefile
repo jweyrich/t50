@@ -62,11 +62,11 @@ DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
 #
 CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR)
 ifdef DEBUG
-	CFLAGS+=-O0
+	CFLAGS+=-O0 -std=gnu99
 	DFLAGS+=-D__HAVE_DEBUG__ -g
 	LDFLAGS=
 else
-	CFLAGS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
+	CFLAGS+=-O3 -std=gnu99 -mtune=native -flto -ffast-math -fomit-frame-pointer
 
 	# Get architecture
 	ARCH=$(shell arch)
