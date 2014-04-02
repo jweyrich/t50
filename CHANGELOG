@@ -6,7 +6,7 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
-T50 5.5 - March 1, 2014
+T50 5.5 - April 2nd, 2014
  * Code compiles fine with LLVM clang 3.x;
  * SSE is enabled by default in x86-64 architecture (commented on Makefile);
  * Changed return type of module funcions;
@@ -27,8 +27,14 @@ T50 5.5 - March 1, 2014
  * Created src/help directory and src/include/help.h header to improve module modularity.
  * Host name now can be a partial IP or name, optionally followed by "/cidr".
    Partial IP have the format 'a(.b(.c(.d)))'. Formats as 'a.b./cidr' are invalid.
+ ! if a name or a full IP is given, the default cidr is 32. T50 will fail showing the message:
+   "CIDR must be between 8 and 30.".
+ * socket descriptor isolated from anyone except sock.c.
+ * "modules" just manipulates the packet buffer. main() actually sends the packet.
+ * 'stdout' is now unbuffered on initialization. To avoid line buffer behavior oddities (if any).
+ * Added -std=gnu99 to CFLAGS, on Makefile.
 
-T50 5.4.1 - August 11, 2013
+T50 5.4.1 - August 11th, 2013
  - Fixed bug in option parsing.
  - Fixed license missing in some files.
  * Depecrecation of gethostbyname() - thanks to Cooler
@@ -38,7 +44,7 @@ T50 5.4.1 - August 11, 2013
  - Manpage moved to section 8.
  + Strip set by default.
 
-T50 5.4.0 - September 4, 2011
+T50 5.4.0 - September 4th, 2011
  + New version scheme <MajorVersion.MinorVersion.RevisionNumber>.
  + Added manpage.
  * UPX and strip removed.
@@ -48,7 +54,7 @@ T50 5.4.0 - September 4, 2011
  ! We don't have support for IPv6 yet.
  ! T50 may not compile in other systems nor GNU/Linux distros.
 
-T50 5.3 - April 9, 2011
+T50 5.3 - April 9th, 2011
  + New License: it is, finally, licensed under GPL v2.0. Please, refer
  to LICENSE document for further information.
  + CIDR Support: Classless Inter-Domain Routing  support  for destination
@@ -58,5 +64,5 @@ T50 5.3 - April 9, 2011
  and OSPF.
  + TCP Options support.
 
- T50 3.4 - November 10, 2010
+ T50 3.4 - November 10th, 2010
   First public release.
