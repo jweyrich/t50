@@ -19,8 +19,8 @@
 
 #include <common.h>
 
-/* The socket descriptor shold not be accessible to any other functions. */
-static socket_t fd;
+/* Initialized for error condition, just in case! */
+static socket_t fd = -1;
 
 /* Socket configuration */
 void createSocket(void)
@@ -87,7 +87,13 @@ void createSocket(void)
 #endif /* SO_PRIORITY */
 }
 
-void sendPacket(const void * const buffer, size_t size, const struct config_options * const co)
+void closeSocket(void)
+{
+  if (fd != -1)
+    close(fd);
+}
+
+void sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
 {
   struct sockaddr_in sin;
 

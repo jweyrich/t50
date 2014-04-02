@@ -29,7 +29,7 @@ static size_t ospf_hdr_len(const uint8_t, const uint8_t, const uint8_t, const ui
 Description:   This function configures and sends the OSPF packet header.
 
 Targets:       N/A */
-void ospf(const struct config_options * const co, size_t *size)
+void ospf(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ospf_length, /* OSPF header length. */

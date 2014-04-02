@@ -537,7 +537,6 @@ struct config_options {
 };
 
 struct config_options *getConfigOptions(int, char **);
-int checkConfigOptions(const struct config_options * const);
-
+int checkConfigOptions(const struct config_options * const __restrict__);
 
 #endif /* CONFIG_H */

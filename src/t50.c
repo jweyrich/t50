@@ -20,16 +20,9 @@
 #include <common.h>
 #include <sys/wait.h>
 
-/* Only the socket descriptor is global to this module. */
-static socket_t fd;
-
-/* Months */
-static const char *const months[] =
-  { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
-
-static void initializeSignalHandlers(void);
+static void initialize(void);
 static const char *getOrdinalSuffix(unsigned);
+static const char *getMonth(unsigned);
 
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
@@ -42,7 +35,7 @@ int main(int argc, char *argv[])
 
   static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
-  initializeSignalHandlers();
+  initialize();
 
   /* Configuring command line interface options. */
   co = getConfigOptions(argc, argv);
@@ -106,9 +99,8 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    /* FIXME: Why use '\b\r' at the beginning?! */
-    fprintf(stderr, "\b\r%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
+    fprintf(stderr, "\b\n%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
+      PACKAGE,  VERSION, getMonth(tm->tm_mon), tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
 
@@ -171,7 +163,7 @@ int main(int argc, char *argv[])
 #endif
 
   /* Closing the socket. */
-  close(fd);
+  closeSocket();
 
   /* Show termination message only for parent process. */
   if (pid)
@@ -183,9 +175,8 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    /* FIXME: Why use '\b\r' at the beginning?! */
-    fprintf(stderr, "\b\r%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, months[tm->tm_mon], tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
+    fprintf(stderr, "\b\n%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
+      PACKAGE,  VERSION, getMonth(tm->tm_mon), tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
 
@@ -196,17 +187,19 @@ int main(int argc, char *argv[])
 static void signal_handler(int signal)
 {
   /* Make sure the socket descriptor is closed. */
-  close(fd);
+  closeSocket();
 
   /* FIX: The shell documentation (bash) specifies that a process
           when exits because a signal, must return 128+signal#. */
   exit(128 + signal);
 }
 
-static void initializeSignalHandlers(void)
+static void initialize(void)
 {
   /* NOTE: See 'man 2 signal' */
   struct sigaction sa;
+
+  /* --- Initialize signal handlers --- */
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
@@ -225,6 +218,10 @@ static void initializeSignalHandlers(void)
 #ifdef  __HAVE_TURBO__
   sigaction(SIGCHLD, &sa, NULL);
 #endif
+
+  /* --- Make sure stdout is unbuffered. --- */
+  fflush(stdout);
+  setvbuf(stdout, NULL, _IONBF, 0); 
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
@@ -243,4 +240,15 @@ static const char *getOrdinalSuffix(unsigned n)
   return suffixes[3];
 }
 
+static const char *getMonth(unsigned n)
+{
+  /* Months */
+  static const char * const months[] =
+    { "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec" };
 
+  if (n > 11)
+    return "";
+
+  return months[n];
+}

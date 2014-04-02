@@ -21,7 +21,7 @@
 
 /* Function Name: IGMPv3 packet header configuration.
 Description:   This function configures and sends the IGMPv3 packet header. */
-void igmpv3(const struct config_options * const co, size_t *size)
+void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          offset,

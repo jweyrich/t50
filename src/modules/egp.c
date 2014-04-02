@@ -24,7 +24,7 @@
 Description:   This function configures and sends the EGP packet header.
 
 Targets:       N/A */
-void egp(const struct config_options * const co, size_t *size)
+void egp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          offset;

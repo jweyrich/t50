@@ -63,7 +63,7 @@
 /* NOTE: Protocols and modules definitions are on modules.h now. */
 
 /* The packet buffer. Reallocated as needed! */
-extern uint8_t *packet;
+extern void *packet;
 extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
@@ -77,8 +77,9 @@ extern struct cidr *config_cidr(uint32_t, in_addr_t);
 extern uint16_t cksum(void *, size_t);  /* Checksum calc. */
 extern in_addr_t resolv(char *);  /* Resolve name to ip address. */
 extern void createSocket(void); /* Creates the sending socket */
+extern void closeSocket(void);  /* Close the previously created socket */
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern void sendPacket(const void * const, size_t, const struct config_options * const);
+extern void sendPacket(const void * const, size_t, const struct config_options * const __restrict__);
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
 

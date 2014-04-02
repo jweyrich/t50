@@ -29,7 +29,7 @@ static size_t tcp_options_len(const uint8_t, const uint8_t, const uint8_t);
 Description:   This function configures and sends the TCP packet header.
 
 Targets:       N/A */
-void tcp(const struct config_options * const co, size_t *size)
+void tcp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */

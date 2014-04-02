@@ -20,7 +20,7 @@
 #include <common.h>
 
 /* Actual packet buffer. Allocated dynamically. */
-uint8_t *packet = NULL;
+void *packet = NULL;
 size_t current_packet_size = 0;
 
 /* "private" variable holding the number of modules. Use getNumberOfRegisteredModules() funcion to get it. */

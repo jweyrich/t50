@@ -26,7 +26,7 @@
 typedef uint32_t in_addr_t;
 typedef int socket_t;
 
-typedef void (*module_func_ptr_t)(const struct config_options * const, size_t *);
+typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
 
 /* This will ease the buffers pointers manipulations. */
 typedef union {

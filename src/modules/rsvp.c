@@ -28,7 +28,7 @@ static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, con
 Description:   This function configures and sends the RSVP packet header.
 
 Targets:       N/A */
-void rsvp(const struct config_options * const co, size_t *size)
+void rsvp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */

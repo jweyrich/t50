@@ -24,7 +24,7 @@
 Description:   This function configures and sends the UDP packet header.
 
 Targets:       N/A */
-void udp(const struct config_options * const co, size_t *size)
+void udp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen;   /* GRE options size. */
 

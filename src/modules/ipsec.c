@@ -24,7 +24,7 @@
 Description:   This function configures and sends the IPSec packet header.
 
 Targets:       N/A */
-void ipsec(const struct config_options * const co, size_t *size)
+void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ip_ah_icv,   /* IPSec AH Integrity Check Value (ICV). */
