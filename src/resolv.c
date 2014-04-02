@@ -23,13 +23,12 @@
 in_addr_t resolv(char *name)
 {
    /* try this method to follow posix, so i try with getaddinfo()  ;-) */
-    struct addrinfo hints, * res, * res0 = NULL;
-    struct sockaddr_in * target = NULL;
-    char tmp[46];
+    struct addrinfo hints, *res, *res0 = NULL;
+    struct sockaddr_in *target = NULL;
     int error;
+    char tmp[46];
 
     memset(&hints, 0, sizeof(struct addrinfo));
-
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = 0;
 

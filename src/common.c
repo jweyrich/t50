@@ -67,7 +67,7 @@ void alloc_packet(size_t new_packet_size)
 /* Scan the list of modules (ONCE!), returning the number of itens in the list. */
 /* Function prototype moved to modules.h. */
 /* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
-int getNumberOfRegisteredModules(void)
+size_t getNumberOfRegisteredModules(void)
 {
 	modules_table_t *ptbl;
 

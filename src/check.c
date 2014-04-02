@@ -20,7 +20,7 @@
 #include <common.h>
 
 /* Validate options */
-int checkConfigOptions(const struct config_options *co)
+int checkConfigOptions(const struct config_options * const co)
 {
   int minThreshold;
 

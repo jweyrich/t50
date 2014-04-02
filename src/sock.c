@@ -19,14 +19,13 @@
 
 #include <common.h>
 
-/* FIXME: Is it not better to substitute ERROR() macros for perror() calls? */
+static socket_t fd;
 
 /* Socket configuration */
-socket_t createSocket(void)
+void createSocket(void)
 {
-	socket_t fd;
-	uint32_t len;
-	uint32_t n = 1, *nptr = &n;
+	socklen_t len;
+	unsigned n = 1, *nptr = &n;
 
 	/* Setting SOCKET RAW. */
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
@@ -85,6 +84,29 @@ socket_t createSocket(void)
 		exit(EXIT_FAILURE);
 	}
 #endif /* SO_PRIORITY */
+}
 
-	return fd;
+void sendPacket(const void * const buffer, size_t size, const struct config_options * const co)
+{
+  struct sockaddr_in sin;
+
+  assert(buffer != NULL);
+  assert(size > 0);
+  assert(co != NULL);
+
+  sin.sin_family      = AF_INET; 
+  sin.sin_port        = htons(IPPORT_RND(co->dest)); 
+  sin.sin_addr.s_addr = co->ip.daddr; 
+
+  if ((sendto(fd, 
+              buffer, size, 
+              MSG_NOSIGNAL, 
+              (struct sockaddr *)&sin, 
+              sizeof(struct sockaddr)) == -1) && 
+      (errno != EPERM)) 
+  {
+    close(fd);
+    ERROR("Error sending packet.");
+    exit(EXIT_FAILURE);
+  }
 }

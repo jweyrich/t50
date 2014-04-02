@@ -21,15 +21,17 @@
 
 void tcp_udp_dccp_help(void)
 {
-	puts("DCCP/TCP/UDP Options:\n"
+  fprintf(stderr,
+	     "DCCP/TCP/UDP Options:\n"
        "    --sport NUM               DCCP|TCP|UDP source port         (default RANDOM)\n"
-       "    --dport NUM               DCCP|TCP|UDP destination port    (default RANDOM)\n");
+       "    --dport NUM               DCCP|TCP|UDP destination port    (default RANDOM)\n\n");
 
 }
 
 void tcp_help(void)
 {
-  printf("TCP Options:\n"
+  fprintf(stderr,
+         "TCP Options:\n"
          "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
          "    --data-offset NUM         TCP data offset                  (default %d)\n"
@@ -61,7 +63,8 @@ void tcp_help(void)
 
 void dccp_help(void)
 {
-  printf("DCCP Options:\n"
+  fprintf(stderr,
+         "DCCP Options:\n"
          "    --dccp-data-offset NUM    DCCP data offset                 (default VARY)\n"
          "    --dccp-cscov NUM          DCCP checksum coverage           (default 0)\n"
          "    --dccp-ccval NUM          DCCP HC-Sender CCID              (default RANDOM)\n"

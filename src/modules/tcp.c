@@ -29,19 +29,16 @@ static size_t tcp_options_len(const uint8_t, const uint8_t, const uint8_t);
 Description:   This function configures and sends the TCP packet header.
 
 Targets:       N/A */
-int tcp(const socket_t fd, const struct config_options *co)
+void tcp(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
-         packet_size,
          offset,
          counter;
 
   mptr_t buffer;
 
-  /* Socket address, IP header. */
-  struct sockaddr_in sin;
   struct iphdr *ip;
 
   /* GRE Encapsulated IP Header. */
@@ -56,16 +53,16 @@ int tcp(const socket_t fd, const struct config_options *co)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     greoptlen             +
     sizeof(struct tcphdr) +
     tcpopt;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   gre_ip = gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
@@ -438,18 +435,7 @@ int tcp(const socket_t fd, const struct config_options *co)
   /* Computing the checksum. */
   tcp->check   = co->bogus_csum ? random() : cksum(tcp, offset);
 
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, 0|MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }
 
 /* Function Name: TCP options size calculation.

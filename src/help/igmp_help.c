@@ -21,7 +21,8 @@
 
 void igmp_help(void)
 {
-  printf("IGMP Options:\n"
+  fprintf(stderr,
+         "IGMP Options:\n"
          "    --igmp-type NUM           IGMPv1/v3 type                   (default 0x%x)\n"
          "    --igmp-code NUM           IGMPv1/v3 code                   (default 0)\n"
          "    --igmp-group ADDR         IGMPv1/v3 address                (default RANDOM)\n"

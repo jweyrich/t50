@@ -74,14 +74,14 @@ extern void alloc_packet(size_t);
 
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
-/* Command line interface options validation. */
-extern int checkConfigOptions(const struct config_options *);
 /* Checksum calculation. */
 extern uint16_t cksum(void *, size_t);
 /* IP address and name resolve. */
 extern in_addr_t resolv(char *);
 /* Socket configuration. */
-extern socket_t createSocket(void);
+extern void createSocket(void);
+/* Send the actual packet from buffer, with size bytes, using config options. */
+extern void sendPacket(const void * const, size_t, const struct config_options * const);
 /* Show version info */
 extern void show_version(void);
 /* Help and usage message. */

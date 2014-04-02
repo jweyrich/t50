@@ -21,7 +21,8 @@
 
 void rip_help(void)
 {
-  printf("RIP Options:\n"
+  fprintf(stderr,
+         "RIP Options:\n"
          "    --rip-command NUM         RIPv1/v2 command                 (default 2)\n"
          "    --rip-family NUM          RIPv1/v2 address family          (default %d)\n"
          "    --rip-address ADDR        RIPv1/v2 router address          (default RANDOM)\n"

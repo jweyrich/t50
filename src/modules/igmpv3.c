@@ -21,18 +21,15 @@
 
 /* Function Name: IGMPv3 packet header configuration.
 Description:   This function configures and sends the IGMPv3 packet header. */
-int igmpv3(const socket_t fd, const struct config_options *co)
+void igmpv3(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
-         packet_size,
          offset,
          counter;
 
   /* Packet and Checksum. */
   mptr_t buffer;
 
-  /* Socket address and IP header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* IGMPv3 Query header, IGMPv3 Report header and IGMPv3 GREC header. */
@@ -43,15 +40,15 @@ int igmpv3(const socket_t fd, const struct config_options *co)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     greoptlen            +
     igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
@@ -127,16 +124,5 @@ int igmpv3(const socket_t fd, const struct config_options *co)
   }
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending Packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }

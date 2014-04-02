@@ -24,13 +24,10 @@
 Description:   This function configures and sends the UDP packet header.
 
 Targets:       N/A */
-int udp(const socket_t fd, const struct config_options *co)
+void udp(const struct config_options * const co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
-         packet_size;
+  size_t greoptlen;   /* GRE options size. */
 
-  /* Socket address, IP header, UDP header and PSEUDO header. */
-  struct sockaddr_in sin;
   struct iphdr *ip;
 
   /* GRE Encapsulated IP Header. */
@@ -43,13 +40,13 @@ int udp(const socket_t fd, const struct config_options *co)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
-  packet_size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr);
+  *size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr);
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* Fill IP header. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   gre_ip = gre_encapsulation(packet, co,
     sizeof(struct iphdr) + sizeof(struct udphdr));
@@ -73,16 +70,5 @@ int udp(const socket_t fd, const struct config_options *co)
   udp->check  = co->bogus_csum ? random() :
     cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
 
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }

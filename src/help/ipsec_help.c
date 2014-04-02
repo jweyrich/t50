@@ -21,7 +21,8 @@
 
 void ipsec_help(void)
 {
-  puts("IPSEC Options:\n"
+  fprintf(stderr,
+       "IPSEC Options:\n"
        "    --ipsec-ah-length NUM     IPSec AH header length           (default NONE)\n"
        "    --ipsec-ah-spi NUM        IPSec AH SPI                     (default RANDOM)\n"
        "    --ipsec-ah-sequence NUM   IPSec AH sequence #              (default RANDOM)\n"

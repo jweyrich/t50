@@ -24,20 +24,17 @@
 Description:   This function configures and sends the IPSec packet header.
 
 Targets:       N/A */
-int ipsec(const socket_t fd, const struct config_options *co)
+void ipsec(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ip_ah_icv,   /* IPSec AH Integrity Check Value (ICV). */
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
-         packet_size,
          offset,
          counter;
 
   /* Packet. */
   mptr_t buffer;
 
-  /* Socket address, IP header and IPSec AH header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* IPSec AH header and IPSec ESP Header. */
@@ -49,7 +46,7 @@ int ipsec(const socket_t fd, const struct config_options *co)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     greoptlen                  +
     sizeof(struct ip_auth_hdr) +
     ip_ah_icv                  +
@@ -57,9 +54,9 @@ int ipsec(const socket_t fd, const struct config_options *co)
     esp_data;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
@@ -120,16 +117,5 @@ int ipsec(const socket_t fd, const struct config_options *co)
 
   /* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
   /* Setting socket file descriptor. */
   /* NOTE: createSocket() handles its errors before returning. */
-  fd = createSocket();
+  createSocket();
 
   /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
@@ -115,6 +115,9 @@ int main(int argc, char *argv[])
   /* Execute if flood or while threshold greater than 0. */
   while (co->flood || co->threshold--)
   {
+    /* Holds the actual packet size after module function call. */
+    size_t size;
+
     /* Set the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
       co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
@@ -128,13 +131,9 @@ int main(int argc, char *argv[])
       co->ip.protocol = ptbl->protocol_id;
 
       /* Launch t50 module. */
-      if (ptbl->func(fd, co))
-      {
-        ERROR("Error sending packet");
-        close(fd);
-
-        return EXIT_FAILURE;
-      }
+      ptbl->func(co, &size);
+      
+      sendPacket(packet, size, co);
     }
     else
     {
@@ -147,13 +146,9 @@ int main(int argc, char *argv[])
         co->ip.protocol = ptbl->protocol_id;
 
         /* Launching t50 module. */
-        if (ptbl->func(fd, co))
-        {
-          ERROR("Error sending packet");
-          close(fd);
+        ptbl->func(co, &size);
 
-          return EXIT_FAILURE;
-        }
+        sendPacket(packet, size, co);
       }
 
       /* Sanitizing the threshold. */

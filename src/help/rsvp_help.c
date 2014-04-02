@@ -21,7 +21,8 @@
 
 void rsvp_help(void)
 {
-  puts("RSVP Options:\n"
+  fprintf(stderr,
+       "RSVP Options:\n"
        "    --rsvp-flags NUM          RSVP flags                       (default 1)\n"
        "    --rsvp-type NUM           RSVP message type                (default 1)\n"
        "    --rsvp-ttl NUM            RSVP time to live                (default 254)\n"
@@ -58,5 +59,5 @@ void rsvp_help(void)
        "    --rsvp-adspec-Csum NUM    RSVP ADSPEC SLR point composed C (default RANDOM)\n"
        "    --rsvp-adspec-Dsum NUM    RSVP ADSPEC SLR point composed D (default RANDOM)\n"
        "    --rsvp-adspec-controlled  RSVP ADSPEC service controlled   (default OFF)\n"
-       "    --rsvp-confirm-addr ADDR  RSVP CONFIRM receiver address    (default RANDOM)\n");
+       "    --rsvp-confirm-addr ADDR  RSVP CONFIRM receiver address    (default RANDOM)\n\n");
 }

@@ -28,19 +28,16 @@ static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, con
 Description:   This function configures and sends the RSVP packet header.
 
 Targets:       N/A */
-int rsvp(const socket_t fd, const struct config_options *co)
+void rsvp(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
-         packet_size,
          offset,
          counter;
 
   /* Packet and Checksum. */
   mptr_t buffer;
 
-  /* Socket address and IP header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* RSVP Common header. */
@@ -50,16 +47,16 @@ int rsvp(const socket_t fd, const struct config_options *co)
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   objects_length = rsvp_objects_len(co->rsvp.type, co->rsvp.scope, co->rsvp.adspec, co->rsvp.tspec);
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     sizeof(struct rsvp_common_hdr) +
     greoptlen                      +
     objects_length;
 
   /* Try to reallocate the packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
@@ -607,18 +604,7 @@ int rsvp(const socket_t fd, const struct config_options *co)
     cksum(rsvp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }
 
 /* Function Name: RSVP objects size claculation.

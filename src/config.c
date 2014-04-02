@@ -33,7 +33,8 @@ static struct config_options co = {
   /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                                    */
   .ip = {
     .tos = IPTOS_PREC_IMMEDIATE,      /* default type of service                */
-    .ttl = 255 },                     /* default time to live                   */
+    .ttl = 255                        /* default time to live                   */
+  },
 
   /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1)                                 */
   .icmp = { .type = ICMP_ECHO },     /* default type                           */
@@ -42,25 +43,29 @@ static struct config_options co = {
   .igmp = {
     .type = IGMP_HOST_MEMBERSHIP_QUERY, /* default type                           */
     .grec_type = 1,                     /* default group record type              */
-    .sources = 2 },                     /* default number of sources              */
+    .sources = 2                        /* default number of sources              */
+  },
 
   /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6)                                   */
   .tcp = {
     .key_id = 1,                     /* default AO key ID         (RFC5925)    */
     .next_key = 1,                   /* default AO next key ID    (RFC5925)    */
-    .nop = TCPOPT_EOL },             /* default NOP option        (RFC793)     */
+    .nop = TCPOPT_EOL                /* default NOP option        (RFC793)     */
+  },
 
   /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8)                                   */
   .egp = {
     .type = EGP_NEIGHBOR_ACQUISITION,     /* default type                           */
     .code = EGP_ACQ_CODE_CEASE_CMD,       /* default code                           */
-    .status = EGP_ACQ_STAT_ACTIVE_MODE }, /* default status                         */
+    .status = EGP_ACQ_STAT_ACTIVE_MODE    /* default status                         */
+  },
 
   /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17)                                  */
   .rip = {
     .command = 2,                    /* default command                        */
     .family = AF_INET,               /* default address family identifier      */
-    .key_id = 1 },                   /* default authentication key ID          */
+    .key_id = 1                      /* default authentication key ID          */
+  },
 
   /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33)                                */
   .dccp = { .type = DCCP_PKT_REQUEST }, /* default type                           */
@@ -78,7 +83,8 @@ static struct config_options co = {
     .error_value = 8,                /* default ERROR value                    */
     .scope = 1,                      /* default number of SCOPE(s)             */
     .style_opt = 18,                 /* default STYLE option vector            */
-    .tspec = 6 },                    /* default TSPEC service                  */
+    .tspec = 6                       /* default TSPEC service                  */
+  },
 
   /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88)                              */
   .eigrp = {
@@ -93,7 +99,8 @@ static struct config_options co = {
     .ver_minor = 2,                  /* default EIGRP Minor Version            */
     .mtu = 1500,                     /* default maximum transmission unit      */
     .proto_id = 2,                   /* default external protocol ID           */
-    .key_id = 1 },                   /* default authentication key ID          */
+    .key_id = 1                      /* default authentication key ID          */
+  },
 
   /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89)                                */
   .ospf = {
@@ -104,7 +111,8 @@ static struct config_options co = {
     .lsa_age = 360,                  /* default LSA age                        */
     .lsa_type = LSA_TYPE_ROUTER,     /* default LSA header type                */
     .lsa_link_type = LINK_TYPE_PTP,  /* default Router-LSA link type           */
-    .key_id = 1 }                     /* default authentication key ID          */
+    .key_id = 1                       /* default authentication key ID          */
+  }
 
     /* NOTE: Add configuration structured values for new protocols here! */
 };
@@ -365,6 +373,7 @@ static const struct option long_opt[] = {
 
   /* NOTE: Add new long options for new protocols here! */
 
+  /* NOTE: This MUST be at the end of this list. */
   { NULL,                     0,                 NULL, 0                             }
 };
 

@@ -21,7 +21,8 @@
 
 void icmp_help(void)
 {
-  printf("ICMP Options:\n"
+  fprintf(stderr,
+         "ICMP Options:\n"
          "    --icmp-type NUM           ICMP type                        (default %d)\n"
          "    --icmp-code NUM           ICMP code                        (default 0)\n"
          "    --icmp-gateway ADDR       ICMP redirect gateway            (default RANDOM)\n"

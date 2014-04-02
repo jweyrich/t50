@@ -24,19 +24,16 @@
 Description:   This function configures and sends the DCCP packet header.
 
 Targets:       N/A */
-int dccp(const socket_t fd, const struct config_options *co)
+void dccp(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          dccp_length, /* DCCP header length. */
          dccp_ext_length, /* DCCP Extended Sequence Number length. */
-         packet_size,
          offset;
 
   /* Packet and Checksum. */
   void *buffer_ptr;
 
-  /* Socket address and IP heade. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* GRE Encapsulated IP Header. */
@@ -58,17 +55,17 @@ int dccp(const socket_t fd, const struct config_options *co)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   dccp_length = dccp_packet_hdr_len(co->dccp.type);
   dccp_ext_length = (co->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     greoptlen               +
     sizeof(struct dccp_hdr) +
     dccp_ext_length         +
     dccp_length;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* Prepare GRE encapsulation, if needed */
   gre_ip = gre_encapsulation(packet, co,
@@ -245,16 +242,5 @@ int dccp(const socket_t fd, const struct config_options *co)
   dccp->dccph_checksum = co->bogus_csum ? random() : cksum(dccp, offset);
 
   /* Finish GRE encapsulation, if needed */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending Packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }

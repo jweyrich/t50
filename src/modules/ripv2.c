@@ -26,17 +26,14 @@
 Description:   This function configures and sends the RIPv2 packet header.
 
 Targets:       N/A */
-int ripv2(const socket_t fd, const struct config_options *co)
+void ripv2(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
-         packet_size,
          offset,
          counter;
 
   mptr_t buffer;
 
-  /* Socket address, IP header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* GRE Encapsulated IP Header. */
@@ -49,16 +46,16 @@ int ripv2(const socket_t fd, const struct config_options *co)
   assert(o != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
-  packet_size = sizeof(struct iphdr)  +
+  *size = sizeof(struct iphdr)  +
     greoptlen             +
     sizeof(struct udphdr) +
     rip_hdr_len(co->rip.auth);
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, co,
@@ -255,16 +252,5 @@ int ripv2(const socket_t fd, const struct config_options *co)
   udp->check  = co->bogus_csum ? random() : cksum(udp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }

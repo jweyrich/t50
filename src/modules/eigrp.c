@@ -22,18 +22,17 @@
 /*
  * prototypes.
  */
-static  size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const uint32_t);
+static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const uint32_t);
 
 /* Function Name: EIGRP packet header configuration.
 
 Description:   This function configures and sends the EIGRP packet header.
 
 Targets:       N/A */
-int eigrp(const socket_t fd, const struct config_options *co)
+void eigrp(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
          eigrp_tlv_len, /* EIGRP TLV size. */
-         packet_size,
          offset,
          counter;
 
@@ -43,8 +42,6 @@ int eigrp(const socket_t fd, const struct config_options *co)
   /* Packet and Checksum. */
   mptr_t buffer;
 
-  /* Socket address and IP header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* EIGRP header. */
@@ -55,16 +52,16 @@ int eigrp(const socket_t fd, const struct config_options *co)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   prefix = __RND(co->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
-  packet_size = sizeof(struct iphdr)     +
+  *size = sizeof(struct iphdr)     +
     greoptlen                +
     sizeof(struct eigrp_hdr) +
     eigrp_tlv_len;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
@@ -432,18 +429,7 @@ int eigrp(const socket_t fd, const struct config_options *co)
     random() : cksum(eigrp, offset);
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }
 
 /* EIGRP header size calculation */

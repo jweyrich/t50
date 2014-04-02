@@ -21,8 +21,8 @@
 
 void ospf_help(void)
 {
-  /* FIXME: Future call: ospf_usage(); */
-  printf("OSPF Options:\n"
+  fprintf(stderr,
+         "OSPF Options:\n"
          "    --ospf-type NUM           OSPF type                        (default %d)\n"
          "    --ospf-length NUM         OSPF length                      (default NONE)\n"
          "    --ospf-router-id ADDR     OSPF router ID                   (default RANDOM)\n"

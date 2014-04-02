@@ -40,7 +40,7 @@ typedef struct {
 	int protocol_id;
 	char *acronym;
   char *description;
-  int (*func)(const socket_t, const struct config_options *);
+  module_func_ptr_t func;
 } modules_table_t;
 
 #define BEGIN_MODULES_TABLE modules_table_t mod_table[] = {
@@ -50,22 +50,22 @@ typedef struct {
 
 extern modules_table_t mod_table[];
 
-extern int getNumberOfRegisteredModules(void);
+extern size_t getNumberOfRegisteredModules(void);
 
 /* Modules functions prototypes. */
-extern int icmp  (const socket_t, const struct config_options *);
-extern int igmpv1(const socket_t, const struct config_options *);
-extern int igmpv3(const socket_t, const struct config_options *);
-extern int tcp   (const socket_t, const struct config_options *);
-extern int egp   (const socket_t, const struct config_options *);
-extern int udp   (const socket_t, const struct config_options *);
-extern int ripv1 (const socket_t, const struct config_options *);
-extern int ripv2 (const socket_t, const struct config_options *);
-extern int dccp  (const socket_t, const struct config_options *);
-extern int rsvp  (const socket_t, const struct config_options *);
-extern int ipsec (const socket_t, const struct config_options *);
-extern int eigrp (const socket_t, const struct config_options *);
-extern int ospf  (const socket_t, const struct config_options *);
-/* --- add yours here --- */
+extern void icmp  (const struct config_options const *, size_t *size);
+extern void igmpv1(const struct config_options const *, size_t *size);
+extern void igmpv3(const struct config_options const *, size_t *size);
+extern void tcp   (const struct config_options const *, size_t *size);
+extern void egp   (const struct config_options const *, size_t *size);
+extern void udp   (const struct config_options const *, size_t *size);
+extern void ripv1 (const struct config_options const *, size_t *size);
+extern void ripv2 (const struct config_options const *, size_t *size);
+extern void dccp  (const struct config_options const *, size_t *size);
+extern void rsvp  (const struct config_options const *, size_t *size);
+extern void ipsec (const struct config_options const *, size_t *size);
+extern void eigrp (const struct config_options const *, size_t *size);
+extern void ospf  (const struct config_options const *, size_t *size);
+/* --- add yours here */
 
 #endif

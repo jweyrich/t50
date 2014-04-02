@@ -29,11 +29,10 @@ static size_t ospf_hdr_len(const uint8_t, const uint8_t, const uint8_t, const ui
 Description:   This function configures and sends the OSPF packet header.
 
 Targets:       N/A */
-int ospf(const socket_t fd, const struct config_options *co)
+void ospf(const struct config_options * const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ospf_length, /* OSPF header length. */
-         packet_size,
          offset,
          counter,
          stemp;
@@ -44,8 +43,6 @@ int ospf(const socket_t fd, const struct config_options *co)
   /* Packet and Checksum. */
   mptr_t buffer;
 
-  /* Socket address and IP header. */
-  struct sockaddr_in sin;
   struct iphdr * ip;
 
   /* OSPF header. */
@@ -63,7 +60,7 @@ int ospf(const socket_t fd, const struct config_options *co)
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
   ospf_length = ospf_hdr_len(co->ospf.type, co->ospf.neighbor, co->ospf.lsa_type, co->ospf.dd_include_lsa);
 
-  packet_size = sizeof(struct iphdr) +
+  *size = sizeof(struct iphdr) +
     greoptlen                      +
     sizeof(struct ospf_hdr)        +
     sizeof(struct ospf_auth_hdr)   +
@@ -72,10 +69,10 @@ int ospf(const socket_t fd, const struct config_options *co)
     ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(packet_size);
+  alloc_packet(*size);
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, packet_size, co);
+  ip = ip_header(packet, *size, co);
 
   gre_encapsulation(packet, co,
         sizeof(struct iphdr)           +
@@ -703,18 +700,7 @@ build_ospf_lsa:
       random() :
       cksum(ospf, sizeof(struct ospf_hdr) + offset);
 
-  gre_checksum(packet, co, packet_size);
-
-  /* Setting SOCKADDR structure. */
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = htons(IPPORT_RND(co->dest));
-  sin.sin_addr.s_addr = co->ip.daddr;
-
-  /* Sending packet. */
-  if (sendto(fd, packet, packet_size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr)) == -1 && errno != EPERM)
-    return 1;
-
-  return 0;
+  gre_checksum(packet, co, *size);
 }
 
 /* Function Name: OSPF header size calculation.
