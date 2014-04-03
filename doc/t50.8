@@ -1,53 +1,52 @@
-.TH T50 8
+.TH T50 8 "02 April 2014" "5.5" "T50 man page"
 .SH NAME
-t50 - network packet injector
-
+T50 - network packet injector
 .SH SYNOPSIS
 .B t50
 [OPTION]...
-.IR host
-[/CIDR]
-
+.IR host[/CIDR]
 .SH DESCRIPTION
-Experimental mixed packet injector tool. T50 must to be executed as root.
-
+Experimental mixed packet injector tool.
+.P
+T50 must to be executed as root.
 .SH OPTIONS
+.TP
+.BI host[/CIDR]
+The host address can be informed in one of two formats: IP address or URI name. In both cases the CIDR can be informed following the host name or IP using '/' as separator.
+Partial IP addresses can be informed. To do so, the user must exclude one or more octects (ex: 192.168 for 192.168.0.0/16 - "192.168." is an invalid host because of the last '.').
+When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or thrid octect is informed, respectively).
 .TP
 .BI \-\-threshold " NUM"
 Number of packets to send (default 1000).
-
 .TP
 .BR \-\-flood
 Superseds the threshold.
-
 .TP
 .BR \-B ", " \-\-bogus-csum
 Bogus checksum.
-
 .TP
 .BR \-\-turbo
 Extend performance (create child process).
-
 .TP
 .BI \-s, " "\-\-saddr " ADDR"
 IP source address (default RANDOM).
-
 .TP
 .BR \-\-help
 Display full help.
-
 .SH EXAMPLES
 Send 500 packets to a single target:
 .IP
 # t50 --threshold 500 192.168.0.100
-
 .PP
 Flood test:
 .IP
 $ t50 --flood 192.168.0.100
-
 .SH AUTHORS
 Nelson Brito
+.SH CONTRIBUTORS
+Fernando Mercês
+.br
+Frederico Lamberti Pissarra
 .SH REPORTING BUGS
 Report t50 bugs at http://github.com/fredericopissarra/t50
 .SH COPYRIGHT
