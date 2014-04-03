@@ -76,5 +76,8 @@
 #define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s);
 #endif
 
+/* Used to test if "pid" from fork() is from a child process. */
+#define IS_CHILD_PID(p) ((p) == 0)
+
 #endif
 

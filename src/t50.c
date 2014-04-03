@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
   cidr_ptr = config_cidr(co->bits, co->ip.daddr);
 
   /* Show launch info only for parent process. */
-  if (pid)
+  if (!IS_CHILD_PID(pid))
   {
     time_t lt;
     struct tm *tm;
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
   }
 
   /* Show termination message only for parent process. */
-  if (pid)
+  if (!IS_CHILD_PID(pid))
   {
     time_t lt;
     struct tm *tm;
@@ -222,7 +222,7 @@ static void signal_handler(int signal)
      FIX: But only if this is the parent process. Closing the cloned descriptor on the
           child process can be catastrophic to the parent. */
 #ifdef __HAVE_TURBO__
-  if (pid)
+  if (!IS_CHILD_PID(pid))
 #endif
     closeSocket();
 
