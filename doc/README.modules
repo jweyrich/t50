@@ -1,0 +1,150 @@
+How to create a new module for T50
+
+Suppose you want to add a new protocol for packet injection for T50. Let's say
+you want to add "Stream Control Transport Protocol" (SCTP). For this example I
+choose this protocol because it's defined in <linux/in.h> header as
+IPPROTO_SCTP. You can code any protocol you want, if this protocol description is not 
+available on standard header files, you *MUST* create your own definition. The
+IPPROTO_T50 definition, for instance, is defined at 'src/include/defines.h' as
+69.
+
+STEP 1:
+
+The first step is to create a module that allocate and fills the packet buffer
+and returns the packet buffer size to the caller. All module routines *MUST*
+follow the signature defined in "typedefs.h":
+
+  typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
+
+Your module *MUST* be created in src/modules/ directory as 'sctp.c'. You
+*SHOULD* code something like this:
+
+  #include <common.h>  /* Include all t50 definitions and prototypes. */
+
+  static void fill_sctp(void *buffer);
+  static size_t get_sctp_buffer_size(void);
+
+  /* This is the module! */
+  void sctp(const struct config_options * const __restrict__ co, size_t *size)
+  {
+    /* Working pointers to the buffer */
+    struct iphdr *ip;
+
+    /* Get the packet size */
+    *size = sizeof(struct iphdr) + get_sctp_buffer_size();
+
+    /* Tries to reallocate space for the packet buffer, if necessary. */
+    alloc_packet(*size);
+
+    /* Fill IP header */
+    ip = ip_header(packet, *size, co);
+
+    fill_sctp(packet + sizeof(struct iphdr));
+  }
+
+  /* This will fill the buffer part of sctp protocol. */
+  static void fill_sctp(void *buffer, size_t size) { ... }
+
+  /* This is only an example! */
+  #define SCTP_SIZE 524
+  static size_t get_sctp_buffer_size(void) { return SCTP_SIZE; }
+
+Notice that "packet" is a global pointer to the packet buffer used by all
+modules. It is necessary to reallocate the buffer for every protocol,
+since the previous module could leave a very small buffer for your module use.
+
+Take a look at the actual modules. They are a little but more complicated than
+this, but essentially, that's all they do.
+
+STEP 2:
+
+Create an entry on 'src/modules.c'. You *MUST* add a line like this:
+
+  MODULE_ENTRY(IPPROTO_SCTP, "SCTP","Stream Control Transport Protocol", sctp)
+
+This way T50 now knows how to fill the packet for your protocol.
+
+STEP 3:
+
+Change config_options structure on 'src/config.c' and 'src/include/config.h'.
+Let's say that SCTP needs only one item called 'tag' (a 32 bits value) that
+could be a random value. You can add a new structure on config_options:
+
+  struct {
+    uint32_t tag;
+  } sctp;
+
+OBS: The "random" part depends on the module. The macro __RND(), defined in
+'src/include/defines.h' will return an random value if its parameter is 0. You
+acn use this on your function to garantee an random value if this 'tag' is
+informed as 0 or not informed at all in the command line.
+
+Now, add an OPTION_SCTP_TAG in the enumeration at the beggining of config.h file.
+
+Add a default value to config_options 'co' variable at config.c, if you need
+something different from 0.
+
+Add an entry called 'sctp-tag' on long_opt array to allow you to change this
+value through the command line:
+
+  { "sctp-tag",  required_argument, NULL, OPTION_SCTP_TAG },
+
+And, finally, change getConfigOptions() function, adding a 'case' inside the
+'switch(cli_opts)' block, like this:
+
+  case OPTION_SCTP_TAG: co.sctp.tag = atoi(optarg): break;
+
+STEP 4
+
+Create a routine showing the usage for SCTP protocol options and put it on
+sctp_help.c at 'src/help/' directory:
+
+  void sctp_help(void)
+  {
+    puts("SCTP Options:\n"
+         "    --sctp-tag NUM               SCTP tag number                  (default RANDOM)\n");
+  }
+
+To keep the standard, the first line starts with a description of the protocol
+followed by "Options:". The following lines are formated as (printf style):
+
+  "    --%-23s %-32s (default: %s)\n"  
+
+Where the first string (max 23 chars) is the option. The second string (32 chars
+max) is a small description and the last string is a numeric value or "RANDOM",
+depending of what you did in config_options 'co' and your module.
+
+After creating the sctp_help() functiom, put a call on the usage routine at 'src/usage.c':
+
+  ...
+  rsvp_help();
+  ipsec_help();
+  eigrp_help();
+  ospf_help();
+  sctp_help();    /* Added sctp help */
+
+FINAL STEP
+
+Modify the Makefile adding the object filename (sctp.o) file location on OBJS var:
+
+  ...
+  $(OBJ_DIR)/modules/igmpv1.o \
+  $(OBJ_DIR)/modules/icmp.o \
+  $(OBJ_DIR)/modules/sctp.o \
+  $(OBJ_DIR)/common.o \
+  ...
+
+And test everything trying to compile the project:
+
+  $ make
+
+Don't forget to compile in DEBUG mode and test everything with your favorite
+debugger:
+
+  $ DEBUG=1 make
+  $ sudo gdb release/t50
+
+Good luck!
+
+Frederico Lamberti Pissarra
+April 3rd, 2014
