@@ -33,6 +33,8 @@ T50 5.5 - April 2nd, 2014
  * "modules" just manipulates the packet buffer. main() actually sends the packet.
  * 'stdout' is now unbuffered on initialization. To avoid line buffer behavior oddities (if any).
  * Added -std=gnu99 to CFLAGS, on Makefile.
+ ! Possible wrong way to calculate threshold for turbo mode.
+   Proposed fix placed on code.
 
 T50 5.4.1 - August 11th, 2013
  - Fixed bug in option parsing.

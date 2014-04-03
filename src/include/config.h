@@ -20,7 +20,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <common.h>
+#include <stdint.h>
+#include <typedefs.h>
 
 /* Command line interface options which do not have short options */
 /* NOTE: All options are greater or equal than 128 to avoid ASCII character
@@ -267,7 +268,7 @@ struct cidr {
 
 struct config_options {
   /* XXX COMMON OPTIONS                                            */
-  uint32_t  threshold;              /* amount of packets           */
+  threshold_t threshold;            /* amount of packets           */
   int       flood;                  /* flood                       */
   int       encapsulated;           /* GRE encapsulated            */
   int       bogus_csum;             /* bogus packet checksum       */

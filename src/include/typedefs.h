@@ -20,11 +20,13 @@
 #ifndef __TYPEDEFS_INCLUDED__
 #define __TYPEDEFS_INCLUDED__
 
-#include <config.h>
+struct config_options;
 
 /* Data types */
 typedef uint32_t in_addr_t;
 typedef int socket_t;
+typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
+                                  this type can be changed to int64_t. */
 
 typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
 

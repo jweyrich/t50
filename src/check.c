@@ -22,7 +22,7 @@
 /* Validate options */
 int checkConfigOptions(const struct config_options * const __restrict__ co)
 {
-  int minThreshold;
+  threshold_t minThreshold;
 
   /* Warning missed target. */
   if (co->ip.daddr == INADDR_ANY)
@@ -69,9 +69,9 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
 #endif  /* __HAVE_TURBO__ */
 
     /* Sanitizing the threshold. */
-    minThreshold = getNumberOfRegisteredModules();
+    minThreshold = (threshold_t)getNumberOfRegisteredModules();
 
-    if ((co->ip.protocol == IPPROTO_T50) && (co->threshold < (unsigned)minThreshold))
+    if ((co->ip.protocol == IPPROTO_T50) && (co->threshold < minThreshold))
     {
       fprintf(stderr,
           "%s: protocol %s cannot have threshold smaller than %d\n",

@@ -20,6 +20,8 @@
 #include <common.h>
 #include <sys/wait.h>
 
+static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
+
 static void initialize(void);
 static const char *getOrdinalSuffix(unsigned);
 static const char *getMonth(unsigned);
@@ -32,8 +34,6 @@ int main(int argc, char *argv[])
 
   modules_table_t *ptbl;      /* Pointer to modules table */
   int num_modules;            /* Holds number of modules in modules table. */
-
-  static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
   initialize();
 
@@ -66,24 +66,60 @@ int main(int argc, char *argv[])
   /* NOTE: Random seed don't need to be so precise! */
   srandom(time(NULL));
 
+  /* 
+     FIXME: Is threshold calculated right, in turbo mode?
+
+            To my knowledge, if threshold == 1, no child process should be
+            created in turbo mode. Even more: if the protocol choosen is
+            "T50", then no child process should be created if threshold is
+            lesser than "num_of_modules".
+
+            If threshold is even, both parent and child processes should send
+            "threshold / 2" packets. But if it is odd, the parent process should
+            send "threshold / 2" packets, while the child process should send
+            "(threshold / 2) - 1" packets.
+
+            The possible fix for this problem are below, commented as
+            "FIXME: Possible fix (#1)".
+  */
+
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
   if (co->turbo)
   {
-    if ((pid = fork()) == -1)
+    /* FIXME: Possible fix (#1) */
+#if 0
+    if ((co->ip.protocol == IPROTO_T50 && co->threshold > num_modules) || 
+        (cp->ip.protocol != IPPROTO_T50 && co->threshold > 1))
     {
-      perror("Error creating child process. Exiting...");
-      return EXIT_FAILURE;
-    }
+      threshold_t new_threshold;
 
-    /* Setting the priority to both parent and child process to highly favorable scheduling value. */
-    /* FIXME: Why not setup this value when t50 runs as a single process? */
-    if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
-    {
-      perror("Error setting process priority. Exiting...");
-      return EXIT_FAILURE;
+#endif
+      if ((pid = fork()) == -1)
+      {
+        perror("Error creating child process. Exiting...");
+        return EXIT_FAILURE;
+      }
+
+      /* Setting the priority to both parent and child process to highly favorable scheduling value. */
+      /* FIXME: Why not setup this value when t50 runs as a single process? */
+      if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
+      {
+        perror("Error setting process priority. Exiting...");
+        return EXIT_FAILURE;
+      }
+
+      /* FIXME: Possible fix (#1) */
+#if 0
+      new_threshold = co->threshold / 2; 
+
+      /* child process get threshold minus one, if given threshold is odd. */
+      if ((co->threshold % 2) && !pid)
+        new_threshold--;
+
+      co->threshold = new_threshold;
+#endif
     }
-  }
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
@@ -105,7 +141,7 @@ int main(int argc, char *argv[])
   }
 
   /* Execute if flood or while threshold greater than 0. */
-  while (co->flood || co->threshold--)
+  while (co->flood || (co->threshold-- > 0))
   {
     /* Holds the actual packet size after module function call. */
     size_t size;
@@ -144,7 +180,6 @@ int main(int argc, char *argv[])
       }
 
       /* Sanitizing the threshold. */
-      /* FIXME: Is this correct? */
       co->threshold -= num_modules - 1;
 
       /* Reseting protocol. */
@@ -152,24 +187,21 @@ int main(int argc, char *argv[])
     }
   }
 
-#ifdef  __HAVE_TURBO__
-  /* Make sure the child process have exited. */
-  if (co->turbo)
-  {
-    int status;
-
-    wait(&status);
-  }
-#endif
-
-  /* Closing the socket. */
-  closeSocket();
-
   /* Show termination message only for parent process. */
   if (pid)
   {
     time_t lt;
     struct tm *tm;
+
+    /* FIX: We need to wait() for child processes only if we forked one! */
+#ifdef  __HAVE_TURBO__
+    int status;
+
+    wait(&status);
+#endif
+
+    /* FIX: To graciously end the program, only the parent process can close the socket. */
+    closeSocket();
 
     /* Getting the local time. */
     lt = time(NULL); 
@@ -186,8 +218,13 @@ int main(int argc, char *argv[])
 /* This function handles interruptions. */
 static void signal_handler(int signal)
 {
-  /* Make sure the socket descriptor is closed. */
-  closeSocket();
+  /* Make sure the socket descriptor is closed. 
+     FIX: But only if this is the parent process. Closing the cloned descriptor on the
+          child process can be catastrophic to the parent. */
+#ifdef __HAVE_TURBO__
+  if (pid)
+#endif
+    closeSocket();
 
   /* FIX: The shell documentation (bash) specifies that a process
           when exits because a signal, must return 128+signal#. */
