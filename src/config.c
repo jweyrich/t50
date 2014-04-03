@@ -885,10 +885,10 @@ static void listProtocols(void)
   modules_table_t *ptbl;
   int i;
 
-  fprintf(stderr, "List of supported protocols:\n");
+  puts("List of supported protocols:");
 
   for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-    fprintf(stderr, "\t%2d PROTO = %-6s (%s)\n",
+    printf("\t%2d PROTO = %-6s (%s)\n",
            i,
            ptbl->acronym,
            ptbl->description);

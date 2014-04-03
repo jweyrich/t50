@@ -21,8 +21,7 @@
 
 void eigrp_help(void)
 {
-  fprintf(stderr,
-         "EIGRP Options:\n"
+  printf("EIGRP Options:\n"
          "    --eigrp-opcode NUM        EIGRP opcode                     (default %d)\n"
          "    --eigrp-flags NUM         EIGRP flags                      (default RANDOM)\n"
          "    --eigrp-sequence NUM      EIGRP sequence #                 (default RANDOM)\n"

@@ -21,8 +21,7 @@
 
 void ospf_help(void)
 {
-  fprintf(stderr,
-         "OSPF Options:\n"
+  printf("OSPF Options:\n"
          "    --ospf-type NUM           OSPF type                        (default %d)\n"
          "    --ospf-length NUM         OSPF length                      (default NONE)\n"
          "    --ospf-router-id ADDR     OSPF router ID                   (default RANDOM)\n"

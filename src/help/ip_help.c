@@ -21,8 +21,7 @@
 
 void ip_help(void)
 {
-  fprintf(stderr,
-         "IP Options:\n"
+  printf("IP Options:\n"
        	 " -s,--saddr ADDR              IP source IP address             (default RANDOM)\n"
        	 "    --tos NUM                 IP type of service               (default 0x%x)\n"
        	 "    --id NUM                  IP identification                (default RANDOM)\n"

@@ -19,11 +19,14 @@
 
 #include <common.h>
 
-/* Validate options */
+/* Evaluate the threshold configuration */
+static int checkThreshold(const struct config_options * const __restrict__);
+
+/* Validate options 
+   NOTE: This function must be called befor forking!
+   Returns 0 on failure. */
 int checkConfigOptions(const struct config_options * const __restrict__ co)
 {
-  threshold_t minThreshold;
-
   /* Warning missed target. */
   if (co->ip.daddr == INADDR_ANY)
   {
@@ -32,15 +35,14 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
   }
 
   /* Sanitizing the CIDR. */
-  if (co->bits != 0) 
-    if ((co->bits < CIDR_MINIMUM) || (co->bits > CIDR_MAXIMUM))
-    {
-      char errstr[64];
+  if ((co->bits < CIDR_MINIMUM) || (co->bits > CIDR_MAXIMUM))
+  {
+    char errstr[64];
 
-      sprintf(errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
-      ERROR(errstr);
-      return 0;
-    }
+    sprintf(errstr, "CIDR must be between %d and %d", CIDR_MINIMUM, CIDR_MAXIMUM);
+    ERROR(errstr);
+    return 0;
+  }
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
@@ -57,6 +59,9 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
     return 0;
   }
 
+  if (!checkThreshold(co))
+    return 0;
+
   if (!co->flood)
   {
 #ifdef  __HAVE_TURBO__
@@ -67,19 +72,6 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
       return 0;
     }
 #endif  /* __HAVE_TURBO__ */
-
-    /* Sanitizing the threshold. */
-    minThreshold = (threshold_t)getNumberOfRegisteredModules();
-
-    if ((co->ip.protocol == IPPROTO_T50) && (co->threshold < minThreshold))
-    {
-      fprintf(stderr,
-          "%s: protocol %s cannot have threshold smaller than %d\n",
-          PACKAGE,
-          mod_table[co->ip.protoname].acronym,
-          minThreshold);
-      return 0;
-    }
   }
   else /* if (co->flood) isn't 0 */
   {
@@ -101,3 +93,35 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
   /* Returning. */
   return 1;
 }
+
+static int checkThreshold(const struct config_options * const __restrict__ co)
+{
+  if (co->ip.protocol == IPPROTO_T50)
+  {
+    threshold_t minThreshold = (threshold_t)getNumberOfRegisteredModules();
+
+    if (co->threshold < minThreshold)
+    {
+      fprintf(stderr,
+              "%s: protocol %s cannot have threshold smaller than %d\n",
+              PACKAGE,
+              mod_table[co->ip.protoname].acronym,
+              minThreshold);
+      return 0;
+    }
+  }
+  else
+  {
+    if (co->threshold < 1)
+    {
+      fprintf(stderr,
+              "%s: protocol %s cannot have threshold smaller than 1\n",
+              PACKAGE,
+              mod_table[co->ip.protoname].acronym);
+      return 0;
+    }
+  }
+
+  return 1;
+}
+

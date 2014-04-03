@@ -21,22 +21,19 @@
 
 void show_version(void)
 {
-  fprintf(stderr, 
-         "T50 Experimental Mixed Packet Injector Tool %s\n"
+  printf("T50 Experimental Mixed Packet Injector Tool %s\n"
          "Originally created by Nelson Brito <nbrito@sekure.org>\n"
          "Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
          "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>\n"
          VERSION);
 }
 
-
 /* Help and usage message */
 void usage(void)
 {
   show_version();
 
-  fprintf(stderr, "\n"
-                  "Usage: t50 <host> [/CIDR] [options]\n");
+  puts("\nUsage: t50 <host> [/CIDR] [options]");
 
   general_help();
   gre_help();
@@ -51,14 +48,14 @@ void usage(void)
   eigrp_help();
   ospf_help();
 
-  fprintf(stderr, "Some considerations while running this program:\n"
-                  " 1. There is no limitation of using as many options as possible.\n"
-                  " 2. Report %s bugs at %s.\n"
-                  " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
-                  " 4. Mandatory arguments to long options are mandatory for short options too.\n"
-                  " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"
-                  " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n\n",
-                  PACKAGE, SITE, PACKAGE, PACKAGE);
+  printf("Some considerations while running this program:\n"
+         " 1. There is no limitation of using as many options as possible.\n"
+         " 2. Report %s bugs at %s.\n"
+         " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
+         " 4. Mandatory arguments to long options are mandatory for short options too.\n"
+         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"
+         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n",
+         PACKAGE, SITE, PACKAGE, PACKAGE);
 
   exit(EXIT_FAILURE);
 }

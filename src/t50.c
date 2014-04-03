@@ -18,7 +18,7 @@
 */
 
 #include <common.h>
-#include <sys/wait.h>
+#include <sys/wait.h> /* POSIX.1 compliant */
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
@@ -31,10 +31,7 @@ int main(int argc, char *argv[])
 {
   struct config_options *co;  /* Pointer to options. */
   struct cidr *cidr_ptr;      /* Pointer to cidr host id and 1st ip address. */
-
   modules_table_t *ptbl;      /* Pointer to modules table */
-  int num_modules;            /* Holds number of modules in modules table. */
-
   uint8_t proto;              /* Used on main loop. */
 
   initialize();
@@ -42,7 +39,8 @@ int main(int argc, char *argv[])
   /* Configuring command line interface options. */
   co = getConfigOptions(argc, argv);
 
-  /* This is a requirement of t50. Previously on checkConfigOptions(). */
+  /* This is a requirement of t50. User must be root to use it. 
+     Previously on checkConfigOptions(). */
   if (getuid())
   {
     ERROR("User must have root priviledge to run.");
@@ -50,53 +48,27 @@ int main(int argc, char *argv[])
   }
 
   /* Validating command line interface options. */
-  /* NOTE: checkConfigOptions now returns 0 if failure. Makes more sense! */
   if (!checkConfigOptions(co))
     return EXIT_FAILURE;
 
-  num_modules = getNumberOfRegisteredModules();
-
-  /* Sanitizing the threshold. */
-  if (co->ip.protocol == IPPROTO_T50)
-    co->threshold -= (co->threshold % num_modules);
-
   /* Setting socket file descriptor. */
-  /* NOTE: createSocket() handles its errors before returning. */
+  /* NOTE: createSocket() handles its own errors before returning. */
   createSocket();
 
   /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
   srandom(time(NULL));
 
-  /* 
-     FIXME: Is threshold calculated right, in turbo mode?
-
-            To my knowledge, if threshold == 1, no child process should be
-            created in turbo mode. Even more: if the protocol choosen is
-            "T50", then no child process should be created if threshold is
-            lesser than "num_of_modules".
-
-            If threshold is even, both parent and child processes should send
-            "threshold / 2" packets. But if it is odd, the parent process should
-            send "threshold / 2" packets, while the child process should send
-            "(threshold / 2) - 1" packets.
-
-            The possible fix for this problem are below, commented as
-            "FIXME: Possible fix (#1)".
-  */
-
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
   if (co->turbo)
   {
-    /* FIXME: Possible fix (#1) */
-#if 0
-    if ((co->ip.protocol == IPROTO_T50 && co->threshold > num_modules) || 
-        (cp->ip.protocol != IPPROTO_T50 && co->threshold > 1))
+    /* Decides if it's necessary to fork a new process. */
+    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)getNumberOfRegisteredModules()) || 
+        (co->ip.protocol != IPPROTO_T50 && co->threshold > 1))
     {
       threshold_t new_threshold;
 
-#endif
       if ((pid = fork()) == -1)
       {
         perror("Error creating child process. Exiting...");
@@ -111,8 +83,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
       }
 
-      /* FIXME: Possible fix (#1) */
-#if 0
+      /* Divide the process iterations in main loop between processes. */
       new_threshold = co->threshold / 2; 
 
       /* child process get threshold minus one, if given threshold is odd. */
@@ -120,8 +91,8 @@ int main(int argc, char *argv[])
         new_threshold--;
 
       co->threshold = new_threshold;
-#endif
     }
+  }
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
@@ -137,7 +108,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    fprintf(stderr, "\b\n%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\b\n%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  
       VERSION, 
       getMonth(tm->tm_mon), 
@@ -149,6 +120,7 @@ int main(int argc, char *argv[])
       tm->tm_sec);
   }
 
+  /* Selects the initial protocol to use. */
   proto = co->ip.protocol;
   ptbl = mod_table;
   if (proto != IPPROTO_T50)
@@ -165,10 +137,12 @@ int main(int argc, char *argv[])
       co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
         (random() % cidr_ptr->hostid));
 
+    /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
     sendPacket(packet, size, co);
   
+    /* If protocol if 'T50', then get the next true protocol. */
     if (proto == IPPROTO_T50)
       if ((++ptbl)->func == NULL)
         ptbl = mod_table;
@@ -194,7 +168,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    fprintf(stderr, "\b\n%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\b\n%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,
       VERSION,
       getMonth(tm->tm_mon),
@@ -236,7 +210,7 @@ static void initialize(void)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART; /* same signal() semantics?! */
 
-  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV */
+  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal'). */
   sa.sa_handler = signal_handler;
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
@@ -250,7 +224,7 @@ static void initialize(void)
   sigaction(SIGCHLD, &sa, NULL);
 #endif
 
-  /* --- Make sure stdout is unbuffered. --- */
+  /* --- Make sure stdout is unbuffered (otherwise, it's line buffered). --- */
   fflush(stdout);
   setvbuf(stdout, NULL, _IONBF, 0); 
 }

@@ -21,8 +21,7 @@
 
 void egp_help(void)
 {
-  fprintf(stderr,
-         "EGP Options:\n"
+  printf("EGP Options:\n"
          "    --egp-type NUM            EGP type                         (default %d)\n"
          "    --egp-code NUM            EGP code                         (default %d)\n"
          "    --egp-status NUM          EGP status                       (default %d)\n"

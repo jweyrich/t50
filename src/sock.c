@@ -112,7 +112,6 @@ void sendPacket(const void * const buffer, size_t size, const struct config_opti
               sizeof(struct sockaddr)) == -1) && 
       (errno != EPERM)) 
   {
-    close(fd);
     ERROR("Error sending packet.");
     exit(EXIT_FAILURE);
   }
