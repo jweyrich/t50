@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
       /* Divide the process iterations in main loop between processes. */
       new_threshold = co->threshold / 2; 
 
-      /* child process get threshold minus one, if given threshold is odd. */
-      if ((co->threshold % 2) && !pid)
-        new_threshold--;
+      /* FIX: Ooops! Parent process get the extra packet, if given threshold is odd. */
+      if ((co->threshold % 2) && !IS_CHILD_PID(pid))
+        new_threshold++;
 
       co->threshold = new_threshold;
     }
@@ -161,7 +161,9 @@ int main(int argc, char *argv[])
     wait(&status);
 #endif
 
-    /* FIX: To graciously end the program, only the parent process can close the socket. */
+    /* FIX: To graciously end the program, only the parent process can close the socket. 
+       NOTE: I realize that closing descriptors are reference counted.
+             Kept the logic just in case! */
     closeSocket();
 
     /* Getting the local time. */
@@ -188,7 +190,9 @@ static void signal_handler(int signal)
 {
   /* Make sure the socket descriptor is closed. 
      FIX: But only if this is the parent process. Closing the cloned descriptor on the
-          child process can be catastrophic to the parent. */
+          child process can be catastrophic to the parent. 
+     NOTE: I realize that the act of closing descriptors are reference counted.
+           Keept the logic just in case! */
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
 #endif
