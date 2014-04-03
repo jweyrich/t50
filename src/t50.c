@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
   modules_table_t *ptbl;      /* Pointer to modules table */
   int num_modules;            /* Holds number of modules in modules table. */
 
+  uint8_t proto;              /* Used on main loop. */
+
   initialize();
 
   /* Configuring command line interface options. */
@@ -140,6 +142,11 @@ int main(int argc, char *argv[])
       (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
   }
 
+  proto = co->ip.protocol;
+  ptbl = mod_table;
+  if (proto != IPPROTO_T50)
+    ptbl += co->ip.protoname;
+
   /* Execute if flood or while threshold greater than 0. */
   while (co->flood || (co->threshold-- > 0))
   {
@@ -151,40 +158,13 @@ int main(int argc, char *argv[])
       co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
         (random() % cidr_ptr->hostid));
 
-    /* Sending ICMP/IGMP/TCP/UDP/... packets. */
-    if (co->ip.protocol != IPPROTO_T50)
-    {
-      /* Get the protocol. */
-      ptbl = &mod_table[co->ip.protoname];
-      co->ip.protocol = ptbl->protocol_id;
-
-      /* Launch t50 module. */
-      ptbl->func(co, &size);
-      
-      sendPacket(packet, size, co);
-    }
-    else
-    {
-      /* NOTE: Using single pointer instead of calculating
-               the pointers in every iteration. */
-      /* Sending T50 packets. */
-      for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
-      {
-        /* Getting the correct protocol. */
-        co->ip.protocol = ptbl->protocol_id;
-
-        /* Launching t50 module. */
-        ptbl->func(co, &size);
-
-        sendPacket(packet, size, co);
-      }
-
-      /* Sanitizing the threshold. */
-      co->threshold -= num_modules - 1;
-
-      /* Reseting protocol. */
-      co->ip.protocol = IPPROTO_T50;
-    }
+    co->ip.protocol = ptbl->protocol_id;
+    ptbl->func(co, &size);
+    sendPacket(packet, size, co);
+  
+    if (proto == IPPROTO_T50)
+      if ((++ptbl)->func == NULL)
+        ptbl = mod_table;
   }
 
   /* Show termination message only for parent process. */
