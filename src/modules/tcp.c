@@ -48,7 +48,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   struct tcphdr *tcp;
   struct psdhdr *pseudo;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);

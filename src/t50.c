@@ -138,8 +138,15 @@ int main(int argc, char *argv[])
     tm = localtime(&lt);
 
     fprintf(stderr, "\b\n%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, getMonth(tm->tm_mon), tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
-      (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
+      PACKAGE,  
+      VERSION, 
+      getMonth(tm->tm_mon), 
+      tm->tm_mday, 
+      getOrdinalSuffix(tm->tm_mday),
+      (tm->tm_year + 1900), 
+      tm->tm_hour, 
+      tm->tm_min, 
+      tm->tm_sec);
   }
 
   proto = co->ip.protocol;
@@ -188,8 +195,15 @@ int main(int argc, char *argv[])
     tm = localtime(&lt);
 
     fprintf(stderr, "\b\n%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  VERSION, getMonth(tm->tm_mon), tm->tm_mday, getOrdinalSuffix(tm->tm_mday),
-      (tm->tm_year + 1900), tm->tm_hour, tm->tm_min, tm->tm_sec);
+      PACKAGE,
+      VERSION,
+      getMonth(tm->tm_mon),
+      tm->tm_mday,
+      getOrdinalSuffix(tm->tm_mday),
+      (tm->tm_year + 1900),
+      tm->tm_hour,
+      tm->tm_min,
+      tm->tm_sec);
   }
 
   return 0;

@@ -35,7 +35,7 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   struct egp_hdr * egp;
   struct egp_acq_hdr * egp_acq;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr)   +

@@ -50,7 +50,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   struct dccp_hdr_ack_bits * dccp_ack;
   struct dccp_hdr_reset * dccp_rst;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   dccp_length = dccp_packet_hdr_len(co->dccp.type);

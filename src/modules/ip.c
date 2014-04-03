@@ -24,7 +24,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   struct iphdr *ip;
 
   assert(buffer != NULL);
-  assert(o != NULL);
+  assert(co != NULL);
 
   ip = (struct iphdr *)buffer;
   ip->version  = IPVERSION;

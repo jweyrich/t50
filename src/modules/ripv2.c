@@ -43,7 +43,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   struct udphdr * udp;
   struct psdhdr * pseudo;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr)  +

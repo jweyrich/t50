@@ -34,7 +34,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   /* ICMP header. */
   struct icmphdr * icmp;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr) +

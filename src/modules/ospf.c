@@ -53,7 +53,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   struct ospf_lsa_hdr * ospf_lsa;
   struct ospf_lls_hdr * ospf_lls;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   ospf_options = __RND(co->ospf.options);

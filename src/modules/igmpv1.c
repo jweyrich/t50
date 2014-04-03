@@ -30,7 +30,7 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
   /* IGMPv1 header. */
   struct igmphdr * igmpv1;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   /* GRE options size. */
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);

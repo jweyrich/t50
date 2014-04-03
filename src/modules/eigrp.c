@@ -47,7 +47,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   /* EIGRP header. */
   struct eigrp_hdr * eigrp;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   prefix = __RND(co->eigrp.prefix);

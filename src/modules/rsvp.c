@@ -43,7 +43,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
   /* RSVP Common header. */
   struct rsvp_common_hdr * rsvp;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   objects_length = rsvp_objects_len(co->rsvp.type, co->rsvp.scope, co->rsvp.adspec, co->rsvp.tspec);

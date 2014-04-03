@@ -37,7 +37,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
   struct igmpv3_report * igmpv3_report;
   struct igmpv3_grec * igmpv3_grec;
 
-  assert(o != NULL);
+  assert(co != NULL);
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr) +
