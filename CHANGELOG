@@ -6,6 +6,8 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+
+
 T50 5.5 - April 2nd, 2014
  * Code compiles fine with LLVM clang 3.x;
  * SSE is enabled by default in x86-64 architecture (commented on Makefile);
@@ -34,7 +36,7 @@ T50 5.5 - April 2nd, 2014
  * 'stdout' is now unbuffered on initialization. To avoid line buffer behavior oddities (if any).
  * Added -std=gnu99 to CFLAGS, on Makefile.
  ! Possible wrong way to calculate threshold for turbo mode.
-   Proposed fix placed on code.
+ - Threshold bugs fixed. 
 
 T50 5.4.1 - August 11th, 2013
  - Fixed bug in option parsing.
