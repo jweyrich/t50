@@ -29,7 +29,7 @@ Targets:       N/A */
 void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
-         offset,
+         length,
          counter;
 
   mptr_t buffer;
@@ -47,9 +47,9 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr)  +
-    greoptlen             +
-    sizeof(struct udphdr) +
-    rip_hdr_len(co->rip.auth);
+          greoptlen             +
+          sizeof(struct udphdr) +
+          rip_hdr_len(co->rip.auth);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -59,7 +59,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
+        sizeof(struct iphdr)  +
         sizeof(struct udphdr) +
         rip_hdr_len(co->rip.auth));
 
@@ -71,9 +71,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
       rip_hdr_len(co->rip.auth));
   udp->check  = 0;
 
-  offset = sizeof(struct udphdr);
-
-  buffer.ptr = (void *)udp + offset;
+  buffer.ptr = (void *)udp + sizeof(struct udphdr);
 
   /*
    * RIP Version 2 -- Carrying Additional Information (RFC 1388)
@@ -110,7 +108,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = htons(__RND(co->rip.domain));
 
-  offset += RIP_HEADER_LENGTH;
+  length = sizeof(struct udphdr) + RIP_HEADER_LENGTH;
 
   /*
    * RIP-2 MD5 Authentication (RFC 2082)
@@ -167,7 +165,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
 
-    offset += RIP_AUTH_LENGTH;
+    length += RIP_AUTH_LENGTH;
   }
 
   /*
@@ -206,7 +204,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
-  offset += RIP_MESSAGE_LENGTH;
+  length += RIP_MESSAGE_LENGTH;
 
   /*
    * XXX Playing with:
@@ -235,7 +233,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     for (counter = 0; counter < size; counter++)
       *buffer.byte_ptr++ = random();
 
-    offset += RIP_TRAILER_LENGTH + size;
+    length += RIP_TRAILER_LENGTH + size;
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
@@ -244,12 +242,12 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(offset);
+  pseudo->len      = htons(length);
 
-  offset += sizeof(struct psdhdr);
+  length += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  udp->check  = co->bogus_csum ? random() : cksum(udp, offset);
+  udp->check  = co->bogus_csum ? random() : cksum(udp, length);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

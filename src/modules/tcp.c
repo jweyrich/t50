@@ -34,7 +34,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
-         offset,
+         length,
          counter;
 
   mptr_t buffer;
@@ -53,10 +53,10 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
-  *size = sizeof(struct iphdr) +
-    greoptlen             +
-    sizeof(struct tcphdr) +
-    tcpopt;
+  *size = sizeof(struct iphdr)  +
+          greoptlen             +
+          sizeof(struct tcphdr) +
+          tcpopt;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -65,9 +65,9 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   ip = ip_header(packet, *size, co);
 
   gre_ip = gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        sizeof(struct tcphdr) +
-        tcpopt);
+              sizeof(struct iphdr)  +
+              sizeof(struct tcphdr) +
+              tcpopt);
 
   /*
    * The RFC 793 has defined a 4-bit field in the TCP header which encodes the size
@@ -102,7 +102,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   tcp->ece     = co->tcp.ece;
   tcp->cwr     = co->tcp.cwr;
   tcp->window  = htons(__RND(co->tcp.window));
-  tcp->check   = 0;
+  tcp->check   = 0; /* Needed 'cause of cksum() call */
 
   buffer.ptr = (void *)tcp + sizeof(struct tcphdr);
 
@@ -259,7 +259,8 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++ = TCPOLEN_CC;
     *buffer.dword_ptr++ = htonl(co->tcp.cc_new ?
-      __RND(co->tcp.cc_new) : __RND(co->tcp.cc_echo));
+        __RND(co->tcp.cc_new) : 
+        __RND(co->tcp.cc_echo));
 
     tcp->syn = 1;
     tcp->seq = htonl(__RND(co->tcp.sequence));
@@ -367,7 +368,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
    */
   if (co->tcp.md5)
   {
-    size_t stemp;
+    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
     *buffer.byte_ptr++ = TCPOPT_MD5;
     *buffer.byte_ptr++ = TCPOLEN_MD5;
@@ -402,7 +403,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
    */
   if (co->tcp.auth)
   {
-    size_t stemp;
+    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
@@ -420,7 +421,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   for (; tcpolen & 3; tcpolen++)
     *buffer.byte_ptr++ = co->tcp.nop;
 
-  offset = sizeof(struct tcphdr) + tcpolen;
+  length = sizeof(struct tcphdr) + tcpolen;
 
   /* Fill PSEUDO Header structure. */
   pseudo           = (struct psdhdr *)buffer.ptr;
@@ -428,12 +429,12 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(offset);
+  pseudo->len      = htons(length);
 
-  offset += sizeof(struct psdhdr);
+  length += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  tcp->check   = co->bogus_csum ? random() : cksum(tcp, offset);
+  tcp->check   = co->bogus_csum ? random() : cksum(tcp, length);
 
   gre_checksum(packet, co, *size);
 }

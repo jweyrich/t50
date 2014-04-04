@@ -24,7 +24,6 @@ Description:   This function configures and sends the IGMPv3 packet header. */
 void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
-         offset,
          counter;
 
   /* Packet and Checksum. */
@@ -66,32 +65,25 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_report->ngrec    = htons(1);
     igmpv3_report->csum     = 0;
 
-    /* Computing the Checksum offset. */
-    offset  = sizeof(struct igmpv3_report);
-
-    /* Storing both Checksum and Packet. */
-    buffer.ptr = (void *)igmpv3_report + offset;
-
     /* IGMPv3 Group Record Header structure making a pointer to Checksum. */
-    igmpv3_grec                = (struct igmpv3_grec *)(buffer.ptr + (offset - sizeof(struct igmpv3_report)));
+    igmpv3_grec                = (void *)igmpv3_report + sizeof(struct igmpv3_report);
     igmpv3_grec->grec_type     = __RND(co->igmp.grec_type);
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
     igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources);
     igmpv3_grec->grec_mca      = INADDR_RND(co->igmp.grec_mca);
-    buffer.ptr += sizeof(struct igmpv3_grec);
-
-    offset += sizeof(struct igmpv3_grec);
 
     /* Dealing with source address(es). */
+    buffer.ptr = (void *)igmpv3_grec + sizeof(struct igmpv3_grec);
     for (counter = 0; counter < co->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
-
-    offset += IGMPV3_TLEN_NSRCS(co->igmp.sources);
 
     /* Computing the checksum. */
     igmpv3_report->csum     = co->bogus_csum ?
       random() :
-      cksum(igmpv3_report, offset);
+      cksum(igmpv3_report, 
+        sizeof(struct igmpv3_report) + 
+        sizeof(struct igmpv3_grec)   + 
+        IGMPV3_TLEN_NSRCS(co->igmp.sources));
   }
   else
   {
@@ -106,21 +98,16 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_query->nsrcs    = htons(co->igmp.sources);
     igmpv3_query->csum     = 0;
 
-    offset  = sizeof(struct igmpv3_query);
-
-    /* Storing both Checksum and Packet. */
-    buffer.ptr = (void *)igmpv3_query + offset;
-
     /* Dealing with source address(es). */
+    buffer.ptr = (void *)igmpv3_query + sizeof(struct igmpv3_query);
     for (counter = 0; counter < co->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
-
-    offset += IGMPV3_TLEN_NSRCS(co->igmp.sources);
 
     /* Computing the checksum. */
     igmpv3_query->csum     = co->bogus_csum ?
       random() :
-      cksum(igmpv3_query, offset);
+      cksum(igmpv3_query, 
+        sizeof(struct igmpv3_query) + IGMPV3_TLEN_NSRCS(co->igmp.sources));
   }
 
   /* GRE Encapsulation takes place. */

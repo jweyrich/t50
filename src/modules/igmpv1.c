@@ -37,8 +37,8 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Packet size. */
   *size = sizeof(struct iphdr) +
-    greoptlen            +
-    sizeof(struct igmphdr);
+          greoptlen            +
+          sizeof(struct igmphdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -56,7 +56,7 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
   igmpv1->type  = co->igmp.type;
   igmpv1->code  = co->igmp.code;
   igmpv1->group = INADDR_RND(co->igmp.group);
-  igmpv1->csum  = 0;
+  igmpv1->csum  = 0;  /* Needed 'cause cksum() call, below! */
 
   /* Computing the checksum. */
   igmpv1->csum  = co->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));

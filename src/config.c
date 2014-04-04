@@ -395,9 +395,11 @@ struct config_options *getConfigOptions(int argc, char **argv)
   int counter;
 
   /* The following variables will be used by 'getsubopt()'. */
-  char  *optionp, *valuep, *tmp_ptr;
-  char **tokens;
   int opt_ind;
+
+  char  *optionp;
+  char *tmp_ptr;
+  char **tokens;
 
   /* Used by getIpAndCidrFromString() */
   T50_tmp_addr_t addr;
@@ -411,13 +413,13 @@ struct config_options *getConfigOptions(int argc, char **argv)
     switch (cli_opts)
     {
       /* XXX COMMON OPTIONS */
-      case OPTION_THRESHOLD:    co.threshold = atol(optarg); break;
-      case OPTION_FLOOD:        co.flood = TRUE; break;
+      case OPTION_THRESHOLD:    co.threshold    = atol(optarg); break;
+      case OPTION_FLOOD:        co.flood        = TRUE; break;
       case OPTION_ENCAPSULATED: co.encapsulated = TRUE; break;
-      case 'B':                 co.bogus_csum = TRUE; break;
+      case 'B':                 co.bogus_csum   = TRUE; break;
 
 #ifdef  __HAVE_TURBO__
-      case OPTION_TURBO:        co.turbo = TRUE; break;
+      case OPTION_TURBO:        co.turbo        = TRUE; break;
 #endif  /* __HAVE_TURBO__ */
 
       case OPTION_LIST_PROTOCOL:
@@ -432,21 +434,21 @@ struct config_options *getConfigOptions(int argc, char **argv)
                                         co.gre.K = TRUE; break;
       case OPTION_GRE_CHECKSUM_PRESENT: co.gre.options |= GRE_OPTION_CHECKSUM;
                                         co.gre.C = TRUE; break;
-      case OPTION_GRE_KEY:              co.gre.key = atol(optarg); break;
+      case OPTION_GRE_KEY:              co.gre.key      = atol(optarg); break;
       case OPTION_GRE_SEQUENCE:         co.gre.sequence = atoi(optarg); break;
-      case OPTION_GRE_SADDR:            co.gre.saddr = resolv(optarg); break;
-      case OPTION_GRE_DADDR:            co.gre.daddr = resolv(optarg); break;
+      case OPTION_GRE_SADDR:            co.gre.saddr    = resolv(optarg); break;
+      case OPTION_GRE_DADDR:            co.gre.daddr    = resolv(optarg); break;
 
       /* XXX DCCP, TCP & UDP HEADER OPTIONS */
       case OPTION_SOURCE:       co.source = atoi(optarg); break;
       case OPTION_DESTINATION:  co.dest = atoi(optarg);   break;
 
       /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0) */
-      case OPTION_IP_TOS:       co.ip.tos = atoi(optarg); break;
-      case OPTION_IP_ID:        co.ip.id = atoi(optarg); break;
-      case OPTION_IP_OFFSET:    co.ip.frag_off = atoi(optarg); break;
-      case OPTION_IP_TTL:       co.ip.ttl = atoi(optarg); break;
-      case 's':                 co.ip.saddr = resolv(optarg); break;
+      case OPTION_IP_TOS:       co.ip.tos       = atoi(optarg); break;
+      case OPTION_IP_ID:        co.ip.id        = atoi(optarg); break;
+      case OPTION_IP_OFFSET:    co.ip.frag_off  = atoi(optarg); break;
+      case OPTION_IP_TTL:       co.ip.ttl       = atoi(optarg); break;
+      case 's':                 co.ip.saddr     = resolv(optarg); break;
       case OPTION_IP_PROTOCOL:
         optionp = optarg;
 
@@ -454,6 +456,8 @@ struct config_options *getConfigOptions(int argc, char **argv)
 
         while (*optionp != '\0')
         {
+          char *valuep;
+
           counter = getsubopt(&optionp, tokens, &valuep);
           if (counter == -1)
           {
@@ -464,7 +468,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
             exit(EXIT_FAILURE);
           }
 
-          if (strcmp(tokens[counter], "T50") == 0)
+          if (strcasecmp(tokens[counter], "T50") == 0)
             co.ip.protocol = IPPROTO_T50;
           else
             co.ip.protocol = mod_table[counter].protocol_id;
@@ -492,19 +496,10 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_IGMP_SOURCES:         co.igmp.sources = atoi(optarg); break;
       case OPTION_IGMP_GREC_MULTICAST:  co.igmp.grec_mca = resolv(optarg); break;
       case OPTION_IGMP_ADDRESS:
-        tmp_ptr = strtok(optarg, ",");
-
-        for (counter = 0;
-            counter < (int)(sizeof(co.igmp.address)/sizeof(in_addr_t));
-            counter++)
-        {
-          if (tmp_ptr == NULL)
-            break;
-
+        for (counter = 0, tmp_ptr = strtok(optarg, ",");
+            tmp_ptr && (counter < (int)(sizeof(co.igmp.address)/sizeof(in_addr_t)));
+            counter++, tmp_ptr = strtok(NULL, ","))
           co.igmp.address[counter] = resolv(tmp_ptr);
-          tmp_ptr = strtok(NULL, ",");
-        }
-
         co.igmp.sources = counter;
         break;
 
@@ -529,7 +524,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_TCP_TSOPT:
         co.tcp.options |= TCP_OPTION_TSOPT;
 
-        if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
+        if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
         {
           long t;
 
@@ -551,7 +546,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_TCP_SACK_EDGE:
         co.tcp.options |= TCP_OPTION_SACK_EDGE;
 
-        if ( (tmp_ptr = (char *) strchr(optarg, ':')) != NULL )
+        if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
         {
           long t;
 
@@ -625,15 +620,10 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_RSVP_ERROR_VALUE:       co.rsvp.error_value = atoi(optarg); break;
       case OPTION_RSVP_SCOPE:             co.rsvp.scope = atoi(optarg); break;
       case OPTION_RSVP_SCOPE_ADDRESS:
-        tmp_ptr = strtok(optarg, ",");
-        for (counter=0; counter < (int)(sizeof(co.rsvp.address)/sizeof(in_addr_t)); counter++)
-        {
-          if (tmp_ptr == NULL) 
-            break;
-
+        for (counter = 0, tmp_ptr = strtok(optarg, ","); 
+             tmp_ptr && (counter < (int)(sizeof(co.rsvp.address)/sizeof(in_addr_t))); 
+             counter++, tmp_ptr = strtok(NULL, ","))
           co.rsvp.address[counter] = resolv(tmp_ptr);
-          tmp_ptr = strtok(NULL, ",");
-        }
         co.rsvp.scope = counter;
         break;
       case OPTION_RSVP_STYLE_OPTION:      co.rsvp.style_opt = atol(optarg); break;
@@ -694,7 +684,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
                                      co.eigrp.k5 = atoi(optarg); break;
       case OPTION_EIGRP_HOLD:        co.eigrp.hold = atoi(optarg); break;
       case OPTION_EIGRP_IOS_VERSION:
-        if ( (tmp_ptr = (char *) strchr(optarg, '.')) != NULL )
+        if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
         {
           int t;
 
@@ -707,7 +697,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
         }
         break;
       case OPTION_EIGRP_PROTO_VERSION:
-        if ( (tmp_ptr = (char *) strchr(optarg, '.')) != NULL )
+        if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
         {
           int t;
 
@@ -727,7 +717,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_EIGRP_LOAD:        co.eigrp.load = atoi(optarg); break;
       case OPTION_EIGRP_RELIABILITY: co.eigrp.reliability = atoi(optarg); break;
       case OPTION_EIGRP_DESINATION:
-        if ( (tmp_ptr = (char *) strchr(optarg, '/')) == NULL )
+        if ( (tmp_ptr = strchr(optarg, '/')) == NULL )
           co.eigrp.dest   = resolv(optarg);
         else
         {
@@ -770,15 +760,10 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_OSPF_HELLO_BACKUP:   co.ospf.hello_backup = resolv(optarg); break;
       case OPTION_OSPF_HELLO_NEIGHBOR: co.ospf.neighbor = atoi(optarg); break;
       case OPTION_OSPF_HELLO_ADDRESS:
-        tmp_ptr = strtok(optarg, ",");
-        for (counter=0; counter < (int)(sizeof(co.ospf.address)/sizeof(in_addr_t)); counter++)
-        {
-          if (tmp_ptr == NULL)
-            break;
-
+        for (counter = 0, tmp_ptr = strtok(optarg, ","); 
+             tmp_ptr && (counter < (int)(sizeof(co.ospf.address)/sizeof(in_addr_t))); 
+             counter++, tmp_ptr = strtok(NULL, ","))
           co.ospf.address[counter] = resolv(tmp_ptr);
-          tmp_ptr = strtok(NULL, ",");
-        }
         co.ospf.neighbor = counter;
         break;
       case OPTION_OSPF_DD_MTU:            co.ospf.dd_mtu = atoi(optarg); break;
@@ -892,7 +877,6 @@ static void listProtocols(void)
            i,
            ptbl->acronym,
            ptbl->description);
-
 }
 
 /* NOTE: Ugly hack, but necessary! */

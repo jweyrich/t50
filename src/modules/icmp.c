@@ -26,8 +26,7 @@ Description:   This function configures and sends the ICMP packet header.
 Targets:       N/A */
 void icmp(const struct config_options * const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
-         offset;
+  size_t greoptlen;   /* GRE options size. */
 
   struct iphdr * ip;
 
@@ -63,11 +62,8 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
       icmp->un.gateway = INADDR_RND(co->icmp.gateway);
   icmp->checksum = 0;
 
-  /* Computing the Packet offset. */
-  offset = sizeof(struct icmphdr);
-
   /* Computing the checksum. */
-  icmp->checksum = co->bogus_csum ? random() : cksum(icmp, offset);
+  icmp->checksum = co->bogus_csum ? random() : cksum(icmp, sizeof(struct icmphdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

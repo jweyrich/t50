@@ -56,7 +56,7 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   udp->source = htons(IPPORT_RND(co->source));
   udp->dest   = htons(IPPORT_RND(co->dest));
   udp->len    = htons(sizeof(struct udphdr));
-  udp->check  = 0;
+  udp->check  = 0;    /* needed 'cause of cksum(), below! */
 
   /* Fill PSEUDO Header structure. */
   pseudo           = (struct psdhdr *)((void *)udp + sizeof(struct udphdr));

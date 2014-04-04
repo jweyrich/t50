@@ -26,8 +26,7 @@ Description:   This function configures and sends the EGP packet header.
 Targets:       N/A */
 void egp(const struct config_options * const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
-         offset;
+  size_t greoptlen;   /* GRE options size. */
 
   struct iphdr * ip;
 
@@ -39,9 +38,9 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr)   +
-    greoptlen              +
-    sizeof(struct egp_hdr) +
-    sizeof(struct egp_acq_hdr);
+          greoptlen              +
+          sizeof(struct egp_hdr) +
+          sizeof(struct egp_acq_hdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -51,8 +50,8 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        sizeof(struct egp_hdr)     +
+        sizeof(struct iphdr)    +
+        sizeof(struct egp_hdr)  +
         sizeof(struct egp_acq_hdr));
 
   /*
@@ -70,17 +69,14 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   egp->sequence = __RND(co->egp.sequence);
   egp->check    = 0;
 
-  offset  = sizeof(struct egp_hdr);
-
   /* EGP Acquire Header structure. */
-  egp_acq        = (struct egp_acq_hdr *)((void *)egp + offset);
+  egp_acq        = (struct egp_acq_hdr *)((void *)egp + sizeof(struct egp_hdr));
   egp_acq->hello = __RND(co->egp.hello);
   egp_acq->poll  = __RND(co->egp.poll);
 
-  offset += sizeof(struct egp_acq_hdr);
-
   /* Computing the checksum. */
-  egp->check    = co->bogus_csum ? random() : cksum(egp, offset);
+  egp->check    = co->bogus_csum ? random() : 
+    cksum(egp, sizeof(struct egp_hdr) + sizeof(struct egp_acq_hdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
