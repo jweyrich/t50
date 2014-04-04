@@ -108,7 +108,8 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = htons(__RND(co->rip.domain));
 
-  length = sizeof(struct udphdr) + RIP_HEADER_LENGTH;
+  /* DON'T NEED THIS */
+  /* length = sizeof(struct udphdr) + RIP_HEADER_LENGTH; */
 
   /*
    * RIP-2 MD5 Authentication (RFC 2082)
@@ -165,7 +166,8 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
 
-    length += RIP_AUTH_LENGTH;
+    /* DON'T NEED THIS */
+    /* length += RIP_AUTH_LENGTH; */
   }
 
   /*
@@ -204,7 +206,8 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
-  length += RIP_MESSAGE_LENGTH;
+  /* DON'T NEED THIS */
+  /* length += RIP_MESSAGE_LENGTH; */
 
   /*
    * XXX Playing with:
@@ -233,7 +236,8 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     for (counter = 0; counter < size; counter++)
       *buffer.byte_ptr++ = random();
 
-    length += RIP_TRAILER_LENGTH + size;
+    /* DON'T NEED THIS */
+    /* length += RIP_TRAILER_LENGTH + size; */
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
@@ -242,12 +246,17 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length);
+  pseudo->len      = htons(length = buffer.ptr - (void *)udp);
 
-  length += sizeof(struct psdhdr);
+  /* FIX: buffer.ptr points to 'pseudo' So, it is simple to calculate the size used
+          by cksum() function.
+
+          This is easier than accumulate the "length" through
+          various conditionals above! */
 
   /* Computing the checksum. */
-  udp->check  = co->bogus_csum ? random() : cksum(udp, length);
+  udp->check  = co->bogus_csum ? random() : 
+    cksum(udp, length + sizeof(struct psdhdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -32,7 +32,6 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
-         length,
          counter;
 
   /* Packet and Checksum. */
@@ -101,7 +100,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
   *buffer.byte_ptr++ = __RND(co->rsvp.session_flags);
   *buffer.word_ptr++ = htons(__RND(co->rsvp.session_port));
 
-  length = sizeof(struct rsvp_common_hdr) + RSVP_LENGTH_SESSION;
+  /* DON'T NEED THIS! */
+  /* length = sizeof(struct rsvp_common_hdr) + RSVP_LENGTH_SESSION; */
 
   /*
    * The RESV_HOP Object Class is present for the following:
@@ -138,7 +138,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.hop_addr);
     *buffer.dword_ptr++ = htonl(__RND(co->rsvp.hop_iface));
 
-    length += RSVP_LENGTH_RESV_HOP;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_RESV_HOP; */
   }
 
   /*
@@ -167,7 +168,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = 1;
     *buffer.dword_ptr++ = htonl(__RND(co->rsvp.time_refresh));
 
-    length += RSVP_LENGTH_TIME_VALUES;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_TIME_VALUES; */
   }
 
   /*
@@ -203,7 +205,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = __RND(co->rsvp.error_code);
     *buffer.word_ptr++ = htons(__RND(co->rsvp.error_value));
 
-    length += RSVP_LENGTH_ERROR_SPEC;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_ERROR_SPEC; */
   }
 
   /*
@@ -245,7 +248,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(__RND(co->rsvp.sender_port));
 
-    length += RSVP_LENGTH_SENDER_TEMPLATE;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_SENDER_TEMPLATE; */
 
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -312,7 +316,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
         break;
     }
 
-    length += RSVP_LENGTH_SENDER_TSPEC + TSPEC_SERVICES(co->rsvp.tspec);
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_SENDER_TSPEC + TSPEC_SERVICES(co->rsvp.tspec); */
 
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -360,7 +365,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.word_ptr++ = htons((ADSPEC_SERVICES(co->rsvp.adspec) -
           ADSPEC_MESSAGE_HEADER)/4);
 
-    length += RSVP_LENGTH_ADSPEC;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_ADSPEC; */
 
     /*
      * The Use of RSVP with IETF Integrated Services (RFC 2210)
@@ -408,7 +414,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
     *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_mtu));
 
-    length += ADSPEC_PARAMETER_LENGTH;
+    /* DON'T NEED THIS! */
+    /* length += ADSPEC_PARAMETER_LENGTH; */
 
     /* Identifying the ADSPEC and building it. */
     switch (co->rsvp.adspec)
@@ -466,7 +473,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
         *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
         *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dsum));
 
-        length += ADSPEC_GUARANTEED_LENGTH;
+        /* DON'T NEED THIS! */
+        /* length += ADSPEC_GUARANTEED_LENGTH; */
 
         /* Going to the next ADSPEC, if it needs to do sco-> */
         if (co->rsvp.adspec == ADSPEC_CONTROLLED_SERVICE)
@@ -490,7 +498,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
           *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
           *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
 
-          length += ADSPEC_CONTROLLED_LENGTH;
+          /* DON'T NEED THIS! */
+          /* length += ADSPEC_CONTROLLED_LENGTH; */
         }
         break;
     }
@@ -522,7 +531,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = 1;
     *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.confirm_addr);
 
-    length += RSVP_LENGTH_RESV_CONFIRM;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_RESV_CONFIRM; */
   }
 
   /*
@@ -572,7 +582,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
       for(counter = 0; counter < co->rsvp.scope ; counter ++)
         *buffer.inaddr_ptr++ = INADDR_RND(co->rsvp.address[counter]);
 
-      length += RSVP_LENGTH_SCOPE(co->rsvp.scope);
+      /* DON'T NEED THIS! */
+      /* length += RSVP_LENGTH_SCOPE(co->rsvp.scope); */
     }
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
@@ -593,13 +604,21 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = htonl(__RND(co->rsvp.style_opt) << 8);
 
-    length += RSVP_LENGTH_STYLE;
+    /* DON'T NEED THIS! */
+    /* length += RSVP_LENGTH_STYLE; */
   }
+
+  /* FIX: buffer.ptr alrealy points past the last byte writen on
+          the buffer. So, it is simple to calculate the size used
+          by cksum() function.
+
+          This is easier than accumulate the "length" through
+          various conditionals above! */
 
   /* Computing the checksum. */
   rsvp->check   = co->bogus_csum ?
     random() :
-    cksum(rsvp, length);
+    cksum(rsvp, buffer.ptr - (void *)rsvp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

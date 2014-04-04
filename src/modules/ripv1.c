@@ -29,7 +29,7 @@ Targets:       N/A */
 void ripv1(const struct config_options *const co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
-         offset;
+         length;
 
   mptr_t buffer;
 
@@ -69,9 +69,7 @@ void ripv1(const struct config_options *const co, size_t *size)
   udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
 
-  offset = sizeof(struct udphdr);
-
-  buffer.ptr = (void *)udp + offset;
+  buffer.ptr = (void *)udp + sizeof(struct udphdr);
 
   /*
    * Routing Information Protocol (RIP) (RFC 1058)
@@ -105,7 +103,8 @@ void ripv1(const struct config_options *const co, size_t *size)
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
-  offset += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH;
+  /* DON'T NEED THIS */
+  /* length += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH; */
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = (struct psdhdr *)buffer.ptr;
@@ -113,12 +112,11 @@ void ripv1(const struct config_options *const co, size_t *size)
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(offset);
-
-  offset += sizeof(struct psdhdr);
+  pseudo->len      = htons(length = buffer.ptr - (void *)udp);
 
   /* Computing the checksum. */
-  udp->check  = co->bogus_csum ? random() : cksum(udp, offset);
+  udp->check  = co->bogus_csum ? random() : 
+    cksum(udp, buffer.ptr - (void *)udp + sizeof(struct psdhdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

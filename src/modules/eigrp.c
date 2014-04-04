@@ -33,7 +33,6 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
          eigrp_tlv_len, /* EIGRP TLV size. */
-         offset,
          counter;
 
   in_addr_t dest;       /* EIGRP Destination address */
@@ -91,9 +90,10 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   eigrp->as          = htonl(__RND(co->eigrp.as));
   eigrp->check       = 0;
 
-  offset  = sizeof(struct eigrp_hdr);
+  /* DON'T NEED THIS */
+  /* length  = sizeof(struct eigrp_hdr); */
 
-  buffer.ptr = (void *)eigrp + offset;
+  buffer.ptr = (void *)eigrp + sizeof(struct eigrp_hdr);
 
   /*
    * Every live EIGRP PCAP file brings Authentication Data TLV first.
@@ -159,10 +159,11 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
       for (counter = 0; counter < stemp; counter++)
         *buffer.byte_ptr++ = random();
 
+      /* DON'T NEED THIS. */
       /* FIXME: Is this correct?!
                 The code, above seems to use a variable size for digest (stemp)
                 and length (if co->eigrp_length != 0). */
-      offset += EIGRP_TLEN_AUTH;
+      /* length += EIGRP_TLEN_AUTH; */
     }
   }
 
@@ -289,10 +290,11 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);
       buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
 
-      offset += (co->eigrp.type == EIGRP_TYPE_INTERNAL ?
+      /* DON'T NEED THIS. */
+      /* length += (co->eigrp.type == EIGRP_TYPE_INTERNAL ?
           EIGRP_TLEN_INTERNAL :
           EIGRP_TLEN_EXTERNAL) +
-        EIGRP_DADDR_LENGTH(prefix);
+        EIGRP_DADDR_LENGTH(prefix); */
     }
     /*
      * In the other hand,   EIGRP Packet for Hello can carry Paremeter,
@@ -344,7 +346,8 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(co->eigrp.hold);
 
-        offset += EIGRP_TLEN_PARAMETER;
+        /* DON'T NEED THIS. */
+        /* length += EIGRP_TLEN_PARAMETER; */
 
         /* Going to the next TLV, if it needs to do sco-> */
         if (co->eigrp.type == EIGRP_TYPE_SOFTWARE ||
@@ -371,7 +374,8 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
           *buffer.byte_ptr++ = __RND(co->eigrp.ver_major);
           *buffer.byte_ptr++ = __RND(co->eigrp.ver_minor);
 
-          offset += EIGRP_TLEN_SOFTWARE;
+          /* DON'T NEED THIS. */
+          /* length += EIGRP_TLEN_SOFTWARE; */
 
           /* Going to the next TLV, if it needs to do sco-> */
           if (co->eigrp.type == EIGRP_TYPE_MULTICAST)
@@ -417,8 +421,8 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
                 co->eigrp.length : EIGRP_TLEN_MULTICAST);
             *buffer.dword_ptr++ = htonl(__RND(co->eigrp.multicast));
 
-            offset += EIGRP_TLEN_MULTICAST +
-              EIGRP_TLEN_SEQUENCE;
+            /* DON'T NEED THIS. */
+            /* length += EIGRP_TLEN_MULTICAST + EIGRP_TLEN_SEQUENCE; */
           }
         }
     }
@@ -426,7 +430,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
-    random() : cksum(eigrp, offset);
+    random() : cksum(eigrp, buffer.ptr - (void *)eigrp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

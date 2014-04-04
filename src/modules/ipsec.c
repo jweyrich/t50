@@ -29,7 +29,6 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   size_t greoptlen,   /* GRE options size. */
          ip_ah_icv,   /* IPSec AH Integrity Check Value (ICV). */
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
-         offset,
          counter;
 
   /* Packet. */
@@ -95,9 +94,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
 
-  offset = sizeof(struct ip_auth_hdr);
-
-  buffer.ptr = (void *)ip_auth + offset;
+  buffer.ptr = (void *)ip_auth + sizeof(struct ip_auth_hdr);
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < ip_ah_icv; counter++)
@@ -108,14 +105,12 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_esp->spi    = htonl(__RND(co->ipsec.esp_spi));
   ip_esp->seq_no = htonl(__RND(co->ipsec.esp_sequence));
 
-  offset += sizeof(struct ip_esp_hdr);
   buffer.ptr += sizeof(struct ip_esp_hdr);
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)
     *buffer.byte_ptr++ = random();
 
-  /* FIXME: Is this correct?! */
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }

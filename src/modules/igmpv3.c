@@ -107,7 +107,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_query->csum     = co->bogus_csum ?
       random() :
       cksum(igmpv3_query, 
-        sizeof(struct igmpv3_query) + IGMPV3_TLEN_NSRCS(co->igmp.sources));
+        buffer.ptr - (void *)igmpv3_query);
   }
 
   /* GRE Encapsulation takes place. */

@@ -29,7 +29,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   size_t greoptlen,   /* GRE options size. */
          dccp_length, /* DCCP header length. */
          dccp_ext_length, /* DCCP Extended Sequence Number length. */
-         offset;
+         length;
 
   /* Packet and Checksum. */
   void *buffer_ptr;
@@ -159,10 +159,10 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   dccp->dccph_seq2     = co->dccp.ext ? 0 : __RND(co->dccp.sequence_02);
   dccp->dccph_checksum = 0;
 
-  offset  = sizeof(struct dccp_hdr);
+  length  = sizeof(struct dccp_hdr);
 
   /* NOTE: Not using union 'mptr_t' this time!!! */
-  buffer_ptr = (void *)dccp + offset;
+  buffer_ptr = (void *)dccp + sizeof(struct dccp_hdr);
 
   /* DCCP Extended Header structure making a pointer to Checksum. */
   if (co->dccp.ext)
@@ -170,7 +170,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     dccp_ext = (struct dccp_hdr_ext *)buffer_ptr;
     dccp_ext->dccph_seq_low = htonl(__RND(co->dccp.sequence_03));
 
-    offset += sizeof(struct dccp_hdr_ext);
+    buffer_ptr += sizeof(struct dccp_hdr_ext);
   }
 
   /* Identifying the DCCP Type and building it. */
@@ -178,21 +178,21 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   {
     case DCCP_PKT_REQUEST:
       /* DCCP Request Header structure making a pointer to Checksum. */
-      dccp_req = (struct dccp_hdr_request *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+      dccp_req = (struct dccp_hdr_request *)buffer_ptr;
       dccp_req->dccph_req_service = htonl(__RND(co->dccp.service));
 
-      offset += sizeof(struct dccp_hdr_request);
+      buffer_ptr += sizeof(struct dccp_hdr_request);
       break;
 
     case DCCP_PKT_RESPONSE:
       /* DCCP Response Header structure making a pointer to Checksum. */
-      dccp_res = (struct dccp_hdr_response *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+      dccp_res = (struct dccp_hdr_response *)buffer_ptr;
       dccp_res->dccph_resp_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_res->dccph_resp_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
       dccp_res->dccph_resp_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
       dccp_res->dccph_resp_service               = htonl(__RND(co->dccp.service));
 
-      offset += sizeof(struct dccp_hdr_response);
+      buffer_ptr += sizeof(struct dccp_hdr_response);
     case DCCP_PKT_DATA:
       break;
 
@@ -203,7 +203,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     case DCCP_PKT_CLOSE:
     case DCCP_PKT_CLOSEREQ:
       /* DCCP Acknowledgment Header structure making a pointer to Checksum. */
-      dccp_ack = (struct dccp_hdr_ack_bits *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+      dccp_ack = (struct dccp_hdr_ack_bits *)buffer_ptr;
       dccp_ack->dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_ack->dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
       /* Until DCCP Options implementation. */
@@ -213,33 +213,32 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
       else
         dccp_ack->dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
 
-      offset += sizeof(struct dccp_hdr_ack_bits);
+      buffer_ptr += sizeof(struct dccp_hdr_ack_bits);
       break;
 
     default:
       /* DCCP Reset Header structure making a pointer to Checksum. */
-      dccp_rst = (struct dccp_hdr_reset *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+      dccp_rst = (struct dccp_hdr_reset *)buffer_ptr;
       dccp_rst->dccph_reset_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
       dccp_rst->dccph_reset_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
       dccp_rst->dccph_reset_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
       dccp_rst->dccph_reset_code                  = __RND(co->dccp.rst_code);
 
-      offset += sizeof(struct dccp_hdr_reset);
+      buffer_ptr += sizeof(struct dccp_hdr_reset);
       break;
   }
 
   /* PSEUDO Header structure??? */
-  pseudo = (struct psdhdr *)(buffer_ptr + (offset - sizeof(struct dccp_hdr)));
+  pseudo = (struct psdhdr *)buffer_ptr;
   pseudo->saddr = co->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero  = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(offset);
-
-  offset += sizeof(struct psdhdr);
+  pseudo->len      = htons(length = buffer_ptr - (void *)dccp);
 
   /* Computing the checksum. */
-  dccp->dccph_checksum = co->bogus_csum ? random() : cksum(dccp, offset);
+  dccp->dccph_checksum = co->bogus_csum ? random() : 
+    cksum(dccp, length + sizeof(struct psdhdr));
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);
