@@ -1,78 +1,102 @@
 How to create a new module for T50
 
-Suppose you want to add a new protocol for packet injection for T50. Let's say
-you want to add "Stream Control Transport Protocol" (SCTP). For this example I
-choose this protocol because it's defined in <linux/in.h> header as
-IPPROTO_SCTP. You can code any protocol you want, if this protocol description is not 
-available on standard header files, you *MUST* create your own definition. The
-IPPROTO_T50 definition, for instance, is defined at 'src/include/defines.h' as
-69.
+Suppose you want to add a new protocol for packet injection on T50. Let's say
+you want to add "Stream Control Transport Protocol" (SCTP). 
 
-STEP 1:
+For this example I choose this protocol because it's defined in <linux/in.h>
+header as IPPROTO_SCTP. You can code any protocol you want. But if your protocol
+description (IPPROTO_xxx) isn't available on standard header files, you *MUST*
+create your own definition on 'src/include/defines.h' file. The IPPROTO_T50
+definition, for instance, is defined there.
 
-The first step is to create a module that allocate and fills the packet buffer
+Adding a module is a 5 step process:
+
+** STEP 1:
+
+The first step is to create a module that re-allocate, fills the packet buffer
 and returns the packet buffer size to the caller. All module routines *MUST*
 follow the signature defined in "typedefs.h":
 
-  typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *); │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 Your module *MUST* be created in src/modules/ directory as 'sctp.c'. You
 *SHOULD* code something like this:
 
-  #include <common.h>  /* Include all t50 definitions and prototypes. */
-
-  static void fill_sctp(void *buffer);
-  static size_t get_sctp_buffer_size(void);
-
-  /* This is the module! */
-  void sctp(const struct config_options * const __restrict__ co, size_t *size)
-  {
-    /* Working pointers to the buffer */
-    struct iphdr *ip;
-
-    /* Get the packet size */
-    *size = sizeof(struct iphdr) + get_sctp_buffer_size();
-
-    /* Tries to reallocate space for the packet buffer, if necessary. */
-    alloc_packet(*size);
-
-    /* Fill IP header */
-    ip = ip_header(packet, *size, co);
-
-    fill_sctp(packet + sizeof(struct iphdr));
-  }
-
-  /* This will fill the buffer part of sctp protocol. */
-  static void fill_sctp(void *buffer, size_t size) { ... }
-
-  /* This is only an example! */
-  #define SCTP_SIZE 524
-  static size_t get_sctp_buffer_size(void) { return SCTP_SIZE; }
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ #include <common.h>  /* Include all t50 definitions and prototypes. */       │
+│                                                                              │
+│ static void fill_sctp(void *buffer);                                         │
+│ static size_t get_sctp_buffer_size(void);                                    │
+│                                                                              │
+│ /* This is the module! */                                                    │
+│ void sctp(const struct config_options * const __restrict__ co, size_t *size) │
+│ {                                                                            │
+│   /* Working pointers to the buffer */                                       │
+│   struct iphdr *ip;                                                          │
+│                                                                              │
+│   /* Get the packet size */                                                  │
+│   *size = sizeof(struct iphdr) + get_sctp_buffer_size();                     │
+│                                                                              │
+│   /* Tries to reallocate space for the packet buffer, if necessary. */       │
+│   alloc_packet(*size);                                                       │
+│                                                                              │
+│   /* Fill IP header */                                                       │
+│   ip = ip_header(packet, *size,                                              │
+│                                                                              │
+│   fill_sctp(packet + sizeof(struct iphdr));                                  │
+│ }                                                                            │
+│                                                                              │
+│ /* This will fill the buffer part of sctp protocol. */                       │
+│ static void fill_sctp(void *buffer, size_t size) { ... }                     │
+│                                                                              │
+│ /* This is only an example! */                                               │
+│ #define SCTP_SIZE 524                                                        │
+│ static size_t get_sctp_buffer_size(void) { return SCTP_SIZE; }               │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 Notice that "packet" is a global pointer to the packet buffer used by all
-modules. It is necessary to reallocate the buffer for every protocol,
-since the previous module could leave a very small buffer for your module use.
+modules. It is necessary to reallocate the buffer for every module, since the
+previous module who use it could leave a very small buffer behind.
 
-Take a look at the actual modules. They are a little but more complicated than
-this, but essentially, that's all they do.
+Any protocol specific structures, types *SHOULD* be defined in a separated
+header file 'sctp.h' in 'src/include/protocol/' directory and this header *MUST*
+be added to '/src/include/common.h' file. 
 
-STEP 2:
+The prototype of the module function *MUST* be added to 'src/include/modules.h'
+file:
 
-Create an entry on 'src/modules.c'. You *MUST* add a line like this:
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ extern void sctp(const struct config_options * const __restrict__, size_t *); │
+└───────────────────────────────────────────────────────────────────────────────┘
 
-  MODULE_ENTRY(IPPROTO_SCTP, "SCTP","Stream Control Transport Protocol", sctp)
+Take a look at the actual modules. They are a little more complicated than this,
+but essentially, that's all they do.
+
+** STEP 2:
+
+Create an entry on 'src/modules.c'. You *MUST* add a line like this before
+END_MODULES_TABLE declaration: 
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│   MODULE_ENTRY(IPPROTO_SCTP, "SCTP","Stream Control Transport Protocol", sctp) │
+│ END_MODULES_TABLE                                                              │
+└────────────────────────────────────────────────────────────────────────────────┘
 
 This way T50 now knows how to fill the packet for your protocol.
 
-STEP 3:
+** STEP 3:
 
 Change config_options structure on 'src/config.c' and 'src/include/config.h'.
 Let's say that SCTP needs only one item called 'tag' (a 32 bits value) that
 could be a random value. You can add a new structure on config_options:
 
-  struct {
-    uint32_t tag;
-  } sctp;
+┌───────────────────────────────────────────────────────────────────────────┐
+│ struct {                                                                  │
+│   uint32_t tag;                                                           │
+│ } sctp;                                                                   │
+└───────────────────────────────────────────────────────────────────────────┘
 
 OBS: The "random" part depends on the module. The macro __RND(), defined in
 'src/include/defines.h' will return an random value if its parameter is 0. You
@@ -87,23 +111,29 @@ something different from 0.
 Add an entry called 'sctp-tag' on long_opt array to allow you to change this
 value through the command line:
 
-  { "sctp-tag",  required_argument, NULL, OPTION_SCTP_TAG },
+┌───────────────────────────────────────────────────────────────────────────┐
+│ { "sctp-tag",  required_argument, NULL, OPTION_SCTP_TAG },                │
+└───────────────────────────────────────────────────────────────────────────┘
 
 And, finally, change getConfigOptions() function, adding a 'case' inside the
 'switch(cli_opts)' block, like this:
 
-  case OPTION_SCTP_TAG: co.sctp.tag = atoi(optarg): break;
+┌───────────────────────────────────────────────────────────────────────────┐
+│ case OPTION_SCTP_TAG: co.sctp.tag = atoi(optarg): break;                  │
+└───────────────────────────────────────────────────────────────────────────┘
 
-STEP 4
+** STEP 4
 
 Create a routine showing the usage for SCTP protocol options and put it on
 sctp_help.c at 'src/help/' directory:
 
-  void sctp_help(void)
-  {
-    puts("SCTP Options:\n"
-         "    --sctp-tag NUM               SCTP tag number                  (default RANDOM)\n");
-  }
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ void sctp_help(void)                                                                            │
+│ {                                                                                               │
+│   puts("SCTP Options:\n"                                                                        │
+│        "    --sctp-tag NUM               SCTP tag number                  (default RANDOM)\n"); │
+│ }                                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 To keep the standard, the first line starts with a description of the protocol
 followed by "Options:". The following lines are formated as (printf style):
@@ -116,23 +146,27 @@ depending of what you did in config_options 'co' and your module.
 
 After creating the sctp_help() functiom, put a call on the usage routine at 'src/usage.c':
 
-  ...
-  rsvp_help();
-  ipsec_help();
-  eigrp_help();
-  ospf_help();
-  sctp_help();    /* Added sctp help */
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ ...                                                                           │
+│ rsvp_help();                                                                  │
+│ ipsec_help();                                                                 │
+│ eigrp_help();                                                                 │
+│ ospf_help();                                                                  │
+│ sctp_help();    /* Added sctp help */                                         │
+└───────────────────────────────────────────────────────────────────────────────┘
 
-FINAL STEP
+** STEP 5 (FINAL)
 
 Modify the Makefile adding the object filename (sctp.o) file location on OBJS var:
 
-  ...
-  $(OBJ_DIR)/modules/igmpv1.o \
-  $(OBJ_DIR)/modules/icmp.o \
-  $(OBJ_DIR)/modules/sctp.o \
-  $(OBJ_DIR)/common.o \
-  ...
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ...                                                                            │
+│ $(OBJ_DIR)/modules/igmpv1.o \                                                  │
+│ $(OBJ_DIR)/modules/icmp.o \                                                    │
+│ $(OBJ_DIR)/modules/sctp.o \                           <-- here!                │
+│ $(OBJ_DIR)/common.o \                                                          │
+│ ...                                                                            │
+└────────────────────────────────────────────────────────────────────────────────┘
 
 And test everything trying to compile the project:
 
