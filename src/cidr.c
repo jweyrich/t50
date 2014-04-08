@@ -27,7 +27,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
   uint32_t netmask;
 
   /* Configuring CIDR IP addresses. */
-  if (bits != 0)
+  if (bits > 7 && bits < 32) /* T50 requires CDIR from 8 to 32, where 32 does not require calculation */
   {
     /*
      * @nbrito -- Thu Dec 23 13:06:39 BRST 2010
@@ -66,8 +66,8 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
       char errstr[144];
 
       sprintf(errstr, "internal error detecded -- please, report.\n"
-                      "cidr.hostid > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
-                      MAXIMUM_IP_ADDRESSES);
+                      "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
+                      cidr.hostid, MAXIMUM_IP_ADDRESSES);
       ERROR(errstr);
 
       exit(EXIT_FAILURE);

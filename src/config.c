@@ -837,7 +837,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
     if ((tmp_ptr = strtok(NULL, "/")) != NULL)
       co.bits = atoi(tmp_ptr);
     else
-      co.bits = 32;  /* FIXME: Should be CIDR_MAXIMUM?! */ 
+      co.bits = 32;
   }
 
   return &co;
