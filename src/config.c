@@ -998,8 +998,9 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
       return 0;
     }
 
+  /* NOTE: Check 'bits' here! */
   /* Validate cidr. */
-  if (matches[4] > 32)
+  if (matches[4] < CIDR_MINIMUM || matches[4] > CIDR_MAXIMUM)
   {
     regfree(&re);
     return 0;
