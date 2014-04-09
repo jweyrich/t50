@@ -1002,6 +1002,12 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
   /* Validate cidr. */
   if (matches[4] < CIDR_MINIMUM || matches[4] > CIDR_MAXIMUM)
   {
+    char *stmp;
+
+    asprintf(&stmp, "CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM);
+    ERROR(stmp);
+    free(stmp);
+
     regfree(&re);
     return 0;
   }
