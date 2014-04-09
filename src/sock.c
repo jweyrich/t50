@@ -132,7 +132,8 @@ void sendPacket(const void * const buffer, size_t size, const struct config_opti
     p += sent;
   }
 
-  if (!num_tries)
+  /* FIX */
+  if (num_tries < 0)
   {
 error:
     ERROR("Error sending packet.");
