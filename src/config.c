@@ -394,9 +394,6 @@ struct config_options *getConfigOptions(int argc, char **argv)
   int cli_opts;
   int counter;
 
-  /* The following variables will be used by 'getsubopt()'. */
-  int opt_ind;
-
   char  *optionp;
   char *tmp_ptr;
   char **tokens;
@@ -407,8 +404,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
   setDefaultModuleOption();
 
   /* Checking command line interface options. */
-  opt_ind = 1;
-  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, &opt_ind)) != -1 )
+  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, NULL)) != -1 )
   {
     switch (cli_opts)
     {
