@@ -7,36 +7,38 @@ Legend:
 ! Known issue / missing feature
 
 
-
-T50 5.5 - April 2nd, 2014
+T50 5.5 - April 29th, 2014
  * Code compiles fine with LLVM clang 3.x;
  * SSE is enabled by default in x86-64 architecture (commented on Makefile);
  * Changed return type of module funcions;
  * Small corrections on modules functions;
  * All files were converted to UNIX text format;
- - gre_encapsulation() was still not used on ospf.c;
- - Calls to sendto with second parameter wrong;
+ * gre_encapsulation() was still not used on ospf.c;
+ - Calls to sendto with second parameter were wrong;
  * Function ip_header() added to modules/ip.c.
- - On embeded systems the use of VLAs on modules functions can be hazardous
-    due to restricted stack space. "Differential" buffer reallocation on heap fix this problem.
- * cksum() 5 times faster now.
- * Using a trick to deal with pointers of multiple types on modules functions.
- * New Makefile.
+ - On embeded systems the use of VLAs (Variable Length Arrays) in modules functions can be hazardous
+    due to restricted stack space. "Differential" buffer reallocation on heap fix this problem;
+ * cksum() 5 times faster now (summing QWORDs, DWORDs WORDs and BYTES, in that order);
+ * Using a trick to deal with pointers of multiple types on modules functions;
+ * New Makefile (still needs some tweaks) for better incremental compiling;
  * Minor fix on getOrdinalSuffix() function, no t50.c (11, 12 & 13 have a "th" suffix!).
  + Added comments with FIX, FIXME, NOTE prefix for better code reading.
  * Changed the way modules table are declared. See modules.c for advice.
  * Module table are not order dependant anymore!
- * Created src/help directory and src/include/help.h header to improve module modularity.
+ * Created src/help directory and src/include/help.h header to improve module "modularity".
  * Host name now can be a partial IP or name, optionally followed by "/cidr".
    Partial IP have the format 'a(.b(.c(.d)))'. Formats as 'a.b./cidr' are invalid.
  ! if a name or a full IP is given, the default cidr is 32. T50 will fail showing the message:
    "CIDR must be between 8 and 30.".
+ - CIDR bug above fixed by Fernando Mercês.
  * socket descriptor isolated from anyone except sock.c.
  * "modules" just manipulates the packet buffer. main() actually sends the packet.
  * 'stdout' is now unbuffered on initialization. To avoid line buffer behavior oddities (if any).
  * Added -std=gnu99 to CFLAGS, on Makefile.
  ! Possible wrong way to calculate threshold for turbo mode.
  - Threshold bugs fixed. 
+ ! Possible wrong way to threat SIGCHLD signal.
+ - Added a SIGALRM handler and a timeout of 5 seconds when main process waits for child.
 
 T50 5.4.1 - August 11th, 2013
  - Fixed bug in option parsing.
