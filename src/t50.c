@@ -197,8 +197,17 @@ static void signal_handler(int signal)
            Keept the logic just in case! */
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
+  {
+    /* If is the parent process and SIGALRM, kill the child. */
+    if (signal == SIGALRM)
+      kill(pid, SIGKILL);
 #endif
-    closeSocket();
+
+      closeSocket();
+
+#ifdef __HAVE_TURBO__
+  }
+#endif
 
   /* FIX: The shell documentation (bash) specifies that a process
           when exits because a signal, must return 128+signal#. */
