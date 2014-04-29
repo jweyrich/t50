@@ -158,6 +158,8 @@ int main(int argc, char *argv[])
 #ifdef  __HAVE_TURBO__
     int status;
 
+    /* Wait 5 seconds for child process, then ungracefully closes the program. */
+    alarm(5);
     wait(&status);
 #endif
 
@@ -225,6 +227,14 @@ static void initialize(void)
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGTSTP, &sa, NULL);
 #ifdef  __HAVE_TURBO__
+  /* FIX: Is it wise to simply terminate the main process
+          if the child terminates? 
+
+          Maybe it is wiser if we implement some kind of
+          timeout when waiting for the child to terminate. */
+  sigaction(SIGALRM, &sa, NULL);
+
+  sa.sa_handler = SIG_IGN;
   sigaction(SIGCHLD, &sa, NULL);
 #endif
 
