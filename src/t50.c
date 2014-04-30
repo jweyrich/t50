@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    printf("\b\n%s %s successfully launched on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\b\n%s %s successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,  
       VERSION, 
       getMonth(tm->tm_mon), 
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    printf("\b\n%s %s successfully finished on %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\b\n%s %s successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
       PACKAGE,
       VERSION,
       getMonth(tm->tm_mon),
@@ -196,12 +196,10 @@ static void signal_handler(int signal)
      NOTE: I realize that the act of closing descriptors are reference counted.
            Keept the logic just in case! */
 #ifdef __HAVE_TURBO__
-  /* Kills the child */
-  if (pid > 0)
-    kill(pid, SIGKILL);
-
   if (!IS_CHILD_PID(pid))
   {
+    /* Kills the child process! */
+    kill(pid, SIGKILL);
 #endif
 
       closeSocket();
