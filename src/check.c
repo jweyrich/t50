@@ -23,11 +23,11 @@
 static int checkThreshold(const struct config_options * const __restrict__);
 
 /* Validate options 
-   NOTE: This function must be called befor forking!
+   NOTE: This function must be called before forking!
    Returns 0 on failure. */
 int checkConfigOptions(const struct config_options * const __restrict__ co)
 {
-  /* Warning missed target. */
+  /* Warns about missed target. */
   if (co->ip.daddr == INADDR_ANY)
   {
     ERROR("Need target address. Try --help for usage");

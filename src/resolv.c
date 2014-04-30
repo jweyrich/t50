@@ -69,7 +69,7 @@ in_addr_t resolv(char *name)
 
           case AF_INET6:
             inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr,tmp,46);
-            return inet_addr(tmp);
+            return inet_addr(tmp);  /* FIXME: There is a potential problem here! */
          }
       }
     }

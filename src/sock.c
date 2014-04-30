@@ -112,9 +112,7 @@ void sendPacket(const void * const buffer, size_t size, const struct config_opti
   sin.sin_addr.s_addr = co->ip.daddr; 
 
   /* FIX: There is no garantee that sendto() will deliver the entire packet at once.
-          So, we try MAX_SENDTO_TRIES times before giving up. 
-
-          And the mutex is here now, not in worker() function anymore. */
+          So, we try MAX_SENDTO_TRIES times before giving up. */ 
   p = (void *)buffer;
   for (num_tries = MAX_SENDTO_TRIES; size > 0 && num_tries--;) 
   {

@@ -25,7 +25,7 @@
 /* NOTE: Using GCC structure initialization extension to
          make sure that all fields are initialized correctly. */
 /* NOTE: As C standandard goes, any field not explicitly initialized
-         will be filled by zero. */
+         will be filled with zero. */
 static struct config_options co = {
   /* XXX COMMON OPTIONS                                                         */
   .threshold = 1000,                  /* default threshold                      */
@@ -398,7 +398,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
   char *tmp_ptr;
   char **tokens;
 
-  /* Used by getIpAndCidrFromString() */
+  /* Used by getIpAndCidrFromString() call. */
   T50_tmp_addr_t addr;
 
   setDefaultModuleOption();
@@ -520,16 +520,12 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_TCP_TSOPT:
         co.tcp.options |= TCP_OPTION_TSOPT;
 
+        /* FIX: The code below is faster and smaller than the previous one. */
         if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
         {
-          long t;
-
-          if ((t = atol(tmp_ptr + 1)) != 0)
-            co.tcp.tsecr = t;
-
-          tmp_ptr     = strtok(optarg, ":");
-          if (tmp_ptr != NULL)
-            co.tcp.tsval = atol(tmp_ptr);
+          *tmp_ptr++ = '\0';
+          co.tcp.tsecr = atol(tmp_ptr);
+          co.tcp.tsval = atol(optarg);
         }
         break;
       case OPTION_TCP_SACK_OK:    co.tcp.options |= TCP_OPTION_SACK_OK; break;
@@ -542,16 +538,12 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_TCP_SACK_EDGE:
         co.tcp.options |= TCP_OPTION_SACK_EDGE;
 
+        /* FIX: The code below is faster and smaller than the previous one. */
         if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
         {
-          long t;
-
-          if ((t = atol(tmp_ptr + 1)) != 0)
-            co.tcp.sack_right = t;
-
-          tmp_ptr          = strtok(optarg, ":");
-          if (tmp_ptr != NULL)
-            co.tcp.sack_left = atol(tmp_ptr);
+          *tmp_ptr++ = '\0';
+          co.tcp.sack_right = atol(tmp_ptr);
+          co.tcp.sack_left = atol(optarg);
         }
         break;
 
@@ -680,29 +672,21 @@ struct config_options *getConfigOptions(int argc, char **argv)
                                      co.eigrp.k5 = atoi(optarg); break;
       case OPTION_EIGRP_HOLD:        co.eigrp.hold = atoi(optarg); break;
       case OPTION_EIGRP_IOS_VERSION:
+        /* FIX: The code below is faster and smaller than the previous one. */
         if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
         {
-          int t;
-
-          if ((t = atoi(tmp_ptr + 1)) != 0)
-            co.eigrp.ios_minor = t;
-
-          tmp_ptr           = strtok(optarg, ".");
-          if (tmp_ptr != NULL)
-            co.eigrp.ios_major = atoi(tmp_ptr);
+          *tmp_ptr++ = '\0';
+          co.eigrp.ios_minor = atoi(tmp_ptr);
+          co.eigrp.ios_major = atoi(optarg);
         }
         break;
       case OPTION_EIGRP_PROTO_VERSION:
+        /* FIX: The code below is faster and smaller than the previous one. */
         if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
         {
-          int t;
-
-          if ((t = atoi(tmp_ptr + 1)) != 0)
-            co.eigrp.ver_minor = t;
-
-          tmp_ptr           = strtok(optarg, ".");
-          if (tmp_ptr != NULL)
-            co.eigrp.ver_major = atoi(tmp_ptr);
+          *tmp_ptr++ = '\0';
+          co.eigrp.ver_minor = atoi(tmp_ptr);
+          co.eigrp.ver_major = atoi(optarg);
         }
         break;
       case OPTION_EIGRP_NEXTHOP:     co.eigrp.next_hop = resolv(optarg); break;
@@ -717,10 +701,10 @@ struct config_options *getConfigOptions(int argc, char **argv)
           co.eigrp.dest   = resolv(optarg);
         else
         {
-          co.eigrp.prefix = atoi(tmp_ptr + 1);
-          tmp_ptr        = strtok(optarg, "/");
-          if (tmp_ptr != NULL)
-            co.eigrp.dest = resolv(tmp_ptr);
+          /* FIX: The code below is faster and smaller than the previous one. */
+          *tmp_ptr++ = '\0';
+          co.eigrp.prefix = atoi(tmp_ptr);
+          co.eigrp.dest = resolv(optarg);
         }
         break;
       case OPTION_EIGRP_SOURCE_ROUTER:  co.eigrp.src_router = resolv(optarg); break;
@@ -828,7 +812,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
   {
     /* Otherwise, probably it's a name. Try to resolve it. 
        '/' still marks the optional cidr here. */
-    tmp_ptr = strtok(argv[optind], "/");
+    tmp_ptr = strtok(argv[optind], "/");  /* NOTE: tmp_ptr is never null at this point! */
     co.ip.daddr = resolv(tmp_ptr);
     if ((tmp_ptr = strtok(NULL, "/")) != NULL)
       co.bits = atoi(tmp_ptr);

@@ -196,11 +196,12 @@ static void signal_handler(int signal)
      NOTE: I realize that the act of closing descriptors are reference counted.
            Keept the logic just in case! */
 #ifdef __HAVE_TURBO__
+  /* Kills the child */
+  if (pid > 0)
+    kill(pid, SIGKILL);
+
   if (!IS_CHILD_PID(pid))
   {
-    /* If is the parent process and SIGALRM, kill the child. */
-    if (signal == SIGALRM)
-      kill(pid, SIGKILL);
 #endif
 
       closeSocket();
