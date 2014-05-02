@@ -7,6 +7,10 @@
 # The final executable will be created at release/ sub-directory.
 #
 
+define checkroot()
+	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
+endef
+
 SRC_DIR=./src
 OBJ_DIR=./build
 RELEASE_DIR=./release
@@ -55,18 +59,18 @@ $(OBJ_DIR)/help/ospf_help.o
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.
 CC=gcc
-DFLAGS=-D__HAVE_TURBO__ -DVERSION=\"5.5\"
+DFLAGS=-DVERSION=\"5.5\"
 
 #
 # You can define DEBUG if you want to use GDB. 
 #
-CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR)
+CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR) -std=gnu99
+LDFLAGS=-lpthread
 ifdef DEBUG
-	CFLAGS+=-O0 -std=gnu99
+	CFLAGS+=-O0
 	DFLAGS+=-D__HAVE_DEBUG__ -g
-	LDFLAGS=
 else
-	CFLAGS+=-O3 -std=gnu99 -mtune=native -flto -ffast-math -fomit-frame-pointer
+	CFLAGS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
 
 	# Get architecture
 	ARCH=$(shell arch)
@@ -75,11 +79,13 @@ else
 	endif
 
   DFLAGS+=-DNDEBUG
-	LDFLAGS=-s -O3 -fuse-linker-plugin -flto
+	LDFLAGS+=-s -O3 -fuse-linker-plugin -flto
 endif
 CFLAGS+=$(DFLAGS)
 
-.PHONY: clean install
+.PHONY: all clean install uninstall
+
+all: $(TARGET)
 
 # link
 $(TARGET): $(OBJS)
@@ -102,9 +108,11 @@ clean:
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
+	$(checkroot)
 	gzip -9c ./doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
 	install $(RELEASE_DIR)/t50 /usr/sbin/
 	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
 
 uninstall:
+	$(checkroot)
 	rm -f $(MAN_DIR)/t50.8.gz /usr/sbin/t50
