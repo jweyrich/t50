@@ -7,7 +7,7 @@
 # The final executable will be created at release/ sub-directory.
 #
 
-define checkroot()
+define checkroot
 	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
 endef
 
