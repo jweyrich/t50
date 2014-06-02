@@ -54,9 +54,19 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
    *     address and 'Network Mask' adding one  gives the first IP address
    *     for the CIDR.
    */
-  netmask = ~(0xffffffffUL >> bits);
-  cidr.hostid = (1UL << (32 - bits)) - 2;
-  cidr.__1st_addr = (ntohl(address) & netmask) + 1;
+  if (bits < CIDR_MAXIMUM)
+  {
+    netmask = ~(0xffffffffUL >> bits);
+    cidr.hostid = (1ULL << (32 - bits)) - 2ULL;
+    cidr.__1st_addr = (ntohl(address) & netmask) + 1;
+  }
+  else
+  {
+    cidr.hostid = 0;
+    cidr.__1st_addr = ntohl(address);
+
+    return &cidr;
+  }
 
   /* XXX Sanitizing the maximum host identifier's IP addresses.
    * XXX Should never reaches here!!! */

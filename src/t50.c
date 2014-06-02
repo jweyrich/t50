@@ -126,6 +126,8 @@ int main(int argc, char *argv[])
   if (proto != IPPROTO_T50)
     ptbl += co->ip.protoname;
 
+  co->ip.daddr = htonl(cidr_ptr->__1st_addr);
+
   /* Execute if flood or while threshold greater than 0. */
   while (co->flood || (co->threshold-- > 0))
   {
