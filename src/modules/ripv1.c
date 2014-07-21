@@ -33,6 +33,10 @@ void ripv1(const struct config_options *const co, size_t *size)
 
   mptr_t buffer;
 
+#ifdef __HAVE_DEBUG__
+  void *__pstart, *__pend;
+#endif
+
   struct iphdr * ip;
 
   /* GRE Encapsulated IP Header. */
@@ -46,12 +50,21 @@ void ripv1(const struct config_options *const co, size_t *size)
 
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr)  +
-                greoptlen             +
-                sizeof(struct udphdr) +
-                rip_hdr_len(0);
+          greoptlen             +
+          sizeof(struct udphdr) +
+          rip_hdr_len(0)        +
+          sizeof(struct psdhdr);
+
+#ifdef __HAVE_DEBUG__
+  PRINT_CALC_SIZE(*size);
+#endif
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
+
+#ifdef __HAVE_DEBUG__
+  __pstart = packet;
+#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -113,6 +126,11 @@ void ripv1(const struct config_options *const co, size_t *size)
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = buffer.ptr - (void *)udp);
+
+#ifdef __HAVE_DEBUG__
+  __pend = (void *)pseudo + sizeof(struct psdhdr);
+  PRINT_PTR_DIFF(__pstart, __pend);
+#endif
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? random() : 

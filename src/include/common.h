@@ -53,6 +53,8 @@
 #include <linux/dccp.h>
 #include <linux/if_ether.h>
 
+#include <debug.h>
+
 #include <typedefs.h>
 #include <defines.h>
 

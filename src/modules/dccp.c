@@ -34,6 +34,10 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   void *buffer_ptr;
 
+#ifdef __HAVE_DEBUG__
+  void *__pstart, *__pend;
+#endif
+
   struct iphdr * ip;
 
   /* GRE Encapsulated IP Header. */
@@ -59,10 +63,19 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     greoptlen               +
     sizeof(struct dccp_hdr) +
     dccp_ext_length         +
-    dccp_length;
+    dccp_length             +
+    sizeof(struct psdhdr);
+
+#ifdef __HAVE_DEBUG__
+  PRINT_CALC_SIZE(*size);
+#endif
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
+
+#ifdef __HAVE_DEBUG__
+  __pstart = packet;
+#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -148,7 +161,6 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
    *       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    *       |  Data Offset  | CCVal | CsCov |           Checksum            |
    *       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
    *       |     |       |X|                                               |
    *       | Res | Type  |=|          Sequence Number (low bits)           |
    *       |     |       |0|                                               |
@@ -235,6 +247,11 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->zero  = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = buffer_ptr - (void *)dccp);
+
+#ifdef __HAVE_DEBUG__
+  __pend = (void *)pseudo + sizeof(struct psdhdr);
+  PRINT_PTR_DIFF(__pstart, __pend);
+#endif
 
   /* Computing the checksum. */
   dccp->dccph_checksum = co->bogus_csum ? random() : 

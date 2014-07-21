@@ -7,7 +7,8 @@ Legend:
 ! Known issue / missing feature
 
 
-T50 5.5 - April 29th, 2014
+T50 5.5 - July 21st, 2014
+ - Fixed bugs of modules memory allocations.
  * Code compiles fine with LLVM clang 3.x;
  * SSE is enabled by default in x86-64 architecture (commented on Makefile);
  * Changed return type of module funcions;

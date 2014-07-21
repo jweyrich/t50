@@ -34,6 +34,10 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   mptr_t buffer;
 
+#ifdef __HAVE_DEBUG__
+  void *__pstart, *__pend;
+#endif
+
   struct iphdr * ip;
 
   /* GRE Encapsulated IP Header. */
@@ -49,10 +53,19 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   *size = sizeof(struct iphdr)  +
           greoptlen             +
           sizeof(struct udphdr) +
-          rip_hdr_len(co->rip.auth);
+          rip_hdr_len(co->rip.auth) +
+          sizeof(struct psdhdr);
+
+#ifdef __HAVE_DEBUG__
+  PRINT_CALC_SIZE(*size);
+#endif
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
+
+#ifdef __HAVE_DEBUG__
+  __pstart = packet;
+#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -247,6 +260,11 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = buffer.ptr - (void *)udp);
+
+#ifdef __HAVE_DEBUG__
+  __pend = (void *)pseudo + sizeof(struct psdhdr);
+  PRINT_PTR_DIFF(__pstart, __pend);
+#endif
 
   /* FIX: buffer.ptr points to 'pseudo' So, it is simple to calculate the size used
           by cksum() function.

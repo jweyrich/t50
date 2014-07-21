@@ -41,9 +41,11 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   mptr_t buffer;
 
-  struct iphdr * ip;
+#ifdef __HAVE_DEBUG__
+  void *__pstart, *__pend;
+#endif
 
-  /* EIGRP header. */
+  struct iphdr * ip;
   struct eigrp_hdr * eigrp;
 
   assert(co != NULL);
@@ -52,12 +54,21 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   prefix = __RND(co->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
   *size = sizeof(struct iphdr)     +
-    greoptlen                +
-    sizeof(struct eigrp_hdr) +
-    eigrp_tlv_len;
+          greoptlen                +
+          sizeof(struct eigrp_hdr) +
+          eigrp_tlv_len            +
+          8;    /* OBS: Ugly workaround! Must change this later! */
+
+#ifdef __HAVE_DEBUG__
+  PRINT_CALC_SIZE(*size);
+#endif
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
+
+#ifdef __HAVE_DEBUG__
+  __pstart = packet;
+#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -428,6 +439,11 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
     }
   }
 
+#ifdef __HAVE_DEBUG__
+  __pend = buffer.ptr;
+  PRINT_PTR_DIFF(__pstart, __pend);
+#endif
+
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
     random() : cksum(eigrp, buffer.ptr - (void *)eigrp);
@@ -442,7 +458,7 @@ static size_t eigrp_hdr_len(const uint16_t foo,
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */
-  size_t size=0;
+  size_t size = 0;
 
   /*
    * The Authentication Data TVL must be used only in some cases:
