@@ -23,10 +23,6 @@
 Description:   This function configures and sends the IGMPv1 packet header. */
 void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
 {
-#ifdef __HAVE_DEBUG__
-  void *__pstart, *__pend;
-#endif
-
   size_t greoptlen;     /* GRE options size. */
 
   struct iphdr * ip;
@@ -44,16 +40,8 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
           greoptlen            +
           sizeof(struct igmphdr);
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -72,11 +60,6 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   igmpv1->csum  = co->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));
-
-#ifdef __HAVE_DEBUG__
-  __pend = (void *)igmpv1 + sizeof(struct igmphdr);
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

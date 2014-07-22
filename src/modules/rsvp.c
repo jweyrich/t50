@@ -34,10 +34,6 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
          objects_length,  /* RSVP objects length. */
          counter;
 
-#ifdef __HAVE_DEBUG__
-  void *__pstart, *__pend;
-#endif
-
   /* Packet and Checksum. */
   mptr_t buffer;
 
@@ -55,16 +51,8 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
           greoptlen                      +
           objects_length;
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate the packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -619,11 +607,6 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
     /* DON'T NEED THIS! */
     /* length += RSVP_LENGTH_STYLE; */
   }
-
-#ifdef __HAVE_DEBUG__
-  __pend = buffer.ptr;
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* FIX: buffer.ptr alrealy points past the last byte writen on
           the buffer. So, it is simple to calculate the size used

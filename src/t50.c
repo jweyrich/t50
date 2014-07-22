@@ -128,6 +128,9 @@ int main(int argc, char *argv[])
 
   co->ip.daddr = htonl(cidr_ptr->__1st_addr);
 
+  /* Preallocate packet buffer. */
+  alloc_packet(INITIAL_PACKET_SIZE);
+
   /* Execute if flood or while threshold greater than 0. */
   while (co->flood || (co->threshold-- > 0))
   {

@@ -29,6 +29,9 @@
 #define ON    1
 #define OFF   0
 
+/* Initial packet buffer preallocated size (1 kB). */
+#define INITIAL_PACKET_SIZE 1024
+
 /* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */
 #define CIDR_MINIMUM 8
 #define CIDR_MAXIMUM 32 // fix #7

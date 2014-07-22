@@ -34,10 +34,6 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet. */
   mptr_t buffer;
 
-#ifdef __HAVE_DEBUG__
-  void *__pstart, *__pend;
-#endif
-
   struct iphdr * ip;
 
   /* IPSec AH header and IPSec ESP Header. */
@@ -56,16 +52,8 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
     sizeof(struct ip_esp_hdr)  +
     esp_data;
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   ip = ip_header(packet, *size, co);
 
@@ -122,11 +110,6 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)
     *buffer.byte_ptr++ = random();
-
-#ifdef __HAVE_DEBUG__
-  __pend = buffer.ptr;
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

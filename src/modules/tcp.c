@@ -39,11 +39,6 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
 
   mptr_t buffer;
 
-#ifdef __HAVE_DEBUG__
-  void *__pstart;
-  void *__pend;
-#endif
-
   struct iphdr *ip;
 
   /* GRE Encapsulated IP Header. */
@@ -64,16 +59,8 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
           tcpopt                +
           sizeof(struct psdhdr);
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -446,11 +433,6 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->len      = htons(length);
 
   length += sizeof(struct psdhdr);
-
-#ifdef __HAVE_DEBUG__
-  __pend = (void *)pseudo + sizeof(struct psdhdr);
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* Computing the checksum. */
   tcp->check   = co->bogus_csum ? random() : cksum(tcp, length);

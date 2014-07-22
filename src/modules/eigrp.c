@@ -41,10 +41,6 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   mptr_t buffer;
 
-#ifdef __HAVE_DEBUG__
-  void *__pstart, *__pend;
-#endif
-
   struct iphdr * ip;
   struct eigrp_hdr * eigrp;
 
@@ -59,16 +55,8 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
           eigrp_tlv_len            +
           8;    /* OBS: Ugly workaround! Must change this later! */
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   /* IP Header structure making a pointer to Packet. */
   ip = ip_header(packet, *size, co);
@@ -438,11 +426,6 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
         }
     }
   }
-
-#ifdef __HAVE_DEBUG__
-  __pend = buffer.ptr;
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?

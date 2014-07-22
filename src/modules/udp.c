@@ -26,11 +26,6 @@ Description:   This function configures and sends the UDP packet header.
 Targets:       N/A */
 void udp(const struct config_options * const __restrict__ co, size_t *size)
 {
-#ifdef __HAVE_DEBUG__
-  void *__pstart;
-  void *__pend;
-#endif
-
   size_t greoptlen;   /* GRE options size. */
 
   struct iphdr *ip;
@@ -47,16 +42,8 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
   *size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr) + sizeof(struct psdhdr);
 
-#ifdef __HAVE_DEBUG__
-  PRINT_CALC_SIZE(*size);
-#endif
-
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
-
-#ifdef __HAVE_DEBUG__
-  __pstart = packet;
-#endif
 
   /* Fill IP header. */
   ip = ip_header(packet, *size, co);
@@ -78,11 +65,6 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(sizeof(struct udphdr));
-
-#ifdef __HAVE_DEBUG__
-  __pend = (void *)pseudo + sizeof(struct psdhdr);
-  PRINT_PTR_DIFF(__pstart, __pend);
-#endif
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? random() :
