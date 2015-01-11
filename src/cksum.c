@@ -21,6 +21,8 @@
 
 /* Calculates checksum */
 /* This function is 5 times faster than the "official" rfc 1071 implementation (and shortter too!). */
+
+/* FIXME: Maybe there is bug here still... Must check. */
 uint16_t cksum(void *data, size_t length)
 {
   uint64_t sum, oldsum, *p = data;
