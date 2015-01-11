@@ -23,18 +23,18 @@
 /* This function is 5 times faster than the "official" rfc 1071 implementation (and shortter too!). */
 uint16_t cksum(void *data, size_t length)
 {
-  uint64_t sum, *p = data;
+  uint64_t sum, oldsum, *p = data;
   uint32_t t1, t2;
   uint16_t t3, t4;
 
-  sum = 0;
+  sum = oldsum = 0;
 
   /* Sums 8 bytes at a time... */
   while (length >= sizeof(uint64_t))
   {
-    uint64_t s = *p++;
-    sum += s;
-    if (sum < s) sum++;
+    sum += *p++;
+    if (sum < oldsum) sum++;
+    oldsum = sum;
     length -= sizeof(uint64_t);
   }
 
@@ -42,27 +42,26 @@ uint16_t cksum(void *data, size_t length)
   data = p;
   if (length >= sizeof(uint32_t))
   {
-    uint32_t s = *(uint32_t *)data;
-    sum += s;
-    if (sum < s) sum++;
+    sum += *(uint32_t *)data;
+    if (sum < oldsum) sum++;
+    oldsum = sum;
     length -= sizeof(uint32_t);
     data += sizeof(uint32_t);
   }
 
   if (length >= sizeof(uint16_t))
   {
-    uint16_t s = *(uint16_t *)data;
-    sum += s;
-    if (sum < s) sum++;
+    sum += *(uint16_t *)data;
+    if (sum < oldsum) sum++;
+    oldsum = sum;
     length -= sizeof(uint16_t);
     data += sizeof(uint16_t);
   }
 
   if (length)
   {
-    uint8_t s = *(uint8_t *)data;
-    sum += s;
-    if (sum < s) sum++;
+    sum += *(uint8_t *)data;
+    if (sum < oldsum) sum++;
   }
 
   /* Fold down to 16 bits */
