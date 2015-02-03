@@ -11,15 +11,15 @@ define checkroot
 	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
 endef
 
-SRC_DIR=./src
-OBJ_DIR=./build
-RELEASE_DIR=./release
-MAN_DIR=/usr/share/man/man8
-INCLUDE_DIR=$(SRC_DIR)/include
+SRC_DIR = ./src
+OBJ_DIR = ./build
+RELEASE_DIR = ./release
+MAN_DIR = /usr/share/man/man8
+INCLUDE_DIR = $(SRC_DIR)/include
 
-TARGET=$(RELEASE_DIR)/t50
+TARGET = $(RELEASE_DIR)/t50
 
-OBJS=$(OBJ_DIR)/modules/ip.o \
+OBJS = $(OBJ_DIR)/modules/ip.o \
 $(OBJ_DIR)/modules/igmpv3.o \
 $(OBJ_DIR)/modules/dccp.o \
 $(OBJ_DIR)/modules/ripv2.o \
@@ -58,30 +58,40 @@ $(OBJ_DIR)/help/ospf_help.o
 
 # OBS: Using Linker Time Optiomizer!
 #      -O3 and -fuse-linker-plugin needed on link time to use lto.
-CC=gcc
-DFLAGS=-DVERSION=\"5.5\"
+CC = gcc
+DFLAGS = -DVERSION=\"5.5\"
 
 #
 # You can define DEBUG if you want to use GDB. 
 #
-CFLAGS=-Wall -Wextra -I$(INCLUDE_DIR) -std=gnu99
-LDFLAGS=-lpthread
+CFLAGS = -Wall -Wextra -I$(INCLUDE_DIR) -std=gnu99
+LDFLAGS = -lpthread
 ifdef DEBUG
-	CFLAGS+=-O0
-	DFLAGS+=-D__HAVE_DEBUG__ -g
+	CFLAGS += -O0
+	DFLAGS += -D__HAVE_DEBUG__ -g
 else
-	CFLAGS+=-O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
+	CFLAGS += -O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
 
 	# Get architecture
 	ARCH=$(shell arch)
 	ifneq ($(ARCH),x86_64)
-		CFLAGS+=-msse -mfpmath=sse		
+		CFLAGS += -msse -mfpmath=sse
 	endif
 
   DFLAGS+=-DNDEBUG
 	LDFLAGS+=-s -O3 -fuse-linker-plugin -flto
+
+  # Testa se RDRAND está disponível.
+  ifeq ($(shell grep rdrand /proc/cpuinfo > /dev/null; echo $$?),0)
+    CFLAGS += -D__HAVE_RDRAND__
+  endif
+
+  # Testa se BMI2 está disponivel.
+  ifeq ($(shell grep bmi2 /proc/cpuinfo > /dev/null; echo $$?), 0)
+    CFLAGS += -mbmi2
+  endif
 endif
-CFLAGS+=$(DFLAGS)
+CFLAGS += $(DFLAGS)
 
 .PHONY: all clean install uninstall
 
@@ -104,7 +114,7 @@ $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
+	-@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
 	@echo Binary executable, temporary files and packed manual file deleted.
 
 install:
@@ -115,4 +125,4 @@ install:
 
 uninstall:
 	$(checkroot)
-	rm -f $(MAN_DIR)/t50.8.gz /usr/sbin/t50
+	-rm -f $(MAN_DIR)/t50.8.gz /usr/sbin/t50
