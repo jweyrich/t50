@@ -98,7 +98,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < ip_ah_icv; counter++)
-    *buffer.byte_ptr++ = random();
+    *buffer.byte_ptr++ = RANDOM();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
   ip_esp         = (struct ip_esp_hdr *)buffer.ptr;
@@ -109,7 +109,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)
-    *buffer.byte_ptr++ = random();
+    *buffer.byte_ptr++ = RANDOM();
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

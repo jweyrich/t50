@@ -87,6 +87,8 @@ uint16_t cksum(void *data, size_t length)
   uint32_t sum;
   uint16_t *p = data;
 
+  sum = 0;
+
   while (length > 1)
   {
     sum += *p++;

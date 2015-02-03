@@ -68,7 +68,15 @@
 #define TEST_BITS(x,bits) ((x) & (bits))
 
 /* Randomizer macros and function */
-#define __RND(foo) (((foo) == 0) ? random() : (foo))
+#ifdef __HAVE_RDRAND__
+#define RANDOM() readrand()
+#define SRANDOM(x) {}
+#else
+#define RANDOM() random()
+#define SRANDOM(x) { srandom((x)); }
+#endif
+
+#define __RND(foo) (((foo) == 0) ? RANDOM() : (foo))
 #define INADDR_RND(foo) __RND((foo))
 #define IPPORT_RND(foo) __RND((foo))
 

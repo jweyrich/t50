@@ -75,7 +75,7 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   egp_acq->poll  = __RND(co->egp.poll);
 
   /* Computing the checksum. */
-  egp->check    = co->bogus_csum ? random() : 
+  egp->check    = co->bogus_csum ? RANDOM() : 
     cksum(egp, sizeof(struct egp_hdr) + sizeof(struct egp_acq_hdr));
 
   /* GRE Encapsulation takes place. */

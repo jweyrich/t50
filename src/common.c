@@ -77,3 +77,18 @@ size_t getNumberOfRegisteredModules(void)
 	return numOfModules;
 }
 
+#ifdef __HAVE_RDRAND__
+uint32_t readrand(void)
+{
+  uint32_t d;
+
+  __asm__ __volatile__ (
+    "1:\n"
+    "rdrand %0\n"
+    "jnc 1b\n"
+    : "=r" (d)
+  );
+
+  return d;
+}
+#endif

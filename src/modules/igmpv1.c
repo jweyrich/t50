@@ -59,7 +59,7 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
   igmpv1->csum  = 0;  /* Needed 'cause cksum() call, below! */
 
   /* Computing the checksum. */
-  igmpv1->csum  = co->bogus_csum ? random() : cksum(igmpv1, sizeof(struct igmphdr));
+  igmpv1->csum  = co->bogus_csum ? RANDOM() : cksum(igmpv1, sizeof(struct igmphdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

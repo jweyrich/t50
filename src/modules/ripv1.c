@@ -116,7 +116,7 @@ void ripv1(const struct config_options *const co, size_t *size)
   pseudo->len      = htons(length = buffer.ptr - (void *)udp);
 
   /* Computing the checksum. */
-  udp->check  = co->bogus_csum ? random() : 
+  udp->check  = co->bogus_csum ? RANDOM() : 
     cksum(udp, buffer.ptr - (void *)udp + sizeof(struct psdhdr));
 
   /* GRE Encapsulation takes place. */

@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
   /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
-  srandom(time(NULL));
+  SRANDOM(time(NULL));
 
 #ifdef  __HAVE_TURBO__
   /* Entering in TURBO. */
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     /* Set the destination IP address to RANDOM IP address. */
     if (cidr_ptr->hostid)
       co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
-        (random() % cidr_ptr->hostid));
+        (RANDOM() % cidr_ptr->hostid));
 
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;

@@ -315,7 +315,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
       }
       else if (co->ospf.lsa_type == LSA_TYPE_NETWORK)
@@ -344,7 +344,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum  ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
       }
       else if (co->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
@@ -376,7 +376,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
       }
       else if (co->ospf.lsa_type == LSA_TYPE_ASBR ||
@@ -418,7 +418,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
       }
       else if (co->ospf.lsa_type == LSA_TYPE_MULTICAST)
@@ -447,7 +447,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
         /* Building a generic OSPF LSA Header. */
       }
@@ -462,7 +462,7 @@ build_ospf_lsupdate:
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0));
       }
       break;
@@ -561,7 +561,7 @@ build_ospf_lsa:
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
-        random() :
+        RANDOM() :
         cksum(ospf_lsa, LSA_TLEN_GENERIC(0));
     }
   }
@@ -571,7 +571,7 @@ build_ospf_lsa:
    */
   stemp = auth_hmac_md5_len(co->ospf.auth);
   for (counter = 0; counter < stemp; counter++)
-    *buffer.byte_ptr++ = random();
+    *buffer.byte_ptr++ = RANDOM();
 
   length += stemp;
 
@@ -661,7 +661,7 @@ build_ospf_lsa:
          */
         stemp = auth_hmac_md5_len(co->ospf.auth);
         for (counter = 0; counter < stemp; counter++)
-          *buffer.byte_ptr++ = random();
+          *buffer.byte_ptr++ = RANDOM();
 
         /*
          * OSPF Link-Local Signaling (RFC 5613)
@@ -678,7 +678,7 @@ build_ospf_lsa:
       {
         /* Computing the checksum. */
         ospf_lls->check  =  co->bogus_csum ?
-          random() :
+          RANDOM() :
           cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
       }
 
@@ -697,7 +697,7 @@ build_ospf_lsa:
   if (!co->ospf.auth)
     /* Computing the checksum. */
     ospf->check   = co->bogus_csum ?
-      random() :
+      RANDOM() :
       cksum(ospf, sizeof(struct ospf_hdr) + length);
 
   gre_checksum(packet, co, *size);

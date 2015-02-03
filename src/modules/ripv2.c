@@ -235,7 +235,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
      */
     size = auth_hmac_md5_len(co->rip.auth);
     for (counter = 0; counter < size; counter++)
-      *buffer.byte_ptr++ = random();
+      *buffer.byte_ptr++ = RANDOM();
 
     /* DON'T NEED THIS */
     /* length += RIP_TRAILER_LENGTH + size; */
@@ -256,7 +256,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
           various conditionals above! */
 
   /* Computing the checksum. */
-  udp->check  = co->bogus_csum ? random() : 
+  udp->check  = co->bogus_csum ? RANDOM() : 
     cksum(udp, length + sizeof(struct psdhdr));
 
   /* GRE Encapsulation takes place. */

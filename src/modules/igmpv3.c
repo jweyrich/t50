@@ -79,7 +79,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
     /* Computing the checksum. */
     igmpv3_report->csum     = co->bogus_csum ?
-      random() :
+      RANDOM() :
       cksum(igmpv3_report, 
         sizeof(struct igmpv3_report) + 
         sizeof(struct igmpv3_grec)   + 
@@ -105,7 +105,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
     /* Computing the checksum. */
     igmpv3_query->csum     = co->bogus_csum ?
-      random() :
+      RANDOM() :
       cksum(igmpv3_query, 
         buffer.ptr - (void *)igmpv3_query);
   }

@@ -617,7 +617,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   rsvp->check   = co->bogus_csum ?
-    random() :
+    RANDOM() :
     cksum(rsvp, buffer.ptr - (void *)rsvp);
 
   /* GRE Encapsulation takes place. */

@@ -156,7 +156,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
       for (counter = 0; counter < stemp; counter++)
-        *buffer.byte_ptr++ = random();
+        *buffer.byte_ptr++ = RANDOM();
 
       /* DON'T NEED THIS. */
       /* FIXME: Is this correct?!
@@ -429,7 +429,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
-    random() : cksum(eigrp, buffer.ptr - (void *)eigrp);
+    RANDOM() : cksum(eigrp, buffer.ptr - (void *)eigrp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

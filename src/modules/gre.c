@@ -109,7 +109,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
 
     /* Computing the checksum. */
     gre_ip->check    = co->bogus_csum ?
-      random() : cksum(gre_ip, sizeof(struct iphdr));
+      RANDOM() : cksum(gre_ip, sizeof(struct iphdr));
 
     return gre_ip;
   }
@@ -134,7 +134,7 @@ void gre_checksum(void *buffer, const struct config_options *co, uint32_t packet
     /* Computing the checksum. */
     if (TEST_BITS(co->gre.options, GRE_OPTION_CHECKSUM))
       gre_sum->check  = co->bogus_csum ?
-        random() :
+        RANDOM() :
         cksum(gre, packet_size - sizeof(struct iphdr));
   }
 }

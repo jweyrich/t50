@@ -85,4 +85,8 @@ extern void sendPacket(const void * const, size_t, const struct config_options *
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
 
+#ifdef __HAVE_RDRAND__
+extern uint32_t readrand(void);
+#endif
+
 #endif /* __COMMON_H */

@@ -113,7 +113,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
    *                  (CsCov-1)*4 bytes of the packet's application data.
    */
   dccp->dccph_cscov    = co->dccp.cscov ?
-    (co->dccp.cscov - 1) * 4 : (co->bogus_csum ? random() : co->dccp.cscov);
+    (co->dccp.cscov - 1) * 4 : (co->bogus_csum ? RANDOM() : co->dccp.cscov);
 
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)
@@ -237,7 +237,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   pseudo->len      = htons(length = buffer_ptr - (void *)dccp);
 
   /* Computing the checksum. */
-  dccp->dccph_checksum = co->bogus_csum ? random() : 
+  dccp->dccph_checksum = co->bogus_csum ? RANDOM() : 
     cksum(dccp, length + sizeof(struct psdhdr));
 
   /* Finish GRE encapsulation, if needed */

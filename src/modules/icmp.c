@@ -63,7 +63,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   icmp->checksum = 0;
 
   /* Computing the checksum. */
-  icmp->checksum = co->bogus_csum ? random() : cksum(icmp, sizeof(struct icmphdr));
+  icmp->checksum = co->bogus_csum ? RANDOM() : cksum(icmp, sizeof(struct icmphdr));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
