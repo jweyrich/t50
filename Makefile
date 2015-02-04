@@ -7,6 +7,7 @@
 # The final executable will be created at release/ sub-directory.
 #
 
+# Macro used to check if we are running make as root.
 define checkroot
 	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
 endef
@@ -56,50 +57,46 @@ $(OBJ_DIR)/help/ipsec_help.o \
 $(OBJ_DIR)/help/eigrp_help.o \
 $(OBJ_DIR)/help/ospf_help.o
 
-# OBS: Using Linker Time Optiomizer!
-#      -O3 and -fuse-linker-plugin needed on link time to use lto.
-CC = gcc
-DFLAGS = -DVERSION=\"5.5\"
+CFLAGS = -DVERSION=\"5.5\" -I$(INCLUDE_DIR) -std=gnu99
+LDFLAGS =
 
 #
 # You can define DEBUG if you want to use GDB. 
 #
-CFLAGS = -Wall -Wextra -I$(INCLUDE_DIR) -std=gnu99
-LDFLAGS = -lpthread
 ifdef DEBUG
-	CFLAGS += -O0
-	DFLAGS += -D__HAVE_DEBUG__ -g
+  CFLAGS += -O0 -D__HAVE_DEBUG__ -g
 else
-	CFLAGS += -O3 -mtune=native -flto -ffast-math -fomit-frame-pointer
+  CFLAGS += -O3 -mtune=native -flto -ffast-math -fomit-frame-pointer -DNDEBUG -D__HAVE_TURBO__
 
 	# Get architecture
-	ARCH=$(shell arch)
-	ifneq ($(ARCH),x86_64)
-		CFLAGS += -msse -mfpmath=sse
-	endif
-
-  DFLAGS+=-DNDEBUG
-	LDFLAGS+=-s -O3 -fuse-linker-plugin -flto
-
-  # Testa se RDRAND está disponível.
-  ifeq ($(shell grep rdrand /proc/cpuinfo > /dev/null; echo $$?),0)
-    CFLAGS += -D__HAVE_RDRAND__
+  ARCH = $(shell arch)
+  ifneq ($(ARCH),x86_64)
+    CFLAGS += -msse -mfpmath=sse
   endif
 
-  # Testa se BMI2 está disponivel.
-  ifeq ($(shell grep bmi2 /proc/cpuinfo > /dev/null; echo $$?), 0)
+  LDFLAGS = -s -O3 -fuse-linker-plugin -flto
+
+  ifeq ($(shell grep rdrand /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
+    CFLAGS += -D__HAVE_RDRAND__
+  endif
+  ifeq ($(shell grep bmi2 /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mbmi2
   endif
 endif
-CFLAGS += $(DFLAGS)
 
-.PHONY: all clean install uninstall
+# Define USE_PTHREADS when calling make to use libpthreads.
+ifdef USE_PTHREADS
+  CFLAGS += -pthread
+  LDFLAGS += -lpthread
+endif
+
+.PHONY: all distclean clean install uninstall
 
 all: $(TARGET)
 
 # link
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 # Compile main
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
@@ -113,13 +110,17 @@ $(OBJ_DIR)/help/%.o: $(SRC_DIR)/help/%.c
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+distclean: clean
+	-@rm $(RELEASE_DIR)/t50 $(RELEASE_DIR)/t50.8.gz
+	@echo Executable and manual files deleted.
+
 clean:
-	-@rm -rf $(RELEASE_DIR)/t50 $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
-	@echo Binary executable, temporary files and packed manual file deleted.
+	-@rm $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
+	@echo Temporary failes deleted.
 
 install:
 	$(checkroot)
-	gzip -9c ./doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
+	gzip -9c doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
 	install $(RELEASE_DIR)/t50 /usr/sbin/
 	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
 
