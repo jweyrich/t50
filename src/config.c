@@ -471,7 +471,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
           co.ip.protoname = counter;
         }
 
-        free(tokens); /* Don't need it anymore! */
+        free(tokens); /* Don't need the tokens list anymore! */
         break;
 
       /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
@@ -493,9 +493,11 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_IGMP_GREC_MULTICAST:  co.igmp.grec_mca = resolv(optarg); break;
       case OPTION_IGMP_ADDRESS:
         for (counter = 0, tmp_ptr = strtok(optarg, ",");
-            tmp_ptr && (counter < (int)(sizeof(co.igmp.address)/sizeof(in_addr_t)));
-            counter++, tmp_ptr = strtok(NULL, ","))
+             tmp_ptr && (counter < (int)(sizeof(co.igmp.address)/sizeof(in_addr_t)));
+             counter++, tmp_ptr = strtok(NULL, ","))
+        {
           co.igmp.address[counter] = resolv(tmp_ptr);
+        }
         co.igmp.sources = counter;
         break;
 
@@ -611,7 +613,9 @@ struct config_options *getConfigOptions(int argc, char **argv)
         for (counter = 0, tmp_ptr = strtok(optarg, ","); 
              tmp_ptr && (counter < (int)(sizeof(co.rsvp.address)/sizeof(in_addr_t))); 
              counter++, tmp_ptr = strtok(NULL, ","))
+        {
           co.rsvp.address[counter] = resolv(tmp_ptr);
+        }
         co.rsvp.scope = counter;
         break;
       case OPTION_RSVP_STYLE_OPTION:      co.rsvp.style_opt = atol(optarg); break;
@@ -743,7 +747,9 @@ struct config_options *getConfigOptions(int argc, char **argv)
         for (counter = 0, tmp_ptr = strtok(optarg, ","); 
              tmp_ptr && (counter < (int)(sizeof(co.ospf.address)/sizeof(in_addr_t))); 
              counter++, tmp_ptr = strtok(NULL, ","))
+        {
           co.ospf.address[counter] = resolv(tmp_ptr);
+        }
         co.ospf.neighbor = counter;
         break;
       case OPTION_OSPF_DD_MTU:            co.ospf.dd_mtu = atoi(optarg); break;
@@ -877,7 +883,7 @@ static void setDefaultModuleOption(void)
   }
 }
 
-/* Regular Expression used to match IP addresses with optional CIDR. */
+/* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
 #define IP_REGEX "^([1-2]*[0-9]{1,2})" \
                  "(\\.[1-2]*[0-9]{1,2}){0,1}" \
                  "(\\.[1-2]*[0-9]{1,2}){0,1}" \

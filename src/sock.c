@@ -98,7 +98,7 @@ void closeSocket(void)
 
 void sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sin = {};  /* zero fill */
   void *p;
   ssize_t sent;
   int num_tries;
@@ -107,7 +107,6 @@ void sendPacket(const void * const buffer, size_t size, const struct config_opti
   assert(size > 0);
   assert(co != NULL);
 
-  memset(&sin, 0, sizeof(sin));
   sin.sin_family      = AF_INET; 
   sin.sin_port        = htons(IPPORT_RND(co->dest)); 
   sin.sin_addr.s_addr = co->ip.daddr; 

@@ -27,6 +27,8 @@ static int checkThreshold(const struct config_options * const __restrict__);
    Returns 0 on failure. */
 int checkConfigOptions(const struct config_options * const __restrict__ co)
 {
+  assert(co != NULL);
+
   /* Warns about missed target. */
   if (co->ip.daddr == INADDR_ANY)
   {

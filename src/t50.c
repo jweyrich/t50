@@ -159,7 +159,6 @@ int main(int argc, char *argv[])
     time_t lt;
     struct tm *tm;
 
-    /* FIX: We need to wait() for child processes only if we forked one! */
 #ifdef  __HAVE_TURBO__
     int status;
 
