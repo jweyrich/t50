@@ -22,7 +22,7 @@
 /* Calculates checksum */
 /* This function is 5 times faster than the "official" rfc 1071 implementation (and shortter too!). */
 
-/* FIXME: Maybe there is bug here still... Must check. */
+/* FIXME: Maybe there is a bug here still... Must check. */
 /* NOTE: This version of cksum is retired, for now, due to bugs. */
 //uint16_t cksum(void *data, size_t length)
 //{

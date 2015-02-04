@@ -82,10 +82,12 @@ uint32_t readrand(void)
 {
   uint32_t d;
 
+  /* Using assembly here is more reliable than using the intrinsic funcion! */
   __asm__ __volatile__ (
     "1:\n"
     "rdrand %0\n"
-    "jnc 1b\n"
+    "jnc 1b\n"         /* Carry flag is zero if RDRAND fails. 
+                          No need to implement a failsafe here. RDRAND will work eventually. */
     : "=r" (d)
   );
 
