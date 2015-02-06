@@ -37,7 +37,8 @@ int main(int argc, char *argv[])
   initialize();
 
   /* Configuring command line interface options. */
-  co = getConfigOptions(argc, argv);
+  if ((co = getConfigOptions(argc, argv)) == NULL)
+    return EXIT_FAILURE;
 
   /* This is a requirement of t50. User must be root to use it. 
      Previously on checkConfigOptions(). */
@@ -53,7 +54,8 @@ int main(int argc, char *argv[])
 
   /* Setting socket file descriptor. */
   /* NOTE: createSocket() handles its own errors before returning. */
-  createSocket();
+  if (!createSocket())
+    return EXIT_FAILURE;
 
   /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
@@ -96,7 +98,8 @@ int main(int argc, char *argv[])
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
-  cidr_ptr = config_cidr(co->bits, co->ip.daddr);
+  if ((cidr_ptr = config_cidr(co->bits, co->ip.daddr)) == NULL)
+    return EXIT_FAILURE;
 
   /* Show launch info only for parent process. */
   if (!IS_CHILD_PID(pid))
@@ -126,8 +129,6 @@ int main(int argc, char *argv[])
   if (proto != IPPROTO_T50)
     ptbl += co->ip.protoname;
 
-  co->ip.daddr = htonl(cidr_ptr->__1st_addr);
-
   /* Preallocate packet buffer. */
   alloc_packet(INITIAL_PACKET_SIZE);
 
@@ -138,14 +139,18 @@ int main(int argc, char *argv[])
     size_t size;
 
     /* Set the destination IP address to RANDOM IP address. */
+    /* NOTE: The previous code did not account for 'hostid == 0'! */
+    co->ip.daddr = cidr_ptr->__1st_addr;
     if (cidr_ptr->hostid)
-      co->ip.daddr = htonl(cidr_ptr->__1st_addr + 
-        (RANDOM() % cidr_ptr->hostid));
+      co->ip.daddr += RANDOM() % cidr_ptr->hostid;
+    co->ip.daddr = htonl(co->ip.daddr);
 
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
-    sendPacket(packet, size, co);
+
+    if (!sendPacket(packet, size, co))
+      return EXIT_FAILURE;
   
     /* If protocol if 'T50', then get the next true protocol. */
     if (proto == IPPROTO_T50)

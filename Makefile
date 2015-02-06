@@ -74,7 +74,7 @@ else
     CFLAGS += -msse -mfpmath=sse
   endif
 
-  LDFLAGS = -s -O3 -fuse-linker-plugin -flto
+  LDFLAGS += -s -O3 -fuse-linker-plugin -flto
 
   ifeq ($(shell grep rdrand /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
     CFLAGS += -D__HAVE_RDRAND__

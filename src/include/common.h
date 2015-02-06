@@ -78,10 +78,10 @@ extern void alloc_packet(size_t);
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
 extern uint16_t cksum(void *, size_t);  /* Checksum calc. */
 extern in_addr_t resolv(char *);  /* Resolve name to ip address. */
-extern void createSocket(void); /* Creates the sending socket */
+extern int createSocket(void); /* Creates the sending socket */
 extern void closeSocket(void);  /* Close the previously created socket */
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern void sendPacket(const void * const, size_t, const struct config_options * const __restrict__);
+extern int sendPacket(const void * const, size_t, const struct config_options * const __restrict__);
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
 

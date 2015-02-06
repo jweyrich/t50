@@ -24,8 +24,6 @@ static struct cidr cidr = { 0, 0 };
 /* CIDR configuration tiny C algorithm */
 struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 {
-  uint32_t netmask;
-
   /* FIX: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
 
   /*
@@ -56,30 +54,31 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
    */
   if (bits < CIDR_MAXIMUM)
   {
-    netmask = ~(0xffffffffUL >> bits);
-    cidr.hostid = (1ULL << (32 - bits)) - 2ULL;
+    uint32_t netmask;
+
+    cidr.hostid = (1U << (32 - bits)) - 2U;
+
+    /* XXX Sanitizing the maximum host identifier's IP addresses.
+     * XXX Should never reaches here!!! */
+    if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
+    {
+      char errstr[144];
+
+      sprintf(errstr, "internal error detecded -- please, report.\n"
+                      "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
+                      cidr.hostid, MAXIMUM_IP_ADDRESSES);
+      ERROR(errstr);
+
+      return NULL;
+    }
+
+    netmask = ~(0xffffffffU >> bits);
     cidr.__1st_addr = (ntohl(address) & netmask) + 1;
   }
   else
   {
     cidr.hostid = 0;
     cidr.__1st_addr = ntohl(address);
-
-    return &cidr;
-  }
-
-  /* XXX Sanitizing the maximum host identifier's IP addresses.
-   * XXX Should never reaches here!!! */
-  if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
-  {
-    char errstr[144];
-
-    sprintf(errstr, "internal error detecded -- please, report.\n"
-                    "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
-                    cidr.hostid, MAXIMUM_IP_ADDRESSES);
-    ERROR(errstr);
-
-    exit(EXIT_FAILURE);
   }
 
   return &cidr;

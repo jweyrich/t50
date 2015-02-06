@@ -461,7 +461,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
                 "%s(): Protocol %s is not implemented\n",
                 __FUNCTION__,
                 optarg);
-            exit(EXIT_FAILURE);
+            return NULL;
           }
 
           if (strcasecmp(tokens[counter], "T50") == 0)
@@ -789,14 +789,14 @@ struct config_options *getConfigOptions(int argc, char **argv)
 
       case 'v':
         show_version();
-        exit(EXIT_FAILURE);
+        return NULL;
 
       /* XXX HELP/USAGE MESSAGE */
       case 'h':
       case '?':
       default:
         usage();
-        exit(EXIT_FAILURE);
+        return NULL;
     }
   }
 
@@ -804,7 +804,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
   if (optind >= argc)
   {
     ERROR("t50 what? try --help for usage");
-    exit(EXIT_FAILURE);
+    return NULL;
   }
 
   /* Get host and cidr. */
@@ -914,13 +914,13 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
 
   /* Try to compile the regular expression. */
   if (regcomp(&re, IP_REGEX, REG_EXTENDED))
-    return 0;
+    return FALSE;
 
   /* Try to execute regex against the addr string. */
   if (regexec(&re, addr, 6, rm, 0))
   {
     regfree(&re);
-    return 0;
+    return FALSE;
   }
 
   /* Allocate enough space for temporary string. */
@@ -964,7 +964,7 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
       /* if cidr is actually '0', then it is an error! */
       free(t);
       regfree(&re);
-      return 0;
+      return FALSE;
     }
   }
   else
@@ -981,7 +981,7 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
     if (matches[i] > 255)
     {
       regfree(&re);
-      return 0;
+      return FALSE;
     }
 
   /* NOTE: Check 'bits' here! */
@@ -994,7 +994,7 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
     ERROR(msg);
 
     regfree(&re);
-    return 0;
+    return FALSE;
   }
 
   regfree(&re);
@@ -1007,7 +1007,7 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
                     (matches[0] << 24)) &
                       (0xffffffffUL << (32 - addr_ptr->cidr));
 
-  return 1;
+  return TRUE;
 }
 
 

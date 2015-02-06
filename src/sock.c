@@ -26,7 +26,7 @@
 static socket_t fd = -1;
 
 /* Socket configuration */
-void createSocket(void)
+int createSocket(void)
 {
 	socklen_t len;
 	unsigned n = 1, *nptr = &n;
@@ -35,14 +35,14 @@ void createSocket(void)
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
 	{
 		perror("error opening raw socket");
-		exit(EXIT_FAILURE);
+		return FALSE;
 	}
 
 	/* Setting IP_HDRINCL. */
 	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, nptr, sizeof(n)) == -1 )
 	{
 		perror("error setting socket options");
-		exit(EXIT_FAILURE);
+		return FALSE;
 	}
 
 /* Taken from libdnet by Dug Song. */
@@ -52,7 +52,7 @@ void createSocket(void)
 	if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
 	{
 		perror("error getting socket buffer");
-		exit(EXIT_FAILURE);
+		return FALSE;
 	}
 
 	/* Setting the maximum SO_SNDBUF in bytes.
@@ -67,7 +67,7 @@ void createSocket(void)
 				break;
 
 			perror("error setting socket buffer");
-			exit(EXIT_FAILURE);
+			return FALSE;
 		}
 	}
 #endif /* SO_SNDBUF */
@@ -77,7 +77,7 @@ void createSocket(void)
 	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, nptr, sizeof(n)) == -1 )
 	{
 		perror("error setting socket broadcast");
-		exit(EXIT_FAILURE);
+		return FALSE;
 	}
 #endif /* SO_BROADCAST */
 
@@ -85,9 +85,11 @@ void createSocket(void)
 	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, nptr, sizeof(n)) == -1 )
 	{
 		perror("error setting socket priority");
-		exit(EXIT_FAILURE);
+		return FALSE;
 	}
 #endif /* SO_PRIORITY */
+
+  return TRUE;
 }
 
 void closeSocket(void)
@@ -96,7 +98,7 @@ void closeSocket(void)
     close(fd);
 }
 
-void sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
+int sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
 {
   struct sockaddr_in sin = {};  /* zero fill */
   void *p;
@@ -136,6 +138,8 @@ void sendPacket(const void * const buffer, size_t size, const struct config_opti
   {
 error:
     ERROR("Error sending packet.");
-    exit(EXIT_FAILURE);
+    return FALSE;
   }
+
+  return TRUE;
 }
