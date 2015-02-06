@@ -8,6 +8,7 @@ Legend:
 
 T50 5.6 - February 3rd, 2015
  * Support for RDRAND and BMI2 instruction set added.
+ - Small bug when calculating IP address on t50.c fixed
 
 T50 5.5 - July 21st, 2014
  - Fixed bugs of modules memory allocations.
