@@ -82,6 +82,12 @@ else
   ifeq ($(shell grep bmi2 /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mbmi2
   endif
+  ifeq ($(shell grep popcnt /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
+    CFLAGS += -mpopcnt
+  endif
+  ifeq ($(shell grep movbe /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
+    CFLAGS += -mmovbe
+  endif
 endif
 
 # Define USE_PTHREADS when calling make to use libpthreads.
