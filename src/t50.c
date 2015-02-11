@@ -34,12 +34,6 @@ int main(int argc, char *argv[])
   modules_table_t *ptbl;      /* Pointer to modules table */
   uint8_t proto;              /* Used on main loop. */
 
-  initialize();
-
-  /* Configuring command line interface options. */
-  if ((co = getConfigOptions(argc, argv)) == NULL)
-    return EXIT_FAILURE;
-
   /* This is a requirement of t50. User must be root to use it. 
      Previously on checkConfigOptions(). */
   if (getuid())
@@ -47,6 +41,12 @@ int main(int argc, char *argv[])
     ERROR("User must have root priviledge to run.");
     return EXIT_FAILURE;
   }
+
+  initialize();
+
+  /* Configuring command line interface options. */
+  if ((co = getConfigOptions(argc, argv)) == NULL)
+    return EXIT_FAILURE;
 
   /* Validating command line interface options. */
   if (!checkConfigOptions(co))
@@ -204,15 +204,18 @@ static void signal_handler(int signal)
           child process can be catastrophic to the parent. 
      NOTE: I realize that the act of closing descriptors are reference counted.
            Keept the logic just in case! */
+
+  /* Ignore the SIGALRM. Used only to timeout the wait() function! */
+  if (signal == SIGALRM)
+    return;
+
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
   {
     /* Kills the child process! */
     kill(pid, SIGKILL);
 #endif
-
-      closeSocket();
-
+    closeSocket();
 #ifdef __HAVE_TURBO__
   }
 #endif
@@ -233,7 +236,8 @@ static void initialize(void)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART; /* same signal() semantics?! */
 
-  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal'). */
+  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal'). 
+     This is necessary to close the socket when terminating the parent process. */
   sa.sa_handler = signal_handler;
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
@@ -250,9 +254,6 @@ static void initialize(void)
           Maybe it is wiser if we implement some kind of
           timeout when waiting for the child to terminate. */
   sigaction(SIGALRM, &sa, NULL);
-
-  sa.sa_handler = SIG_IGN;
-  sigaction(SIGCHLD, &sa, NULL);
 #endif
 
   /* --- Make sure stdout is unbuffered (otherwise, it's line buffered). --- */
