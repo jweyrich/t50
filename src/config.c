@@ -387,12 +387,14 @@ static char **getTokensList(void);
 static void listProtocols(void);
 static void setDefaultModuleOption(void);
 static int  getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
+static void CheckUnsignedShortRange(const char *, int);
 
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char **argv)
 {
   int cli_opts;
   int counter;
+  int tmp;
 
   char  *optionp;
   char *tmp_ptr;
@@ -436,8 +438,8 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_GRE_DADDR:            co.gre.daddr    = resolv(optarg); break;
 
       /* XXX DCCP, TCP & UDP HEADER OPTIONS */
-      case OPTION_SOURCE:       co.source = atoi(optarg); break;
-      case OPTION_DESTINATION:  co.dest = atoi(optarg);   break;
+      case OPTION_SOURCE:       CheckUnsignedShortRange("--sport", tmp = atoi(optarg)); co.source = tmp; break;
+      case OPTION_DESTINATION:  CheckUnsignedShortRange("--dport", tmp = atoi(optarg)); co.dest = tmp; break;
 
       /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0) */
       case OPTION_IP_TOS:       co.ip.tos       = atoi(optarg); break;
@@ -1010,4 +1012,12 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
   return TRUE;
 }
 
+static void CheckUnsignedShortRange(const char *errstr, int value)
+{
+  if (value < 0 || value > 65535)
+  {
+    fprintf(stderr, "ERROR: %s range must be 16 bits unsigned integer.\n", errstr);
+    exit(EXIT_FAILURE);    
+  }
+}
 
