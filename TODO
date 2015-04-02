@@ -6,6 +6,9 @@ Legend:
  * Ideas (t50 code unrelated)
  % Ideas (t50 code related)
 
+April 2nd, 2015
+ + Improve support for ports list on --dport option (maybe round robin?)
+
 March 1st, 2014
  - Improve t50 manpage documentation
  - Create some standard test scripts
