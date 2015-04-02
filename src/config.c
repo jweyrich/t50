@@ -387,7 +387,7 @@ static char **getTokensList(void);
 static void listProtocols(void);
 static void setDefaultModuleOption(void);
 static int  getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
-static void CheckUnsignedShortRange(const char *, int);
+static void CheckRangeFromBits(const char *, int, int);
 
 /* CLI options configuration */
 struct config_options *getConfigOptions(int argc, char **argv)
@@ -438,14 +438,14 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_GRE_DADDR:            co.gre.daddr    = resolv(optarg); break;
 
       /* XXX DCCP, TCP & UDP HEADER OPTIONS */
-      case OPTION_SOURCE:       CheckUnsignedShortRange("--sport", tmp = atoi(optarg)); co.source = tmp; break;
-      case OPTION_DESTINATION:  CheckUnsignedShortRange("--dport", tmp = atoi(optarg)); co.dest = tmp; break;
+      case OPTION_SOURCE:       CheckRangeFromBits("--sport", 16, tmp = atoi(optarg)); co.source = tmp; break;
+      case OPTION_DESTINATION:  CheckRangeFromBits("--dport", 16, tmp = atoi(optarg)); co.dest = tmp; break;
 
       /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0) */
-      case OPTION_IP_TOS:       co.ip.tos       = atoi(optarg); break;
-      case OPTION_IP_ID:        co.ip.id        = atoi(optarg); break;
-      case OPTION_IP_OFFSET:    co.ip.frag_off  = atoi(optarg); break;
-      case OPTION_IP_TTL:       co.ip.ttl       = atoi(optarg); break;
+      case OPTION_IP_TOS:       CheckRangeFromBits("--tos", 8, tmp = atoi(optarg)); co.ip.tos = tmp; break;
+      case OPTION_IP_ID:        CheckRangeFromBits("--id", 16, tmp = atoi(optarg)); co.ip.id  = tmp; break;
+      case OPTION_IP_OFFSET:    CheckRangeFromBits("--frag-offset", 16, tmp = atoi(optarg)); co.ip.frag_off = tmp; break;
+      case OPTION_IP_TTL:       CheckRangeFromBits("--ttl", 8, tmp = atoi(optarg)); co.ip.ttl = tmp; break;
       case 's':                 co.ip.saddr     = resolv(optarg); break;
       case OPTION_IP_PROTOCOL:
         optionp = optarg;
@@ -1012,11 +1012,17 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
   return TRUE;
 }
 
-static void CheckUnsignedShortRange(const char *errstr, int value)
+static long GetMaskFromBits(int bits)
 {
-  if (value < 0 || value > 65535)
+  long tmp = -1L;
+  return (long)~((unsigned long)tmp << bits);
+}
+
+static void CheckRangeFromBits(const char *errstr, int bits, int value)
+{
+  if (value < 0 || value > GetMaskFromBits(bits))
   {
-    fprintf(stderr, "ERROR: %s range must be 16 bits unsigned integer.\n", errstr);
+    fprintf(stderr, "ERROR: %s range must be %d bits unsigned integer.\n", errstr, bits);
     exit(EXIT_FAILURE);    
   }
 }
