@@ -19,6 +19,10 @@
 
 #include <common.h>
 
+#ifdef DUMP_DATA
+  extern FILE *fdebug;
+#endif
+
 struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, uint32_t total_len)
 {
   struct iphdr *ip, *gre_ip;
@@ -110,6 +114,10 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
     /* Computing the checksum. */
     gre_ip->check    = co->bogus_csum ?
       RANDOM() : cksum(gre_ip, sizeof(struct iphdr));
+
+#ifdef DUMP_DATA
+    dump_grehdr(fdebug, gre);
+#endif
 
     return gre_ip;
   }

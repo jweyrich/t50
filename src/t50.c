@@ -20,6 +20,11 @@
 #include <common.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
 
+#ifdef DUMP_DATA
+  FILE *fdebug;
+  static unsigned long cnt = 1;
+#endif
+
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
 static void initialize(void);
@@ -41,6 +46,10 @@ int main(int argc, char *argv[])
     ERROR("User must have root priviledge to run.");
     return EXIT_FAILURE;
   }
+
+#ifdef DUMP_DATA
+  fdebug = fopen("t50-debug.log", "wt");
+#endif
 
   initialize();
 
@@ -138,6 +147,10 @@ int main(int argc, char *argv[])
     /* Holds the actual packet size after module function call. */
     size_t size;
 
+#ifdef DUMP_DATA
+    fprintf(fdebug, "*** Packet #%u\n", cnt++);
+#endif
+
     /* Set the destination IP address to RANDOM IP address. */
     /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
@@ -192,6 +205,11 @@ int main(int argc, char *argv[])
       tm->tm_min,
       tm->tm_sec);
   }
+
+#ifdef DUMP_DATA
+  fclose(fdebug);
+#endif
+
 
   return 0;
 }

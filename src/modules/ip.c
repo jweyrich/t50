@@ -19,6 +19,10 @@
 
 #include <common.h>
 
+#ifdef DUMP_DATA
+  extern FILE *fdebug;
+#endif
+
 struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options *co)
 {
   struct iphdr *ip;
@@ -39,6 +43,10 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip->daddr    = co->ip.daddr;
   /* The code does not have to handle the checksum. Kernel will do */
   ip->check    = 0;
+
+#ifdef DUMP_DATA
+  dump_ip(fdebug, ip);
+#endif
 
   return ip;
 }

@@ -22,6 +22,10 @@
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_TRIES  100
 
+#ifdef DUMP_DATA
+  extern FILE *fdebug;
+#endif
+
 /* Initialized for error condition, just in case! */
 static socket_t fd = -1;
 
@@ -105,6 +109,10 @@ int sendPacket(const void * const buffer, size_t size, const struct config_optio
   ssize_t sent;
   int num_tries;
 
+#ifdef DUMP_DATA
+  size_t sz = size;
+#endif
+
   assert(buffer != NULL);
   assert(size > 0);
   assert(co != NULL);
@@ -133,13 +141,23 @@ int sendPacket(const void * const buffer, size_t size, const struct config_optio
     p += sent;
   }
 
+
   /* FIX */
   if (num_tries < 0)
   {
 error:
     ERROR("Error sending packet.");
+#ifdef DUMP_DATA
+    fprintf(fdebug, "Error sending %zu bytes of data.\n");
+#endif
     return FALSE;
   }
+#ifdef DUMP_DATA
+  else
+    fprintf(fdebug, "Data sent:\n");
+
+  dump_buffer(fdebug, buffer, sz);
+#endif
 
   return TRUE;
 }

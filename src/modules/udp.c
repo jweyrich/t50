@@ -19,6 +19,10 @@
 
 #include <common.h>
 
+#ifdef DUMP_DATA
+  extern FILE *fdebug;
+#endif
+
 /* Function Name: UDP packet header configuration.
 
 Description:   This function configures and sends the UDP packet header.
@@ -69,6 +73,11 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
     cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
+
+#ifdef DUMP_DATA
+  dump_udp(fdebug, udp);
+  dump_psdhdr(fdebug, pseudo);
+#endif
 
   gre_checksum(packet, co, *size);
 }

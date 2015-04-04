@@ -64,7 +64,8 @@ LDFLAGS =
 # You can define DEBUG if you want to use GDB. 
 #
 ifdef DEBUG
-  CFLAGS += -O0 -D__HAVE_DEBUG__ -g
+  OBJS += $(OBJ_DIR)/debug.o
+  CFLAGS += -O0 -D__HAVE_DEBUG__ -DDUMP_DATA -g
 else
   CFLAGS += -O3 -mtune=native -flto -ffast-math -fomit-frame-pointer -DNDEBUG -D__HAVE_TURBO__
 
