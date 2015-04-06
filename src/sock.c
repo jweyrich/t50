@@ -18,6 +18,7 @@
 */
 
 #include <common.h>
+#include <sys/ioctl.h>
 
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_TRIES  100
@@ -104,7 +105,6 @@ void closeSocket(void)
 
 int sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
 {
-  struct sockaddr_in sin = {};  /* zero fill */
   void *p;
   ssize_t sent;
   int num_tries;
@@ -113,42 +113,41 @@ int sendPacket(const void * const buffer, size_t size, const struct config_optio
   size_t sz = size;
 #endif
 
+  struct sockaddr_in sin = { 
+    .sin_family = AF_INET, 
+    .sin_port = htons(IPPORT_RND(co->dest)), 
+    .sin_addr = co->ip.daddr 
+  };
+
   assert(buffer != NULL);
   assert(size > 0);
   assert(co != NULL);
-
-  sin.sin_family      = AF_INET; 
-  sin.sin_port        = htons(IPPORT_RND(co->dest)); 
-  sin.sin_addr.s_addr = co->ip.daddr; 
 
   /* FIX: There is no garantee that sendto() will deliver the entire packet at once.
           So, we try MAX_SENDTO_TRIES times before giving up. */ 
   p = (void *)buffer;
   for (num_tries = MAX_SENDTO_TRIES; size > 0 && num_tries--;) 
   {
-    sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(struct sockaddr));
-
-    if (sent == -1)
-    {
-      if (errno != EPERM)
-        goto error;
-
-      perror("");
-      continue;
-    }
+    if ((sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(sin))) == -1)
+      break;
 
     size -= sent;
     p += sent;
   }
 
+  if (errno == EPERM)
+  {
+    ERROR("Error sending packet. Please check your firewall (iptables?) rules!");
+    return FALSE;
+  }
 
   /* FIX */
   if (num_tries < 0)
   {
-error:
     ERROR("Error sending packet.");
+    
 #ifdef DUMP_DATA
-    fprintf(fdebug, "Error sending %zu bytes of data.\n");
+    fprintf(fdebug, "Error sending %zu bytes of data.\n", sz);
 #endif
     return FALSE;
   }
