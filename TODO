@@ -8,6 +8,7 @@ Legend:
 
 April 2nd, 2015
  + Improve support for ports list on --dport option (maybe round robin?)
+ % Add support for network interface binding.
 
 March 1st, 2014
  - Improve t50 manpage documentation
