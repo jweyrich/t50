@@ -137,7 +137,7 @@ int sendPacket(const void * const buffer, size_t size, const struct config_optio
 
   if (errno == EPERM)
   {
-    ERROR("Error sending packet. Please check your firewall (iptables?) rules!");
+    ERROR("Error sending packet (Permission!). Please check your firewall (iptables?) rules!");
     return FALSE;
   }
 
