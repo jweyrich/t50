@@ -18,7 +18,6 @@
 */
 
 #include <common.h>
-#include <sys/ioctl.h>
 
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_TRIES  100
