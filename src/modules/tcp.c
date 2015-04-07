@@ -22,7 +22,7 @@
 /*
  * prototypes.
  */
-static size_t tcp_options_len(const uint8_t, const uint8_t, const uint8_t);
+static size_t tcp_options_len(const uint8_t, int, int);
 
 /* Function Name: TCP packet header configuration.
 
@@ -91,17 +91,17 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   tcp->dest    = htons(IPPORT_RND(co->dest));
   tcp->res1    = TCP_RESERVED_BITS;
   tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
-  tcp->fin     = co->tcp.fin;
-  tcp->syn     = co->tcp.syn;
+  tcp->fin     = (co->tcp.fin != 0);
+  tcp->syn     = (co->tcp.syn != 0);
   tcp->seq     = co->tcp.syn ? htonl(__RND(co->tcp.sequence)) : 0;
-  tcp->rst     = co->tcp.rst;
-  tcp->psh     = co->tcp.psh;
-  tcp->ack     = co->tcp.ack;
+  tcp->rst     = (co->tcp.rst != 0);
+  tcp->psh     = (co->tcp.psh != 0);
+  tcp->ack     = (co->tcp.ack != 0);
   tcp->ack_seq = co->tcp.ack ? htonl(__RND(co->tcp.acknowledge)) : 0;
-  tcp->urg     = co->tcp.urg;
+  tcp->urg     = (co->tcp.urg != 0);
   tcp->urg_ptr = co->tcp.urg ? htons(__RND(co->tcp.urg_ptr)) : 0;
-  tcp->ece     = co->tcp.ece;
-  tcp->cwr     = co->tcp.cwr;
+  tcp->ece     = (co->tcp.ece != 0);
+  tcp->cwr     = (co->tcp.cwr != 0);
   tcp->window  = htons(__RND(co->tcp.window));
   tcp->check   = 0; /* Needed 'cause of cksum() call */
 
@@ -445,7 +445,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
 Description:   This function calculates the size of TCP options.
 
 Targets:       N/A */
-static size_t tcp_options_len(const uint8_t foo, const uint8_t bar, const uint8_t baz)
+static size_t tcp_options_len(const uint8_t foo, int bar, int baz)
 {
   size_t size;
 

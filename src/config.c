@@ -426,12 +426,9 @@ struct config_options *getConfigOptions(int argc, char **argv)
         break;
 
       /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
-      case OPTION_GRE_SEQUENCE_PRESENT: co.gre.options |= GRE_OPTION_SEQUENCE;
-                                        co.gre.S = TRUE; break;
-      case OPTION_GRE_KEY_PRESENT:      co.gre.options |= GRE_OPTION_KEY;
-                                        co.gre.K = TRUE; break;
-      case OPTION_GRE_CHECKSUM_PRESENT: co.gre.options |= GRE_OPTION_CHECKSUM;
-                                        co.gre.C = TRUE; break;
+      case OPTION_GRE_SEQUENCE_PRESENT: co.gre.options |= GRE_OPTION_SEQUENCE; co.gre.S = TRUE; break;
+      case OPTION_GRE_KEY_PRESENT:      co.gre.options |= GRE_OPTION_KEY; co.gre.K = TRUE; break;
+      case OPTION_GRE_CHECKSUM_PRESENT: co.gre.options |= GRE_OPTION_CHECKSUM; co.gre.C = TRUE; break;
       case OPTION_GRE_KEY:              co.gre.key      = atol(optarg); break;
       case OPTION_GRE_SEQUENCE:         co.gre.sequence = atoi(optarg); break;
       case OPTION_GRE_SADDR:            co.gre.saddr    = resolv(optarg); break;
@@ -477,10 +474,10 @@ struct config_options *getConfigOptions(int argc, char **argv)
         break;
 
       /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
-      case OPTION_ICMP_TYPE:      co.icmp.type = atoi(optarg); break;
-      case OPTION_ICMP_CODE:      co.icmp.code = atoi(optarg); break;
-      case OPTION_ICMP_ID:        co.icmp.id = atoi(optarg); break;
-      case OPTION_ICMP_SEQUENCE:  co.icmp.sequence = atoi(optarg); break;
+      case OPTION_ICMP_TYPE:      CheckRangeFromBits("--icmp-type", 8, tmp = atoi(optarg)); co.icmp.type = tmp; break;
+      case OPTION_ICMP_CODE:      CheckRangeFromBits("--icmp-code", 8, tmp = atoi(optarg)); co.icmp.code = tmp; break;
+      case OPTION_ICMP_ID:        CheckRangeFromBits("--icmp-id",  16, tmp = atoi(optarg)); co.icmp.id = tmp; break;
+      case OPTION_ICMP_SEQUENCE:  CheckRangeFromBits("--icmp-sequence", 16, tmp = atoi(optarg)); co.icmp.sequence = tmp; break;
       case OPTION_ICMP_GATEWAY:   co.icmp.gateway = resolv(optarg); break;
 
       /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2) */
@@ -488,7 +485,7 @@ struct config_options *getConfigOptions(int argc, char **argv)
       case OPTION_IGMP_CODE:            co.igmp.code = atoi(optarg); break;
       case OPTION_IGMP_GROUP:           co.igmp.group = resolv(optarg); break;
       case OPTION_IGMP_QRV:             co.igmp.qrv = atoi(optarg); break;
-      case OPTION_IGMP_SUPPRESS:        co.igmp.suppress = 1;  break;
+      case OPTION_IGMP_SUPPRESS:        co.igmp.suppress = TRUE;  break;
       case OPTION_IGMP_QQIC:            co.igmp.qqic = atoi(optarg); break;
       case OPTION_IGMP_GREC_TYPE:       co.igmp.grec_type = atoi(optarg); break;
       case OPTION_IGMP_SOURCES:         co.igmp.sources = atoi(optarg); break;
@@ -533,12 +530,9 @@ struct config_options *getConfigOptions(int argc, char **argv)
         }
         break;
       case OPTION_TCP_SACK_OK:    co.tcp.options |= TCP_OPTION_SACK_OK; break;
-      case OPTION_TCP_CC:         co.tcp.options |= TCP_OPTION_CC;
-                                  co.tcp.cc = atol(optarg); break;
-      case OPTION_TCP_CC_NEW:     co.tcp.options |= TCP_OPTION_CC_NEXT;
-                                  co.tcp.cc_new = atol(optarg); break;
-      case OPTION_TCP_CC_ECHO:    co.tcp.options |= TCP_OPTION_CC_NEXT;
-                                  co.tcp.cc_echo = atol(optarg); break;
+      case OPTION_TCP_CC:         co.tcp.options |= TCP_OPTION_CC; co.tcp.cc = atol(optarg); break;
+      case OPTION_TCP_CC_NEW:     co.tcp.options |= TCP_OPTION_CC_NEXT; co.tcp.cc_new = atol(optarg); break;
+      case OPTION_TCP_CC_ECHO:    co.tcp.options |= TCP_OPTION_CC_NEXT; co.tcp.cc_echo = atol(optarg); break;
       case OPTION_TCP_SACK_EDGE:
         co.tcp.options |= TCP_OPTION_SACK_EDGE;
 
@@ -551,10 +545,8 @@ struct config_options *getConfigOptions(int argc, char **argv)
         }
         break;
 
-      case OPTION_TCP_MD5_SIGNATURE:  co.tcp.md5  = TRUE;
-                                      co.tcp.auth = FALSE; break;
-      case OPTION_TCP_AUTHENTICATION: co.tcp.md5  = FALSE;
-                                      co.tcp.auth = TRUE; break;
+      case OPTION_TCP_MD5_SIGNATURE:  co.tcp.md5  = TRUE; co.tcp.auth = FALSE; break;
+      case OPTION_TCP_AUTHENTICATION: co.tcp.md5  = FALSE; co.tcp.auth = TRUE; break;
       case OPTION_TCP_AUTH_KEY_ID:    co.tcp.key_id = atoi(optarg); break;
       case OPTION_TCP_AUTH_NEXT_KEY:  co.tcp.next_key = atoi(optarg); break;
       case OPTION_TCP_NOP:            co.tcp.nop = TCPOPT_NOP; break;

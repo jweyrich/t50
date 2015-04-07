@@ -154,7 +154,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
    *       |     |       |0|                                               |
    *       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  dccp->dccph_x        = co->dccp.ext;
+  dccp->dccph_x        = (co->dccp.ext != 0);
   dccp->dccph_seq      = htons(__RND(co->dccp.sequence_01));
   dccp->dccph_seq2     = co->dccp.ext ? 0 : __RND(co->dccp.sequence_02);
   dccp->dccph_checksum = 0;

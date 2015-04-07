@@ -92,7 +92,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
     igmpv3_query->group    = INADDR_RND(co->igmp.group);
-    igmpv3_query->suppress = co->igmp.suppress;
+    igmpv3_query->suppress = (co->igmp.suppress != 0);
     igmpv3_query->qrv      = __RND(co->igmp.qrv);
     igmpv3_query->qqic     = __RND(co->igmp.qqic);
     igmpv3_query->nsrcs    = htons(co->igmp.sources);

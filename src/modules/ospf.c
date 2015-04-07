@@ -22,7 +22,7 @@
 /*
  * prototypes.
  */
-static size_t ospf_hdr_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
+static size_t ospf_hdr_len(const unsigned int, const int, const int, const int);
 
 /* Function Name: OSPF packet header configuration.
 
@@ -708,7 +708,7 @@ build_ospf_lsa:
 Description:   This function calculates the size of OSPF header.
 
 Targets:       N/A */
-static size_t ospf_hdr_len(const uint8_t foo, const uint8_t bar, const uint8_t baz, const uint8_t qux)
+static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz, const int qux)
 {
   size_t size;
 

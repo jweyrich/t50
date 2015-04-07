@@ -296,9 +296,9 @@ struct config_options {
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                     */
   struct {
     uint8_t   options;        /* GRE options bitmask         */
-    uint8_t   S:1;            /* sequence number present     */
-    uint8_t   K:1;            /* key present                 */
-    uint8_t   C:1;            /* checksum present            */
+    int       S;              /* sequence number present     */
+    int       K;              /* key present                 */
+    int       C;              /* checksum present            */
     uint32_t  key;            /* key                         */
     uint32_t  sequence;       /* sequence number             */
     in_addr_t saddr;          /* GRE source address          */
@@ -319,8 +319,8 @@ struct config_options {
     uint8_t   type;           /* type                        */
     uint8_t   code;           /* code                        */
     in_addr_t group;          /* group address               */
-    uint8_t   qrv:3,          /* querier robustness variable */
-              suppress:1;     /* suppress router-side        */
+    uint8_t   qrv:3;          /* querier robustness variable */
+    int       suppress;       /* suppress router-side        */
     uint8_t   qqic;           /* querier query interv. code  */
     uint8_t   grec_type;      /* group record type           */
     uint8_t   sources;        /* number of sources           */
@@ -333,14 +333,14 @@ struct config_options {
     uint32_t  sequence;       /* initial sequence number     */
     uint32_t  acknowledge;    /* acknowledgment sequence     */
     uint8_t   doff:4;         /* data offset                 */
-    uint8_t   fin:1;          /* end of data flag            */
-    uint8_t   syn:1;          /* synchronize ISN flag        */
-    uint8_t   rst:1;          /* reset connection flag       */
-    uint8_t   psh:1;          /* push flag                   */
-    uint8_t   ack:1;          /* acknowledgment # valid flag */
-    uint8_t   urg:1;          /* urgent pointer valid flag   */
-    uint8_t   ece:1;          /* ecn-echo                    */
-    uint8_t   cwr:1;          /* congestion windows reduced  */
+    int       fin;            /* end of data flag            */
+    int       syn;            /* synchronize ISN flag        */
+    int       rst;            /* reset connection flag       */
+    int       psh;            /* push flag                   */
+    int       ack;            /* acknowledgment # valid flag */
+    int       urg;            /* urgent pointer valid flag   */
+    int       ece;            /* ecn-echo                    */
+    int       cwr;            /* congestion windows reduced  */
     uint16_t  window;         /* window size                 */
     uint16_t  urg_ptr;        /* urgent pointer data         */
     uint8_t   options;        /* TCP options bitmask         */
@@ -353,8 +353,8 @@ struct config_options {
     uint32_t  cc_echo;        /* T/TCP CC.ECHO     (RFC1644) */
     uint32_t  sack_left;      /* SACK-Left option  (RFC2018) */
     uint32_t  sack_right;     /* SACK-Right option (RFC2018) */
-    uint8_t   md5:1;          /* MD5 Option        (RFC2385) */
-    uint8_t   auth:1;         /* AO Option         (RFC5925) */
+    int       md5;            /* MD5 Option        (RFC2385) */
+    int       auth;           /* AO Option         (RFC5925) */
     uint8_t   key_id;         /* AO key ID         (RFC5925) */
     uint8_t   next_key;       /* AO next key ID    (RFC5925) */
     uint8_t   nop;            /* NOP option        (RFC793)  */
@@ -381,7 +381,7 @@ struct config_options {
     uint16_t  tag;            /* router tag                  */
     in_addr_t netmask;        /* subnet mask                 */
     in_addr_t next_hop;       /* next hop                    */
-    uint8_t   auth:1;         /* authentication              */
+    int       auth;           /* authentication              */
     uint8_t   key_id;         /* authentication key ID       */
     uint32_t  sequence;       /* authentication sequence     */
   } rip;
@@ -392,7 +392,7 @@ struct config_options {
     uint8_t   cscov:4;        /* checksum coverage           */
     uint8_t   ccval:4;        /* HC-sender CCID              */
     uint8_t   type:4;         /* DCCP type                   */
-    uint8_t   ext:1;          /* extend the sequence number  */
+    int       ext;            /* extend the sequence number  */
     uint16_t  sequence_01;    /* sequence number             */
     uint8_t   sequence_02;    /* extended sequence number    */
     uint32_t  sequence_03;    /* low sequence number         */
@@ -497,7 +497,7 @@ struct config_options {
     uint16_t  length;         /* length                      */
     in_addr_t rid;            /* router ID                   */
     in_addr_t aid;            /* area ID                     */
-    uint8_t   AID:1;          /* area ID present             */
+    int       AID;            /* area ID present             */
     uint8_t   options;        /* options                     */
     in_addr_t netmask;        /* subnet mask                 */
     uint16_t  hello_interval; /* HELLO interval              */
@@ -512,7 +512,7 @@ struct config_options {
     uint32_t  dd_sequence;    /* DD sequence number          */
     uint8_t   dd_include_lsa; /* DD LSA Header               */
     uint16_t  lsa_age;        /* LSA age                     */
-    uint8_t   lsa_dage:1;     /* LSA do not age              */
+    int       lsa_dage;       /* LSA do not age              */
     uint8_t   lsa_type;       /* LSA header type             */
     in_addr_t lsa_lsid;       /* LSA ID                      */
     in_addr_t lsa_router;     /* LSA advertising router      */
@@ -523,13 +523,13 @@ struct config_options {
     in_addr_t lsa_link_data;  /* Router-LSA link data        */
     uint8_t   lsa_link_type;  /* Router-LSA link type        */
     in_addr_t lsa_attached;   /* Network-LSA attached router */
-    uint8_t   lsa_larger:1;   /* ASBR/NSSA-LSA ext. larger   */
+    int       lsa_larger;     /* ASBR/NSSA-LSA ext. larger   */
     in_addr_t lsa_forward;    /* ASBR/NSSA-LSA forward       */
     in_addr_t lsa_external;   /* ASBR/NSSA-LSA external      */
     uint32_t  vertex_type;    /* Group-LSA vertex type       */
     in_addr_t vertex_id;      /* Group-LSA vertex ID         */
     uint32_t  lls_options;    /* LSS Extended TLV options    */
-    uint8_t   auth:1;         /* authentication              */
+    int       auth;           /* authentication              */
     uint8_t   key_id;         /* authentication key ID       */
     uint32_t  sequence;       /* authentication sequence     */
   } ospf;

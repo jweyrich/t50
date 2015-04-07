@@ -46,7 +46,7 @@
 #define AUTH_TYPE_HMACNUL 0x0000
 #define AUTH_TYPE_HMACMD5 0x0002
 #define AUTH_TLEN_HMACMD5 16
-#define AUTH_TLEN_HMACMD5 16
+
 #define auth_hmac_md5_len(foo) ((foo) ? AUTH_TLEN_HMACMD5 : 0)
 
 /* #define IPVERSION 4 */ /* NOTE: Already defined in netinet/in.h. */
