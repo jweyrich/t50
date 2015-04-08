@@ -143,7 +143,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
   return NULL;
 }
 
-void gre_checksum(void *buffer, const struct config_options *co, uint32_t packet_size)
+void gre_checksum(void *buffer, const struct config_options *co, size_t packet_size)
 {
   struct gre_hdr *gre;
   struct gre_sum_hdr *gre_sum;
@@ -155,7 +155,7 @@ void gre_checksum(void *buffer, const struct config_options *co, uint32_t packet
   if (co->encapsulated)
   {
     gre = (struct gre_hdr *)(buffer + sizeof(struct iphdr));
-    gre_sum = (struct gre_sum_hdr *)((void *)gre + sizeof(struct gre_hdr));
+    gre_sum = (struct gre_sum_hdr *)(gre + 1);
 
     /* Computing the checksum. */
     if (TEST_BITS(co->gre.options, GRE_OPTION_CHECKSUM))
@@ -170,7 +170,7 @@ void gre_checksum(void *buffer, const struct config_options *co, uint32_t packet
    Description:   This function calculates the size of GRE header.
 
    Targets:       N/A */
-size_t gre_opt_len(const uint8_t foo, const uint8_t bar)
+size_t gre_opt_len(const unsigned foo, int bar)
 {
   size_t size;
 
