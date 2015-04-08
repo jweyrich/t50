@@ -76,7 +76,7 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   egp->check    = co->bogus_csum ? RANDOM() : 
-    cksum(egp, sizeof(struct egp_hdr) + sizeof(struct egp_acq_hdr));
+    cksum(egp, (void *)(egp_acq + 1) - (void *)egp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

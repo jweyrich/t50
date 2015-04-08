@@ -22,7 +22,7 @@
 /*
  * prototypes.
  */
-static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const uint32_t);
+static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const int);
 
 /* Function Name: EIGRP packet header configuration.
 
@@ -437,7 +437,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
 
 /* EIGRP header size calculation */
 static size_t eigrp_hdr_len(const uint16_t foo,
-    const uint16_t bar, const uint8_t baz, const uint32_t qux)
+    const uint16_t bar, const uint8_t baz, const int qux)
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */
@@ -498,7 +498,7 @@ static size_t eigrp_hdr_len(const uint16_t foo,
      * exactly what I saw on live  EIGRP PCAP files.  Read the code and
      * you will understand what I am talking about.
      */
-    switch(bar)
+    switch (bar)
     {
       case EIGRP_TYPE_MULTICAST:
         size += EIGRP_TLEN_MULTICAST;

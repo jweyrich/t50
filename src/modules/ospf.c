@@ -736,7 +736,8 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
        */
     case OSPF_TYPE_DD:
       size += OSPF_TLEN_DD;
-      size += (qux ? LSA_TLEN_GENERIC(0) : 0);
+      if (qux)
+        size += LSA_TLEN_GENERIC(0);
       break;
 
     case OSPF_TYPE_LSREQUEST:

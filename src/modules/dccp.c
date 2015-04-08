@@ -28,8 +28,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          dccp_length, /* DCCP header length. */
-         dccp_ext_length, /* DCCP Extended Sequence Number length. */
-         length;
+         dccp_ext_length; /* DCCP Extended Sequence Number length. */
 
   /* Packet and Checksum. */
   void *buffer_ptr;
@@ -159,8 +158,6 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   dccp->dccph_seq2     = co->dccp.ext ? 0 : __RND(co->dccp.sequence_02);
   dccp->dccph_checksum = 0;
 
-  length  = sizeof(struct dccp_hdr);
-
   /* NOTE: Not using union 'mptr_t' this time!!! */
   buffer_ptr = dccp + 1;
 
@@ -230,15 +227,23 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure??? */
   pseudo = buffer_ptr;
-  pseudo->saddr = co->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr = co->encapsulated ? gre_ip->daddr : ip->daddr;
+  if (co->encapsulated)
+  {
+    pseudo->saddr = gre_ip->saddr;
+    pseudo->daddr = gre_ip->daddr;
+  }
+  else
+  {
+    pseudo->saddr = ip->saddr;
+    pseudo->daddr = ip->daddr;
+  }
   pseudo->zero  = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length = (buffer_ptr - (void *)dccp));
+  pseudo->len      = htons(buffer_ptr - (void *)dccp);
 
   /* Computing the checksum. */
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() : 
-    cksum(dccp, length + sizeof(struct psdhdr));
+    cksum(dccp, (void *)(pseudo + 1) - (void *)dccp);
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);

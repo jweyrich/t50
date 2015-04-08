@@ -585,6 +585,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
       /* DON'T NEED THIS! */
       /* length += RSVP_LENGTH_SCOPE(co->rsvp.scope); */
     }
+
     /*
      * Resource ReSerVation Protocol (RSVP) (RFC 2205)
      *
