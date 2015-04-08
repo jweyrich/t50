@@ -65,7 +65,12 @@ LDFLAGS =
 #
 ifdef DEBUG
   OBJS += $(OBJ_DIR)/debug.o
-  CFLAGS += -O0 -D__HAVE_DEBUG__ -DDUMP_DATA -g
+  CFLAGS += -O0 -D__HAVE_DEBUG__
+#
+# Define DUMP_DATA if you want to view a big log file...
+#
+
+# CFLAGS +=  -DDUMP_DATA -g
 else
   CFLAGS += -O3 -mtune=native -flto -ffast-math -fomit-frame-pointer -DNDEBUG -D__HAVE_TURBO__
 
