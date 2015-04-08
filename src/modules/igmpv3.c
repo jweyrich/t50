@@ -38,7 +38,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr) +
     greoptlen            +
     igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
@@ -81,10 +81,8 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     /* Computing the checksum. */
     igmpv3_report->csum     = co->bogus_csum ?
       RANDOM() :
-      cksum(igmpv3_report, 
-        sizeof(struct igmpv3_report) + 
-        sizeof(struct igmpv3_grec)   + 
-        IGMPV3_TLEN_NSRCS(co->igmp.sources));
+      cksum(igmpv3_report,
+        buffer.ptr - (void *)igmpv3_report);
   }
   else
   {

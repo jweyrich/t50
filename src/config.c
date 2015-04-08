@@ -426,9 +426,9 @@ struct config_options *getConfigOptions(int argc, char **argv)
         break;
 
       /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
-      case OPTION_GRE_SEQUENCE_PRESENT: co.gre.options |= GRE_OPTION_SEQUENCE; co.gre.S = TRUE; break;
-      case OPTION_GRE_KEY_PRESENT:      co.gre.options |= GRE_OPTION_KEY; co.gre.K = TRUE; break;
-      case OPTION_GRE_CHECKSUM_PRESENT: co.gre.options |= GRE_OPTION_CHECKSUM; co.gre.C = TRUE; break;
+      case OPTION_GRE_SEQUENCE_PRESENT: /* co.gre.options |= GRE_OPTION_SEQUENCE;*/ co.gre.S = TRUE; break;
+      case OPTION_GRE_KEY_PRESENT:      /* co.gre.options |= GRE_OPTION_KEY; */ co.gre.K = TRUE; break;
+      case OPTION_GRE_CHECKSUM_PRESENT: /* co.gre.options |= GRE_OPTION_CHECKSUM; */ co.gre.C = TRUE; break;
       case OPTION_GRE_KEY:              co.gre.key      = atol(optarg); break;
       case OPTION_GRE_SEQUENCE:         co.gre.sequence = atoi(optarg); break;
       case OPTION_GRE_SADDR:            co.gre.saddr    = resolv(optarg); break;

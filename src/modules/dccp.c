@@ -52,7 +52,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   dccp_length = dccp_packet_hdr_len(co->dccp.type);
   dccp_ext_length = (co->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
   *size = sizeof(struct iphdr) +

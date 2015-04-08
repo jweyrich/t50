@@ -43,8 +43,11 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
-  *size = sizeof(struct iphdr) + greoptlen + sizeof(struct udphdr) + sizeof(struct psdhdr);
+  greoptlen = gre_opt_len(co);
+  *size = sizeof(struct iphdr) + 
+          greoptlen + 
+          sizeof(struct udphdr) + 
+          sizeof(struct psdhdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -64,15 +67,23 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Fill PSEUDO Header structure. */
   pseudo           = (struct psdhdr *)(udp + 1);
-  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
+  if (co->encapsulated)
+  {
+    pseudo->saddr = gre_ip->saddr;
+    pseudo->daddr = gre_ip->daddr;
+  }
+  else
+  {
+    pseudo->saddr = ip->saddr;
+    pseudo->daddr = ip->daddr;
+  }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(sizeof(struct udphdr));
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-    cksum(udp, sizeof(struct udphdr) + sizeof(struct psdhdr));
+    cksum(udp, (void *)(pseudo + 1) - (void *)udp);
 
 #ifdef DUMP_DATA
   dump_udp(fdebug, udp);

@@ -154,8 +154,8 @@ struct gre_seq_hdr {
 	uint32_t sequence;          /* sequence number             */
 };	
 
-size_t gre_opt_len(const unsigned foo, const int bar);
-struct iphdr *gre_encapsulation(void *, const struct config_options *, uint32_t);
+size_t gre_opt_len(const struct config_options * const __restrict__);
+struct iphdr *gre_encapsulation(void *, const struct config_options * const __restrict__, uint32_t);
 void gre_checksum(void *, const struct config_options *, size_t);
 
 #endif  /* __GRE_H */

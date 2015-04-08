@@ -44,7 +44,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   objects_length = rsvp_objects_len(co->rsvp.type, co->rsvp.scope, co->rsvp.adspec, co->rsvp.tspec);
   *size = sizeof(struct iphdr)           +
           sizeof(struct rsvp_common_hdr) +

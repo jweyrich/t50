@@ -295,7 +295,7 @@ struct config_options {
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                     */
   struct {
-    uint8_t   options;        /* GRE options bitmask         */
+    //uint8_t   options;        /* GRE options bitmask         */
     int       S;              /* sequence number present     */
     int       K;              /* key present                 */
     int       C;              /* checksum present            */

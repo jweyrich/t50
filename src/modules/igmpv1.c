@@ -33,7 +33,7 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
   assert(co != NULL);
 
   /* GRE options size. */
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
 
   /* Packet size. */
   *size = sizeof(struct iphdr) +

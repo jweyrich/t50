@@ -24,7 +24,7 @@ static struct cidr cidr = { 0, 0 };
 /* CIDR configuration tiny C algorithm */
 struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 {
-  /* FIX: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
+  /* FIXME: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
 
   /*
    * @nbrito -- Thu Dec 23 13:06:39 BRST 2010

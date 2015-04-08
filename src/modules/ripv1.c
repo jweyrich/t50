@@ -44,7 +44,7 @@ void ripv1(const struct config_options *const co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr)  +
           greoptlen             +
           sizeof(struct udphdr) +

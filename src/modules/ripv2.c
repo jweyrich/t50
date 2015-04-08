@@ -45,7 +45,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr)  +
           greoptlen             +
           sizeof(struct udphdr) +
@@ -157,7 +157,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
    */
   if (co->rip.auth)
   {
-    *buffer.word_ptr++ = htons(0xffff);
+    *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here! */
     *buffer.word_ptr++ = htons(0x0003);
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH +
         RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
@@ -227,7 +227,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   {
     size_t size;
 
-    *buffer.word_ptr++ = htons(0xffff);
+    *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here. */
     *buffer.word_ptr++ = htons(0x0001);
 
     /*
@@ -243,8 +243,16 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
-  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
+  if (co->encapsulated)
+  {
+    pseudo->saddr    = gre_ip->saddr;
+    pseudo->daddr    = gre_ip->daddr;
+  }
+  else
+  {
+    pseudo->saddr    = ip->saddr;
+    pseudo->daddr    = ip->daddr;
+  }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = (buffer.ptr - (void *)udp));

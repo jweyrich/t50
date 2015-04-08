@@ -50,7 +50,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
   *size = sizeof(struct iphdr)  +
@@ -426,8 +426,16 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Fill PSEUDO Header structure. */
   pseudo           = buffer.ptr;
-  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
+  if (co->encapsulated)
+  {
+    pseudo->saddr    = gre_ip->saddr;
+    pseudo->daddr    = gre_ip->daddr;
+  }
+  else
+  {
+    pseudo->saddr    = ip->saddr;
+    pseudo->daddr    = ip->daddr;
+  }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length);

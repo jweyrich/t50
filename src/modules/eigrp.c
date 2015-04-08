@@ -46,7 +46,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   prefix = __RND(co->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
   *size = sizeof(struct iphdr)     +

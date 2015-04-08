@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   struct config_options *co;  /* Pointer to options. */
   struct cidr *cidr_ptr;      /* Pointer to cidr host id and 1st ip address. */
   modules_table_t *ptbl;      /* Pointer to modules table */
-  uint8_t proto;              /* Used on main loop. */
+  int proto;                  /* Used on main loop. */
 
   /* This is a requirement of t50. User must be root to use it. 
      Previously on checkConfigOptions(). */
@@ -132,14 +132,14 @@ int main(int argc, char *argv[])
       tm->tm_sec);
   }
 
+  /* Preallocate packet buffer. */
+  alloc_packet(INITIAL_PACKET_SIZE);
+
   /* Selects the initial protocol to use. */
   proto = co->ip.protocol;
   ptbl = mod_table;
   if (proto != IPPROTO_T50)
     ptbl += co->ip.protoname;
-
-  /* Preallocate packet buffer. */
-  alloc_packet(INITIAL_PACKET_SIZE);
 
   /* Execute if flood or while threshold greater than 0. */
   while (co->flood || (co->threshold-- > 0))
@@ -209,7 +209,6 @@ int main(int argc, char *argv[])
 #ifdef DUMP_DATA
   fclose(fdebug);
 #endif
-
 
   return 0;
 }

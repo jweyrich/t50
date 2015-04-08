@@ -42,7 +42,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
   *size = sizeof(struct iphdr) +

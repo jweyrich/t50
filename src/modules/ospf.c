@@ -33,7 +33,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ospf_length, /* OSPF header length. */
-         length,
+         //length,
          counter,
          stemp;
 
@@ -55,7 +55,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co->gre.options, co->encapsulated);
+  greoptlen = gre_opt_len(co);
   ospf_options = __RND(co->ospf.options);
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
   ospf_length = ospf_hdr_len(co->ospf.type, co->ospf.neighbor, co->ospf.lsa_type, co->ospf.dd_include_lsa);
@@ -154,7 +154,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
     ospf_auth->sequence = FIELD_MUST_BE_ZERO;
   }
 
-  length = sizeof(struct ospf_auth_hdr);
+  //length = sizeof(struct ospf_auth_hdr);
 
   buffer.ptr = ospf_auth + 1;
 
@@ -192,13 +192,13 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_design);
       *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_backup);
 
-      length += OSPF_TLEN_HELLO;
+      //length += OSPF_TLEN_HELLO;
 
       /* Dealing with neighbor address(es). */
       for (counter = 0; counter < co->ospf.neighbor; counter++)
         *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.address[counter]);
 
-      length += OSPF_TLEN_NEIGHBOR(co->ospf.neighbor);
+      //length += OSPF_TLEN_NEIGHBOR(co->ospf.neighbor);
       break;
 
     case OSPF_TYPE_DD:
@@ -230,7 +230,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.byte_ptr++ = __RND(co->ospf.dd_dbdesc);
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.dd_sequence));
 
-      length += OSPF_TLEN_DD;
+      //length += OSPF_TLEN_DD;
       break;
 
     case OSPF_TYPE_LSREQUEST:
@@ -253,7 +253,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_lsid));
       *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_router);
 
-      length += OSPF_TLEN_LSREQUEST;
+      //length += OSPF_TLEN_LSREQUEST;
       break;
 
     case OSPF_TYPE_LSUPDATE:
@@ -311,7 +311,7 @@ build_ospf_lsupdate:
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(__RND(co->ospf.lsa_metric));
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER;
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -340,7 +340,7 @@ build_ospf_lsupdate:
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
         *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_attached);
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum  ?
@@ -370,9 +370,9 @@ build_ospf_lsupdate:
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
-        buffer.ptr--;
+        buffer.ptr--; /* hack! */
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY;
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY;
 
         /* Computing the checksum. */
         ospf_lsa->check =  co->bogus_csum ?
@@ -410,11 +410,11 @@ build_ospf_lsupdate:
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
         *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
-        buffer.ptr--;
+        buffer.ptr--;   /* hack! */
         *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_forward);
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR;
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -443,7 +443,7 @@ build_ospf_lsupdate:
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.vertex_type));
         *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.vertex_id);
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST;
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -458,7 +458,7 @@ build_ospf_lsupdate:
             co->ospf.length :
             LSA_TLEN_GENERIC(0));
 
-        length += OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0);
+        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0);
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -557,7 +557,7 @@ build_ospf_lsa:
             co->ospf.length :
             LSA_TLEN_GENERIC(0));
 
-      length += LSA_TLEN_GENERIC(0);
+      //length += LSA_TLEN_GENERIC(0);
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
@@ -573,7 +573,7 @@ build_ospf_lsa:
   for (counter = 0; counter < stemp; counter++)
     *buffer.byte_ptr++ = RANDOM();
 
-  length += stemp;
+  //length += stemp;
 
   /*
    * OSPF Link-Local Signaling (RFC 5613)
@@ -682,7 +682,7 @@ build_ospf_lsa:
           cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
       }
 
-      length += ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
+      //length += ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
     }
   }
 
@@ -698,7 +698,8 @@ build_ospf_lsa:
     /* Computing the checksum. */
     ospf->check   = co->bogus_csum ?
       RANDOM() :
-      cksum(ospf, sizeof(struct ospf_hdr) + length);
+      //cksum(ospf, sizeof(struct ospf_hdr) + length);
+      cksum(ospf, buffer.ptr - (void *)ospf);
 
   gre_checksum(packet, co, *size);
 }
