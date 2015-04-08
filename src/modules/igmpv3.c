@@ -58,7 +58,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
   if (co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT)
   {
     /* IGMPv3 Report Header structure making a pointer to Packet. */
-    igmpv3_report           = (struct igmpv3_report *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+    igmpv3_report           = (struct igmpv3_report *)((void *)(ip + 1) + greoptlen);
     igmpv3_report->type     = co->igmp.type;
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
@@ -66,14 +66,15 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_report->csum     = 0;
 
     /* IGMPv3 Group Record Header structure making a pointer to Checksum. */
-    igmpv3_grec                = (void *)igmpv3_report + sizeof(struct igmpv3_report);
+    igmpv3_grec                = (struct igmpv3_grec *)(igmpv3_report + 1);
     igmpv3_grec->grec_type     = __RND(co->igmp.grec_type);
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
     igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources);
     igmpv3_grec->grec_mca      = INADDR_RND(co->igmp.grec_mca);
 
     /* Dealing with source address(es). */
-    buffer.ptr = (void *)igmpv3_grec + sizeof(struct igmpv3_grec);
+    buffer.ptr = igmpv3_grec + 1;
+
     for (counter = 0; counter < co->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
@@ -88,7 +89,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
   else
   {
     /* IGMPv3 Query Header structure making a pointer to Packet. */
-    igmpv3_query           = (struct igmpv3_query *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+    igmpv3_query           = (struct igmpv3_query *)((void *)(ip + 1) + greoptlen);
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
     igmpv3_query->group    = INADDR_RND(co->igmp.group);
@@ -99,11 +100,13 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_query->csum     = 0;
 
     /* Dealing with source address(es). */
-    buffer.ptr = (void *)igmpv3_query + sizeof(struct igmpv3_query);
+    buffer.ptr = igmpv3_query + 1;
+
     for (counter = 0; counter < co->igmp.sources; counter++)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
+    /* FIXME: And the "sources" part? */
     igmpv3_query->csum     = co->bogus_csum ?
       RANDOM() :
       cksum(igmpv3_query, 

@@ -83,7 +83,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
         ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
-  ospf          = (struct ospf_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  ospf          = (struct ospf_hdr *)((void *)(ip + 1) + greoptlen);
   ospf->version = OSPFVERSION;
   ospf->type    = co->ospf.type;
 
@@ -107,7 +107,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   ospf->check   = 0;
 
   /* OSPF Authentication Header structure making a pointer to OSPF Header structure. */
-  ospf_auth       = (struct ospf_auth_hdr *)((void *)ospf + sizeof(struct ospf_hdr));
+  ospf_auth       = (struct ospf_auth_hdr *)(ospf + 1);
 
   /* Identifiyingt whether to use Authentication or not. */
   ospf_auth->reserved = FIELD_MUST_BE_ZERO;
@@ -156,7 +156,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
 
   length = sizeof(struct ospf_auth_hdr);
 
-  buffer.ptr = (void *)ospf_auth + length;
+  buffer.ptr = ospf_auth + 1;
 
   /* Identifying the OSPF Type and building it. */
   switch (co->ospf.type)
@@ -508,7 +508,7 @@ build_ospf_lsupdate:
     {
       /* OSPF LSA Header structure making a pointer to Checksum. */
 build_ospf_lsa:
-      ospf_lsa             = (struct ospf_lsa_hdr *)buffer.ptr;
+      ospf_lsa             = buffer.ptr;
       ospf_lsa->age        = htons(__RND(co->ospf.lsa_age));
       /* Deciding whether age or not. */
       if (co->ospf.lsa_dage)
@@ -520,7 +520,7 @@ build_ospf_lsa:
       ospf_lsa->sequence   = htonl(__RND(co->ospf.lsa_sequence));
       ospf_lsa->check      = 0;
 
-      buffer.ptr += sizeof(struct ospf_lsa_hdr);
+      buffer.ptr = ospf_lsa + 1;
 
       /* Returning to the OSPF type LSUpdate and continue builing it. */
       if (co->ospf.type == OSPF_TYPE_LSUPDATE)
@@ -589,13 +589,13 @@ build_ospf_lsa:
     if (lls)
     {
       /* OSPF LLS TLVs structure making a pointer to Checksum. */
-      ospf_lls         = (struct ospf_lls_hdr *)buffer.ptr;
+      ospf_lls         = buffer.ptr;
       ospf_lls->length = htons(co->ospf.length ?
           co->ospf.length :
           ospf_tlv_len(co->ospf.type, lls, co->ospf.auth)/4);
       ospf_lls->check  = 0;
 
-      buffer.ptr += sizeof(struct ospf_lls_hdr);
+      buffer.ptr = ospf_lls + 1;
 
       /*
        * OSPF Link-Local Signaling (RFC 5613)

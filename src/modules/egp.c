@@ -60,7 +60,7 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = (struct egp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  egp           = (struct egp_hdr *)((void *)(ip + 1) + greoptlen);
   egp->version  = EGPVERSION;
   egp->type     = co->egp.type;
   egp->code     = co->egp.code;
@@ -70,7 +70,7 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   egp->check    = 0;
 
   /* EGP Acquire Header structure. */
-  egp_acq        = (struct egp_acq_hdr *)((void *)egp + sizeof(struct egp_hdr));
+  egp_acq        = (struct egp_acq_hdr *)(egp + 1);
   egp_acq->hello = __RND(co->egp.hello);
   egp_acq->poll  = __RND(co->egp.poll);
 

@@ -30,7 +30,7 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   assert(buffer != NULL);
   assert(co != NULL);
 
-  ip = (struct iphdr *)buffer;
+  ip = buffer;
   ip->version  = IPVERSION;
   ip->ihl      = sizeof(struct iphdr) / 4;
   ip->tos      = co->ip.tos;

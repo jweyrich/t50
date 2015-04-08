@@ -79,7 +79,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
    *
    * EIGRP Header structure.
    */
-  eigrp              = (struct eigrp_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  eigrp              = (struct eigrp_hdr *)((void *)(ip + 1) + greoptlen);
   eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __RND(co->eigrp.opcode);
   eigrp->flags       = htonl(__RND(co->eigrp.flags));
@@ -92,7 +92,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   /* DON'T NEED THIS */
   /* length  = sizeof(struct eigrp_hdr); */
 
-  buffer.ptr = (void *)eigrp + sizeof(struct eigrp_hdr);
+  buffer.ptr = eigrp + 1;
 
   /*
    * Every live EIGRP PCAP file brings Authentication Data TLV first.

@@ -52,7 +52,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
         sizeof(struct icmphdr));
 
   /* ICMP Header structure making a pointer to Packet. */
-  icmp                   = (struct icmphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  icmp                   = (struct icmphdr *)((void *)(ip + 1) + greoptlen);
   icmp->type             = co->icmp.type;
   icmp->code             = co->icmp.code;
   icmp->un.echo.id       = htons(__RND(co->icmp.id));

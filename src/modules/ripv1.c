@@ -64,13 +64,13 @@ void ripv1(const struct config_options *const co, size_t *size)
         rip_hdr_len(0));
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
   udp->source = htons(IPPORT_RIP);
   udp->dest   = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
 
-  buffer.ptr = (void *)udp + sizeof(struct udphdr);
+  buffer.ptr = udp + 1;
 
   /*
    * Routing Information Protocol (RIP) (RFC 1058)
@@ -108,16 +108,16 @@ void ripv1(const struct config_options *const co, size_t *size)
   /* length += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH; */
 
   /* PSEUDO Header structure making a pointer to Checksum. */
-  pseudo           = (struct psdhdr *)buffer.ptr;
+  pseudo           = buffer.ptr;
   pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length = buffer.ptr - (void *)udp);
+  pseudo->len      = htons(length = (buffer.ptr - (void *)udp));
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() : 
-    cksum(udp, buffer.ptr - (void *)udp + sizeof(struct psdhdr));
+    cksum(udp, (size_t)((void *)(pseudo + 1) - (void *)udp));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

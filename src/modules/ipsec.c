@@ -86,7 +86,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
    */
 
   /* IPSec AH Header structure making a pointer to IP Header structure. */
-  ip_auth          = (struct ip_auth_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  ip_auth          = (struct ip_auth_hdr *)((void *)(ip + 1) + greoptlen);
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
     co->ipsec.ah_length :
@@ -94,18 +94,18 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
 
-  buffer.ptr = (void *)ip_auth + sizeof(struct ip_auth_hdr);
+  buffer.ptr = ip_auth + 1;
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < ip_ah_icv; counter++)
     *buffer.byte_ptr++ = RANDOM();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
-  ip_esp         = (struct ip_esp_hdr *)buffer.ptr;
+  ip_esp         = buffer.ptr;
   ip_esp->spi    = htonl(__RND(co->ipsec.esp_spi));
   ip_esp->seq_no = htonl(__RND(co->ipsec.esp_sequence));
 
-  buffer.ptr += sizeof(struct ip_esp_hdr);
+  buffer.ptr = ip_esp + 1;
 
   /* Setting a fake encrypted content. */
   for (counter = 0; counter < esp_data; counter++)

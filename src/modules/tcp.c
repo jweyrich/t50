@@ -86,7 +86,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   }
 
   /* TCP Header structure making a pointer to IP Header structure. */
-  tcp          = (struct tcphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  tcp          = (struct tcphdr *)((void *)(ip + 1) + greoptlen);
   tcp->source  = htons(IPPORT_RND(co->source));
   tcp->dest    = htons(IPPORT_RND(co->dest));
   tcp->res1    = TCP_RESERVED_BITS;
@@ -105,7 +105,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   tcp->window  = htons(__RND(co->tcp.window));
   tcp->check   = 0; /* Needed 'cause of cksum() call */
 
-  buffer.ptr = (void *)tcp + sizeof(struct tcphdr);
+  buffer.ptr = tcp + 1;
 
   /*
    * Transmission Control Protocol (TCP) (RFC 793)
@@ -425,7 +425,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   length = sizeof(struct tcphdr) + tcpolen;
 
   /* Fill PSEUDO Header structure. */
-  pseudo           = (struct psdhdr *)buffer.ptr;
+  pseudo           = buffer.ptr;
   pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;

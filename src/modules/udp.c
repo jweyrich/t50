@@ -56,14 +56,14 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
     sizeof(struct iphdr) + sizeof(struct udphdr));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
   udp->source = htons(IPPORT_RND(co->source));
   udp->dest   = htons(IPPORT_RND(co->dest));
   udp->len    = htons(sizeof(struct udphdr));
   udp->check  = 0;    /* needed 'cause of cksum(), below! */
 
   /* Fill PSEUDO Header structure. */
-  pseudo           = (struct psdhdr *)((void *)udp + sizeof(struct udphdr));
+  pseudo           = (struct psdhdr *)(udp + 1);
   pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
   pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
   pseudo->zero     = 0;

@@ -64,7 +64,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
         objects_length);
 
   /* RSVP Header structure making a pointer to IP Header structure. */
-  rsvp           = (struct rsvp_common_hdr *)((void *)ip + sizeof(struct iphdr) + greoptlen);
+  rsvp           = (struct rsvp_common_hdr *)((void *)(ip + 1) + greoptlen);
   rsvp->flags    = __RND(co->rsvp.flags);
   rsvp->version  = RSVPVERSION;
   rsvp->type     = co->rsvp.type;
@@ -73,7 +73,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
   rsvp->reserved = FIELD_MUST_BE_ZERO;
   rsvp->check    = 0;
 
-  buffer.ptr = (void *)rsvp + sizeof(struct rsvp_common_hdr);
+  buffer.ptr = rsvp + 1;
 
   /*
    * The SESSION Object Class is present for all RSVP Messages.

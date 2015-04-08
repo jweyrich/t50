@@ -25,10 +25,9 @@
 
 struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, uint32_t total_len)
 {
-  struct iphdr *ip, *gre_ip;
-  struct gre_hdr *gre;
-  struct gre_sum_hdr *gre_sum;
-  size_t offset;
+  struct iphdr *ip,  *gre_ip;
+  struct gre_hdr     *gre;
+  void               *offset;
 
   assert(buffer != NULL);
   assert(co != NULL);
@@ -36,8 +35,27 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
   /* GRE Encapsulation takes place. */
   if (co->encapsulated)
   {
+    ip = buffer;
+
     /* GRE Header structure making a pointer to IP Header structure. */
-    gre          = (struct gre_hdr *)(buffer + sizeof(struct iphdr));
+
+    /*
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |C|R|K|S|s|Recur|  Flags  | Ver |         Protocol Type         |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |      Checksum (optional)      |       Offset (optional)       |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                         Key (optional)                        |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                    Sequence Number (optional)                 |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                         Routing (optional)
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    */
+
+    gre          = (struct gre_hdr *)(ip + 1);
     gre->C       = co->gre.C;
     gre->K       = co->gre.K;
     gre->R       = FIELD_MUST_BE_ZERO;
@@ -49,13 +67,15 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
     gre->proto   = htons(ETH_P_IP);
 
     /* Computing the GRE offset. */
-    offset  = sizeof(struct iphdr) + sizeof(struct gre_hdr);
+    offset  = gre + 1;
 
     /* GRE CHECKSUM? */
     if (TEST_BITS(co->gre.options, GRE_OPTION_CHECKSUM))
     {
       /* GRE CHECKSUM Header structure making a pointer to IP Header structure. */
-      gre_sum         = (struct gre_sum_hdr *)(buffer + offset);
+      struct gre_sum_hdr *gre_sum;
+
+      gre_sum         = offset;
       gre_sum->offset = FIELD_MUST_BE_ZERO;
       gre_sum->check  = 0;
 
@@ -68,7 +88,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
       /* GRE KEY Header structure making a pointer to IP Header structure. */
       struct gre_key_hdr *gre_key;
 
-      gre_key      = (struct gre_key_hdr *)(buffer + offset);
+      gre_key      = offset;
       gre_key->key = htonl(__RND(co->gre.key));
 
       offset += GRE_OPTLEN_KEY;
@@ -80,7 +100,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
       /* GRE SEQUENCE Header structure making a pointer to IP Header structure. */
       struct gre_seq_hdr *gre_seq;
 
-      gre_seq          = (struct gre_seq_hdr *)(buffer + offset);
+      gre_seq          = offset;
       gre_seq->sequence = htonl(__RND(co->gre.sequence));
 
       offset += GRE_OPTLEN_SEQUENCE;
@@ -97,8 +117,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
      * packet is decapsulated to insure that no packet lives forever.
      */
     /* GRE Encapsulated IP Header structure making a pointer to to IP Header structure. */
-    ip = (struct iphdr *)buffer;
-    gre_ip           = (struct iphdr *)(buffer + offset);
+    gre_ip           = offset;
     gre_ip->version  = ip->version;
     gre_ip->ihl      = ip->ihl;
     gre_ip->tos      = ip->tos;
@@ -109,7 +128,6 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options *co, u
     gre_ip->protocol = co->ip.protocol;
     gre_ip->saddr    = co->gre.saddr ? co->gre.saddr : ip->saddr;
     gre_ip->daddr    = co->gre.daddr ? co->gre.daddr : ip->daddr;
-    gre_ip->check    = 0; /* NOTE: Is it necessary? */
 
     /* Computing the checksum. */
     gre_ip->check    = co->bogus_csum ?
