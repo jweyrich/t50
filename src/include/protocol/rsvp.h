@@ -150,12 +150,12 @@
 struct rsvp_common_hdr{
 #if defined(__LITTLE_ENDIAN_BITFIELD)
   uint16_t flags:4,                /* flags                       */
-            version:4,              /* version                     */
-            type:8;                 /* message type                */
+           version:4,              /* version                     */
+           type:8;                 /* message type                */
 #elif defined(__BIG_ENDIAN_BITFIELD)
   uint16_t version:4,              /* version                     */
-            flags:4,                /* flags                       */
-            type:8;                 /* message type                */
+           flags:4,                /* flags                       */
+           type:8;                 /* message type                */
 #else
 # error "Adjust your <asm/byteorder.h> defines"
 #endif

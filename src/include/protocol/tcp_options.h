@@ -38,8 +38,8 @@
 #define TCPOLEN_MSS       4
 #define TCPOLEN_WSOPT     3
 #define TCPOLEN_SACK_OK   2
-#define TCPOLEN_TSOPT     10
 #define TCPOLEN_CC        6
+#define TCPOLEN_TSOPT     10
 #define TCPOLEN_MD5       18
 #define TCPOLEN_AO        20
 
@@ -53,9 +53,7 @@
  * an additional 10 bytes (plus two bytes of padding); thus a maximum
  * of 3 SACK blocks will be allowed in this case.
  */
-#define TCPOLEN_SACK_EDGE(foo) \
-      (((foo) * (sizeof(uint32_t) * 2)) + \
-      TCPOLEN_SACK_OK)
+#define TCPOLEN_SACK_EDGE(foo) (((foo) * (sizeof(uint32_t) * 2)) + TCPOLEN_SACK_OK)
 
 /*
  * Transmission Control Protocol (TCP) (RFC 793)
