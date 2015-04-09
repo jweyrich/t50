@@ -24,6 +24,7 @@
 # error "Sorry! The T50 was only tested under Linux!"
 #endif  /* __linux__ */
 
+/* Some functions need this! */
 #define _GNU_SOURCE
 
 #include <assert.h> /* for debugging purposes only */
@@ -54,10 +55,8 @@
 #include <linux/if_ether.h>
 
 #include <debug.h>
-
 #include <typedefs.h>
 #include <defines.h>
-
 #include <config.h>
 #include <help.h>
 #include <modules.h>

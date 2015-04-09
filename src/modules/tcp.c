@@ -78,10 +78,15 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
    */
   if (tcpopt > (sizeof(struct tcphdr) * 2))
   {
-    fprintf(stderr,
-        "%s(): TCP Options size (%u bytes) is bigger than two times TCP Header size\n",
-        __FUNCTION__,
-        (unsigned int)tcpopt);
+    char *s;
+
+    asprintf(&s, "%s(): TCP options size (%u bytes) is bigger than two times TCP header size",
+      __FUNCTION__,
+      (unsigned int)tcpopt);
+
+    ERROR(s);
+    free(s);
+
     exit(EXIT_FAILURE);
   }
 

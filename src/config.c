@@ -456,10 +456,15 @@ struct config_options *getConfigOptions(int argc, char **argv)
           counter = getsubopt(&optionp, tokens, &valuep);
           if (counter == -1)
           {
-            fprintf(stderr,
-                "%s(): Protocol %s is not implemented\n",
-                __FUNCTION__,
-                optarg);
+            char *s;
+
+            asprintf(&s, "%s(): %s is not implemented",
+              __FUNCTION__,
+              optarg);
+
+            ERROR(s);
+            free(s);
+
             return NULL;
           }
 
@@ -1014,7 +1019,13 @@ static void CheckRangeFromBits(const char *errstr, int bits, int value)
 {
   if (value < 0 || value > GetMaskFromBits(bits))
   {
-    fprintf(stderr, "ERROR: %s range must be %d bits unsigned integer.\n", errstr, bits);
+    char *s;
+
+    asprintf(&s, "%s range must be %d bits wide unsigned integer", errstr, bits);
+
+    ERROR(s);
+    free(s);
+
     exit(EXIT_FAILURE);    
   }
 }

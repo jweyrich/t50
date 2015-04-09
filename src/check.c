@@ -90,17 +90,21 @@ int checkConfigOptions(const struct config_options * const __restrict__ co)
 
 static int checkThreshold(const struct config_options * const __restrict__ co)
 {
+  char *s;
+
   if (co->ip.protocol == IPPROTO_T50)
   {
     threshold_t minThreshold = (threshold_t)getNumberOfRegisteredModules();
 
     if (co->threshold < minThreshold)
     {
-      fprintf(stderr,
-              "%s: protocol %s cannot have threshold smaller than %d\n",
-              PACKAGE,
-              mod_table[co->ip.protoname].acronym,
-              minThreshold);
+      asprintf(&s, "Protocol %s cannot have threshold smaller than %d", 
+        mod_table[co->ip.protoname].acronym,
+        minThreshold);
+
+      ERROR(s);
+      free(s);
+
       return FALSE;
     }
   }
@@ -108,10 +112,12 @@ static int checkThreshold(const struct config_options * const __restrict__ co)
   {
     if (co->threshold < 1)
     {
-      fprintf(stderr,
-              "%s: protocol %s cannot have threshold smaller than 1\n",
-              PACKAGE,
+      asprintf(&s, "Protocol %s cannot have threshold smaller than 1",
               mod_table[co->ip.protoname].acronym);
+
+      ERROR(s);
+      free(s);
+
       return FALSE;
     }
   }
