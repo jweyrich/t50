@@ -1,25 +1,35 @@
-/*
- *  T50 - Experimental Mixed Packet Injector
- *
- *  Copyright (C) 2010 - 2014 - T50 developers
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include <common.h>
-#include <regex.h>    /* there is regex in libc6! */
+#include <limits.h>
+#include <regex.h>
 
+struct options_table_s {
+  int id;             /* This is the value returned by find_option(). */
+  char short_opt;     /* Single char short option (ou '\0' if none). */
+  char *long_opt;     /* String for long option name (or NULL is none.) */
+  int has_arg;        /* If option must have an argument, this is 1. */
+
+  /* "private" part. */
+  int  in_use;        /* Boolean used to check if option was already used. */
+};
+
+/* structure used in getConfigOptions() and getIpAndCidrFromString() */
+typedef struct {
+  unsigned addr;
+  unsigned cidr;
+} T50_tmp_addr_t;
+
+/* Local prototypes. */
+static int check_if_option(char *);
+static void check_options_rules(struct config_options * __restrict__);
+static struct options_table_s *find_option(char *);
+static void set_config_option(struct config_options * __restrict__, char *, int, char *);
+static unsigned int toULong(char *, char *);
+static unsigned int toULongCheckRange(char *, char *, unsigned int, unsigned int);
+static void check_list_separators(char *, char *);
+static void set_destination_addresses(char *, struct config_options * __restrict__); 
+static void listProtocols(void);
+static void set_default_protocol(struct config_options * __restrict__);
+static int getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
 
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
@@ -117,736 +127,940 @@ static struct config_options co = {
     /* NOTE: Add configuration structured values for new protocols here! */
 };
 
-/* NOTE: Declare long_opt[] here as static makes sense! */
-static const struct option long_opt[] = {
-  /* XXX COMMON OPTIONS                                                             */
-  { "threshold",              required_argument, NULL, OPTION_THRESHOLD              },
-  { "flood",                  no_argument,       NULL, OPTION_FLOOD                  },
-  { "encapsulated",           no_argument,       NULL, OPTION_ENCAPSULATED           },
-  { "bogus-csum",             no_argument,       NULL, 'B'                           },
-#ifdef  __HAVE_TURBO__
-  { "turbo",                  no_argument,       NULL, OPTION_TURBO                  },
-#endif  /* __HAVE_TURBO__ */
-  { "version",                no_argument,       NULL, 'v'                           },
-  { "help",                   no_argument,       NULL, 'h'                           },
 
-  /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                                       */
-  { "gre-seq-present",        no_argument,       NULL, OPTION_GRE_SEQUENCE_PRESENT   },
-  { "gre-key-present",        no_argument,       NULL, OPTION_GRE_KEY_PRESENT        },
-  { "gre-sum-present",        no_argument,       NULL, OPTION_GRE_CHECKSUM_PRESENT   },
-  { "gre-key",                required_argument, NULL, OPTION_GRE_KEY                },
-  { "gre-sequence",           required_argument, NULL, OPTION_GRE_SEQUENCE           },
-  { "gre-saddr",              required_argument, NULL, OPTION_GRE_SADDR              },
-  { "gre-daddr",              required_argument, NULL, OPTION_GRE_DADDR              },
+/* Examplo de tabela de opções. */
+static struct options_table_s options[] = {
+  { OPTION_VERSION,               'v',  "version",          0 },
+  { OPTION_HELP,                  'h',  "help",             0 },
+  { OPTION_LIST_PROTOCOLS,        'l',  "list-protocols",   0 },
+#ifdef __HAVE_TURBO__
+  { OPTION_TURBO,                 0,    "turbo",            0 },
+#endif
+  { OPTION_THRESHOLD,             0,    "threshold",        1 },
+  { OPTION_FLOOD,                 0,    "flood",            0 },
+  { OPTION_ENCAPSULATED,          0,    "encapsulated",     0 },
+  { OPTION_BOGUSCSUM,             'B',  "bogus-csum",       0 },
 
-  /* XXX DCCP, TCP & UDP HEADER OPTIONS                                              */
-  { "sport",                  required_argument, NULL, OPTION_SOURCE                 },
-  { "dport",                  required_argument, NULL, OPTION_DESTINATION            },
+  /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
+  { OPTION_GRE_SEQUENCE_PRESENT,  0,    "gre-seq-present",  0 },
+  { OPTION_GRE_KEY_PRESENT,       0,    "gre-key-present",  0 },
+  { OPTION_GRE_CHECKSUM_PRESENT,  0,    "gre-sum-present",  0 },
+  { OPTION_GRE_KEY,               0,    "gre-key",          1 },
+  { OPTION_GRE_SEQUENCE,          0,    "gre-sequence",     1 },
+  { OPTION_GRE_SADDR,             0,    "gre-saddr",        1 },
+  { OPTION_GRE_DADDR,             0,    "gre-daddr",        1 },
 
-  /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                                         */
-  { "saddr",                  required_argument, NULL, 's'                           },
-  { "tos",                    required_argument, NULL, OPTION_IP_TOS                 },
-  { "id",                     required_argument, NULL, OPTION_IP_ID                  },
-  { "frag-offset",            required_argument, NULL, OPTION_IP_OFFSET              },
-  { "ttl",                    required_argument, NULL, OPTION_IP_TTL                 },
-  { "protocol",               required_argument, NULL, OPTION_IP_PROTOCOL            },
+  /* XXX DCCP, TCP & UDP HEADER OPTIONS */
+  { OPTION_SOURCE,                0,    "sport",            1 },
+  { OPTION_DESTINATION,           0,    "dport",            1 },
 
-  /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1)                                      */
-  { "icmp-type",              required_argument, NULL, OPTION_ICMP_TYPE              },
-  { "icmp-code",              required_argument, NULL, OPTION_ICMP_CODE              },
-  { "icmp-gateway",           required_argument, NULL, OPTION_ICMP_GATEWAY           },
-  { "icmp-id",                required_argument, NULL, OPTION_ICMP_ID                },
-  { "icmp-sequence",          required_argument, NULL, OPTION_ICMP_SEQUENCE          },
+  /* XXX IP HEADER OPTIONS (IPPROTO_IP = 0) */
+  { OPTION_IP_SOURCE,             's',  "saddr",            1 },
+  { OPTION_IP_TOS,                0,    "tos",              1 },
+  { OPTION_IP_ID,                 0,    "id",               1 },
+  { OPTION_IP_OFFSET,             0,    "frag-offset",      1 },
+  { OPTION_IP_TTL,                0,    "ttl",              1 },
+  { OPTION_IP_PROTOCOL,           'p',  "protocol",         1 },
+
+  /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
+  { OPTION_ICMP_TYPE,             0, "icmp-type",           1 },
+  { OPTION_ICMP_CODE,             0, "icmp-code",           1 },
+  { OPTION_ICMP_GATEWAY,          0, "icmp-gateway",        1 },
+  { OPTION_ICMP_ID,               0, "icmp-id",             1 },
+  { OPTION_ICMP_SEQUENCE,         0, "icmp-sequence",       1 },
 
   /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2)                                      */
-  { "igmp-type",              required_argument, NULL, OPTION_IGMP_TYPE              },
-  { "igmp-code",              required_argument, NULL, OPTION_IGMP_CODE              },
-  { "igmp-group",             required_argument, NULL, OPTION_IGMP_GROUP             },
-  { "igmp-qrv",               required_argument, NULL, OPTION_IGMP_QRV               },
-  { "igmp-suppress",          no_argument,       NULL, OPTION_IGMP_SUPPRESS          },
-  { "igmp-qqic",              required_argument, NULL, OPTION_IGMP_QQIC              },
-  { "igmp-grec-type",         required_argument, NULL, OPTION_IGMP_GREC_TYPE         },
-  { "igmp-sources",           required_argument, NULL, OPTION_IGMP_SOURCES           },
-  { "igmp-multicast",         required_argument, NULL, OPTION_IGMP_GREC_MULTICAST    },
-  { "igmp-address",           required_argument, NULL, OPTION_IGMP_ADDRESS           },
+  { OPTION_IGMP_TYPE,             0, "igmp-type",           1 },
+  { OPTION_IGMP_CODE,             0, "igmp-code",           1 },
+  { OPTION_IGMP_GROUP,            0, "igmp-group",          1 },
+  { OPTION_IGMP_QRV,              0, "igmp-qrv",            1 },
+  { OPTION_IGMP_SUPPRESS,         0, "igmp-suppress",       0 },
+  { OPTION_IGMP_QQIC,             0, "igmp-qqic",           1 },
+  { OPTION_IGMP_GREC_TYPE,        0, "igmp-grec-type",      1 },
+  { OPTION_IGMP_SOURCES,          0, "igmp-sources",        1 },
+  { OPTION_IGMP_GREC_MULTICAST,   0, "igmp-multicast",      1 },
+  { OPTION_IGMP_ADDRESS,          0, "igmp-address",        1 },
 
   /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6)                                        */
-  { "acknowledge",            required_argument, NULL, OPTION_TCP_ACKNOWLEDGE        },
-  { "sequence",               required_argument, NULL, OPTION_TCP_SEQUENCE           },
-  { "data-offset",            required_argument, NULL, OPTION_TCP_OFFSET             },
-  { "fin",                    no_argument,       NULL, 'F'                           },
-  { "syn",                    no_argument,       NULL, 'S'                           },
-  { "rst",                    no_argument,       NULL, 'R'                           },
-  { "psh",                    no_argument,       NULL, 'P'                           },
-  { "ack",                    no_argument,       NULL, 'A'                           },
-  { "urg",                    no_argument,       NULL, 'U'                           },
-  { "ece",                    no_argument,       NULL, 'E'                           },
-  { "cwr",                    no_argument,       NULL, 'C'                           },
-  { "window",                 required_argument, NULL, 'W'                           },
-  { "urg-pointer",            required_argument, NULL, OPTION_TCP_URGENT_POINTER     },
-  { "mss",                    required_argument, NULL, OPTION_TCP_MSS                },
-  { "wscale",                 required_argument, NULL, OPTION_TCP_WSOPT              },
-  { "tstamp",                 required_argument, NULL, OPTION_TCP_TSOPT              },
-  { "sack-ok",                no_argument,       NULL, OPTION_TCP_SACK_OK            },
-  { "cc",                     required_argument, NULL, OPTION_TCP_CC                 },
-  { "ccnew",                  required_argument, NULL, OPTION_TCP_CC_NEW             },
-  { "ccecho",                 required_argument, NULL, OPTION_TCP_CC_ECHO            },
-  { "sack",                   required_argument, NULL, OPTION_TCP_SACK_EDGE          },
-  { "md5-signature",          no_argument,       NULL, OPTION_TCP_MD5_SIGNATURE      },
-  { "authentication",         no_argument,       NULL, OPTION_TCP_AUTHENTICATION     },
-  { "auth-key-id",            required_argument, NULL, OPTION_TCP_AUTH_KEY_ID        },
-  { "auth-next-key",          required_argument, NULL, OPTION_TCP_AUTH_NEXT_KEY      },
-  { "nop",                    no_argument,       NULL, OPTION_TCP_NOP                },
+  { OPTION_TCP_ACK,                0,    "acknowledge",     1 },
+  { OPTION_TCP_SEQUENCE,           0,    "sequence",        1 },
+  { OPTION_TCP_OFFSET,             0,    "data-offset",     1 },
+  { OPTION_TCP_FIN,                'F',  "fin",             0 },
+  { OPTION_TCP_SYN,                'S',  "syn",             0 },
+  { OPTION_TCP_RST,                'R',  "rst",             0 },
+  { OPTION_TCP_PSH,                'P',  "psh",             0 },
+  { OPTION_TCP_ACK,                'A',  "ack",             0 },
+  { OPTION_TCP_URG,                'U',  "urg",             0 },
+  { OPTION_TCP_ECE,                'E',  "ece",             0 },
+  { OPTION_TCP_CWR,                'C',  "cwr",             0 },
+  { OPTION_TCP_WINDOW,             'W',  "window",          1 },
+  { OPTION_TCP_URGENT_POINTER,     0,    "urg-pointer",     1 },
+  { OPTION_TCP_MSS,                0,    "mss",             1 },
+  { OPTION_TCP_WSOPT,              0,    "wscale",          1 },
+  { OPTION_TCP_TSOPT,              0,    "tstamp",          1 },
+  { OPTION_TCP_SACK_OK,            0,    "sack-ok",         0 },
+  { OPTION_TCP_CC,                 0,    "cc",              1 },
+  { OPTION_TCP_CC_NEW,             0,    "ccnew",           1 },
+  { OPTION_TCP_CC_ECHO,            0,    "ccecho",          1 },
+  { OPTION_TCP_SACK_EDGE,          0,    "sack",            1 },
+  { OPTION_TCP_MD5_SIGNATURE,      0,    "md5-signature",   0 },
+  { OPTION_TCP_AUTHENTICATION,     0,    "authentication",  0 },
+  { OPTION_TCP_AUTH_KEY_ID,        0,    "auth-key-id",     1 },
+  { OPTION_TCP_AUTH_NEXT_KEY,      0,    "auth-next-key",   1 },
+  { OPTION_TCP_NOP,                0,    "nop",             0 },
+  
+  /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8) */
+  { OPTION_EGP_TYPE,               0, "egp-type",           1 },
+  { OPTION_EGP_CODE,               0, "egp-code",           1 },
+  { OPTION_EGP_STATUS,             0, "egp-status",         1 },
+  { OPTION_EGP_AS,                 0, "egp-as",             1 },
+  { OPTION_EGP_SEQUENCE,           0, "egp-sequence",       1 },
+  { OPTION_EGP_HELLO,              0, "egp-hello",          1 },
+  { OPTION_EGP_POLL,               0, "egp-poll",           1 },
+  
+  /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17) */
+  { OPTION_RIP_COMMAND,            0, "rip-command",        1 },
+  { OPTION_RIP_FAMILY,             0, "rip-family",         1 },
+  { OPTION_RIP_ADDRESS,            0, "rip-address",        1 },
+  { OPTION_RIP_METRIC,             0, "rip-metric",         1 },
+  { OPTION_RIP_DOMAIN,             0, "rip-domain",         1 },
+  { OPTION_RIP_TAG,                0, "rip-tag",            1 },
+  { OPTION_RIP_NETMASK,            0, "rip-netmask",        1 },
+  { OPTION_RIP_NEXTHOP,            0, "rip-next-hop",       1 },
+  { OPTION_RIP_AUTHENTICATION,     0, "rip-authentication", 0 },
+  { OPTION_RIP_AUTH_KEY_ID,        0, "rip-auth-key-id",    1 },
+  { OPTION_RIP_AUTH_SEQUENCE,      0, "rip-auth-sequence",  1 },
+  
+  /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33) */
+  { OPTION_DCCP_OFFSET,            0, "dccp-data-offset",   1 },
+  { OPTION_DCCP_CSCOV,             0, "dccp-cscov",         1 },
+  { OPTION_DCCP_CCVAL,             0, "dccp-ccval",         1 },
+  { OPTION_DCCP_TYPE,              0, "dccp-type",          1 },
+  { OPTION_DCCP_EXTEND,            0, "dccp-extended",      0 },
+  { OPTION_DCCP_SEQUENCE_01,       0, "dccp-sequence-1",    1 },
+  { OPTION_DCCP_SEQUENCE_02,       0, "dccp-sequence-2",    1 },
+  { OPTION_DCCP_SEQUENCE_03,       0, "dccp-sequence-3",    1 },
+  { OPTION_DCCP_SERVICE,           0, "dccp-service",       1 },
+  { OPTION_DCCP_ACKNOWLEDGE_01,    0, "dccp-acknowledge-1", 1 },
+  { OPTION_DCCP_ACKNOWLEDGE_02,    0, "dccp-acknowledge-2", 1 },
+  { OPTION_DCCP_RESET_CODE,        0, "dccp-reset-code",    1 },
+  
+  /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46) */
+  { OPTION_RSVP_FLAGS,             0, "rsvp-flags",         1 },
+  { OPTION_RSVP_TYPE,              0, "rsvp-type",          1 },
+  { OPTION_RSVP_TTL,               0, "rsvp-ttl",           1 },
+  { OPTION_RSVP_SESSION_ADDRESS,   0, "rsvp-session-addr",  1 },
+  { OPTION_RSVP_SESSION_PROTOCOL,  0, "rsvp-session-proto", 1 },
+  { OPTION_RSVP_SESSION_FLAGS,     0, "rsvp-session-flags", 1 },
+  { OPTION_RSVP_SESSION_PORT,      0, "rsvp-session-port",  1 },
+  { OPTION_RSVP_HOP_ADDRESS,       0, "rsvp-hop-addr",      1 },
+  { OPTION_RSVP_HOP_IFACE,         0, "rsvp-hop-iface",     1 },
+  { OPTION_RSVP_TIME_REFRESH,      0, "rsvp-time-refresh",  1 },
+  { OPTION_RSVP_ERROR_ADDRESS,     0, "rsvp-error-addr",    1 },
+  { OPTION_RSVP_ERROR_FLAGS,       0, "rsvp-error-flags",   1 },
+  { OPTION_RSVP_ERROR_CODE,        0, "rsvp-error-code",    1 },
+  { OPTION_RSVP_ERROR_VALUE,       0, "rsvp-error-value",   1 },
+  { OPTION_RSVP_SCOPE,             0, "rsvp-scope",         1 },
+  { OPTION_RSVP_SCOPE_ADDRESS,     0, "rsvp-address",       1 },
+  { OPTION_RSVP_STYLE_OPTION,      0, "rsvp-style-option",  1 },
+  { OPTION_RSVP_SENDER_ADDRESS,    0, "rsvp-sender-addr",   1 },
+  { OPTION_RSVP_SENDER_PORT,       0, "rsvp-sender-port",   1 },
+  { OPTION_RSVP_TSPEC_TRAFFIC,     0, "rsvp-tspec-traffic", 0 },
+  { OPTION_RSVP_TSPEC_GUARANTEED,  0, "rsvp-tspec-guaranteed", 0 },
+  { OPTION_RSVP_TSPEC_TOKEN_R,     0, "rsvp-tspec-r",       1 },
+  { OPTION_RSVP_TSPEC_TOKEN_B,     0, "rsvp-tspec-b",       1 },
+  { OPTION_RSVP_TSPEC_DATA_P,      0, "rsvp-tspec-p",       1 },
+  { OPTION_RSVP_TSPEC_MINIMUM,     0, "rsvp-tspec-m",       1 },
+  { OPTION_RSVP_TSPEC_MAXIMUM,     0, "rsvp-tspec-M",       1 },
+  { OPTION_RSVP_ADSPEC_ISHOP,      0, "rsvp-adspec-ishop",  1 },
+  { OPTION_RSVP_ADSPEC_PATH,       0, "rsvp-adspec-path",   1 },
+  { OPTION_RSVP_ADSPEC_MINIMUM,    0, "rsvp-adspec-m",      1 },
+  { OPTION_RSVP_ADSPEC_MTU,        0, "rsvp-adspec-mtu",    1 },
+  { OPTION_RSVP_ADSPEC_GUARANTEED, 0, "rsvp-adspec-guaranteed", 0 },
+  { OPTION_RSVP_ADSPEC_CTOT,       0, "rsvp-adspec-Ctot",   1 },
+  { OPTION_RSVP_ADSPEC_DTOT,       0, "rsvp-adspec-Dtot",   1 },
+  { OPTION_RSVP_ADSPEC_CSUM,       0, "rsvp-adspec-Csum",   1 },
+  { OPTION_RSVP_ADSPEC_DSUM,       0, "rsvp-adspec-Dsum",   1 },
+  { OPTION_RSVP_ADSPEC_CONTROLLED, 0, "rsvp-adspec-controlled", 0 },
+  { OPTION_RSVP_CONFIRM_ADDR,      0, "rsvp-confirm-addr",  1 },
+  
+  /*O_ESP = 50) XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROT*/
+  { OPTION_IPSEC_AH_LENGTH,        0, "ipsec-ah-length",    1 },
+  { OPTION_IPSEC_AH_SPI,           0, "ipsec-ah-spi",       1 },
+  { OPTION_IPSEC_AH_SEQUENCE,      0, "ipsec-ah-sequence",  1 },
+  { OPTION_IPSEC_ESP_SPI,          0, "ipsec-esp-spi",      1 },
+  { OPTION_IPSEC_ESP_SEQUENCE,     0, "ipsec-esp-sequence", 1 },
+  
+  /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88) */
+  { OPTION_EIGRP_OPCODE,           0, "eigrp-opcode",       1 },
+  { OPTION_EIGRP_FLAGS,            0, "eigrp-flags",        1 },
+  { OPTION_EIGRP_SEQUENCE,         0, "eigrp-sequence",     1 },
+  { OPTION_EIGRP_ACKNOWLEDGE,      0, "eigrp-acknowledge",  1 },
+  { OPTION_EIGRP_AS,               0, "eigrp-as",           1 },
+  { OPTION_EIGRP_TYPE,             0, "eigrp-type",         1 },
+  { OPTION_EIGRP_LENGTH,           0, "eigrp-length",       1 },
+  { OPTION_EIGRP_K1,               0, "eigrp-k1",           1 },
+  { OPTION_EIGRP_K2,               0, "eigrp-k2",           1 },
+  { OPTION_EIGRP_K3,               0, "eigrp-k3",           1 },
+  { OPTION_EIGRP_K4,               0, "eigrp-k4",           1 },
+  { OPTION_EIGRP_K5,               0, "eigrp-k5",           1 },
+  { OPTION_EIGRP_HOLD,             0, "eigrp-hold",         1 },
+  { OPTION_EIGRP_IOS_VERSION,      0, "eigrp-ios-ver",      1 },
+  { OPTION_EIGRP_PROTO_VERSION,    0, "eigrp-rel-ver",      1 },
+  { OPTION_EIGRP_NEXTHOP,          0, "eigrp-next-hop",     1 },
+  { OPTION_EIGRP_DELAY,            0, "eigrp-delay",        1 },
+  { OPTION_EIGRP_BANDWIDTH,        0, "eigrp-bandwidth",    1 },
+  { OPTION_EIGRP_MTU,              0, "eigrp-mtu",          1 },
+  { OPTION_EIGRP_HOP_COUNT,        0, "eigrp-hop-count",    1 },
+  { OPTION_EIGRP_LOAD,             0, "eigrp-load",         1 },
+  { OPTION_EIGRP_RELIABILITY,      0, "eigrp-reliability",  1 },
+  { OPTION_EIGRP_DESINATION,       0, "eigrp-daddr",        1 },
+  { OPTION_EIGRP_SOURCE_ROUTER,    0, "eigrp-src-router",   1 },
+  { OPTION_EIGRP_SOURCE_AS,        0, "eigrp-src-as",       1 },
+  { OPTION_EIGRP_TAG,              0, "eigrp-tag",          1 },
+  { OPTION_EIGRP_METRIC,           0, "eigrp-proto-metric", 1 },
+  { OPTION_EIGRP_ID,               0, "eigrp-proto-id",     1 },
+  { OPTION_EIGRP_EXTERNAL_FLAGS,   0, "eigrp-ext-flags",    1 },
+  { OPTION_EIGRP_ADDRESS,          0, "eigrp-address",      1 },
+  { OPTION_EIGRP_MULTICAST,        0, "eigrp-multicast",    1 },
+  { OPTION_EIGRP_AUTHENTICATION,   0, "eigrp-authentication", 0 },
+  { OPTION_EIGRP_AUTH_KEY_ID,      0, "eigrp-auth-key-id",  1 },
+  
+  /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89) */
+  { OPTION_OSPF_TYPE,              0,  "ospf-type",         1 },
+  { OPTION_OSPF_LENGTH,            0,  "ospf-length",       1 },
+  { OPTION_OSPF_ROUTER_ID,         0,  "ospf-router-id",    1 },
+  { OPTION_OSPF_AREA_ID,           0,  "ospf-area-id",      1 },
+  { OPTION_OSPF_MT,                0,  "ospf-option-MT",    0 },
+  { OPTION_OSPF_E,                 '2',"ospf-option-E",     0 },
+  { OPTION_OSPF_MC,                '3',"ospf-option-MC",    0 },
+  { OPTION_OSPF_NP,                '4',"ospf-option-NP",    0 },
+  { OPTION_OSPF_L,                 '5',"ospf-option-L",     0 },
+  { OPTION_OSPF_DC,                '6',"ospf-option-DC",    0 },
+  { OPTION_OSPF_O,                 '7',"ospf-option-O",     0 },
+  { OPTION_OSPF_DN,                '8',"ospf-option-DN",    0 },
+  { OPTION_OSPF_NETMASK,           0, "ospf-netmask",       1 },
+  { OPTION_OSPF_HELLO_INTERVAL,    0, "ospf-hello-interval", 1 },
+  { OPTION_OSPF_HELLO_PRIORITY,    0, "ospf-hello-priority", 1 },
+  { OPTION_OSPF_HELLO_DEAD,        0, "ospf-hello-dead",    1 },
+  { OPTION_OSPF_HELLO_DESIGN,      0, "ospf-hello-design",  1 },
+  { OPTION_OSPF_HELLO_BACKUP,      0, "ospf-hello-backup",  1 },
+  { OPTION_OSPF_HELLO_NEIGHBOR,    0, "ospf-neighbor",      1 },
+  { OPTION_OSPF_HELLO_ADDRESS,     0, "ospf-address",       1 },
+  { OPTION_OSPF_DD_MTU,            0, "ospf-dd-mtu",        1 },
+  { OPTION_OSPF_DD_MASTER_SLAVE,   0, "ospf-dd-dbdesc-MS",  0 },
+  { OPTION_OSPF_DD_MORE,           0, "ospf-dd-dbdesc-M",   0 },
+  { OPTION_OSPF_DD_INIT,           0, "ospf-dd-dbdesc-I",   0 },
+  { OPTION_OSPF_DD_OOBRESYNC,      0, "ospf-dd-dbdesc-R",   0 },
+  { OPTION_OSPF_DD_SEQUENCE,       0, "ospf-dd-sequence",   1 },
+  { OPTION_OSPF_DD_INCLUDE_LSA,    0, "ospf-dd-include-lsa", 0 },
+  { OPTION_OSPF_LSA_AGE,           0, "ospf-lsa-age",       1 },
+  { OPTION_OSPF_LSA_DO_NOT_AGE,    0, "ospf-lsa-do-not-age", 0 },
+  { OPTION_OSPF_LSA_TYPE,          0, "ospf-lsa-type",      1 },
+  { OPTION_OSPF_LSA_LSID,          0, "ospf-lsa-id",        1 },
+  { OPTION_OSPF_LSA_ROUTER,        0, "ospf-lsa-router",    1 },
+  { OPTION_OSPF_LSA_SEQUENCE,      0, "ospf-lsa-sequence",  1 },
+  { OPTION_OSPF_LSA_METRIC,        0, "ospf-lsa-metric",    1 },
+  { OPTION_OSPF_LSA_FLAG_BORDER,   0, "ospf-lsa-flag-B",    0 },
+  { OPTION_OSPF_LSA_FLAG_EXTERNAL, 0, "ospf-lsa-flag-E",    0 },
+  { OPTION_OSPF_LSA_FLAG_VIRTUAL,  0, "ospf-lsa-flag-V",    0 },
+  { OPTION_OSPF_LSA_FLAG_WILD,     0, "ospf-lsa-flag-W",    0 },
+  { OPTION_OSPF_LSA_FLAG_NSSA_TR,  0, "ospf-lsa-flag-NT",   0 },
+  { OPTION_OSPF_LSA_LINK_ID,       0, "ospf-lsa-link-id",   1 },
+  { OPTION_OSPF_LSA_LINK_DATA,     0, "ospf-lsa-link-data", 1 },
+  { OPTION_OSPF_LSA_LINK_TYPE,     0, "ospf-lsa-link-type", 1 },
+  { OPTION_OSPF_LSA_ATTACHED,      0, "ospf-lsa-attached",  1 },
+  { OPTION_OSPF_LSA_LARGER,        0, "ospf-lsa-larger",    0 },
+  { OPTION_OSPF_LSA_FORWARD,       0, "ospf-lsa-forward",   1 },
+  { OPTION_OSPF_LSA_EXTERNAL,      0, "ospf-lsa-external",  1 },
+  { OPTION_OSPF_VERTEX_ROUTER,     0, "ospf-vertex-router", 0 },
+  { OPTION_OSPF_VERTEX_NETWORK,    0, "ospf-vertex-network", 0 },
+  { OPTION_OSPF_VERTEX_ID,         0, "ospf-vertex-id",     1 },
+  { OPTIONS_OSPF_LLS_OPTION_LR,    0, "ospf-lls-extended-LR", 0 },
+  { OPTIONS_OSPF_LLS_OPTION_RS,    0, "ospf-lls-extended-RS", 0 },
+  { OPTION_OSPF_AUTHENTICATION,    0, "ospf-authentication", 0 },
+  { OPTION_OSPF_AUTH_KEY_ID,       0, "ospf-auth-key-id",   1 },
+  { OPTION_OSPF_AUTH_SEQUENCE,     0, "ospf-auth-sequence", 1 },
 
-  /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8)                                        */
-  { "egp-type",               required_argument, NULL, OPTION_EGP_TYPE               },
-  { "egp-code",               required_argument, NULL, OPTION_EGP_CODE               },
-  { "egp-status",             required_argument, NULL, OPTION_EGP_STATUS             },
-  { "egp-as",                 required_argument, NULL, OPTION_EGP_AS                 },
-  { "egp-sequence",           required_argument, NULL, OPTION_EGP_SEQUENCE           },
-  { "egp-hello",              required_argument, NULL, OPTION_EGP_HELLO              },
-  { "egp-poll",               required_argument, NULL, OPTION_EGP_POLL               },
-
-  /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17)                                       */
-  { "rip-command",            required_argument, NULL, OPTION_RIP_COMMAND            },
-  { "rip-family",             required_argument, NULL, OPTION_RIP_FAMILY             },
-  { "rip-address",            required_argument, NULL, OPTION_RIP_ADDRESS            },
-  { "rip-metric",             required_argument, NULL, OPTION_RIP_METRIC             },
-  { "rip-domain",             required_argument, NULL, OPTION_RIP_DOMAIN             },
-  { "rip-tag",                required_argument, NULL, OPTION_RIP_TAG                },
-  { "rip-netmask",            required_argument, NULL, OPTION_RIP_NETMASK            },
-  { "rip-next-hop",           required_argument, NULL, OPTION_RIP_NEXTHOP            },
-  { "rip-authentication",     no_argument,       NULL, OPTION_RIP_AUTHENTICATION     },
-  { "rip-auth-key-id",        required_argument, NULL, OPTION_RIP_AUTH_KEY_ID        },
-  { "rip-auth-sequence",      required_argument, NULL, OPTION_RIP_AUTH_SEQUENCE      },
-
-  /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33)                                     */
-  { "dccp-data-offset",       required_argument, NULL, OPTION_DCCP_OFFSET            },
-  { "dccp-cscov",             required_argument, NULL, OPTION_DCCP_CSCOV             },
-  { "dccp-ccval",             required_argument, NULL, OPTION_DCCP_CCVAL             },
-  { "dccp-type",              required_argument, NULL, OPTION_DCCP_TYPE              },
-  { "dccp-extended",          no_argument,       NULL, OPTION_DCCP_EXTEND            },
-  { "dccp-sequence-1",        required_argument, NULL, OPTION_DCCP_SEQUENCE_01       },
-  { "dccp-sequence-2",        required_argument, NULL, OPTION_DCCP_SEQUENCE_02       },
-  { "dccp-sequence-3",        required_argument, NULL, OPTION_DCCP_SEQUENCE_03       },
-  { "dccp-service",           required_argument, NULL, OPTION_DCCP_SERVICE           },
-  { "dccp-acknowledge-1",     required_argument, NULL, OPTION_DCCP_ACKNOWLEDGE_01    },
-  { "dccp-acknowledge-2",     required_argument, NULL, OPTION_DCCP_ACKNOWLEDGE_02    },
-  { "dccp-reset-code",        required_argument, NULL, OPTION_DCCP_RESET_CODE        },
-
-  /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46)                                     */
-  { "rsvp-flags",             required_argument, NULL, OPTION_RSVP_FLAGS             },
-  { "rsvp-type",              required_argument, NULL, OPTION_RSVP_TYPE              },
-  { "rsvp-ttl",               required_argument, NULL, OPTION_RSVP_TTL               },
-  { "rsvp-session-addr",      required_argument, NULL, OPTION_RSVP_SESSION_ADDRESS   },
-  { "rsvp-session-proto",     required_argument, NULL, OPTION_RSVP_SESSION_PROTOCOL  },
-  { "rsvp-session-flags",     required_argument, NULL, OPTION_RSVP_SESSION_FLAGS     },
-  { "rsvp-session-port",      required_argument, NULL, OPTION_RSVP_SESSION_PORT      },
-  { "rsvp-hop-addr",          required_argument, NULL, OPTION_RSVP_HOP_ADDRESS       },
-  { "rsvp-hop-iface",         required_argument, NULL, OPTION_RSVP_HOP_IFACE         },
-  { "rsvp-time-refresh",      required_argument, NULL, OPTION_RSVP_TIME_REFRESH      },
-  { "rsvp-error-addr",        required_argument, NULL, OPTION_RSVP_ERROR_ADDRESS     },
-  { "rsvp-error-flags",       required_argument, NULL, OPTION_RSVP_ERROR_FLAGS       },
-  { "rsvp-error-code",        required_argument, NULL, OPTION_RSVP_ERROR_CODE        },
-  { "rsvp-error-value",       required_argument, NULL, OPTION_RSVP_ERROR_VALUE       },
-  { "rsvp-scope",             required_argument, NULL, OPTION_RSVP_SCOPE             },
-  { "rsvp-address",           required_argument, NULL, OPTION_RSVP_SCOPE_ADDRESS     },
-  { "rsvp-style-option",      required_argument, NULL, OPTION_RSVP_STYLE_OPTION      },
-  { "rsvp-sender-addr",       required_argument, NULL, OPTION_RSVP_SENDER_ADDRESS    },
-  { "rsvp-sender-port",       required_argument, NULL, OPTION_RSVP_SENDER_PORT       },
-  { "rsvp-tspec-traffic",     no_argument,       NULL, OPTION_RSVP_TSPEC_TRAFFIC     },
-  { "rsvp-tspec-guaranteed",  no_argument,       NULL, OPTION_RSVP_TSPEC_GUARANTEED  },
-  { "rsvp-tspec-r",           required_argument, NULL, OPTION_RSVP_TSPEC_TOKEN_R     },
-  { "rsvp-tspec-b",           required_argument, NULL, OPTION_RSVP_TSPEC_TOKEN_B     },
-  { "rsvp-tspec-p",           required_argument, NULL, OPTION_RSVP_TSPEC_DATA_P      },
-  { "rsvp-tspec-m",           required_argument, NULL, OPTION_RSVP_TSPEC_MINIMUM     },
-  { "rsvp-tspec-M",           required_argument, NULL, OPTION_RSVP_TSPEC_MAXIMUM     },
-  { "rsvp-adspec-ishop",      required_argument, NULL, OPTION_RSVP_ADSPEC_ISHOP      },
-  { "rsvp-adspec-path",       required_argument, NULL, OPTION_RSVP_ADSPEC_PATH       },
-  { "rsvp-adspec-m",          required_argument, NULL, OPTION_RSVP_ADSPEC_MINIMUM    },
-  { "rsvp-adspec-mtu",        required_argument, NULL, OPTION_RSVP_ADSPEC_MTU        },
-  { "rsvp-adspec-guaranteed", no_argument,       NULL, OPTION_RSVP_ADSPEC_GUARANTEED },
-  { "rsvp-adspec-Ctot",       required_argument, NULL, OPTION_RSVP_ADSPEC_CTOT       },
-  { "rsvp-adspec-Dtot",       required_argument, NULL, OPTION_RSVP_ADSPEC_DTOT       },
-  { "rsvp-adspec-Csum",       required_argument, NULL, OPTION_RSVP_ADSPEC_CSUM       },
-  { "rsvp-adspec-Dsum",       required_argument, NULL, OPTION_RSVP_ADSPEC_DSUM       },
-  { "rsvp-adspec-controlled", no_argument,       NULL, OPTION_RSVP_ADSPEC_CONTROLLED },
-  { "rsvp-confirm-addr",      required_argument, NULL, OPTION_RSVP_CONFIRM_ADDR      },
-
-  /* XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROTO_ESP = 50)                   */
-  { "ipsec-ah-length",        required_argument, NULL, OPTION_IPSEC_AH_LENGTH        },
-  { "ipsec-ah-spi",           required_argument, NULL, OPTION_IPSEC_AH_SPI           },
-  { "ipsec-ah-sequence",      required_argument, NULL, OPTION_IPSEC_AH_SEQUENCE      },
-  { "ipsec-esp-spi",          required_argument, NULL, OPTION_IPSEC_ESP_SPI          },
-  { "ipsec-esp-sequence",     required_argument, NULL, OPTION_IPSEC_ESP_SEQUENCE     },
-
-  /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88)                                   */
-  { "eigrp-opcode",           required_argument, NULL, OPTION_EIGRP_OPCODE           },
-  { "eigrp-flags",            required_argument, NULL, OPTION_EIGRP_FLAGS            },
-  { "eigrp-sequence",         required_argument, NULL, OPTION_EIGRP_SEQUENCE         },
-  { "eigrp-acknowledge",      required_argument, NULL, OPTION_EIGRP_ACKNOWLEDGE      },
-  { "eigrp-as",               required_argument, NULL, OPTION_EIGRP_AS               },
-  { "eigrp-type",             required_argument, NULL, OPTION_EIGRP_TYPE             },
-  { "eigrp-length",           required_argument, NULL, OPTION_EIGRP_LENGTH           },
-  { "eigrp-k1",               required_argument, NULL, OPTION_EIGRP_K1               },
-  { "eigrp-k2",               required_argument, NULL, OPTION_EIGRP_K2               },
-  { "eigrp-k3",               required_argument, NULL, OPTION_EIGRP_K3               },
-  { "eigrp-k4",               required_argument, NULL, OPTION_EIGRP_K4               },
-  { "eigrp-k5",               required_argument, NULL, OPTION_EIGRP_K5               },
-  { "eigrp-hold",             required_argument, NULL, OPTION_EIGRP_HOLD             },
-  { "eigrp-ios-ver",          required_argument, NULL, OPTION_EIGRP_IOS_VERSION      },
-  { "eigrp-rel-ver",          required_argument, NULL, OPTION_EIGRP_PROTO_VERSION    },
-  { "eigrp-next-hop",         required_argument, NULL, OPTION_EIGRP_NEXTHOP          },
-  { "eigrp-delay",            required_argument, NULL, OPTION_EIGRP_DELAY            },
-  { "eigrp-bandwidth",        required_argument, NULL, OPTION_EIGRP_BANDWIDTH        },
-  { "eigrp-mtu",              required_argument, NULL, OPTION_EIGRP_MTU              },
-  { "eigrp-hop-count",        required_argument, NULL, OPTION_EIGRP_HOP_COUNT        },
-  { "eigrp-load",             required_argument, NULL, OPTION_EIGRP_LOAD             },
-  { "eigrp-reliability",      required_argument, NULL, OPTION_EIGRP_RELIABILITY      },
-  { "eigrp-daddr",            required_argument, NULL, OPTION_EIGRP_DESINATION       },
-  { "eigrp-src-router",       required_argument, NULL, OPTION_EIGRP_SOURCE_ROUTER    },
-  { "eigrp-src-as",           required_argument, NULL, OPTION_EIGRP_SOURCE_AS        },
-  { "eigrp-tag",              required_argument, NULL, OPTION_EIGRP_TAG              },
-  { "eigrp-proto-metric",     required_argument, NULL, OPTION_EIGRP_METRIC           },
-  { "eigrp-proto-id",         required_argument, NULL, OPTION_EIGRP_ID               },
-  { "eigrp-ext-flags",        required_argument, NULL, OPTION_EIGRP_EXTERNAL_FLAGS   },
-  { "eigrp-address",          required_argument, NULL, OPTION_EIGRP_ADDRESS          },
-  { "eigrp-multicast",        required_argument, NULL, OPTION_EIGRP_MULTICAST        },
-  { "eigrp-authentication",   no_argument,       NULL, OPTION_EIGRP_AUTHENTICATION   },
-  { "eigrp-auth-key-id",      required_argument, NULL, OPTION_EIGRP_AUTH_KEY_ID      },
-
-  /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89)                                     */
-  { "ospf-type",              required_argument, NULL, OPTION_OSPF_TYPE              },
-  { "ospf-length",            required_argument, NULL, OPTION_OSPF_LENGTH            },
-  { "ospf-router-id",         required_argument, NULL, OPTION_OSPF_ROUTER_ID         },
-  { "ospf-area-id",           required_argument, NULL, OPTION_OSPF_AREA_ID           },
-  { "ospf-option-MT",         no_argument,       NULL, '1'                           },
-  { "ospf-option-E",          no_argument,       NULL, '2'                           },
-  { "ospf-option-MC",         no_argument,       NULL, '3'                           },
-  { "ospf-option-NP",         no_argument,       NULL, '4'                           },
-  { "ospf-option-L",          no_argument,       NULL, '5'                           },
-  { "ospf-option-DC",         no_argument,       NULL, '6'                           },
-  { "ospf-option-O",          no_argument,       NULL, '7'                           },
-  { "ospf-option-DN",         no_argument,       NULL, '8'                           },
-  { "ospf-netmask",           required_argument, NULL, OPTION_OSPF_NETMASK           },
-  { "ospf-hello-interval",    required_argument, NULL, OPTION_OSPF_HELLO_INTERVAL    },
-  { "ospf-hello-priority",    required_argument, NULL, OPTION_OSPF_HELLO_PRIORITY    },
-  { "ospf-hello-dead",        required_argument, NULL, OPTION_OSPF_HELLO_DEAD        },
-  { "ospf-hello-design",      required_argument, NULL, OPTION_OSPF_HELLO_DESIGN      },
-  { "ospf-hello-backup",      required_argument, NULL, OPTION_OSPF_HELLO_BACKUP      },
-  { "ospf-neighbor",          required_argument, NULL, OPTION_OSPF_HELLO_NEIGHBOR    },
-  { "ospf-address",           required_argument, NULL, OPTION_OSPF_HELLO_ADDRESS     },
-  { "ospf-dd-mtu",            required_argument, NULL, OPTION_OSPF_DD_MTU            },
-  { "ospf-dd-dbdesc-MS",      no_argument,       NULL, OPTION_OSPF_DD_MASTER_SLAVE   },
-  { "ospf-dd-dbdesc-M",       no_argument,       NULL, OPTION_OSPF_DD_MORE           },
-  { "ospf-dd-dbdesc-I",       no_argument,       NULL, OPTION_OSPF_DD_INIT           },
-  { "ospf-dd-dbdesc-R",       no_argument,       NULL, OPTION_OSPF_DD_OOBRESYNC      },
-  { "ospf-dd-sequence",       required_argument, NULL, OPTION_OSPF_DD_SEQUENCE       },
-  { "ospf-dd-include-lsa",    no_argument,       NULL, OPTION_OSPF_DD_INCLUDE_LSA    },
-  { "ospf-lsa-age",           required_argument, NULL, OPTION_OSPF_LSA_AGE           },
-  { "ospf-lsa-do-not-age",    no_argument,       NULL, OPTION_OSPF_LSA_DO_NOT_AGE    },
-  { "ospf-lsa-type",          required_argument, NULL, OPTION_OSPF_LSA_TYPE          },
-  { "ospf-lsa-id",            required_argument, NULL, OPTION_OSPF_LSA_LSID          },
-  { "ospf-lsa-router",        required_argument, NULL, OPTION_OSPF_LSA_ROUTER        },
-  { "ospf-lsa-sequence",      required_argument, NULL, OPTION_OSPF_LSA_SEQUENCE      },
-  { "ospf-lsa-metric",        required_argument, NULL, OPTION_OSPF_LSA_METRIC        },
-  { "ospf-lsa-flag-B",        no_argument,       NULL, OPTION_OSPF_LSA_FLAG_BORDER   },
-  { "ospf-lsa-flag-E",        no_argument,       NULL, OPTION_OSPF_LSA_FLAG_EXTERNAL },
-  { "ospf-lsa-flag-V",        no_argument,       NULL, OPTION_OSPF_LSA_FLAG_VIRTUAL  },
-  { "ospf-lsa-flag-W",        no_argument,       NULL, OPTION_OSPF_LSA_FLAG_WILD     },
-  { "ospf-lsa-flag-NT",       no_argument,       NULL, OPTION_OSPF_LSA_FLAG_NSSA_TR  },
-  { "ospf-lsa-link-id",       required_argument, NULL, OPTION_OSPF_LSA_LINK_ID       },
-  { "ospf-lsa-link-data",     required_argument, NULL, OPTION_OSPF_LSA_LINK_DATA     },
-  { "ospf-lsa-link-type",     required_argument, NULL, OPTION_OSPF_LSA_LINK_TYPE     },
-  { "ospf-lsa-attached",      required_argument, NULL, OPTION_OSPF_LSA_ATTACHED      },
-  { "ospf-lsa-larger",        no_argument,       NULL, OPTION_OSPF_LSA_LARGER        },
-  { "ospf-lsa-forward",       required_argument, NULL, OPTION_OSPF_LSA_FORWARD       },
-  { "ospf-lsa-external",      required_argument, NULL, OPTION_OSPF_LSA_EXTERNAL      },
-  { "ospf-vertex-router",     no_argument,       NULL, OPTION_OSPF_VERTEX_ROUTER     },
-  { "ospf-vertex-network",    no_argument,       NULL, OPTION_OSPF_VERTEX_NETWORK    },
-  { "ospf-vertex-id",         required_argument, NULL, OPTION_OSPF_VERTEX_ID         },
-  { "ospf-lls-extended-LR",   no_argument,       NULL, OPTIONS_OSPF_LLS_OPTION_LR    },
-  { "ospf-lls-extended-RS",   no_argument,       NULL, OPTIONS_OSPF_LLS_OPTION_RS    },
-  { "ospf-authentication",    no_argument,       NULL, OPTION_OSPF_AUTHENTICATION    },
-  { "ospf-auth-key-id",       required_argument, NULL, OPTION_OSPF_AUTH_KEY_ID       },
-  { "ospf-auth-sequence",     required_argument, NULL, OPTION_OSPF_AUTH_SEQUENCE     },
-
-  /* NOTE: Add new long options for new protocols here! */
-
-  /* NOTE: This MUST be at the end of this list. */
-  { NULL,                     0,                 NULL, 0                             }
+  { 0, 0, NULL, 0 }
 };
 
-/* structure used in getConfigOptions() and getIpAndCidrFromString() */
-typedef struct {
-  unsigned addr;
-  unsigned cidr;
-} T50_tmp_addr_t;
-
-static char **getTokensList(void);
-static void listProtocols(void);
-static void setDefaultModuleOption(void);
-static int  getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
-static void checkBitsRange(const char *, int, int);
-
-/* CLI options configuration */
-struct config_options *getConfigOptions(int argc, char **argv)
+/* Substitutes getConfigOptions() function.
+   NOTE: This function expects &argv[0] as the first argument. */
+struct config_options *parse_command_line(char **argv)
 {
-  int cli_opts;
-  int counter;
-  int tmp;
+  struct options_table_s *ptbl;
+  int num_options = 0;
+  char *opt, *next_str, *dest_addr = NULL;
 
-  char  *optionp;
-  char *tmp_ptr;
-  char **tokens;
+  /* Ugly hack! */
+  set_default_protocol(&co);
 
-  /* Used by getIpAndCidrFromString() call. */
-  T50_tmp_addr_t addr;
-
-  setDefaultModuleOption();
-
-  /* Checking command line interface options. */
-  while ( (cli_opts = getopt_long(argc, argv, "s:12345678FSRPAUECW:Bvh?", long_opt, NULL)) != -1 )
+  for (argv++; *argv; argv++)
   {
-    switch (cli_opts)
+    opt = *argv;
+
+    if (check_if_option(opt))
     {
-      /* XXX COMMON OPTIONS */
-      case OPTION_THRESHOLD:    co.threshold    = atol(optarg); break;
-      case OPTION_FLOOD:        co.flood        = TRUE; break;
-      case OPTION_ENCAPSULATED: co.encapsulated = TRUE; break;
-      case 'B':                 co.bogus_csum   = TRUE; break;
+      if ((ptbl = find_option(opt)) == NULL)
+      {
+        fprintf(stderr, "Unrecognized option '%s'.\n", opt);
+        exit(EXIT_FAILURE);
+      }
 
-#ifdef  __HAVE_TURBO__
-      case OPTION_TURBO:        co.turbo        = TRUE; break;
-#endif  /* __HAVE_TURBO__ */
+      /* Estou assumindo que cada opção só pode ser informada uma vez! */
+      if (ptbl->in_use)
+      {
+        fprintf(stderr, "Option '%s' already given.\n", opt);
+        exit(EXIT_FAILURE);
+      }
 
-      case OPTION_LIST_PROTOCOL:
-        listProtocols();
-        exit(EXIT_SUCCESS);
-        break;
+      ptbl->in_use = 1;
 
-      /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
-      case OPTION_GRE_SEQUENCE_PRESENT: /* co.gre.options |= GRE_OPTION_SEQUENCE;*/ co.gre.S = TRUE; break;
-      case OPTION_GRE_KEY_PRESENT:      /* co.gre.options |= GRE_OPTION_KEY; */ co.gre.K = TRUE; break;
-      case OPTION_GRE_CHECKSUM_PRESENT: /* co.gre.options |= GRE_OPTION_CHECKSUM; */ co.gre.C = TRUE; break;
-      case OPTION_GRE_KEY:              co.gre.key      = atol(optarg); break;
-      case OPTION_GRE_SEQUENCE:         co.gre.sequence = atoi(optarg); break;
-      case OPTION_GRE_SADDR:            co.gre.saddr    = resolv(optarg); break;
-      case OPTION_GRE_DADDR:            co.gre.daddr    = resolv(optarg); break;
-
-      /* XXX DCCP, TCP & UDP HEADER OPTIONS */
-      case OPTION_SOURCE:       checkBitsRange("--sport", 16, tmp = atoi(optarg)); co.source = tmp; break;
-      case OPTION_DESTINATION:  checkBitsRange("--dport", 16, tmp = atoi(optarg)); co.dest = tmp; break;
-
-      /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0) */
-      case OPTION_IP_TOS:       checkBitsRange("--tos", 8, tmp = atoi(optarg)); co.ip.tos = tmp; break;
-      case OPTION_IP_ID:        checkBitsRange("--id", 16, tmp = atoi(optarg)); co.ip.id  = tmp; break;
-      case OPTION_IP_OFFSET:    checkBitsRange("--frag-offset", 16, tmp = atoi(optarg)); co.ip.frag_off = tmp; break;
-      case OPTION_IP_TTL:       checkBitsRange("--ttl", 8, tmp = atoi(optarg)); co.ip.ttl = tmp; break;
-      case 's':                 co.ip.saddr     = resolv(optarg); break;
-      case OPTION_IP_PROTOCOL:
-        optionp = optarg;
-
-        tokens = getTokensList();
-
-        while (*optionp != '\0')
+      next_str = *(argv + 1);
+      if (!ptbl->has_arg)
+      {
+        if (next_str != NULL && !check_if_option(next_str))
         {
-          char *valuep;
-
-          counter = getsubopt(&optionp, tokens, &valuep);
-          if (counter == -1)
-          {
-            char *s;
-
-            asprintf(&s, "%s(): %s is not implemented",
-              __FUNCTION__,
-              optarg);
-
-            ERROR(s);
-            free(s);
-
-            return NULL;
-          }
-
-          if (strcasecmp(tokens[counter], "T50") == 0)
-            co.ip.protocol = IPPROTO_T50;
-          else
-            co.ip.protocol = mod_table[counter].protocol_id;
-          co.ip.protoname = counter;
+          fprintf(stderr, "Option '%s' has no arguments.\n", opt);
+          exit(EXIT_FAILURE);
         }
+      }
+      else
+        if (next_str)
+          argv++;
 
-        free(tokens); /* Don't need the tokens list anymore! */
-        break;
-
-      /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
-      case OPTION_ICMP_TYPE:      checkBitsRange("--icmp-type", 8, tmp = atoi(optarg)); co.icmp.type = tmp; break;
-      case OPTION_ICMP_CODE:      checkBitsRange("--icmp-code", 8, tmp = atoi(optarg)); co.icmp.code = tmp; break;
-      case OPTION_ICMP_ID:        checkBitsRange("--icmp-id",  16, tmp = atoi(optarg)); co.icmp.id = tmp; break;
-      case OPTION_ICMP_SEQUENCE:  checkBitsRange("--icmp-sequence", 16, tmp = atoi(optarg)); co.icmp.sequence = tmp; break;
-      case OPTION_ICMP_GATEWAY:   co.icmp.gateway = resolv(optarg); break;
-
-      /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2) */
-      case OPTION_IGMP_TYPE:            co.igmp.type = atoi(optarg); break;
-      case OPTION_IGMP_CODE:            co.igmp.code = atoi(optarg); break;
-      case OPTION_IGMP_GROUP:           co.igmp.group = resolv(optarg); break;
-      case OPTION_IGMP_QRV:             co.igmp.qrv = atoi(optarg); break;
-      case OPTION_IGMP_SUPPRESS:        co.igmp.suppress = TRUE;  break;
-      case OPTION_IGMP_QQIC:            co.igmp.qqic = atoi(optarg); break;
-      case OPTION_IGMP_GREC_TYPE:       co.igmp.grec_type = atoi(optarg); break;
-      case OPTION_IGMP_SOURCES:         co.igmp.sources = atoi(optarg); break;
-      case OPTION_IGMP_GREC_MULTICAST:  co.igmp.grec_mca = resolv(optarg); break;
-      case OPTION_IGMP_ADDRESS:
-        for (counter = 0, tmp_ptr = strtok(optarg, ",");
-             tmp_ptr && (counter < (int)(sizeof(co.igmp.address)/sizeof(in_addr_t)));
-             counter++, tmp_ptr = strtok(NULL, ","))
-        {
-          co.igmp.address[counter] = resolv(tmp_ptr);
-        }
-        co.igmp.sources = counter;
-        break;
-
-      /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6) */
-      case OPTION_TCP_SEQUENCE:       co.tcp.sequence = atol(optarg); break;
-      case OPTION_TCP_ACKNOWLEDGE:    co.tcp.acknowledge = atol(optarg); break;
-      case OPTION_TCP_OFFSET:         co.tcp.doff = atoi(optarg);  break;
-      case 'F':                       co.tcp.fin = TRUE;  break;
-      case 'S':                       co.tcp.syn = TRUE;  break;
-      case 'R':                       co.tcp.rst = TRUE;  break;
-      case 'P':                       co.tcp.psh = TRUE;  break;
-      case 'A':                       co.tcp.ack = TRUE;  break;
-      case 'U':                       co.tcp.urg = TRUE;  break;
-      case 'E':                       co.tcp.ece = TRUE;  break;
-      case 'C':                       co.tcp.cwr = TRUE;  break;
-      case 'W':                       co.tcp.window = atoi(optarg); break;
-      case OPTION_TCP_URGENT_POINTER: co.tcp.urg_ptr = atoi(optarg); break;
-      case OPTION_TCP_MSS:            co.tcp.options |= TCP_OPTION_MSS;
-                                      co.tcp.mss = atoi(optarg); break;
-      case OPTION_TCP_WSOPT:          co.tcp.options |= TCP_OPTION_WSOPT;
-                                      co.tcp.wsopt = atoi(optarg); break;
-      case OPTION_TCP_TSOPT:
-        co.tcp.options |= TCP_OPTION_TSOPT;
-
-        /* FIX: The code below is faster and smaller than the previous one. */
-        if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
-        {
-          *tmp_ptr++ = '\0';
-          co.tcp.tsecr = atol(tmp_ptr);
-          co.tcp.tsval = atol(optarg);
-        }
-        break;
-      case OPTION_TCP_SACK_OK:    co.tcp.options |= TCP_OPTION_SACK_OK; break;
-      case OPTION_TCP_CC:         co.tcp.options |= TCP_OPTION_CC; co.tcp.cc = atol(optarg); break;
-      case OPTION_TCP_CC_NEW:     co.tcp.options |= TCP_OPTION_CC_NEXT; co.tcp.cc_new = atol(optarg); break;
-      case OPTION_TCP_CC_ECHO:    co.tcp.options |= TCP_OPTION_CC_NEXT; co.tcp.cc_echo = atol(optarg); break;
-      case OPTION_TCP_SACK_EDGE:
-        co.tcp.options |= TCP_OPTION_SACK_EDGE;
-
-        /* FIX: The code below is faster and smaller than the previous one. */
-        if ( (tmp_ptr = strchr(optarg, ':')) != NULL )
-        {
-          *tmp_ptr++ = '\0';
-          co.tcp.sack_right = atol(tmp_ptr);
-          co.tcp.sack_left = atol(optarg);
-        }
-        break;
-
-      case OPTION_TCP_MD5_SIGNATURE:  co.tcp.md5  = TRUE; co.tcp.auth = FALSE; break;
-      case OPTION_TCP_AUTHENTICATION: co.tcp.md5  = FALSE; co.tcp.auth = TRUE; break;
-      case OPTION_TCP_AUTH_KEY_ID:    co.tcp.key_id = atoi(optarg); break;
-      case OPTION_TCP_AUTH_NEXT_KEY:  co.tcp.next_key = atoi(optarg); break;
-      case OPTION_TCP_NOP:            co.tcp.nop = TCPOPT_NOP; break;
-
-      /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8) */
-      case OPTION_EGP_TYPE:           co.egp.type = atoi(optarg);  break;
-      case OPTION_EGP_CODE:           co.egp.code = atoi(optarg);  break;
-      case OPTION_EGP_STATUS:         co.egp.status = atoi(optarg); break;
-      case OPTION_EGP_AS:             co.egp.as = atoi(optarg); break;
-      case OPTION_EGP_SEQUENCE:       co.egp.sequence = atoi(optarg); break;
-      case OPTION_EGP_HELLO:          co.egp.hello = atoi(optarg); break;
-      case OPTION_EGP_POLL:           co.egp.poll = atoi(optarg);  break;
-
-      /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17) */
-      case OPTION_RIP_COMMAND:        co.rip.command = atoi(optarg); break;
-      case OPTION_RIP_FAMILY:         co.rip.family = atoi(optarg); break;
-      case OPTION_RIP_ADDRESS:        co.rip.address = resolv(optarg); break;
-      case OPTION_RIP_METRIC:         co.rip.metric = atol(optarg); break;
-      case OPTION_RIP_DOMAIN:         co.rip.domain = atoi(optarg); break;
-      case OPTION_RIP_TAG:            co.rip.tag = atoi(optarg); break;
-      case OPTION_RIP_NETMASK:        co.rip.netmask = resolv(optarg); break;
-      case OPTION_RIP_NEXTHOP:        co.rip.next_hop = resolv(optarg); break;
-      case OPTION_RIP_AUTHENTICATION: co.rip.auth = TRUE; break;
-      case OPTION_RIP_AUTH_KEY_ID:    co.rip.key_id = atoi(optarg); break;
-      case OPTION_RIP_AUTH_SEQUENCE:  co.rip.sequence = atol(optarg); break;
-
-      /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33) */
-      case OPTION_DCCP_OFFSET:          co.dccp.doff = atoi(optarg); break;
-      case OPTION_DCCP_CSCOV:           co.dccp.cscov = atoi(optarg); break;
-      case OPTION_DCCP_CCVAL:           co.dccp.ccval = atoi(optarg); break;
-      case OPTION_DCCP_TYPE:            co.dccp.type = atoi(optarg); break;
-      case OPTION_DCCP_EXTEND:          co.dccp.ext = TRUE; break;
-      case OPTION_DCCP_SEQUENCE_01:     co.dccp.sequence_01 = atoi(optarg); break;
-      case OPTION_DCCP_SEQUENCE_02:     co.dccp.sequence_02 = atoi(optarg); break;
-      case OPTION_DCCP_SEQUENCE_03:     co.dccp.sequence_03 = atol(optarg); break;
-      case OPTION_DCCP_SERVICE:         co.dccp.service = atol(optarg); break;
-      case OPTION_DCCP_ACKNOWLEDGE_01:  co.dccp.acknowledge_01 = atoi(optarg); break;
-      case OPTION_DCCP_ACKNOWLEDGE_02:  co.dccp.acknowledge_02 = atol(optarg); break;
-      case OPTION_DCCP_RESET_CODE:      co.dccp.rst_code = atoi(optarg); break;
-
-      /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46) */
-      case OPTION_RSVP_FLAGS:             co.rsvp.flags = atoi(optarg); break;
-      case OPTION_RSVP_TYPE:              co.rsvp.type = atoi(optarg); break;
-      case OPTION_RSVP_TTL:               co.rsvp.ttl = atoi(optarg);  break;
-      case OPTION_RSVP_SESSION_ADDRESS:   co.rsvp.session_addr = resolv(optarg); break;
-      case OPTION_RSVP_SESSION_PROTOCOL:  co.rsvp.session_proto = atoi(optarg); break;
-      case OPTION_RSVP_SESSION_FLAGS:     co.rsvp.session_flags = atoi(optarg); break;
-      case OPTION_RSVP_SESSION_PORT:      co.rsvp.session_port = atoi(optarg); break;
-      case OPTION_RSVP_HOP_ADDRESS:       co.rsvp.hop_addr = resolv(optarg); break;
-      case OPTION_RSVP_HOP_IFACE:         co.rsvp.hop_iface = atol(optarg); break;
-      case OPTION_RSVP_TIME_REFRESH:      co.rsvp.time_refresh = atol(optarg); break;
-      case OPTION_RSVP_ERROR_ADDRESS:     co.rsvp.error_addr = resolv(optarg); break;
-      case OPTION_RSVP_ERROR_FLAGS:       co.rsvp.error_flags = atoi(optarg); break;
-      case OPTION_RSVP_ERROR_CODE:        co.rsvp.error_code = atoi(optarg); break;
-      case OPTION_RSVP_ERROR_VALUE:       co.rsvp.error_value = atoi(optarg); break;
-      case OPTION_RSVP_SCOPE:             co.rsvp.scope = atoi(optarg); break;
-      case OPTION_RSVP_SCOPE_ADDRESS:
-        for (counter = 0, tmp_ptr = strtok(optarg, ","); 
-             tmp_ptr && (counter < (int)(sizeof(co.rsvp.address)/sizeof(in_addr_t))); 
-             counter++, tmp_ptr = strtok(NULL, ","))
-        {
-          co.rsvp.address[counter] = resolv(tmp_ptr);
-        }
-        co.rsvp.scope = counter;
-        break;
-      case OPTION_RSVP_STYLE_OPTION:      co.rsvp.style_opt = atol(optarg); break;
-      case OPTION_RSVP_SENDER_ADDRESS:    co.rsvp.sender_addr = resolv(optarg); break;
-      case OPTION_RSVP_SENDER_PORT:       co.rsvp.sender_port = atoi(optarg); break;
-      case OPTION_RSVP_TSPEC_TRAFFIC:     co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE; break;
-      case OPTION_RSVP_TSPEC_GUARANTEED:  co.rsvp.tspec = TSPEC_GUARANTEED_SERVICE; break;
-      case OPTION_RSVP_TSPEC_TOKEN_R:     co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                          co.rsvp.tspec_r = atol(optarg); break;
-      case OPTION_RSVP_TSPEC_TOKEN_B:     co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                          co.rsvp.tspec_b = atol(optarg); break;
-      case OPTION_RSVP_TSPEC_DATA_P:      co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                          co.rsvp.tspec_p = atol(optarg); break;
-      case OPTION_RSVP_TSPEC_MINIMUM:     co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                          co.rsvp.tspec_m = atol(optarg); break;
-      case OPTION_RSVP_TSPEC_MAXIMUM:     co.rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                          co.rsvp.tspec_M = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_ISHOP:      co.rsvp.adspec_hop = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_PATH:       co.rsvp.adspec_path = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_MINIMUM:    co.rsvp.adspec_minimum = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_MTU:        co.rsvp.adspec_mtu = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_GUARANTEED: co.rsvp.adspec = ADSPEC_GUARANTEED_SERVICE; break;
-      case OPTION_RSVP_ADSPEC_CTOT:       co.rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                          co.rsvp.adspec_Ctot = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_DTOT:       co.rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                          co.rsvp.adspec_Dtot = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_CSUM:       co.rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                          co.rsvp.adspec_Csum = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_DSUM:       co.rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                          co.rsvp.adspec_Dsum = atol(optarg); break;
-      case OPTION_RSVP_ADSPEC_CONTROLLED: co.rsvp.adspec = ADSPEC_CONTROLLED_SERVICE; break;
-      case OPTION_RSVP_CONFIRM_ADDR:      co.rsvp.confirm_addr = resolv(optarg); break;
-
-      /* XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROTO_ESP = 50) */
-      case OPTION_IPSEC_AH_LENGTH:        co.ipsec.ah_length = atoi(optarg); break;
-      case OPTION_IPSEC_AH_SPI:           co.ipsec.ah_spi = atol(optarg); break;
-      case OPTION_IPSEC_AH_SEQUENCE:      co.ipsec.ah_sequence = atol(optarg); break;
-      case OPTION_IPSEC_ESP_SPI:          co.ipsec.esp_spi = atol(optarg); break;
-      case OPTION_IPSEC_ESP_SEQUENCE:     co.ipsec.esp_sequence = atol(optarg); break;
-
-      /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88) */
-      case OPTION_EIGRP_OPCODE:      co.eigrp.opcode = atoi(optarg); break;
-      case OPTION_EIGRP_FLAGS:       co.eigrp.flags = atol(optarg); break;
-      case OPTION_EIGRP_SEQUENCE:    co.eigrp.sequence = atol(optarg); break;
-      case OPTION_EIGRP_ACKNOWLEDGE: co.eigrp.acknowledge = atol(optarg); break;
-      case OPTION_EIGRP_AS:          co.eigrp.as = atol(optarg); break;
-      case OPTION_EIGRP_TYPE:        co.eigrp.type = atoi(optarg); break;
-      case OPTION_EIGRP_LENGTH:      co.eigrp.length = atoi(optarg); break;
-      case OPTION_EIGRP_K1:          co.eigrp.values |= EIGRP_KVALUE_K1;
-                                     co.eigrp.k1 = atoi(optarg); break;
-      case OPTION_EIGRP_K2:          co.eigrp.values |= EIGRP_KVALUE_K2;
-                                     co.eigrp.k2 = atoi(optarg); break;
-      case OPTION_EIGRP_K3:          co.eigrp.values |= EIGRP_KVALUE_K3;
-                                     co.eigrp.k3 = atoi(optarg); break;
-      case OPTION_EIGRP_K4:          co.eigrp.values |= EIGRP_KVALUE_K4;
-                                     co.eigrp.k4 = atoi(optarg); break;
-      case OPTION_EIGRP_K5:          co.eigrp.values |= EIGRP_KVALUE_K5;
-                                     co.eigrp.k5 = atoi(optarg); break;
-      case OPTION_EIGRP_HOLD:        co.eigrp.hold = atoi(optarg); break;
-      case OPTION_EIGRP_IOS_VERSION:
-        /* FIX: The code below is faster and smaller than the previous one. */
-        if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
-        {
-          *tmp_ptr++ = '\0';
-          co.eigrp.ios_minor = atoi(tmp_ptr);
-          co.eigrp.ios_major = atoi(optarg);
-        }
-        break;
-      case OPTION_EIGRP_PROTO_VERSION:
-        /* FIX: The code below is faster and smaller than the previous one. */
-        if ( (tmp_ptr = strchr(optarg, '.')) != NULL )
-        {
-          *tmp_ptr++ = '\0';
-          co.eigrp.ver_minor = atoi(tmp_ptr);
-          co.eigrp.ver_major = atoi(optarg);
-        }
-        break;
-      case OPTION_EIGRP_NEXTHOP:     co.eigrp.next_hop = resolv(optarg); break;
-      case OPTION_EIGRP_DELAY:       co.eigrp.delay = atol(optarg); break;
-      case OPTION_EIGRP_BANDWIDTH:   co.eigrp.bandwidth = atol(optarg); break;
-      case OPTION_EIGRP_MTU:         co.eigrp.mtu = atol(optarg); break;
-      case OPTION_EIGRP_HOP_COUNT:   co.eigrp.hop_count = atoi(optarg); break;
-      case OPTION_EIGRP_LOAD:        co.eigrp.load = atoi(optarg); break;
-      case OPTION_EIGRP_RELIABILITY: co.eigrp.reliability = atoi(optarg); break;
-      case OPTION_EIGRP_DESINATION:
-        if ( (tmp_ptr = strchr(optarg, '/')) == NULL )
-          co.eigrp.dest   = resolv(optarg);
-        else
-        {
-          /* FIX: The code below is faster and smaller than the previous one. */
-          *tmp_ptr++ = '\0';
-          co.eigrp.prefix = atoi(tmp_ptr);
-          co.eigrp.dest = resolv(optarg);
-        }
-        break;
-      case OPTION_EIGRP_SOURCE_ROUTER:  co.eigrp.src_router = resolv(optarg); break;
-      case OPTION_EIGRP_SOURCE_AS:      co.eigrp.src_as = atol(optarg); break;
-      case OPTION_EIGRP_TAG:            co.eigrp.tag = atol(optarg); break;
-      case OPTION_EIGRP_METRIC:         co.eigrp.proto_metric = atol(optarg); break;
-      case OPTION_EIGRP_ID:             co.eigrp.proto_id = atoi(optarg); break;
-      case OPTION_EIGRP_EXTERNAL_FLAGS: co.eigrp.ext_flags = atoi(optarg); break;
-      case OPTION_EIGRP_ADDRESS:        co.eigrp.address = resolv(optarg); break;
-      case OPTION_EIGRP_MULTICAST:      co.eigrp.multicast = atol(optarg); break;
-      case OPTION_EIGRP_AUTHENTICATION: co.eigrp.auth = TRUE; break;
-      case OPTION_EIGRP_AUTH_KEY_ID:    co.eigrp.key_id = atol(optarg); break;
-
-      /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89) */
-      case OPTION_OSPF_TYPE:           co.ospf.type = atoi(optarg); break;
-      case OPTION_OSPF_LENGTH:         co.ospf.length = atoi(optarg); break;
-      case OPTION_OSPF_ROUTER_ID:      co.ospf.rid = resolv(optarg); break;
-      case OPTION_OSPF_AREA_ID:        co.ospf.AID = TRUE;
-                                       co.ospf.aid = resolv(optarg); break;
-      case '1':                        co.ospf.options |= OSPF_OPTION_TOS; break;
-      case '2':                        co.ospf.options |= OSPF_OPTION_EXTERNAL; break;
-      case '3':                        co.ospf.options |= OSPF_OPTION_MULTICAST; break;
-      case '4':                        co.ospf.options |= OSPF_OPTION_NSSA; break;
-      case '5':                        co.ospf.options |= OSPF_OPTION_LLS; break;
-      case '6':                        co.ospf.options |= OSPF_OPTION_DEMAND; break;
-      case '7':                        co.ospf.options |= OSPF_OPTION_OPAQUE; break;
-      case '8':                        co.ospf.options |= OSPF_OPTION_DOWN; break;
-      case OPTION_OSPF_NETMASK:        co.ospf.netmask = resolv(optarg); break;
-      case OPTION_OSPF_HELLO_INTERVAL: co.ospf.hello_interval = atoi(optarg); break;
-      case OPTION_OSPF_HELLO_PRIORITY: co.ospf.hello_priority = atoi(optarg); break;
-      case OPTION_OSPF_HELLO_DEAD:     co.ospf.hello_dead = atol(optarg); break;
-      case OPTION_OSPF_HELLO_DESIGN:   co.ospf.hello_design = resolv(optarg); break;
-      case OPTION_OSPF_HELLO_BACKUP:   co.ospf.hello_backup = resolv(optarg); break;
-      case OPTION_OSPF_HELLO_NEIGHBOR: co.ospf.neighbor = atoi(optarg); break;
-      case OPTION_OSPF_HELLO_ADDRESS:
-        for (counter = 0, tmp_ptr = strtok(optarg, ","); 
-             tmp_ptr && (counter < (int)(sizeof(co.ospf.address)/sizeof(in_addr_t))); 
-             counter++, tmp_ptr = strtok(NULL, ","))
-        {
-          co.ospf.address[counter] = resolv(tmp_ptr);
-        }
-        co.ospf.neighbor = counter;
-        break;
-      case OPTION_OSPF_DD_MTU:            co.ospf.dd_mtu = atoi(optarg); break;
-      case OPTION_OSPF_DD_MASTER_SLAVE:   co.ospf.dd_dbdesc |= DD_DBDESC_MSLAVE; break;
-      case OPTION_OSPF_DD_MORE:           co.ospf.dd_dbdesc |= DD_DBDESC_MORE; break;
-      case OPTION_OSPF_DD_INIT:           co.ospf.dd_dbdesc |= DD_DBDESC_INIT; break;
-      case OPTION_OSPF_DD_OOBRESYNC:      co.ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC; break;
-      case OPTION_OSPF_DD_SEQUENCE:       co.ospf.dd_sequence = atol(optarg); break;
-      case OPTION_OSPF_DD_INCLUDE_LSA:    co.ospf.dd_include_lsa = TRUE; break;
-      case OPTION_OSPF_LSA_AGE:           co.ospf.lsa_age = atoi(optarg); break;
-      case OPTION_OSPF_LSA_DO_NOT_AGE:    co.ospf.lsa_dage = TRUE; break;
-      case OPTION_OSPF_LSA_TYPE:          co.ospf.lsa_type = atoi(optarg); break;
-      case OPTION_OSPF_LSA_LSID:          co.ospf.lsa_lsid = resolv(optarg); break;
-      case OPTION_OSPF_LSA_ROUTER:        co.ospf.lsa_router = resolv(optarg); break;
-      case OPTION_OSPF_LSA_SEQUENCE:      co.ospf.lsa_sequence = atol(optarg); break;
-      case OPTION_OSPF_LSA_METRIC:        co.ospf.lsa_metric = atol(optarg); break;
-      case OPTION_OSPF_LSA_FLAG_BORDER:   co.ospf.lsa_flags |= ROUTER_FLAG_BORDER; break;
-      case OPTION_OSPF_LSA_FLAG_EXTERNAL: co.ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL; break;
-      case OPTION_OSPF_LSA_FLAG_VIRTUAL:  co.ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL; break;
-      case OPTION_OSPF_LSA_FLAG_WILD:     co.ospf.lsa_flags |= ROUTER_FLAG_WILD; break;
-      case OPTION_OSPF_LSA_FLAG_NSSA_TR:  co.ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR; break;
-      case OPTION_OSPF_LSA_LINK_ID:       co.ospf.lsa_link_id = resolv(optarg); break;
-      case OPTION_OSPF_LSA_LINK_DATA:     co.ospf.lsa_link_data = resolv(optarg); break;
-      case OPTION_OSPF_LSA_LINK_TYPE:     co.ospf.lsa_link_type = atoi(optarg); break;
-      case OPTION_OSPF_LSA_ATTACHED:      co.ospf.lsa_attached = resolv(optarg); break;
-      case OPTION_OSPF_LSA_LARGER:        co.ospf.lsa_larger = TRUE; break;
-      case OPTION_OSPF_LSA_FORWARD:       co.ospf.lsa_forward = resolv(optarg); break;
-      case OPTION_OSPF_LSA_EXTERNAL:      co.ospf.lsa_external = resolv(optarg); break;
-      case OPTION_OSPF_VERTEX_ROUTER:     co.ospf.vertex_type = VERTEX_TYPE_ROUTER; break;
-      case OPTION_OSPF_VERTEX_NETWORK:    co.ospf.vertex_type = VERTEX_TYPE_NETWORK; break;
-      case OPTION_OSPF_VERTEX_ID:         co.ospf.vertex_id = resolv(optarg); break;
-      case OPTIONS_OSPF_LLS_OPTION_LR:    co.ospf.lls_options = EXTENDED_OPTIONS_LR; break;
-      case OPTIONS_OSPF_LLS_OPTION_RS:    co.ospf.lls_options = EXTENDED_OPTIONS_RS; break;
-      case OPTION_OSPF_AUTHENTICATION:    co.ospf.auth = TRUE; break;
-      case OPTION_OSPF_AUTH_KEY_ID:       co.ospf.key_id = atoi(optarg); break;
-      case OPTION_OSPF_AUTH_SEQUENCE:     co.ospf.sequence = atol(optarg); break;
-
-      case 'v':
-        show_version();
-        return NULL;
-
-      /* XXX HELP/USAGE MESSAGE */
-      case 'h':
-      case '?':
-      default:
-        usage();
-        return NULL;
+      set_config_option(&co, opt, ptbl->id, next_str);
     }
-  }
-
-  /* Checking the command line interface options. */
-  if (optind >= argc)
-  {
-    ERROR("t50 what? try --help for usage");
-    return NULL;
-  }
-
-  /* Get host and cidr. */
-  if (getIpAndCidrFromString(argv[optind], &addr))
-  {
-    /* If ok, then set values directly to "options" structure. */
-    co.bits = addr.cidr;
-    co.ip.daddr = htonl(addr.addr);
-  }
-  else
-  {
-    /* Otherwise, probably it's a name. Try to resolve it. 
-       '/' still marks the optional cidr here. */
-    tmp_ptr = strtok(argv[optind], "/");  /* NOTE: tmp_ptr is never null at this point! */
-    co.ip.daddr = resolv(tmp_ptr);
-    if ((tmp_ptr = strtok(NULL, "/")) != NULL)
-      co.bits = atoi(tmp_ptr);
     else
-      co.bits = 32;
+    {
+      /* Check if already got an address. */
+      if (dest_addr)
+      {
+        usage();
+        exit(EXIT_FAILURE);
+      }
+
+      dest_addr = *argv;
+
+      set_destination_addresses(dest_addr, &co); 
+    }
+
+    num_options++;
   }
+
+  /* if '-h' (or '--help') option is given... */
+  if ((ptbl = find_option("-h")) != NULL)
+    if (ptbl->in_use)
+    {
+      if (num_options > 1)
+        fprintf(stderr, "Option '-h' (or '--help') cannot be used with other options.\n");
+      else
+        usage();
+
+      exit(EXIT_FAILURE);
+    }
+
+  /* if '-v' (or '--version') option is given... */
+  if ((ptbl = find_option("-v")) != NULL)
+    if (ptbl->in_use)
+    {
+      if (num_options > 1)
+        fprintf(stderr, "Option '-v' (or '--version') cannot be used with other options.\n");
+      else
+        show_version();
+
+      exit(EXIT_FAILURE);
+    }
+
+  /* if '-l' (or '--list-protocols') option is given... */
+  if ((ptbl = find_option("-l")) != NULL)
+    if (ptbl->in_use)
+    {
+      if (num_options > 1)
+        fprintf(stderr, "Option '-l' (or '--list-protocols') cannot be used with other options.\n");
+      else
+        listProtocols();
+
+      exit(EXIT_FAILURE);
+    }
+
+  check_options_rules(&co);
 
   return &co;
 }
 
-/* Used on getsubopt(), below */
-/* NOTE: This is called just once! */
-static char **getTokensList(void)
+/* Check if the argument is an option. */
+static int check_if_option(char *s) { return *s == '-'; }
+
+/* NOTE: Ugly hack, but necessary! */ 
+static void set_default_protocol(struct config_options * __restrict__ co)
 {
   modules_table_t *ptbl;
-  char **p;
   int i;
 
-  /* Create tokens list. This list have the same number of protocols plus "T50" and the NULL entry. */
-  p = (char **)malloc(sizeof(char *) * (getNumberOfRegisteredModules() + 2));
+  co->ip.protocol = IPPROTO_TCP;
+  for (i = 0, ptbl = mod_table; ptbl->protocol_id; i++, ptbl++)
+  {
+    if (ptbl->protocol_id == IPPROTO_TCP)
+    {
+      co->ip.protoname = i;
+      break;
+    }
+  }
+}
 
-  /* Fill the token list with pointers to protocol "names". */
-  for (i = 0, ptbl = mod_table; ptbl->acronym != NULL; ptbl++, i++)
-    p[i] = ptbl->acronym;
-  p[i++] = "T50";
-  p[i] = NULL;
+/* Scans the option table trying to find the option. 
+   NOTE: "option" points to a string beginning with '-', always! */
+static struct options_table_s *find_option(char *option)
+{
+  struct options_table_s *ptbl;
+  
+  for (ptbl = options; ptbl->id; ptbl++)
+  {
+    /* Is it a long option? */
+    if (*(option + 1) == '-')
+    {
+      /* Find 'long option' */
+      if ((ptbl->long_opt != NULL) && *(option + 2) != '\0')
+        if (!strcmp(option + 2, ptbl->long_opt))
+          return ptbl;
+    }
+    else
+    {
+      /* ... or, is it a short option? */
+      if (*(option + 1) == ptbl->short_opt)
+        return ptbl;
+    }
+  }
 
-  /* NOTE: Just remember to free this list! */
-  return p;
+  /* Option not found. */
+  return NULL;
+}
+
+/* Check rules for options, after we get them all. */
+static void check_options_rules(struct config_options * __restrict__ co)
+{
+  /* Address field is mandatory! */
+  if (!co->ip.daddr) 
+  { 
+    usage(); 
+    fprintf(stderr, "Target address needed.\n"); 
+    exit(EXIT_FAILURE); 
+  }
+
+#ifdef __HAVE_TURBO__
+  if (co->turbo && !co->flood)
+  {
+    fprintf(stderr, "Turbo mode only available when flooding.\n");
+    exit(EXIT_FAILURE);
+  }
+#endif
+
+  /* --flood and --threshold are mutually exclusive! */
+  if (co->flood && find_option("threshold")->in_use)
+  { 
+    usage(); 
+    fprintf(stderr, "--flood and --threshold cannot be used at the same time.\n");
+    exit(EXIT_FAILURE); 
+  }
+
+  /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
+      TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
+  {
+    ERROR("TCP options SACK-Permitted and SACK Edges are not allowed");
+    exit(EXIT_FAILURE);
+  }
+
+  /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
+  {
+    ERROR("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!checkThreshold(co))
+    exit(EXIT_FAILURE);
+
+  /* NOTE: Insert other rules here! */
+}
+
+/* Get the IP PROTOCOL. */
+static void get_ip_protocol(struct config_options *co, char *arg)
+{
+  /* T50 protocol is a special case! Not in modules table! */
+  if (!strcasecmp(arg, "T50"))
+  {
+    co->ip.protocol = IPPROTO_T50;
+    co->ip.protoname = getNumberOfRegisteredModules();    /* Is this correct? */
+  }
+  else
+  {
+    /* Scan the modules table trying to get the protocol. */
+
+    int i;
+
+    for (i = 0; mod_table[i].acronym; i++)
+      if (!strcasecmp(mod_table[i].acronym, arg))
+      {
+        co->ip.protocol = mod_table[co->ip.protoname = i].protocol_id;
+        return;
+      }
+
+    fprintf(stderr, "Unknown protocol '%s'.\n", arg);
+    exit(EXIT_FAILURE);
+  }
+}
+
+static void set_destination_addresses(char *arg, struct config_options * __restrict__ co)
+{
+  char *p;
+  T50_tmp_addr_t addr;
+
+  if (getIpAndCidrFromString(arg, &addr))
+  {
+    co->bits = addr.cidr;
+    co->ip.daddr = htonl(addr.addr);
+  }
+  else
+  {
+    /* If getIpAndCidrFromString() fails, it probably means that we have a name, instead of an IP. */
+
+    /* Tries to resolve the name. */
+    p = strtok(arg, "/");
+    co->ip.daddr = resolv(p);
+
+    /* Get cidr if any. */
+    if ((p = strtok(NULL, "/")) != NULL)
+      co->bits = atoi(p);
+    else
+      co->bits = 32;
+  }
+}
+
+/* Setup an option. */
+static void set_config_option(struct config_options * __restrict__ co, char *optname, int optid, char *arg)
+{
+  int counter;
+  char *tmp_ptr;
+
+  switch (optid)
+  {
+#ifdef __HAVE_TURBO__
+    case OPTION_TURBO:                  co->turbo = TRUE; break;
+#endif
+    case OPTION_THRESHOLD:              co->threshold = toULong(optname, arg); break;
+    case OPTION_FLOOD:                  co->flood = TRUE; break;
+    case OPTION_ENCAPSULATED:           co->encapsulated = TRUE; break;
+    case OPTION_BOGUSCSUM:              co->bogus_csum = TRUE; break;
+
+    case OPTION_GRE_SEQUENCE_PRESENT:   co->gre.S = TRUE; break;
+    case OPTION_GRE_KEY_PRESENT:        co->gre.K = TRUE; break;
+    case OPTION_GRE_CHECKSUM_PRESENT:   co->gre.C = TRUE; break;
+    case OPTION_GRE_KEY:                co->gre.key = toULong(optname, arg); break;
+    case OPTION_GRE_SEQUENCE:           co->gre.sequence = toULong(optname, arg); break; 
+    case OPTION_GRE_SADDR:              check_list_separators(optname, arg);
+                                        co->gre.saddr = resolv(arg); break;
+    case OPTION_GRE_DADDR:              check_list_separators(optname, arg);
+                                        co->gre.daddr = resolv(arg); break;
+
+    case OPTION_SOURCE:                 check_list_separators(optname, arg); 
+                                        co->source = toULongCheckRange(optname, arg, 0, 65535); break;
+
+    case OPTION_DESTINATION:            check_list_separators(optname, arg);
+                                        co->dest   = toULongCheckRange(optname, arg, 0, 65535); break;
+
+    case OPTION_IP_SOURCE:              check_list_separators(optname, arg);
+                                        co->ip.saddr = resolv(arg); break;
+    case OPTION_IP_TOS:                 co->ip.tos = toULong(optname, arg); break;
+    case OPTION_IP_ID:                  co->ip.id = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_IP_OFFSET:              co->ip.frag_off = toULongCheckRange(optname, arg, 0, 0x1fff); break;
+    case OPTION_IP_TTL:                 co->ip.ttl = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_IP_PROTOCOL:            check_list_separators(optname, arg);
+                                        get_ip_protocol(co, arg); break;
+
+    case OPTION_ICMP_TYPE:              co->icmp.type = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_ICMP_CODE:              co->icmp.code = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_ICMP_GATEWAY:           check_list_separators(optname, arg);
+                                        co->icmp.gateway = resolv(arg); break;
+    case OPTION_ICMP_ID:                co->icmp.id = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_ICMP_SEQUENCE:          co->icmp.sequence = toULongCheckRange(optname, arg, 0, 255); break;
+
+    case OPTION_IGMP_TYPE:              co->igmp.type = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_IGMP_CODE:              co->igmp.code = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_IGMP_GROUP:             check_list_separators(optname, arg);
+                                        co->igmp.group = resolv(arg); break;
+    case OPTION_IGMP_QRV:               co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7); break;
+    case OPTION_IGMP_SUPPRESS:          co->igmp.suppress = TRUE; break;
+    case OPTION_IGMP_QQIC:              co->igmp.qqic = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_IGMP_GREC_TYPE:         co->igmp.grec_type = toULong(optname, arg); break;
+    case OPTION_IGMP_SOURCES:           co->igmp.sources = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_IGMP_GREC_MULTICAST:    check_list_separators(optname, arg);
+                                        co->igmp.grec_mca = resolv(arg); break;
+    case OPTION_IGMP_ADDRESS:         
+      /* '--igmp-address' can contain a list. */
+      for (counter = 0, tmp_ptr = strtok(arg, ",");
+           tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
+           counter++, tmp_ptr = strtok(NULL, ","))
+        co->igmp.address[counter] = resolv(tmp_ptr);
+      co->igmp.sources = counter;
+      break;
+
+    case OPTION_TCP_FIN:                co->tcp.fin = TRUE; break;
+    case OPTION_TCP_SYN:                co->tcp.syn = TRUE; break;
+    case OPTION_TCP_RST:                co->tcp.rst = TRUE; break;
+    case OPTION_TCP_PSH:                co->tcp.psh = TRUE; break;
+    case OPTION_TCP_ACK:                co->tcp.ack = TRUE; break;
+    case OPTION_TCP_URG:                co->tcp.urg = TRUE; break;
+    case OPTION_TCP_ECE:                co->tcp.ece = TRUE; break;
+    case OPTION_TCP_CWR:                co->tcp.cwr = TRUE; break;
+    case OPTION_TCP_WINDOW:             co->tcp.window = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_TCP_MSS:                co->tcp.options |= TCP_OPTION_MSS;
+                                        co->tcp.mss = toULong(optname, arg); break; 
+    case OPTION_TCP_WSOPT:              co->tcp.options |= TCP_OPTION_WSOPT;           
+                                        co->tcp.wsopt = toULong(optname, arg); break; 
+    case OPTION_TCP_TSOPT:            
+      /* This option can contain 2 values separated by ':'. */
+      co->tcp.options |= TCP_OPTION_TSOPT;
+      {
+        unsigned int a = 0, b = 0;
+
+        if (sscanf(arg, "%u.%u", &a, &b) > 0)
+        {
+          co->tcp.tsval = a;
+          co->tcp.tsecr = b;
+        }
+        else
+        {
+          fprintf(stderr, "'%s' should receive an argument formated as 'n[.n]'.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+      }
+      break;
+    case OPTION_TCP_SACK_OK:            co->tcp.options |= TCP_OPTION_SACK_OK; break;
+    case OPTION_TCP_CC:                 co->tcp.options |= TCP_OPTION_CC; 
+                                        co->tcp.cc = toULong(optname, arg); break;
+    case OPTION_TCP_CC_NEW:             co->tcp.options |= TCP_OPTION_CC_NEXT; 
+                                        co->tcp.cc_new = toULong(optname, arg); break;
+    case OPTION_TCP_CC_ECHO:            co->tcp.options |= TCP_OPTION_CC_NEXT; 
+                                        co->tcp.cc_echo = toULong(optname, arg); break;
+    case OPTION_TCP_SACK_EDGE:        
+      /* NOTE: This option expects 2 values, separated by ':'. */
+      co->tcp.options |= TCP_OPTION_SACK_EDGE;
+      {
+        unsigned int a = 0, b = 0;
+
+        if (sscanf(arg, "%u:%u", &a, &b) > 0)
+        {
+          co->tcp.sack_left = a;
+          co->tcp.sack_right = b;
+        }
+        else
+        {
+          fprintf(stderr, "'%s' MUST have 2 values separated by ':'.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+      }
+      break;
+    case OPTION_TCP_MD5_SIGNATURE:      co->tcp.md5 = !(co->tcp.auth = FALSE); break;
+    case OPTION_TCP_AUTHENTICATION:     co->tcp.auth = !(co->tcp.md5 = FALSE); break;
+    case OPTION_TCP_AUTH_KEY_ID:        co->tcp.key_id = toULong(optname, arg); break;
+    case OPTION_TCP_AUTH_NEXT_KEY:      co->tcp.next_key = toULong(optname, arg); break;
+    case OPTION_TCP_NOP:                co->tcp.nop = TCPOPT_NOP; break;
+ 
+    case OPTION_EGP_TYPE:               co->egp.type = toULong(optname, arg);  break;    
+    case OPTION_EGP_CODE:               co->egp.code = toULong(optname, arg);  break;
+    case OPTION_EGP_STATUS:             co->egp.status = toULong(optname, arg); break;
+    case OPTION_EGP_AS:                 co->egp.as = toULong(optname, arg); break;
+    case OPTION_EGP_SEQUENCE:           co->egp.sequence = toULong(optname, arg); break;
+    case OPTION_EGP_HELLO:              co->egp.hello = toULong(optname, arg); break;
+    case OPTION_EGP_POLL:               co->egp.poll = toULong(optname, arg);  break;
+ 
+    case OPTION_RIP_COMMAND:            co->rip.command = toULong(optname, arg); break;
+    case OPTION_RIP_FAMILY:             co->rip.family = toULong(optname, arg); break;
+    case OPTION_RIP_ADDRESS:            check_list_separators(optname, arg);
+                                        co->rip.address = resolv(arg); break;
+    case OPTION_RIP_METRIC:             co->rip.metric = toULong(optname, arg); break;
+    case OPTION_RIP_DOMAIN:             co->rip.domain = toULong(optname, arg); break;
+    case OPTION_RIP_TAG:                co->rip.tag = toULong(optname, arg); break;
+    case OPTION_RIP_NETMASK:            co->rip.netmask = resolv(arg); break;  /* Is this correct? */
+    case OPTION_RIP_NEXTHOP:            check_list_separators(optname, arg);
+                                        co->rip.next_hop = resolv(arg); break;
+    case OPTION_RIP_AUTHENTICATION:     co->rip.auth = TRUE; break;
+    case OPTION_RIP_AUTH_KEY_ID:        co->rip.key_id = toULong(optname, arg); break;
+    case OPTION_RIP_AUTH_SEQUENCE:      co->rip.sequence = toULong(optname, arg); break;
+ 
+    case OPTION_DCCP_OFFSET:            co->dccp.doff = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_DCCP_CSCOV:             co->dccp.cscov = toULongCheckRange(optname, arg, 0, 15); break;
+    case OPTION_DCCP_CCVAL:             co->dccp.ccval = toULongCheckRange(optname, arg, 0, 15); break;
+    case OPTION_DCCP_TYPE:              co->dccp.type = toULongCheckRange(optname, arg, 0, 15); break;
+    case OPTION_DCCP_EXTEND:            co->dccp.ext = TRUE; break;
+    case OPTION_DCCP_SEQUENCE_01:       co->dccp.sequence_01 = toULong(optname, arg); break;
+    case OPTION_DCCP_SEQUENCE_02:       co->dccp.sequence_02 = toULong(optname, arg); break;
+    case OPTION_DCCP_SEQUENCE_03:       co->dccp.sequence_03 = toULong(optname, arg); break;
+    case OPTION_DCCP_SERVICE:           co->dccp.service = toULong(optname, arg); break;
+    case OPTION_DCCP_ACKNOWLEDGE_01:    co->dccp.acknowledge_01 = toULong(optname, arg); break;
+    case OPTION_DCCP_ACKNOWLEDGE_02:    co->dccp.acknowledge_02 = toULong(optname, arg); break;
+    case OPTION_DCCP_RESET_CODE:        co->dccp.rst_code = toULongCheckRange(optname, arg, 0, 255); break;
+ 
+    case OPTION_RSVP_FLAGS:             co->rsvp.flags = toULongCheckRange(optname, arg, 0, 15); break;
+    case OPTION_RSVP_TYPE:              co->rsvp.type = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_TTL:               co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_SESSION_ADDRESS:   check_list_separators(optname, arg);
+                                        co->rsvp.session_addr = resolv(arg); break;
+    case OPTION_RSVP_SESSION_PROTOCOL:  check_list_separators(optname, arg);
+                                        co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_SESSION_FLAGS:     co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_SESSION_PORT:      check_list_separators(optname, arg);
+                                        co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_RSVP_HOP_ADDRESS:       check_list_separators(optname, arg);
+                                        co->rsvp.hop_addr = resolv(arg); break;
+    case OPTION_RSVP_HOP_IFACE:         co->rsvp.hop_iface = toULong(optname, arg); break;
+    case OPTION_RSVP_TIME_REFRESH:      co->rsvp.time_refresh = toULong(optname, arg); break;
+    case OPTION_RSVP_ERROR_ADDRESS:     check_list_separators(optname, arg);
+                                        co->rsvp.error_addr = resolv(arg); break;
+    case OPTION_RSVP_ERROR_FLAGS:       co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_ERROR_CODE:        co->rsvp.error_code = toULongCheckRange(optname, arg, 0, 255); break;
+    case OPTION_RSVP_ERROR_VALUE:       co->rsvp.error_value = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_RSVP_SCOPE:             co->rsvp.scope = toULong(optname, arg); break;
+    case OPTION_RSVP_SCOPE_ADDRESS:       
+      /* '--rsvp-address' can have a list of addresses separated by ','. */
+      for (counter = 0, tmp_ptr = strtok(arg, ",");
+           tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
+           counter++, tmp_ptr = strtok(NULL, ","))
+        co->rsvp.address[counter] = resolv(tmp_ptr);
+      co->rsvp.scope = counter;
+      break;
+    case OPTION_RSVP_STYLE_OPTION:      co->rsvp.style_opt = toULong(optname, arg); break;
+    case OPTION_RSVP_SENDER_ADDRESS:    check_list_separators(optname, arg);
+                                        co->rsvp.sender_addr = resolv(arg); break;
+    case OPTION_RSVP_SENDER_PORT:       check_list_separators(optname, arg);
+                                        co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535); break;
+    case OPTION_RSVP_TSPEC_TRAFFIC:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE; break;
+    case OPTION_RSVP_TSPEC_GUARANTEED:  co->rsvp.tspec = TSPEC_GUARANTEED_SERVICE; break;
+    case OPTION_RSVP_TSPEC_TOKEN_R:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+                                        co->rsvp.tspec_r = toULong(optname, arg); break;
+    case OPTION_RSVP_TSPEC_TOKEN_B:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+                                        co->rsvp.tspec_b = toULong(optname, arg); break;
+    case OPTION_RSVP_TSPEC_DATA_P:      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+                                        co->rsvp.tspec_p = toULong(optname, arg); break;
+    case OPTION_RSVP_TSPEC_MINIMUM:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+                                        co->rsvp.tspec_m = toULong(optname, arg); break;
+    case OPTION_RSVP_TSPEC_MAXIMUM:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+                                        co->rsvp.tspec_M = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_ISHOP:      co->rsvp.adspec_hop = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_PATH:       co->rsvp.adspec_path = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_MINIMUM:    co->rsvp.adspec_minimum = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_MTU:        co->rsvp.adspec_mtu = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_GUARANTEED: co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE; break;
+    case OPTION_RSVP_ADSPEC_CTOT:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+                                        co->rsvp.adspec_Ctot = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_DTOT:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+                                        co->rsvp.adspec_Dtot = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_CSUM:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+                                        co->rsvp.adspec_Csum = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_DSUM:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+                                        co->rsvp.adspec_Dsum = toULong(optname, arg); break;
+    case OPTION_RSVP_ADSPEC_CONTROLLED: co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE; break;
+    case OPTION_RSVP_CONFIRM_ADDR:      check_list_separators(optname, arg);
+                                        co->rsvp.confirm_addr = resolv(arg); break;
+ 
+    case OPTION_IPSEC_AH_LENGTH:        co->ipsec.ah_length = toULong(optname, arg); break;
+    case OPTION_IPSEC_AH_SPI:           co->ipsec.ah_spi = toULong(optname, arg); break;
+    case OPTION_IPSEC_AH_SEQUENCE:      co->ipsec.ah_sequence = toULong(optname, arg); break;
+    case OPTION_IPSEC_ESP_SPI:          co->ipsec.esp_spi = toULong(optname, arg); break;
+    case OPTION_IPSEC_ESP_SEQUENCE:     co->ipsec.esp_sequence = toULong(optname, arg); break;
+ 
+    case OPTION_EIGRP_OPCODE:           co->eigrp.opcode = toULong(optname, arg); break;
+    case OPTION_EIGRP_FLAGS:            co->eigrp.flags = toULong(optname, arg); break;
+    case OPTION_EIGRP_SEQUENCE:         co->eigrp.sequence = toULong(optname, arg); break;
+    case OPTION_EIGRP_ACKNOWLEDGE:      co->eigrp.acknowledge = toULong(optname, arg); break;
+    case OPTION_EIGRP_AS:               co->eigrp.as = toULong(optname, arg); break;
+    case OPTION_EIGRP_TYPE:             co->eigrp.type = toULong(optname, arg); break;
+    case OPTION_EIGRP_LENGTH:           co->eigrp.length = toULong(optname, arg); break;
+    case OPTION_EIGRP_K1:               co->eigrp.values |= EIGRP_KVALUE_K1;
+                                        co->eigrp.k1 = toULong(optname, arg); break;
+    case OPTION_EIGRP_K2:               co->eigrp.values |= EIGRP_KVALUE_K2;
+                                        co->eigrp.k2 = toULong(optname, arg); break;
+    case OPTION_EIGRP_K3:               co->eigrp.values |= EIGRP_KVALUE_K3;
+                                        co->eigrp.k3 = toULong(optname, arg); break;
+    case OPTION_EIGRP_K4:               co->eigrp.values |= EIGRP_KVALUE_K4;
+                                        co->eigrp.k4 = toULong(optname, arg); break;
+    case OPTION_EIGRP_K5:               co->eigrp.values |= EIGRP_KVALUE_K5;
+                                        co->eigrp.k5 = toULong(optname, arg); break;
+    case OPTION_EIGRP_HOLD:             co->eigrp.hold = toULong(optname, arg); break;
+    case OPTION_EIGRP_IOS_VERSION:        
+      {
+        unsigned int a = 0, b = 0;
+
+        if (sscanf(arg, "%u.%u", &a, &b) > 0)
+        {
+          co->eigrp.ios_major = a;
+          co->eigrp.ios_minor = b;
+        }
+        else
+        {
+          fprintf(stderr, "'%s' must have two values separated by '.'.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+      }
+      break;
+    case OPTION_EIGRP_PROTO_VERSION:      
+      {
+        unsigned int a = 0, b = 0;
+
+        if (sscanf(arg, "%u.%u", &a, &b) > 0)
+        {
+          co->eigrp.ver_major = a;
+          co->eigrp.ver_minor = b;
+        }
+        else
+        {
+          fprintf(stderr, "'%s' must have two values separated by '.'.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+      }
+      break;
+    case OPTION_EIGRP_NEXTHOP:          check_list_separators(optname, arg);
+                                        co->eigrp.next_hop = resolv(arg); break;
+    case OPTION_EIGRP_DELAY:            co->eigrp.delay = toULong(optname, arg); break;
+    case OPTION_EIGRP_BANDWIDTH:        co->eigrp.bandwidth = toULong(optname, arg); break;
+    case OPTION_EIGRP_MTU:              co->eigrp.mtu = toULong(optname, arg); break;
+    case OPTION_EIGRP_HOP_COUNT:        co->eigrp.hop_count = toULong(optname, arg); break;
+    case OPTION_EIGRP_LOAD:             co->eigrp.load = toULong(optname, arg); break;
+    case OPTION_EIGRP_RELIABILITY:      co->eigrp.reliability = toULong(optname, arg); break;
+    case OPTION_EIGRP_DESINATION:         
+      if ( (tmp_ptr = strchr(arg, '/')) != NULL )
+      {
+        *tmp_ptr++ = '\0';
+        co->eigrp.prefix = toULong(optname, tmp_ptr);
+      }
+      co->eigrp.dest = resolv(arg);
+      break;
+    case OPTION_EIGRP_SOURCE_ROUTER:    co->eigrp.src_router = resolv(arg); break;
+    case OPTION_EIGRP_SOURCE_AS:        co->eigrp.src_as = toULong(optname, arg); break;
+    case OPTION_EIGRP_TAG:              co->eigrp.tag = toULong(optname, arg); break;
+    case OPTION_EIGRP_METRIC:           co->eigrp.proto_metric = toULong(optname, arg); break;
+    case OPTION_EIGRP_ID:               co->eigrp.proto_id = toULong(optname, arg); break;
+    case OPTION_EIGRP_EXTERNAL_FLAGS:   co->eigrp.ext_flags = toULong(optname, arg); break;
+    case OPTION_EIGRP_ADDRESS:          check_list_separators(optname, arg);
+                                        co->eigrp.address = resolv(arg); break;
+    case OPTION_EIGRP_MULTICAST:        co->eigrp.multicast = toULong(optname, arg); break;
+    case OPTION_EIGRP_AUTHENTICATION:   co->eigrp.auth = TRUE; break;
+    case OPTION_EIGRP_AUTH_KEY_ID:      co->eigrp.key_id = toULong(optname, arg); break;
+ 
+    case OPTION_OSPF_TYPE:              co->ospf.type = toULong(optname, arg); break;
+    case OPTION_OSPF_LENGTH:            co->ospf.length = toULong(optname, arg); break;
+    case OPTION_OSPF_ROUTER_ID:         co->ospf.rid = resolv(arg); break;
+    case OPTION_OSPF_AREA_ID:           co->ospf.AID = TRUE;
+                                        co->ospf.aid = resolv(arg); break;
+    case OPTION_OSPF_MT:                co->ospf.options |= OSPF_OPTION_TOS; break;
+    case OPTION_OSPF_E:                 co->ospf.options |= OSPF_OPTION_EXTERNAL; break;
+    case OPTION_OSPF_MC:                co->ospf.options |= OSPF_OPTION_MULTICAST; break;
+    case OPTION_OSPF_NP:                co->ospf.options |= OSPF_OPTION_NSSA; break;
+    case OPTION_OSPF_L:                 co->ospf.options |= OSPF_OPTION_LLS; break;
+    case OPTION_OSPF_DC:                co->ospf.options |= OSPF_OPTION_DEMAND; break;
+    case OPTION_OSPF_O:                 co->ospf.options |= OSPF_OPTION_OPAQUE; break;
+    case OPTION_OSPF_DN:                co->ospf.options |= OSPF_OPTION_DOWN; break;
+    case OPTION_OSPF_NETMASK:           co->ospf.netmask = resolv(arg); break;
+    case OPTION_OSPF_HELLO_INTERVAL:    co->ospf.hello_interval = toULong(optname, arg); break;
+    case OPTION_OSPF_HELLO_PRIORITY:    co->ospf.hello_priority = toULong(optname, arg); break;
+    case OPTION_OSPF_HELLO_DEAD:        co->ospf.hello_dead = toULong(optname, arg); break;
+    case OPTION_OSPF_HELLO_DESIGN:      co->ospf.hello_design = resolv(arg); break;
+    case OPTION_OSPF_HELLO_BACKUP:      co->ospf.hello_backup = resolv(arg); break;
+    case OPTION_OSPF_HELLO_NEIGHBOR:    co->ospf.neighbor = toULong(optname, arg); break;
+    case OPTION_OSPF_HELLO_ADDRESS:       
+      for (counter = 0, tmp_ptr = strtok(arg, ",");
+           tmp_ptr && (counter < (sizeof(co->ospf.address) / sizeof(in_addr_t)));
+           counter++, tmp_ptr = strtok(NULL, ","))
+        co->ospf.address[counter] = resolv(tmp_ptr);
+      co->ospf.neighbor = counter;
+      break;
+    case OPTION_OSPF_DD_MTU:            co->ospf.dd_mtu = toULong(optname, arg); break;
+    case OPTION_OSPF_DD_MASTER_SLAVE:   co->ospf.dd_dbdesc |= DD_DBDESC_MSLAVE; break;
+    case OPTION_OSPF_DD_MORE:           co->ospf.dd_dbdesc |= DD_DBDESC_MORE; break;
+    case OPTION_OSPF_DD_INIT:           co->ospf.dd_dbdesc |= DD_DBDESC_INIT; break;
+    case OPTION_OSPF_DD_OOBRESYNC:      co->ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC; break;
+    case OPTION_OSPF_DD_SEQUENCE:       co->ospf.dd_sequence = toULong(optname, arg); break;
+    case OPTION_OSPF_DD_INCLUDE_LSA:    co->ospf.dd_include_lsa = TRUE; break;
+    case OPTION_OSPF_LSA_AGE:           co->ospf.lsa_age = toULong(optname, arg); break;
+    case OPTION_OSPF_LSA_DO_NOT_AGE:    co->ospf.lsa_dage = TRUE; break;
+    case OPTION_OSPF_LSA_TYPE:          co->ospf.lsa_type = toULong(optname, arg); break;
+    case OPTION_OSPF_LSA_LSID:          co->ospf.lsa_lsid = resolv(arg); break;
+    case OPTION_OSPF_LSA_ROUTER:        co->ospf.lsa_router = resolv(arg); break;
+    case OPTION_OSPF_LSA_SEQUENCE:      co->ospf.lsa_sequence = toULong(optname, arg); break;
+    case OPTION_OSPF_LSA_METRIC:        co->ospf.lsa_metric = toULong(optname, arg); break;
+    case OPTION_OSPF_LSA_FLAG_BORDER:   co->ospf.lsa_flags |= ROUTER_FLAG_BORDER; break;
+    case OPTION_OSPF_LSA_FLAG_EXTERNAL: co->ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL; break;
+    case OPTION_OSPF_LSA_FLAG_VIRTUAL:  co->ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL; break;
+    case OPTION_OSPF_LSA_FLAG_WILD:     co->ospf.lsa_flags |= ROUTER_FLAG_WILD; break;
+    case OPTION_OSPF_LSA_FLAG_NSSA_TR:  co->ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR; break;
+    case OPTION_OSPF_LSA_LINK_ID:       co->ospf.lsa_link_id = resolv(arg); break;
+    case OPTION_OSPF_LSA_LINK_DATA:     co->ospf.lsa_link_data = resolv(arg); break;
+    case OPTION_OSPF_LSA_LINK_TYPE:     co->ospf.lsa_link_type = toULong(optname, arg); break;
+    case OPTION_OSPF_LSA_ATTACHED:      co->ospf.lsa_attached = resolv(arg); break;
+    case OPTION_OSPF_LSA_LARGER:        co->ospf.lsa_larger = TRUE; break;
+    case OPTION_OSPF_LSA_FORWARD:       co->ospf.lsa_forward = resolv(arg); break;
+    case OPTION_OSPF_LSA_EXTERNAL:      co->ospf.lsa_external = resolv(arg); break;
+    case OPTION_OSPF_VERTEX_ROUTER:     co->ospf.vertex_type = VERTEX_TYPE_ROUTER; break;
+    case OPTION_OSPF_VERTEX_NETWORK:    co->ospf.vertex_type = VERTEX_TYPE_NETWORK; break;
+    case OPTION_OSPF_VERTEX_ID:         co->ospf.vertex_id = resolv(arg); break;
+    case OPTIONS_OSPF_LLS_OPTION_LR:    co->ospf.lls_options = EXTENDED_OPTIONS_LR; break;
+    case OPTIONS_OSPF_LLS_OPTION_RS:    co->ospf.lls_options = EXTENDED_OPTIONS_RS; break;
+    case OPTION_OSPF_AUTHENTICATION:    co->ospf.auth = TRUE; break;
+    case OPTION_OSPF_AUTH_KEY_ID:       co->ospf.key_id = toULong(optname, arg); break;
+    case OPTION_OSPF_AUTH_SEQUENCE:     co->ospf.sequence = toULong(optname, arg); break;
+  }
+}
+
+/* Tries to convert string to an unsigned value. */
+static unsigned int toULong(char *optname, char *value)
+{
+  unsigned long n;
+
+  assert(optname != NULL);
+  assert(value != NULL);
+
+  /* strtoul deals ok with hexadecimal, octal and decimal values. */
+  n = strtoul(value, NULL, 0);
+  if (n > UINT_MAX || errno == ERANGE)
+  {
+    fprintf(stderr, "Invalid numeric value for option '%s'.\n", optname);
+    exit(EXIT_FAILURE);
+  }
+
+  return (unsigned int)n;
+}
+
+/* Tries to convert string to unsigned int, checking range. 
+   NOTE: 'min' MUST BE smaller than 'max'. */
+static unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+{
+  unsigned int n;
+
+  assert(min < max);
+
+  n = toULong(optname, value);
+  if (n < min || n > max)
+  {
+    fprintf(stderr, "Value out of range for option '%s'. Range must be between %u and %u.\n", optname, min, max);
+    exit(EXIT_FAILURE);
+  }
+
+  return n;
+}
+
+/* Check if there are any separators on string. */
+static void check_list_separators(char *optname, char *arg)
+{
+  assert(arg != NULL);
+
+  if (strpbrk(arg, ",;:"))
+  {
+    fprintf(stderr, "Option '%s' do not accept a list.\n", optname);
+    exit(EXIT_FAILURE);
+  }
 }
 
 /* List procotolos on modules table */
@@ -862,24 +1076,6 @@ static void listProtocols(void)
            i,
            ptbl->acronym,
            ptbl->description);
-}
-
-/* NOTE: Ugly hack, but necessary! */
-static void setDefaultModuleOption(void)
-{
-  modules_table_t *ptbl;
-  int i;
-
-  for (i = 0, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-  {
-    /* FIXME: Is string comparison the best way?! */
-    if (strcasecmp(ptbl->acronym, "TCP") == 0)
-    {
-      co.ip.protocol = ptbl->protocol_id;
-      co.ip.protoname = i;
-      break;
-    }
-  }
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
@@ -1007,25 +1203,5 @@ static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_
                       (0xffffffffUL << (32 - addr_ptr->cidr));
 
   return TRUE;
-}
-
-static long GetMaskFromBits(int bits)
-{
-  return ~((unsigned long)-1L << bits);
-}
-
-static void checkBitsRange(const char *errstr, int bits, int value)
-{
-  if (value < 0 || value > GetMaskFromBits(bits))
-  {
-    char *s;
-
-    asprintf(&s, "%s range must be %d bits wide unsigned integer", errstr, bits);
-
-    ERROR(s);
-    free(s);
-
-    exit(EXIT_FAILURE);    
-  }
 }
 

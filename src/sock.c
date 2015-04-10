@@ -136,14 +136,14 @@ int sendPacket(const void * const buffer, size_t size, const struct config_optio
 
   if (errno == EPERM)
   {
-    ERROR("Error sending packet (Permission!). Please check your firewall (iptables?) rules!");
+    ERROR("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
     return FALSE;
   }
 
   /* FIX */
   if (num_tries < 0)
   {
-    ERROR("Error sending packet.");
+    ERROR("Error sending packet (Timeout, tried 100 times!).");
     
 #ifdef DUMP_DATA
     fprintf(fdebug, "Error sending %zu bytes of data.\n", sz);

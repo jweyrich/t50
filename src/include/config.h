@@ -27,14 +27,20 @@
 /* NOTE: All options are greater or equal than 128 to avoid ASCII character
          collision on getopt_long(). */
 enum {
+  OPTION_NULL = 0,
+
+  OPTION_VERSION,
+  OPTION_HELP,
+
   /* XXX COMMON OPTIONS                            */
-  OPTION_THRESHOLD = 128,
+  OPTION_THRESHOLD,
   OPTION_FLOOD,
   OPTION_ENCAPSULATED,
 #ifdef  __HAVE_TURBO__
   OPTION_TURBO,
 #endif  /* __HAVE_TURBO__ */
-  OPTION_LIST_PROTOCOL,
+  OPTION_LIST_PROTOCOLS,
+  OPTION_BOGUSCSUM,
 
   /* XXX DCCP, TCP & UDP HEADER OPTIONS            */
   OPTION_SOURCE,
@@ -46,6 +52,7 @@ enum {
   OPTION_IP_OFFSET,
   OPTION_IP_TTL,
   OPTION_IP_PROTOCOL,
+  OPTION_IP_SOURCE,
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)     */
   OPTION_GRE_SEQUENCE_PRESENT,
@@ -79,6 +86,15 @@ enum {
   OPTION_TCP_ACKNOWLEDGE,
   OPTION_TCP_SEQUENCE,
   OPTION_TCP_OFFSET,
+  OPTION_TCP_FIN,
+  OPTION_TCP_SYN,
+  OPTION_TCP_RST,
+  OPTION_TCP_PSH,
+  OPTION_TCP_ACK,
+  OPTION_TCP_URG,
+  OPTION_TCP_ECE,
+  OPTION_TCP_CWR,
+  OPTION_TCP_WINDOW,
   OPTION_TCP_URGENT_POINTER,
   OPTION_TCP_MSS,
   OPTION_TCP_WSOPT,
@@ -217,6 +233,14 @@ enum {
   OPTION_OSPF_ROUTER_ID,
   OPTION_OSPF_AREA_ID,
   OPTION_OSPF_NETMASK,
+  OPTION_OSPF_MT,
+  OPTION_OSPF_E,
+  OPTION_OSPF_MC,
+  OPTION_OSPF_NP,
+  OPTION_OSPF_L,
+  OPTION_OSPF_DC,
+  OPTION_OSPF_O,
+  OPTION_OSPF_DN,
   OPTION_OSPF_HELLO_INTERVAL,
   OPTION_OSPF_HELLO_PRIORITY,
   OPTION_OSPF_HELLO_DEAD,
@@ -257,7 +281,7 @@ enum {
   OPTIONS_OSPF_LLS_OPTION_RS,
   OPTION_OSPF_AUTHENTICATION,
   OPTION_OSPF_AUTH_KEY_ID,
-  OPTION_OSPF_AUTH_SEQUENCE,
+  OPTION_OSPF_AUTH_SEQUENCE
 };
 
 /* Config structures */
@@ -537,7 +561,7 @@ struct config_options {
   /* NOTE: Add structures configuration for new protocols here! */
 };
 
-struct config_options *getConfigOptions(int, char **);
+struct config_options *parse_command_line(char **);
 int checkConfigOptions(const struct config_options * const __restrict__);
 
 #endif /* CONFIG_H */

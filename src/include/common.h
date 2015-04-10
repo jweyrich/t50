@@ -83,6 +83,7 @@ extern void closeSocket(void);  /* Close the previously created socket */
 extern int sendPacket(const void * const, size_t, const struct config_options * const __restrict__);
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
+extern int checkThreshold(const struct config_options * const __restrict__);
 
 #ifdef __HAVE_RDRAND__
 extern uint32_t readrand(void);

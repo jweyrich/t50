@@ -54,14 +54,16 @@ int main(int argc, char *argv[])
   initialize();
 
   /* Configuring command line interface options. */
-  if ((co = getConfigOptions(argc, argv)) == NULL)
-    return EXIT_FAILURE;
+  co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
 
-  /* Validating command line interface options. */
-  if (!checkConfigOptions(co))
-    return EXIT_FAILURE;
+  if (co->flood) puts("Entering flood mode...");
+#ifdef __HAVE_TURBO__
+  if (co->turbo) puts("Turbo mode active...");
+#endif
+  if (co->bits) puts("Performing DoS.");
+  puts("Hit Ctrl+C to stop...");
 
-  /* Setting socket file descriptor. */
+/* Setting socket file descriptor. */
   /* NOTE: createSocket() handles its own errors before returning. */
   if (!createSocket())
     return EXIT_FAILURE;
