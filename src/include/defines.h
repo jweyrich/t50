@@ -21,7 +21,8 @@
 #define __DEFINES_INCLUDED__
 
 #define PACKAGE "T50"
-#define SITE "http://github.com/fredericopissarra/t50"
+#define VERSION "5.5"
+#define SITE    "http://github.com/fredericopissarra/t50"
 
 /* NOTE: Used to set/reset individual bits */
 #define TRUE  1
@@ -82,9 +83,9 @@
 
 /* ERROR macro */
 #ifdef __HAVE_DEBUG__
-#define ERROR(s) fprintf(stderr, "%s: %s at %s, line %d\n", PACKAGE, s, __FILE__, __LINE__);
+#define ERROR(s) fprintf(stderr, PACKAGE ": %s at " __FILE__ ", line %d\n", s, __LINE__);
 #else
-#define ERROR(s) fprintf(stderr, "%s: %s\n", PACKAGE, s);
+#define ERROR(s) fprintf(stderr, PACKAGE ": %s\n", s);
 #endif
 
 /* Used to test if "pid" from fork() is from a child process. */

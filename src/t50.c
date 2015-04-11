@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
   modules_table_t *ptbl;      /* Pointer to modules table */
   int proto;                  /* Used on main loop. */
 
+  /* Configuring command line interface options. */
+  co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
+
   /* This is a requirement of t50. User must be root to use it. 
      Previously on checkConfigOptions(). */
   if (getuid())
@@ -52,9 +55,6 @@ int main(int argc, char *argv[])
 #endif
 
   initialize();
-
-  /* Configuring command line interface options. */
-  co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
 
   if (co->flood) puts("Entering flood mode...");
 #ifdef __HAVE_TURBO__
@@ -122,9 +122,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    printf("\b\n%s %s successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,  
-      VERSION, 
+    printf("\b\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
       getMonth(tm->tm_mon), 
       tm->tm_mday, 
       getOrdinalSuffix(tm->tm_mday),
@@ -196,9 +194,7 @@ int main(int argc, char *argv[])
     lt = time(NULL); 
     tm = localtime(&lt);
 
-    printf("\b\n%s %s successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
-      PACKAGE,
-      VERSION,
+    printf("\b\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
       getMonth(tm->tm_mon),
       tm->tm_mday,
       getOrdinalSuffix(tm->tm_mday),

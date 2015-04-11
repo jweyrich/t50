@@ -21,11 +21,10 @@
 
 void show_version(void)
 {
-  printf("T50 Experimental Mixed Packet Injector Tool %s\n"
-         "Originally created by Nelson Brito <nbrito@sekure.org>\n"
-         "Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n",
-         "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>\n"
-         VERSION);
+  puts("T50 Experimental Mixed Packet Injector Tool " VERSION "\n"
+       "Originally created by Nelson Brito <nbrito@sekure.org>\n"
+       "Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n"
+       "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>");
 }
 
 /* Help and usage message */
@@ -48,14 +47,13 @@ void usage(void)
   eigrp_help();
   ospf_help();
 
-  printf("Some considerations while running this program:\n"
-         " 1. There is no limitation of using as many options as possible.\n"
-         " 2. Report %s bugs at %s.\n"
-         " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
-         " 4. Mandatory arguments to long options are mandatory for short options too.\n"
-         " 5. Be nice when using %s, the author DENIES its use for DoS/DDoS purposes.\n"
-         " 6. Running %s with \'--protocol T50\' option sends ALL protocols sequentially.\n",
-         PACKAGE, SITE, PACKAGE, PACKAGE);
+  puts("Some considerations while running this program:\n"
+       " 1. There is no limitation of using as many options as possible.\n"
+       " 2. Report " PACKAGE " bugs at " SITE ".\n"
+       " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
+       " 4. Mandatory arguments to long options are mandatory for short options too.\n"
+       " 5. Be nice when using " PACKAGE ", the author DENIES its use for DoS/DDoS purposes.\n"
+       " 6. Running " PACKAGE " with \'--protocol T50\' option sends ALL protocols sequentially.");
 
   exit(EXIT_FAILURE);
 }

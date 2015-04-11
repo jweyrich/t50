@@ -437,7 +437,7 @@ struct config_options *parse_command_line(char **argv)
       /* Check if already got an address. */
       if (dest_addr)
       {
-        usage();
+        ERROR("Target address given twice. Aborting...\n");
         exit(EXIT_FAILURE);
       }
 
@@ -544,7 +544,6 @@ static void check_options_rules(struct config_options * __restrict__ co)
   /* Address field is mandatory! */
   if (!co->ip.daddr) 
   { 
-    usage(); 
     fprintf(stderr, "Target address needed.\n"); 
     exit(EXIT_FAILURE); 
   }
@@ -560,7 +559,6 @@ static void check_options_rules(struct config_options * __restrict__ co)
   /* --flood and --threshold are mutually exclusive! */
   if (co->flood && find_option("threshold")->in_use)
   { 
-    usage(); 
     fprintf(stderr, "--flood and --threshold cannot be used at the same time.\n");
     exit(EXIT_FAILURE); 
   }
@@ -1069,10 +1067,10 @@ static void listProtocols(void)
   modules_table_t *ptbl;
   int i;
 
-  puts("List of supported protocols:");
+  puts("List of supported protocols (--protocol):");
 
   for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-    printf("\t%2d PROTO = %-6s (%s)\n",
+    printf("\t%2d - %s\t(%s)\n",
            i,
            ptbl->acronym,
            ptbl->description);

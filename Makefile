@@ -57,7 +57,7 @@ $(OBJ_DIR)/help/ipsec_help.o \
 $(OBJ_DIR)/help/eigrp_help.o \
 $(OBJ_DIR)/help/ospf_help.o
 
-CFLAGS = -DVERSION=\"5.5\" -I$(INCLUDE_DIR) -std=gnu99
+CFLAGS = -I$(INCLUDE_DIR) -std=gnu99
 LDFLAGS =
 
 #
