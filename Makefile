@@ -65,7 +65,7 @@ LDFLAGS =
 #
 ifdef DEBUG
   OBJS += $(OBJ_DIR)/debug.o
-  CFLAGS += -O0 -D__HAVE_DEBUG__
+  CFLAGS += -g -O0 -D__HAVE_DEBUG__
 #
 # Define DUMP_DATA if you want to view a big log file...
 #
