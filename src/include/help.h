@@ -26,6 +26,7 @@
 extern void general_help(void);
 extern void gre_help(void);
 extern void tcp_udp_dccp_help(void);
+extern void tcp_help(void);
 extern void ip_help(void);
 extern void icmp_help(void);
 extern void egp_help(void);
