@@ -591,7 +591,7 @@ static void get_ip_protocol(struct config_options *co, char *arg)
   if (!strcasecmp(arg, "T50"))
   {
     co->ip.protocol = IPPROTO_T50;
-    co->ip.protoname = getNumberOfRegisteredModules();    /* Is this correct? */
+    co->ip.protoname = get_number_of_registered_modules();    /* Is this correct? */
   }
   else
   {

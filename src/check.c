@@ -25,7 +25,7 @@ int checkThreshold(const struct config_options * const __restrict__ co)
 
   if (co->ip.protocol == IPPROTO_T50)
   {
-    threshold_t minThreshold = (threshold_t)getNumberOfRegisteredModules();
+    threshold_t minThreshold = (threshold_t)get_number_of_registered_modules();
 
     if (co->threshold < minThreshold)
     {

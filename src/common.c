@@ -23,8 +23,8 @@
 void *packet = NULL;
 size_t current_packet_size = 0;
 
-/* "private" variable holding the number of modules. Use getNumberOfRegisteredModules() funcion to get it. */
-static size_t numOfModules = 0;
+/* "private" variable holding the number of modules. Use get_number_of_registered_modules() funcion to get it. */
+static size_t number_of_modules = 0;
 
 /* NOTE: This routine shouldn't be inlined due to its compliexity. */
 uint32_t NETMASK_RND(uint32_t foo)
@@ -67,14 +67,14 @@ void alloc_packet(size_t new_packet_size)
 /* Scan the list of modules (ONCE!), returning the number of itens in the list. */
 /* Function prototype moved to modules.h. */
 /* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
-size_t getNumberOfRegisteredModules(void)
+size_t get_number_of_registered_modules(void)
 {
 	modules_table_t *ptbl;
 
-  if (numOfModules == 0)
-	  for (ptbl = mod_table; ptbl->func != NULL; ptbl++, numOfModules++);
+  if (number_of_modules == 0)
+	  for (ptbl = mod_table; ptbl->func != NULL; ptbl++, number_of_modules++);
 
-	return numOfModules;
+	return number_of_modules;
 }
 
 #ifdef __HAVE_RDRAND__

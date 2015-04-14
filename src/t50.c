@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
   if (co->turbo)
   {
     /* Decides if it's necessary to fork a new process. */
-    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)getNumberOfRegisteredModules()) || 
+    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)get_number_of_registered_modules()) || 
         (co->ip.protocol != IPPROTO_T50 && co->threshold > 1))
     {
       threshold_t new_threshold;

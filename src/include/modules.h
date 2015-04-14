@@ -50,7 +50,7 @@ typedef struct {
 
 extern modules_table_t mod_table[];
 
-extern size_t getNumberOfRegisteredModules(void);
+extern size_t get_number_of_registered_modules(void);
 
 /* Modules functions prototypes. 
    They took 'struct config_options' pointer and returns 'size'. */
