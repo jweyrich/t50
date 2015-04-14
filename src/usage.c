@@ -37,6 +37,7 @@ void usage(void)
   general_help();
   gre_help();
   tcp_udp_dccp_help();
+  tcp_help();
   ip_help();
   icmp_help();
   egp_help();
