@@ -19,7 +19,7 @@
 
 #include <common.h>
 
-int checkThreshold(const struct config_options * const __restrict__ co)
+int check_threshold(const struct config_options * const __restrict__ co)
 {
   char *s;
 

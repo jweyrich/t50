@@ -12,7 +12,7 @@ struct options_table_s {
   int  in_use;        /* Boolean used to check if option was already used. */
 };
 
-/* structure used in getConfigOptions() and getIpAndCidrFromString() */
+/* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
 typedef struct {
   unsigned addr;
   unsigned cidr;
@@ -27,9 +27,9 @@ static unsigned int toULong(char *, char *);
 static unsigned int toULongCheckRange(char *, char *, unsigned int, unsigned int);
 static void check_list_separators(char *, char *);
 static void set_destination_addresses(char *, struct config_options * __restrict__); 
-static void listProtocols(void);
+static void list_protocols(void);
 static void set_default_protocol(struct config_options * __restrict__);
-static int getIpAndCidrFromString(char const * const, T50_tmp_addr_t *);
+static int get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
 
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
@@ -480,7 +480,7 @@ struct config_options *parse_command_line(char **argv)
       if (num_options > 1)
         fprintf(stderr, "Option '-l' (or '--list-protocols') cannot be used with other options.\n");
       else
-        listProtocols();
+        list_protocols();
 
       exit(EXIT_FAILURE);
     }
@@ -578,7 +578,7 @@ static void check_options_rules(struct config_options * __restrict__ co)
     exit(EXIT_FAILURE);
   }
 
-  if (!checkThreshold(co))
+  if (!check_threshold(co))
     exit(EXIT_FAILURE);
 
   /* NOTE: Insert other rules here! */
@@ -616,14 +616,14 @@ static void set_destination_addresses(char *arg, struct config_options * __restr
   char *p;
   T50_tmp_addr_t addr;
 
-  if (getIpAndCidrFromString(arg, &addr))
+  if (get_ip_and_cidr_from_string(arg, &addr))
   {
     co->bits = addr.cidr;
     co->ip.daddr = htonl(addr.addr);
   }
   else
   {
-    /* If getIpAndCidrFromString() fails, it probably means that we have a name, instead of an IP. */
+    /* If get_ip_and_cidr_from_string() fails, it probably means that we have a name, instead of an IP. */
 
     /* Tries to resolve the name. */
     p = strtok(arg, "/");
@@ -1062,7 +1062,7 @@ static void check_list_separators(char *optname, char *arg)
 }
 
 /* List procotolos on modules table */
-static void listProtocols(void)
+static void list_protocols(void)
 {
   modules_table_t *ptbl;
   int i;
@@ -1094,7 +1094,7 @@ static void listProtocols(void)
   *((char *)(d) + (len)) = '\0'; \
 }
 
-static int getIpAndCidrFromString(char const * const addr, T50_tmp_addr_t *addr_ptr)
+static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *addr_ptr)
 {
   regex_t re;
   regmatch_t rm[6];

@@ -28,8 +28,8 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
 static void initialize(void);
-static const char *getOrdinalSuffix(unsigned);
-static const char *getMonth(unsigned);
+static const char *get_ordinal_suffix(unsigned);
+static const char *get_month(unsigned);
 
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
   puts("Hit Ctrl+C to stop...");
 
 /* Setting socket file descriptor. */
-  /* NOTE: createSocket() handles its own errors before returning. */
-  if (!createSocket())
+  /* NOTE: create_socket() handles its own errors before returning. */
+  if (!create_socket())
     return EXIT_FAILURE;
 
   /* Setup random seed using current date/time timestamp. */
@@ -123,9 +123,9 @@ int main(int argc, char *argv[])
     tm = localtime(&lt);
 
     printf("\b\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
-      getMonth(tm->tm_mon), 
+      get_month(tm->tm_mon), 
       tm->tm_mday, 
-      getOrdinalSuffix(tm->tm_mday),
+      get_ordinal_suffix(tm->tm_mday),
       (tm->tm_year + 1900), 
       tm->tm_hour, 
       tm->tm_min, 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
 
-    if (!sendPacket(packet, size, co))
+    if (!send_packet(packet, size, co))
       return EXIT_FAILURE;
   
     /* If protocol if 'T50', then get the next true protocol. */
@@ -188,16 +188,16 @@ int main(int argc, char *argv[])
     /* FIX: To graciously end the program, only the parent process can close the socket. 
        NOTE: I realize that closing descriptors are reference counted.
              Kept the logic just in case! */
-    closeSocket();
+    close_socket();
 
     /* Getting the local time. */
     lt = time(NULL); 
     tm = localtime(&lt);
 
     printf("\b\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
-      getMonth(tm->tm_mon),
+      get_month(tm->tm_mon),
       tm->tm_mday,
-      getOrdinalSuffix(tm->tm_mday),
+      get_ordinal_suffix(tm->tm_mday),
       (tm->tm_year + 1900),
       tm->tm_hour,
       tm->tm_min,
@@ -230,7 +230,7 @@ static void signal_handler(int signal)
     /* Kills the child process! */
     kill(pid, SIGKILL);
 #endif
-    closeSocket();
+    close_socket();
 #ifdef __HAVE_TURBO__
   }
 #endif
@@ -277,7 +277,7 @@ static void initialize(void)
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
-static const char *getOrdinalSuffix(unsigned n)
+static const char *get_ordinal_suffix(unsigned n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
@@ -292,7 +292,7 @@ static const char *getOrdinalSuffix(unsigned n)
   return suffixes[3];
 }
 
-static const char *getMonth(unsigned n)
+static const char *get_month(unsigned n)
 {
   /* Months */
   static const char * const months[] =

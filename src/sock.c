@@ -30,7 +30,7 @@
 static socket_t fd = -1;
 
 /* Socket configuration */
-int createSocket(void)
+int create_socket(void)
 {
 	socklen_t len;
 	unsigned n = 1, *nptr = &n;
@@ -96,13 +96,13 @@ int createSocket(void)
   return TRUE;
 }
 
-void closeSocket(void)
+void close_socket(void)
 {
   if (fd != -1)
     close(fd);
 }
 
-int sendPacket(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
+int send_packet(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
 {
   void *p;
   ssize_t sent;
