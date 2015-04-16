@@ -143,7 +143,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
   return NULL;
 }
 
-void gre_checksum(void *buffer, const struct config_options *co, size_t packet_size)
+void gre_checksum(void *buffer, const struct config_options * __restrict__ co, size_t packet_size)
 {
   struct gre_hdr *gre;
   struct gre_sum_hdr *gre_sum;

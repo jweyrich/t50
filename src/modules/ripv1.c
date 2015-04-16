@@ -26,7 +26,7 @@
 Description:   This function configures and sends the RIPv1 packet header.
 
 Targets:       N/A */
-void ripv1(const struct config_options *const co, size_t *size)
+void ripv1(const struct config_options * const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          length;

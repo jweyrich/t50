@@ -101,7 +101,7 @@
 /* EIGRP PROTOCOL STRUCTURES */
 struct eigrp_hdr {
   uint16_t version:8,              /* version                     */
-            opcode:8;               /* opcode                      */
+           opcode:8;               /* opcode                      */
   uint16_t check;                  /* checksum                    */
   uint32_t flags;                  /* flags                       */
   uint32_t sequence;               /* sequence number             */

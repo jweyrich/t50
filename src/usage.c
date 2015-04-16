@@ -32,7 +32,7 @@ void usage(void)
 {
   show_version();
 
-  puts("\nUsage: t50 <host> [/CIDR] [options]");
+  puts("\nUsage: t50 <host[/cidr]> [options]");
 
   general_help();
   gre_help();
