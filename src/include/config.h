@@ -562,6 +562,5 @@ struct config_options {
 };
 
 struct config_options *parse_command_line(char **);
-int checkConfigOptions(const struct config_options * const __restrict__);
 
 #endif /* CONFIG_H */

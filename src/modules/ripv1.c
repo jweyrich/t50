@@ -34,11 +34,7 @@ void ripv1(const struct config_options *const co, size_t *size)
   mptr_t buffer;
 
   struct iphdr * ip;
-
-  /* GRE Encapsulated IP Header. */
   struct iphdr * gre_ip;
-
-  /* UDP header and PSEUDO header. */
   struct udphdr * udp;
   struct psdhdr * pseudo;
 
@@ -65,8 +61,7 @@ void ripv1(const struct config_options *const co, size_t *size)
 
   /* UDP Header structure making a pointer to IP Header structure. */
   udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
-  udp->source = htons(IPPORT_RIP);
-  udp->dest   = htons(IPPORT_RIP);
+  udp->source = udp->dest = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
 
@@ -99,25 +94,30 @@ void ripv1(const struct config_options *const co, size_t *size)
 
   *buffer.word_ptr++ = htons(__RND(co->rip.family));
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
+  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.address));
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
-  /* DON'T NEED THIS */
-  /* length += RIP_HEADER_LENGTH + RIP_MESSAGE_LENGTH; */
-
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
-  pseudo->saddr    = co->encapsulated ? gre_ip->saddr : ip->saddr;
-  pseudo->daddr    = co->encapsulated ? gre_ip->daddr : ip->daddr;
+  if (co->encapsulated)
+  {
+    pseudo->saddr    = gre_ip->saddr;
+    pseudo->daddr    = gre_ip->daddr;
+  }
+  else
+  {
+    pseudo->saddr    = ip->saddr;
+    pseudo->daddr    = ip->daddr;
+  }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = (buffer.ptr - (void *)udp));
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() : 
-    cksum(udp, (size_t)((void *)(pseudo + 1) - (void *)udp));
+    cksum(udp, (void *)(pseudo + 1) - (void *)udp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

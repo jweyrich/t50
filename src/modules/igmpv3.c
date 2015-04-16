@@ -70,13 +70,13 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_grec->grec_type     = __RND(co->igmp.grec_type);
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
     igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources);
-    igmpv3_grec->grec_mca      = INADDR_RND(co->igmp.grec_mca);
+    igmpv3_grec->grec_mca      = htonl(INADDR_RND(co->igmp.grec_mca));
 
     /* Dealing with source address(es). */
     buffer.ptr = igmpv3_grec + 1;
 
     for (counter = 0; counter < co->igmp.sources; counter++)
-      *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->igmp.address[counter]));
 
     /* Computing the checksum. */
     igmpv3_report->csum     = co->bogus_csum ?
@@ -90,7 +90,7 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     igmpv3_query           = (struct igmpv3_query *)((void *)(ip + 1) + greoptlen);
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
-    igmpv3_query->group    = INADDR_RND(co->igmp.group);
+    igmpv3_query->group    = htonl(INADDR_RND(co->igmp.group));
     igmpv3_query->suppress = (co->igmp.suppress != 0);
     igmpv3_query->qrv      = __RND(co->igmp.qrv);
     igmpv3_query->qqic     = __RND(co->igmp.qqic);
@@ -101,10 +101,9 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
     buffer.ptr = igmpv3_query + 1;
 
     for (counter = 0; counter < co->igmp.sources; counter++)
-      *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->igmp.address[counter]));
 
     /* Computing the checksum. */
-    /* FIXME: And the "sources" part? */
     igmpv3_query->csum     = co->bogus_csum ?
       RANDOM() :
       cksum(igmpv3_query, 

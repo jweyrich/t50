@@ -53,6 +53,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
+
   *size = sizeof(struct iphdr)  +
           greoptlen             +
           sizeof(struct tcphdr) +

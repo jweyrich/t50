@@ -90,7 +90,8 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
     co->ipsec.ah_length :
-    (sizeof(struct ip_auth_hdr)/4) + (ip_ah_icv/ip_ah_icv);
+    (sizeof(struct ip_auth_hdr) / 4) + 1;   /* MUST CHECK: The previous line was:
+                                                 (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv) */
   ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
 

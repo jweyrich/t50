@@ -35,11 +35,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   mptr_t buffer;
 
   struct iphdr * ip;
-
-  /* GRE Encapsulated IP Header. */
   struct iphdr * gre_ip;
-
-  /* UDP header and PSEUDO header. */
   struct udphdr * udp;
   struct psdhdr * pseudo;
 
@@ -66,8 +62,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
-  udp->source = htons(IPPORT_RIP);
-  udp->dest   = htons(IPPORT_RIP);
+  udp->source = udp->dest = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) +
       rip_hdr_len(co->rip.auth));
   udp->check  = 0;
@@ -166,9 +161,6 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.dword_ptr++ = htonl(__RND(co->rip.sequence));
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
-
-    /* DON'T NEED THIS */
-    /* length += RIP_AUTH_LENGTH; */
   }
 
   /*
@@ -202,13 +194,10 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
    */
   *buffer.word_ptr++ = htons(__RND(co->rip.family));
   *buffer.word_ptr++ = htons(__RND(co->rip.tag));
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
+  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.address));
   *buffer.inaddr_ptr++ = NETMASK_RND(htonl(co->rip.netmask));
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
+  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.next_hop));
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
-
-  /* DON'T NEED THIS */
-  /* length += RIP_MESSAGE_LENGTH; */
 
   /*
    * XXX Playing with:
@@ -236,9 +225,6 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
     size = auth_hmac_md5_len(co->rip.auth);
     for (counter = 0; counter < size; counter++)
       *buffer.byte_ptr++ = RANDOM();
-
-    /* DON'T NEED THIS */
-    /* length += RIP_TRAILER_LENGTH + size; */
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
@@ -265,7 +251,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() : 
-    cksum(udp, (size_t)((void *)(pseudo + 1) - (void *)udp));
+    cksum(udp, (void *)(pseudo + 1) - (void *)udp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

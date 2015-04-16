@@ -59,7 +59,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   icmp->un.echo.sequence = htons(__RND(co->icmp.sequence));
   if (co->icmp.type == ICMP_REDIRECT)
     if (co->icmp.code == ICMP_REDIR_HOST || co->icmp.code == ICMP_REDIR_NET)
-      icmp->un.gateway = INADDR_RND(co->icmp.gateway);
+      icmp->un.gateway = htonl(INADDR_RND(co->icmp.gateway));
   icmp->checksum = 0;
 
   /* Computing the checksum. */

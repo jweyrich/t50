@@ -67,11 +67,11 @@
 extern void *packet;
 extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
 
-/* NOTE: Since this is not a macro, it's here insted of defines.h. */
-extern uint32_t NETMASK_RND(uint32_t);
-
 /* Realloc packet as needed. Used on module functions. */
 extern void alloc_packet(size_t);
+
+/* NOTE: Since this is not a macro, it's here insted of defines.h. */
+extern uint32_t NETMASK_RND(uint32_t);
 
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);

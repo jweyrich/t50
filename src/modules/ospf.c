@@ -44,8 +44,6 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   mptr_t buffer;
 
   struct iphdr * ip;
-
-  /* OSPF header. */
   struct ospf_hdr * ospf;
 
   /*  OSPF Auth header, LSA header and LLS TLVs. */
@@ -102,8 +100,8 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       sizeof(struct ospf_hdr)      +
       sizeof(struct ospf_auth_hdr) +
       ospf_length);
-  ospf->rid     = INADDR_RND(co->ospf.rid);
-  ospf->aid     = co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid;
+  ospf->rid     = htonl(INADDR_RND(co->ospf.rid));
+  ospf->aid     = htonl(co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid);
   ospf->check   = 0;
 
   /* OSPF Authentication Header structure making a pointer to OSPF Header structure. */
@@ -189,16 +187,12 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.byte_ptr++ = ospf_options;
       *buffer.byte_ptr++ = __RND(co->ospf.hello_priority);
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.hello_dead));
-      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_design);
-      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_backup);
-
-      //length += OSPF_TLEN_HELLO;
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_design));
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_backup));
 
       /* Dealing with neighbor address(es). */
       for (counter = 0; counter < co->ospf.neighbor; counter++)
-        *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.address[counter]);
-
-      //length += OSPF_TLEN_NEIGHBOR(co->ospf.neighbor);
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
       break;
 
     case OSPF_TYPE_DD:
@@ -229,8 +223,6 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.byte_ptr++ = ospf_options;
       *buffer.byte_ptr++ = __RND(co->ospf.dd_dbdesc);
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.dd_sequence));
-
-      //length += OSPF_TLEN_DD;
       break;
 
     case OSPF_TYPE_LSREQUEST:
@@ -251,9 +243,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
        */
       *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_lsid));
-      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_router);
-
-      //length += OSPF_TLEN_LSREQUEST;
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_router));
       break;
 
     case OSPF_TYPE_LSUPDATE:
@@ -305,13 +295,11 @@ build_ospf_lsupdate:
         *buffer.byte_ptr++ = __RND(co->ospf.lsa_flags);
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(1);
-        *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_link_id);
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_link_id));
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.lsa_link_data);
         *buffer.byte_ptr++ = __RND(co->ospf.lsa_link_type);
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(__RND(co->ospf.lsa_metric));
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -338,7 +326,7 @@ build_ospf_lsupdate:
          *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-        *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_attached);
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_attached));
 
         //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
 
@@ -371,8 +359,6 @@ build_ospf_lsupdate:
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
         buffer.ptr--; /* hack! */
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY;
 
         /* Computing the checksum. */
         ospf_lsa->check =  co->bogus_csum ?
@@ -411,10 +397,8 @@ build_ospf_lsupdate:
         *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
         buffer.ptr--;   /* hack! */
-        *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_forward);
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_forward));
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -441,9 +425,7 @@ build_ospf_lsupdate:
          *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
         *buffer.dword_ptr++ = htonl(__RND(co->ospf.vertex_type));
-        *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.vertex_id);
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST;
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.vertex_id));
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -457,8 +439,6 @@ build_ospf_lsupdate:
         ospf_lsa->length     = htons(co->ospf.length ?
             co->ospf.length :
             LSA_TLEN_GENERIC(0));
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0);
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum ?
@@ -515,8 +495,8 @@ build_ospf_lsa:
         ospf_lsa->age     |= 0x80;
       ospf_lsa->type       = co->ospf.lsa_type;
       ospf_lsa->options    = ospf_options;
-      ospf_lsa->lsid       = INADDR_RND(co->ospf.lsa_lsid);
-      ospf_lsa->router     = INADDR_RND(co->ospf.lsa_router);
+      ospf_lsa->lsid       = htonl(INADDR_RND(co->ospf.lsa_lsid));
+      ospf_lsa->router     = htonl(INADDR_RND(co->ospf.lsa_router));
       ospf_lsa->sequence   = htonl(__RND(co->ospf.lsa_sequence));
       ospf_lsa->check      = 0;
 
@@ -557,8 +537,6 @@ build_ospf_lsa:
             co->ospf.length :
             LSA_TLEN_GENERIC(0));
 
-      //length += LSA_TLEN_GENERIC(0);
-
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
         RANDOM() :
@@ -572,8 +550,6 @@ build_ospf_lsa:
   stemp = auth_hmac_md5_len(co->ospf.auth);
   for (counter = 0; counter < stemp; counter++)
     *buffer.byte_ptr++ = RANDOM();
-
-  //length += stemp;
 
   /*
    * OSPF Link-Local Signaling (RFC 5613)
@@ -681,8 +657,6 @@ build_ospf_lsa:
           RANDOM() :
           cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
       }
-
-      //length += ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
     }
   }
 
@@ -698,7 +672,6 @@ build_ospf_lsa:
     /* Computing the checksum. */
     ospf->check   = co->bogus_csum ?
       RANDOM() :
-      //cksum(ospf, sizeof(struct ospf_hdr) + length);
       cksum(ospf, buffer.ptr - (void *)ospf);
 
   gre_checksum(packet, co, *size);
@@ -749,21 +722,17 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
        */
     case OSPF_TYPE_LSUPDATE:
       size += OSPF_TLEN_LSUPDATE;
-      if (baz == LSA_TYPE_ROUTER)
-        size += LSA_TLEN_ROUTER;
-      else if (baz == LSA_TYPE_NETWORK)
-        size += LSA_TLEN_NETWORK;
-      else if (baz == LSA_TYPE_SUMMARY_IP ||
-          baz == LSA_TYPE_SUMMARY_AS)
-        size += LSA_TLEN_SUMMARY;
-      else if (baz == LSA_TYPE_ASBR)
-        size += LSA_TLEN_ASBR;
-      else if (baz == LSA_TYPE_MULTICAST)
-        size += LSA_TLEN_MULTICAST;
-      else if (baz == LSA_TYPE_NSSA)
-        size += LSA_TLEN_NSSA;
-      else
-        size += LSA_TLEN_GENERIC(0);
+      switch (baz)
+      {
+        case LSA_TYPE_ROUTER:     size += LSA_TLEN_ROUTER; break;
+        case LSA_TYPE_NETWORK:    size += LSA_TLEN_NETWORK; break;
+        case LSA_TYPE_SUMMARY_IP:
+        case LSA_TYPE_SUMMARY_AS: size += LSA_TLEN_SUMMARY; break;
+        case LSA_TYPE_ASBR:       size += LSA_TLEN_ASBR; break;
+        case LSA_TYPE_MULTICAST:  size += LSA_TLEN_MULTICAST; break;
+        case LSA_TYPE_NSSA:       size += LSA_TLEN_NSSA; break;
+        default:                  size += LSA_TLEN_GENERIC(0);
+      }
       break;
 
     case OSPF_TYPE_LSACK:

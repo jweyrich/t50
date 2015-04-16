@@ -42,8 +42,7 @@ int main(int argc, char *argv[])
   /* Configuring command line interface options. */
   co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
 
-  /* This is a requirement of t50. User must be root to use it. 
-     Previously on checkConfigOptions(). */
+  /* This is a requirement of t50. User must be root to use it. */
   if (getuid())
   {
     ERROR("User must have root priviledge to run.");
@@ -60,7 +59,7 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_TURBO__
   if (co->turbo) puts("Turbo mode active...");
 #endif
-  if (co->bits) puts("Performing DoS.");
+  if (co->bits) puts("Performing stress testing...");
   puts("Hit Ctrl+C to stop...");
 
 /* Setting socket file descriptor. */

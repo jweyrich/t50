@@ -258,14 +258,14 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
            EIGRP_TLEN_INTERNAL :
            EIGRP_TLEN_EXTERNAL) +
           EIGRP_DADDR_LENGTH(prefix));
-      *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.next_hop);
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.next_hop));
       /*
        * The only difference between Internal and External Routes TLVs is 20
        * octets. Building 20 extra octets for IP External Routes TLV.
        */
       if (co->eigrp.type == EIGRP_TYPE_EXTERNAL)
       {
-        *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.src_router);
+        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.src_router));
         *buffer.dword_ptr++ = htonl(__RND(co->eigrp.src_as));
         *buffer.dword_ptr++ = htonl(__RND(co->eigrp.tag));
         *buffer.dword_ptr++ = htonl(__RND(co->eigrp.proto_metric));
@@ -286,7 +286,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.word_ptr++ = co->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
         FIELD_MUST_BE_ZERO : htons(0x0004);
       *buffer.byte_ptr++ = prefix;
-      *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);
+      *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);  // Is this correct?
       buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
 
       /* DON'T NEED THIS. */
@@ -400,7 +400,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
             *buffer.word_ptr++ = htons(co->eigrp.length ?
                 co->eigrp.length : EIGRP_TLEN_SEQUENCE);
             *buffer.byte_ptr++ = sizeof(co->eigrp.address);
-            *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.address);
+            *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.address));
 
             /*
              * Enhanced Interior Gateway Routing Protocol (EIGRP)

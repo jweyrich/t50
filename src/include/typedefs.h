@@ -70,11 +70,11 @@ typedef union {
  */
 struct psdhdr
 {
-  in_addr_t saddr;                  /* source address              */
-  in_addr_t daddr;                  /* destination address         */
-  uint8_t   zero;                   /* must be zero                */
-  uint8_t   protocol;               /* protocol                    */
-  uint16_t  len;                    /* header length               */
+  in_addr_t saddr;      /* source address      */
+  in_addr_t daddr;      /* destination address */
+  uint8_t   zero;       /* must be zero        */
+  uint8_t   protocol;   /* protocol            */
+  uint16_t  len;        /* header length       */
 };
 
 #endif

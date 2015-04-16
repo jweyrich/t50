@@ -23,7 +23,10 @@
   extern FILE *fdebug;
 #endif
 
-struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options *co)
+#define IP_MF 0x2000
+#define IP_DF 0x4000
+
+struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options * __restrict__ co)
 {
   struct iphdr *ip;
 
@@ -39,9 +42,8 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip->id       = htons(__RND(co->ip.id));
   ip->ttl      = co->ip.ttl;
   ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
-  ip->saddr    = INADDR_RND(co->ip.saddr);
-  ip->daddr    = co->ip.daddr;
-  /* The code does not have to handle the checksum. Kernel will do */
+  ip->saddr    = htonl(INADDR_RND(co->ip.saddr));
+  ip->daddr    = co->ip.daddr;    // Already BIG ENDIAN?
   ip->check    = 0;
 
 #ifdef DUMP_DATA

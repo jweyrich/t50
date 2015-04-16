@@ -27,7 +27,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
 {
   struct iphdr *ip,  *gre_ip;
   struct gre_hdr     *gre;
-  void               *offset;
+  void               *ptr;
 
   assert(buffer != NULL);
   assert(co != NULL);
@@ -67,7 +67,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
     gre->proto   = htons(ETH_P_IP);
 
     /* Computing the GRE offset. */
-    offset  = gre + 1;
+    ptr  = gre + 1;
 
     /* GRE CHECKSUM? */
     if (co->gre.C)
@@ -75,11 +75,11 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       /* GRE CHECKSUM Header structure making a pointer to IP Header structure. */
       struct gre_sum_hdr *gre_sum;
 
-      gre_sum         = offset;
+      gre_sum         = ptr;
       gre_sum->offset = FIELD_MUST_BE_ZERO;
       gre_sum->check  = 0;
 
-      offset += GRE_OPTLEN_CHECKSUM;
+      ptr += GRE_OPTLEN_CHECKSUM;
     }
 
     /* GRE KEY? */
@@ -88,10 +88,10 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       /* GRE KEY Header structure making a pointer to IP Header structure. */
       struct gre_key_hdr *gre_key;
 
-      gre_key      = offset;
+      gre_key      = ptr;
       gre_key->key = htonl(__RND(co->gre.key));
 
-      offset += GRE_OPTLEN_KEY;
+      ptr += GRE_OPTLEN_KEY;
     }
 
     /* GRE SEQUENCE? */
@@ -100,10 +100,10 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       /* GRE SEQUENCE Header structure making a pointer to IP Header structure. */
       struct gre_seq_hdr *gre_seq;
 
-      gre_seq          = offset;
+      gre_seq          = ptr;
       gre_seq->sequence = htonl(__RND(co->gre.sequence));
 
-      offset += GRE_OPTLEN_SEQUENCE;
+      ptr += GRE_OPTLEN_SEQUENCE;
     }
 
     /*
@@ -117,7 +117,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
      * packet is decapsulated to insure that no packet lives forever.
      */
     /* GRE Encapsulated IP Header structure making a pointer to to IP Header structure. */
-    gre_ip           = offset;
+    gre_ip           = ptr;
     gre_ip->version  = ip->version;
     gre_ip->ihl      = ip->ihl;
     gre_ip->tos      = ip->tos;

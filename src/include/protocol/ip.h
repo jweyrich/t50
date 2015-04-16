@@ -22,6 +22,6 @@
 
 #include <common.h>
 
-struct iphdr *ip_header(void *, size_t, const struct config_options *);
+struct iphdr *ip_header(void *, size_t, const struct config_options * __restrict__);
 
 #endif

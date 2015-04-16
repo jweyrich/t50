@@ -50,13 +50,6 @@
 
 #define auth_hmac_md5_len(foo) ((foo) ? AUTH_TLEN_HMACMD5 : 0)
 
-/* #define IPVERSION 4 */ /* NOTE: Already defined in netinet/in.h. */
-
-/* NOTE: Both IP_MF & IP_DF are defined in netinet/ip.h. 
-         But, since we are using linux/ip.h, they are needed here. */
-#define IP_MF 0x2000
-#define IP_DF 0x4000
-
 /* T50 DEFINITIONS. */
 #define IPPROTO_T50        69
 #define FIELD_MUST_BE_NULL NULL

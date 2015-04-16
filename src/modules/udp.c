@@ -33,11 +33,7 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   size_t greoptlen;   /* GRE options size. */
 
   struct iphdr *ip;
-
-  /* GRE Encapsulated IP Header. */
   struct iphdr *gre_ip;
-
-  /* UDP header and PSEUDO header. */
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
@@ -85,10 +81,10 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   udp->check  = co->bogus_csum ? RANDOM() :
     cksum(udp, (void *)(pseudo + 1) - (void *)udp);
 
+  gre_checksum(packet, co, *size);
+
 #ifdef DUMP_DATA
   dump_udp(fdebug, udp);
   dump_psdhdr(fdebug, pseudo);
 #endif
-
-  gre_checksum(packet, co, *size);
 }
