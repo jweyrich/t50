@@ -729,37 +729,38 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
       co->tcp.options |= TCP_OPTION_TSOPT;
       {
         unsigned long a = 0, b = 0;
-        char *pch;
+        char *p1, *p2;
 
-        if ((pch = strtok(arg, ".")) != NULL)
+        if (strpbrk(arg, ";:,"))
         {
-          errno = 0;
-
-          a = strtoul(pch, NULL, 10);
-          if (!errno)
-            goto error1;
-
-          if ((pch = strtok(NULL, ".")) != NULL)
-          {
-            errno = 0;
-
-            b = strtoul(pch, NULL, 10);
-            if (!errno)
-              goto error1;
-          }
-
-          if (a > ULONG_MAX || b > ULONG_MAX)
-          {
-            fprintf(stderr, "'%s' arguments are out of range.\n", optname);
-            exit(EXIT_FAILURE);
-          }
-        }
-        else
-        {
-error1:
-          fprintf(stderr, "'%s' should receive an argument formated as 'n.[n]'.\n", optname);
+          fprintf(stderr, "'%s' should receive an argument formated as 'n[.n]'.\n", optname);
           exit(EXIT_FAILURE);
         }
+
+        /* arg is garanteed to be a valid pointer at this point. */    
+        p1 = strtok(arg, ".");
+        p2 = strtok(NULL, ".");
+
+        errno = 0;
+        a = strtoul(p1, NULL, 10);
+        if (errno)
+        {
+error1:
+          fprintf(stderr, "'%s' arguments are out of range.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+
+        if (p2)
+        {
+          errno = 0;
+          b = strtoul(p2, NULL, 10);
+
+          if (errno)
+            goto error1;
+        }
+
+        if (a > UINT_MAX || b > UINT_MAX)
+          goto error1;
 
         co->tcp.tsval = a;
         co->tcp.tsecr = b;
@@ -775,20 +776,42 @@ error1:
     case OPTION_TCP_SACK_EDGE:        
       /* NOTE: This option expects 2 values, separated by ':'. */
       co->tcp.options |= TCP_OPTION_SACK_EDGE;
-      #pragma message "Remember to fix this!"
       {
-        unsigned int a = 0, b = 0;
+        unsigned int a, b;
+        char *p1, *p2;
 
-        if (sscanf(arg, "%u:%u", &a, &b) > 0)
+        if (strpbrk(arg, ",.;"))
         {
-          co->tcp.sack_left = a;
-          co->tcp.sack_right = b;
-        }
-        else
-        {
-          fprintf(stderr, "'%s' MUST have 2 values separated by ':'.\n", optname);
+error2:
+          fprintf(stderr, "'%s' should receive an argument formated as 'n:n'.\n", optname);
           exit(EXIT_FAILURE);
         }
+
+        p1 = strtok(arg, ":");
+        p2 = strtok(NULL, ":");
+
+        if (!p2)
+          goto error2;
+
+        errno = 0;
+        a = strtoul(p1, NULL, 10);
+        if (errno)
+        {
+error3:
+          fprintf(stderr, "'%s' arguments are out of range.\n", optname);
+          exit(EXIT_FAILURE);
+        }
+
+        errno = 0;
+        b = strtoul(p2, NULL, 10);
+        if (errno)
+          goto error3;
+      
+        if (a > UINT_MAX || b > UINT_MAX)
+          goto error3;
+
+        co->tcp.sack_left = a;
+        co->tcp.sack_right = b;
       }
       break;
     case OPTION_TCP_MD5_SIGNATURE:      co->tcp.md5 = !(co->tcp.auth = FALSE); break;
