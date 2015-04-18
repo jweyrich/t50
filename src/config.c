@@ -775,6 +775,7 @@ error1:
     case OPTION_TCP_SACK_EDGE:        
       /* NOTE: This option expects 2 values, separated by ':'. */
       co->tcp.options |= TCP_OPTION_SACK_EDGE;
+      #pragma message "Remember to fix this!"
       {
         unsigned int a = 0, b = 0;
 
@@ -918,6 +919,7 @@ error1:
                                         co->eigrp.k5 = toULong(optname, arg); break;
     case OPTION_EIGRP_HOLD:             co->eigrp.hold = toULong(optname, arg); break;
     case OPTION_EIGRP_IOS_VERSION:        
+      #pragma message "Remember to fix this!"
       {
         unsigned int a = 0, b = 0;
 
@@ -934,6 +936,7 @@ error1:
       }
       break;
     case OPTION_EIGRP_PROTO_VERSION:      
+      #pragma message "Remember to fix this!"
       {
         unsigned int a = 0, b = 0;
 
