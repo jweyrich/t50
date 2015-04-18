@@ -29,9 +29,13 @@ int check_threshold(const struct config_options * const __restrict__ co)
 
     if (co->threshold < minThreshold)
     {
-      asprintf(&s, "Protocol %s cannot have threshold smaller than %d", 
-        mod_table[co->ip.protoname].acronym,
-        minThreshold);
+      if (asprintf(&s, "Protocol %s cannot have threshold smaller than %d", 
+            mod_table[co->ip.protoname].acronym,
+            minThreshold) == -1)
+      {
+        fprintf(stderr, "ERROR allocating temporary string space.\n");
+        exit(EXIT_FAILURE);
+      }
 
       ERROR(s);
       free(s);
@@ -43,8 +47,12 @@ int check_threshold(const struct config_options * const __restrict__ co)
   {
     if (co->threshold < 1)
     {
-      asprintf(&s, "Protocol %s cannot have threshold smaller than 1",
-              mod_table[co->ip.protoname].acronym);
+      if (asprintf(&s, "Protocol %s cannot have threshold smaller than 1",
+              mod_table[co->ip.protoname].acronym) == -1)
+      {
+        fprintf(stderr, "ERROR allocating temporary string space.\n");
+        exit(EXIT_FAILURE);
+      }
 
       ERROR(s);
       free(s);

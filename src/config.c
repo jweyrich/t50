@@ -31,6 +31,10 @@ static void list_protocols(void);
 static void set_default_protocol(struct config_options * __restrict__);
 static int get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
 
+// Must disable this warning 'cause the initializations are right!
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 /* Default command line interface options. */
 /* NOTE: Using GCC structure initialization extension to
          make sure that all fields are initialized correctly. */
@@ -385,6 +389,8 @@ static struct options_table_s options[] = {
   { 0, 0, NULL, 0 }
 };
 
+#pragma GCC diagnostic pop
+
 /* Substitutes getConfigOptions() function.
    NOTE: This function expects &argv[0] as the first argument. */
 struct config_options *parse_command_line(char **argv)
@@ -640,7 +646,7 @@ static void set_destination_addresses(char *arg, struct config_options * __restr
 /* Setup an option. */
 static void set_config_option(struct config_options * __restrict__ co, char *optname, int optid, char *arg)
 {
-  int counter;
+  size_t counter;
   char *tmp_ptr;
 
   switch (optid)
@@ -722,18 +728,41 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
       /* This option can contain 2 values separated by ':'. */
       co->tcp.options |= TCP_OPTION_TSOPT;
       {
-        unsigned int a = 0, b = 0;
+        unsigned long a = 0, b = 0;
+        char *pch;
 
-        if (sscanf(arg, "%u.%u", &a, &b) > 0)
+        if ((pch = strtok(arg, ".")) != NULL)
         {
-          co->tcp.tsval = a;
-          co->tcp.tsecr = b;
+          errno = 0;
+
+          a = strtoul(pch, NULL, 10);
+          if (!errno)
+            goto error1;
+
+          if ((pch = strtok(NULL, ".")) != NULL)
+          {
+            errno = 0;
+
+            b = strtoul(pch, NULL, 10);
+            if (!errno)
+              goto error1;
+          }
+
+          if (a > ULONG_MAX || b > ULONG_MAX)
+          {
+            fprintf(stderr, "'%s' arguments are out of range.\n", optname);
+            exit(EXIT_FAILURE);
+          }
         }
         else
         {
-          fprintf(stderr, "'%s' should receive an argument formated as 'n[.n]'.\n", optname);
+error1:
+          fprintf(stderr, "'%s' should receive an argument formated as 'n.[n]'.\n", optname);
           exit(EXIT_FAILURE);
         }
+
+        co->tcp.tsval = a;
+        co->tcp.tsecr = b;
       }
       break;
     case OPTION_TCP_SACK_OK:            co->tcp.options |= TCP_OPTION_SACK_OK; break;
@@ -1021,8 +1050,9 @@ static unsigned int toULong(char *optname, char *value)
   assert(value != NULL);
 
   /* strtoul deals ok with hexadecimal, octal and decimal values. */
+  errno = 0;    // errno is set only on error, so we have to reset it here.
   n = strtoul(value, NULL, 0);
-  if (n > UINT_MAX || errno == ERANGE)
+  if (errno || n > UINT_MAX)
   {
     fprintf(stderr, "Invalid numeric value for option '%s'.\n", optname);
     exit(EXIT_FAILURE);

@@ -31,6 +31,9 @@ static void initialize(void);
 static const char *get_ordinal_suffix(unsigned);
 static const char *get_month(unsigned);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
 {
@@ -209,6 +212,8 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+
+#pragma GCC diagnostic pop
 
 /* This function handles interruptions. */
 static void signal_handler(int signal)

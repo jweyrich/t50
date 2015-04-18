@@ -64,6 +64,8 @@ int create_socket(void)
 	 * 10485760 = 10 megabytes */
 	for (n += 128; n < 10485760; n += 128)
 	{
+    errno = 0;    // errno is set only on error, then we have to reset it here.
+
 		/* Setting SO_SNDBUF. */
 		if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, len) == -1 )
 		{
@@ -112,11 +114,15 @@ int send_packet(const void * const buffer, size_t size, const struct config_opti
   size_t sz = size;
 #endif
 
+// Explicitly disabled warning 'cause this initialization is correct!
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-braces"
   struct sockaddr_in sin = { 
     .sin_family = AF_INET, 
     .sin_port = htons(IPPORT_RND(co->dest)), 
     .sin_addr = co->ip.daddr 
   };
+#pragma GCC diagnostic pop
 
   assert(buffer != NULL);
   assert(size > 0);
@@ -127,6 +133,8 @@ int send_packet(const void * const buffer, size_t size, const struct config_opti
   p = (void *)buffer;
   for (num_tries = MAX_SENDTO_TRIES; size > 0 && num_tries--;) 
   {
+    errno = 0;    // errno is set only on error, then we have to reset it here.
+
     if ((sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(sin))) == -1)
       break;
 

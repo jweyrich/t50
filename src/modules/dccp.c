@@ -112,7 +112,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
    *                  (CsCov-1)*4 bytes of the packet's application data.
    */
   dccp->dccph_cscov    = co->dccp.cscov ?
-    (co->dccp.cscov - 1) * 4 : (co->bogus_csum ? RANDOM() : co->dccp.cscov);
+    (co->dccp.cscov - 1) * 4 : (co->bogus_csum ? (uint8_t)(RANDOM() & 0xf) : co->dccp.cscov);
 
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)

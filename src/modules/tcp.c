@@ -81,9 +81,13 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   {
     char *s;
 
-    asprintf(&s, "%s(): TCP options size (%u bytes) is bigger than two times TCP header size",
-      __FUNCTION__,
-      (unsigned int)tcpopt);
+    if (asprintf(&s, "%s(): TCP options size (%u bytes) is bigger than two times TCP header size",
+          __FUNCTION__,
+          (unsigned int)tcpopt) == -1)
+    {
+      fprintf(stderr, "ERROR: Error alocating temporary string space.\n");
+      exit(EXIT_FAILURE);
+    }
 
     ERROR(s);
     free(s);

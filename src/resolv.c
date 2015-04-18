@@ -22,8 +22,12 @@
 /* IP address and name resolving */
 in_addr_t resolv(char *name)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
   /* try this method to follow posix, so i try with getaddinfo()  ;-) */
   struct addrinfo hints = {}, *res, *res0 = NULL;
+#pragma GCC diagnostic pop
+
   struct sockaddr_in *target = NULL;
   int error;
   char tmp[46];
