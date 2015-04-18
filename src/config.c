@@ -1,4 +1,5 @@
 #include <common.h>
+#include <setjmp.h>
 #include <limits.h>
 #include <regex.h>
 
@@ -30,6 +31,7 @@ static void set_destination_addresses(char *, struct config_options * __restrict
 static void list_protocols(void);
 static void set_default_protocol(struct config_options * __restrict__);
 static int get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
+static int get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
@@ -602,7 +604,6 @@ static void get_ip_protocol(struct config_options *co, char *arg)
   else
   {
     /* Scan the modules table trying to get the protocol. */
-
     int i;
 
     for (i = 0; mod_table[i].acronym; i++)
@@ -648,6 +649,7 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
 {
   size_t counter;
   char *tmp_ptr;
+  unsigned long a, b; /* Temporaries. */
 
   switch (optid)
   {
@@ -725,46 +727,14 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
     case OPTION_TCP_WSOPT:              co->tcp.options |= TCP_OPTION_WSOPT;           
                                         co->tcp.wsopt = toULong(optname, arg); break; 
     case OPTION_TCP_TSOPT:            
-      /* This option can contain 2 values separated by ':'. */
+      /* This option can contain 2 values separated by ':' (second is optional). */
       co->tcp.options |= TCP_OPTION_TSOPT;
-      {
-        unsigned long a = 0, b = 0;
-        char *p1, *p2;
 
-        if (strpbrk(arg, ";:,"))
-        {
-          fprintf(stderr, "'%s' should receive an argument formated as 'n[.n]'.\n", optname);
-          exit(EXIT_FAILURE);
-        }
+      if (!get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
+        exit(EXIT_FAILURE);
 
-        /* arg is garanteed to be a valid pointer at this point. */    
-        p1 = strtok(arg, ".");
-        p2 = strtok(NULL, ".");
-
-        errno = 0;
-        a = strtoul(p1, NULL, 10);
-        if (errno)
-        {
-error1:
-          fprintf(stderr, "'%s' arguments are out of range.\n", optname);
-          exit(EXIT_FAILURE);
-        }
-
-        if (p2)
-        {
-          errno = 0;
-          b = strtoul(p2, NULL, 10);
-
-          if (errno)
-            goto error1;
-        }
-
-        if (a > UINT_MAX || b > UINT_MAX)
-          goto error1;
-
-        co->tcp.tsval = a;
-        co->tcp.tsecr = b;
-      }
+      co->tcp.tsval = a;
+      co->tcp.tsecr = b;
       break;
     case OPTION_TCP_SACK_OK:            co->tcp.options |= TCP_OPTION_SACK_OK; break;
     case OPTION_TCP_CC:                 co->tcp.options |= TCP_OPTION_CC; 
@@ -776,43 +746,12 @@ error1:
     case OPTION_TCP_SACK_EDGE:        
       /* NOTE: This option expects 2 values, separated by ':'. */
       co->tcp.options |= TCP_OPTION_SACK_EDGE;
-      {
-        unsigned int a, b;
-        char *p1, *p2;
 
-        if (strpbrk(arg, ",.;"))
-        {
-error2:
-          fprintf(stderr, "'%s' should receive an argument formated as 'n:n'.\n", optname);
-          exit(EXIT_FAILURE);
-        }
+      if (!get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
+        exit(EXIT_FAILURE);
 
-        p1 = strtok(arg, ":");
-        p2 = strtok(NULL, ":");
-
-        if (!p2)
-          goto error2;
-
-        errno = 0;
-        a = strtoul(p1, NULL, 10);
-        if (errno)
-        {
-error3:
-          fprintf(stderr, "'%s' arguments are out of range.\n", optname);
-          exit(EXIT_FAILURE);
-        }
-
-        errno = 0;
-        b = strtoul(p2, NULL, 10);
-        if (errno)
-          goto error3;
-      
-        if (a > UINT_MAX || b > UINT_MAX)
-          goto error3;
-
-        co->tcp.sack_left = a;
-        co->tcp.sack_right = b;
-      }
+      co->tcp.sack_left = a;
+      co->tcp.sack_right = b;
       break;
     case OPTION_TCP_MD5_SIGNATURE:      co->tcp.md5 = !(co->tcp.auth = FALSE); break;
     case OPTION_TCP_AUTHENTICATION:     co->tcp.auth = !(co->tcp.md5 = FALSE); break;
@@ -942,38 +881,18 @@ error3:
                                         co->eigrp.k5 = toULong(optname, arg); break;
     case OPTION_EIGRP_HOLD:             co->eigrp.hold = toULong(optname, arg); break;
     case OPTION_EIGRP_IOS_VERSION:        
-      #pragma message "Remember to fix this!"
-      {
-        unsigned int a = 0, b = 0;
+      if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+        exit(EXIT_FAILURE);
 
-        if (sscanf(arg, "%u.%u", &a, &b) > 0)
-        {
-          co->eigrp.ios_major = a;
-          co->eigrp.ios_minor = b;
-        }
-        else
-        {
-          fprintf(stderr, "'%s' must have two values separated by '.'.\n", optname);
-          exit(EXIT_FAILURE);
-        }
-      }
+      co->eigrp.ios_major = a;
+      co->eigrp.ios_minor = b;
       break;
     case OPTION_EIGRP_PROTO_VERSION:      
-      #pragma message "Remember to fix this!"
-      {
-        unsigned int a = 0, b = 0;
+      if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+        exit(EXIT_FAILURE);
 
-        if (sscanf(arg, "%u.%u", &a, &b) > 0)
-        {
-          co->eigrp.ver_major = a;
-          co->eigrp.ver_minor = b;
-        }
-        else
-        {
-          fprintf(stderr, "'%s' must have two values separated by '.'.\n", optname);
-          exit(EXIT_FAILURE);
-        }
-      }
+      co->eigrp.ver_major = a;
+      co->eigrp.ver_minor = b;
       break;
     case OPTION_EIGRP_NEXTHOP:          check_list_separators(optname, arg);
                                         co->eigrp.next_hop = resolv(arg); break;
@@ -1067,8 +986,9 @@ error3:
   }
 }
 
-/* Tries to convert string to an unsigned value. */
-static unsigned int toULong(char *optname, char *value)
+/* Tries to convert string to an unsigned value. 
+   NOTE: Marked as "noinline" because it's big enough! */
+static __attribute__((noinline)) unsigned int toULong(char *optname, char *value)
 {
   unsigned long n;
 
@@ -1088,8 +1008,9 @@ static unsigned int toULong(char *optname, char *value)
 }
 
 /* Tries to convert string to unsigned int, checking range. 
-   NOTE: 'min' MUST BE smaller than 'max'. */
-static unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+   NOTE: 'min' MUST BE smaller than 'max'. 
+   NOTE: Marked as "noinline" because it's big enough. */
+static __attribute__((noinline)) unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
 {
   unsigned int n;
 
@@ -1257,5 +1178,86 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
                       (0xffffffffUL << (32 - addr_ptr->cidr));
 
   return TRUE;
+}
+
+/* Convert strings as "10.3" to it's components.
+   check if both values conforms to a maximum (max).
+   check if the second argument is optional.
+   allows the use of 2 separators: '.' or ':'. 
+
+   Also, check for invalid separators: ',', ';'. If '.' is the separator, ':'
+   and vice-versa.
+
+  NOTE: Since this funcion is defined and used in this module, it's marked with
+        the attribute "noinline". Because it's big!
+*/
+static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
+{
+  /* 'static' because we don't need to allocate these every time! */
+  static char nseps[] = " ,;";
+  static char sep[2] = " ";  
+
+  char *p1, *p2;
+  jmp_buf jb;
+
+  /* Error handling... */
+  if (setjmp(jb))
+  {
+    fprintf(stderr, "'%s' should be formated as 'n%s'.\n", optname, optional ? "[.n]" : ".n");
+    return 0;
+  }
+
+  nseps[0] = ((sep[0] = separator) == '.') ? ':' : '.';
+
+  /* There are any invalid separators? */
+  if (strpbrk(arg, nseps))
+    longjmp(jb, 1);
+
+  p1 = strtok(arg, sep);
+  p2 = strtok(NULL, sep);
+
+  /* If the second parameter is mandatory, then if p2 is NULL we have a problem! */
+  if (!optional && !p2)
+    longjmp(jb, 1);
+
+  /* Error handling... */
+  if (setjmp(jb))
+  {
+    fprintf(stderr, "'%s' arguments are out of range or invalid.\n", optname);
+    return 0;
+  }
+
+  /* Try to convert the first value. */
+  errno = 0;
+  *px = strtoul(p1, NULL, 10);
+  if (errno)
+    longjmp(jb, 1);
+
+  if (!p2)
+  {
+    /* If the second parameter is optional and missing, assume 0, otherwise... error! */
+    if (optional)
+      *py = 0;
+    else
+      longjmp(jb, 1);
+  }
+  else
+  {
+    /* Try to convert the second value. */
+    errno = 0;
+    *py = strtoul(p2, NULL, 10);
+    if (errno)
+      longjmp(jb, 1);
+  }
+
+  /* Check values ranges. */
+  if (*px > max || *py > max)
+  {
+    fprintf(stderr, "One or both arguments of '%s' option are out of range.\n", optname);
+    return 0;
+  }
+
+  /* Everything ok! */
+  return 1;
 }
 
