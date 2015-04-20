@@ -39,7 +39,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   uint32_t prefix;      /* EIGRP Prefix */
 
   /* Packet and Checksum. */
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr * ip;
   struct eigrp_hdr * eigrp;

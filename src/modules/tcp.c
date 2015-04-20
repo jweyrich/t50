@@ -37,7 +37,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
          length,
          counter;
 
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr *ip;
 
@@ -197,6 +197,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
     if (!co->tcp.syn)
       for (; tcpolen & 3; tcpolen++)
         *buffer.byte_ptr++ = TCPOPT_NOP;
+
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
     *buffer.dword_ptr++ = htonl(__RND(co->tcp.tsval));

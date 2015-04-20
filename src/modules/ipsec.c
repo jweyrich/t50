@@ -32,7 +32,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
          counter;
 
   /* Packet. */
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr * ip;
 

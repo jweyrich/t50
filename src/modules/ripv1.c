@@ -31,7 +31,7 @@ void ripv1(const struct config_options * const __restrict__ co, size_t *size)
   size_t greoptlen,   /* GRE options size. */
          length;
 
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr * ip;
   struct iphdr * gre_ip;

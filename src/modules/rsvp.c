@@ -35,7 +35,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
          counter;
 
   /* Packet and Checksum. */
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr * ip;
 

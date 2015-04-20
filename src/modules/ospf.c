@@ -41,7 +41,7 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
           lls;          /* OSPF LLS header? */
 
   /* Packet and Checksum. */
-  mptr_t buffer;
+  memptr_t buffer;
 
   struct iphdr * ip;
   struct ospf_hdr * ospf;

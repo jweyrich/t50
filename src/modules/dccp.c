@@ -158,7 +158,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   dccp->dccph_seq2     = co->dccp.ext ? 0 : __RND(co->dccp.sequence_02);
   dccp->dccph_checksum = 0;
 
-  /* NOTE: Not using union 'mptr_t' this time!!! */
+  /* NOTE: Not using union 'memptr_t' this time!!! */
   buffer_ptr = dccp + 1;
 
   /* DCCP Extended Header structure making a pointer to Checksum. */

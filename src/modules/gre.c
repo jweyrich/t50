@@ -79,7 +79,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       gre_sum->offset = FIELD_MUST_BE_ZERO;
       gre_sum->check  = 0;
 
-      ptr += GRE_OPTLEN_CHECKSUM;
+      ptr = gre_sum + 1;
     }
 
     /* GRE KEY? */
@@ -91,7 +91,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       gre_key      = ptr;
       gre_key->key = htonl(__RND(co->gre.key));
 
-      ptr += GRE_OPTLEN_KEY;
+      ptr = gre_key + 1;
     }
 
     /* GRE SEQUENCE? */
@@ -103,7 +103,7 @@ struct iphdr *gre_encapsulation(void *buffer, const struct config_options * cons
       gre_seq          = ptr;
       gre_seq->sequence = htonl(__RND(co->gre.sequence));
 
-      ptr += GRE_OPTLEN_SEQUENCE;
+      ptr = gre_seq + 1;
     }
 
     /*
@@ -161,7 +161,7 @@ void gre_checksum(void *buffer, const struct config_options * __restrict__ co, s
     if (co->gre.C)
       gre_sum->check  = co->bogus_csum ?
         RANDOM() :
-        cksum(gre, packet_size - sizeof(struct iphdr));
+        cksum(gre, packet_size - sizeof(struct iphdr)); // All packet, except the main IP header.
   }
 }
 

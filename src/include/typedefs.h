@@ -38,7 +38,7 @@ typedef union {
   uint32_t *dword_ptr;
   in_addr_t *inaddr_ptr;
   uint64_t *qword_ptr;
-} mptr_t;
+} memptr_t;
 
 /* Common protocol structures used by code */
 /*
