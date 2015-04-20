@@ -33,7 +33,7 @@ static socket_t fd = -1;
 int create_socket(void)
 {
 	socklen_t len;
-	unsigned n = 1, *nptr = &n;
+	unsigned i, n = 1;
 
 	/* Setting SOCKET RAW. */
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
@@ -43,7 +43,7 @@ int create_socket(void)
 	}
 
 	/* Setting IP_HDRINCL. */
-	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, nptr, sizeof(n)) == -1 )
+	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket options");
 		return FALSE;
@@ -51,8 +51,8 @@ int create_socket(void)
 
 /* Taken from libdnet by Dug Song. */
 #ifdef SO_SNDBUF
-	len = sizeof(n);
 	/* Getting SO_SNDBUF. */
+	len = sizeof(n);
 	if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
 	{
 		perror("error getting socket buffer");
@@ -62,12 +62,10 @@ int create_socket(void)
 	/* Setting the maximum SO_SNDBUF in bytes.
 	 * 128      =  1 kilobit
 	 * 10485760 = 10 megabytes */
-	for (n += 128; n < 10485760; n += 128)
+	for (i = n + 128; i < 10485760; i += 128)
 	{
-    errno = 0;    // errno is set only on error, then we have to reset it here.
-
 		/* Setting SO_SNDBUF. */
-		if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, len) == -1 )
+		if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(unsigned int)) == -1 )
 		{
 			if(errno == ENOBUFS)	
 				break;
@@ -80,7 +78,7 @@ int create_socket(void)
 
 #ifdef SO_BROADCAST
 	/* Setting SO_BROADCAST. */
-	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, nptr, sizeof(n)) == -1 )
+	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket broadcast");
 		return FALSE;
@@ -88,7 +86,7 @@ int create_socket(void)
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
-	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, nptr, sizeof(n)) == -1 )
+	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket priority");
 		return FALSE;
