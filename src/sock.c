@@ -20,7 +20,7 @@
 #include <common.h>
 
 /* Maximum number of tries to send the packet. */
-#define MAX_SENDTO_TRIES  100
+#define MAX_SENDTO_RETRYS  100
 
 #ifdef DUMP_DATA
   extern FILE *fdebug;
@@ -35,7 +35,10 @@ int create_socket(void)
 	socklen_t len;
 	unsigned i, n = 1;
 
-	/* Setting SOCKET RAW. */
+	/* Setting SOCKET RAW. 
+     NOTE: Protocol must be IPPROTO_RAW on Linux.
+           On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
+           but links will cause an error. */
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
 	{
 		perror("error opening raw socket");
@@ -43,6 +46,10 @@ int create_socket(void)
 	}
 
 	/* Setting IP_HDRINCL. */
+  /* NOTE: Enabling this option makes sure that checksum and total_length 
+           are calculated by the kernel. */
+  /* FIXME: MAYBE disabling this option could be a good thing on
+            OS/X. In this case, we MUST calculate the ip's checksum manually. */
 	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket options");
@@ -60,8 +67,8 @@ int create_socket(void)
 	}
 
 	/* Setting the maximum SO_SNDBUF in bytes.
-	 * 128      =  1 kilobit
-	 * 10485760 = 10 megabytes */
+	 * 128      =  1 kbits
+	 * 10485760 = 80 Mbits */
 	for (i = n + 128; i < 10485760; i += 128)
 	{
 		/* Setting SO_SNDBUF. */
@@ -78,6 +85,7 @@ int create_socket(void)
 
 #ifdef SO_BROADCAST
 	/* Setting SO_BROADCAST. */
+  /* NOTE: Enable the ability to send broadcasts. */
 	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket broadcast");
@@ -86,6 +94,7 @@ int create_socket(void)
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
+  /* FIXME: Is it a good idea to ajust the socket priority to 1? */
 	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
 	{
 		perror("error setting socket priority");
@@ -127,9 +136,9 @@ int send_packet(const void * const buffer, size_t size, const struct config_opti
   assert(co != NULL);
 
   /* FIX: There is no garantee that sendto() will deliver the entire packet at once.
-          So, we try MAX_SENDTO_TRIES times before giving up. */ 
+          So, we try MAX_SENDTO_RETRYS times before giving up. */ 
   p = (void *)buffer;
-  for (num_tries = MAX_SENDTO_TRIES; size > 0 && num_tries--;) 
+  for (num_tries = MAX_SENDTO_RETRYS; size > 0 && num_tries--;) 
   {
     errno = 0;    // errno is set only on error, then we have to reset it here.
 

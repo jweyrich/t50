@@ -36,15 +36,21 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip = buffer;
   ip->version  = IPVERSION;
   ip->ihl      = sizeof(struct iphdr) / 4;
+
+  /* FIXME: MAYBE TOS is filled by kernel through the SO_PRIORITY option and this is completly useless. */
   ip->tos      = co->ip.tos;
+
   ip->frag_off = htons(co->ip.frag_off ? (co->ip.frag_off >> 3) | IP_MF : co->ip.frag_off | IP_DF);
+
+  /* FIXME: Is it necessary to fill tot_len when IP_HDRINCL is used? */
   ip->tot_len  = htons(packet_size);
+
   ip->id       = htons(__RND(co->ip.id));
   ip->ttl      = co->ip.ttl;
   ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
   ip->saddr    = htonl(INADDR_RND(co->ip.saddr));
   ip->daddr    = co->ip.daddr;    // Already BIG ENDIAN?
-  ip->check    = 0;
+  ip->check    = 0;               // NOTE: it will be calculated by the kernel!
 
 #ifdef DUMP_DATA
   dump_ip(fdebug, ip);
