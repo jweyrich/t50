@@ -12,6 +12,11 @@ define checkroot
 	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
 endef
 
+# Define this variable if you really want to use RDRAND instruction, if present.
+# This can make T50 to be SLOW... But the RNG is accurate...
+
+#USE_RDRAND=1
+
 SRC_DIR = ./src
 OBJ_DIR = ./build
 RELEASE_DIR = ./release
@@ -82,8 +87,10 @@ else
 
   LDFLAGS += -s -O3 -fuse-linker-plugin -flto
 
-  ifeq ($(shell grep rdrand /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
-    CFLAGS += -D__HAVE_RDRAND__
+  ifdef USE_RDRAND
+    ifeq ($(shell grep rdrand /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
+      CFLAGS += -D__HAVE_RDRAND__
+    endif
   endif
   ifeq ($(shell grep bmi2 /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mbmi2
