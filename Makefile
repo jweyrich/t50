@@ -14,7 +14,6 @@ endef
 
 # Define this variable if you really want to use RDRAND instruction, if present.
 # This can make T50 to be SLOW... But the RNG is accurate...
-
 #USE_RDRAND=1
 
 SRC_DIR = ./src
@@ -101,12 +100,6 @@ else
   ifeq ($(shell grep movbe /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mmovbe
   endif
-endif
-
-# Define USE_PTHREADS when calling make to use libpthreads.
-ifdef USE_PTHREADS
-  CFLAGS += -pthread
-  LDFLAGS += -lpthread
 endif
 
 .PHONY: all distclean clean install uninstall
