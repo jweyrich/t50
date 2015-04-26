@@ -1,3 +1,22 @@
+/*
+ *  T50 - Experimental Mixed Packet Injector
+ *
+ *  Copyright (C) 2010 - 2015 - T50 developers
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <common.h>
 #include <setjmp.h>
 #include <limits.h>
@@ -1180,7 +1199,7 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
   return TRUE;
 }
 
-/* Convert strings as "10.3" to it's components.
+/* Convert strings like "10.3" to it's components.
    check if both values conforms to a maximum (max).
    check if the second argument is optional.
    allows the use of 2 separators: '.' or ':'. 
@@ -1260,4 +1279,3 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
   /* Everything ok! */
   return 1;
 }
-

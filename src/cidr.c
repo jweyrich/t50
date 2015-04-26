@@ -1,7 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2014 - T50 developers
+ *  Copyright (C) 2010 - 2015 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 #include <common.h>
 
-static struct cidr cidr = { 0, 0 };
+static struct cidr cidr = {0, 0};
 
 /* CIDR configuration tiny C algorithm */
 struct cidr *config_cidr(uint32_t bits, in_addr_t address)
@@ -72,7 +72,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
       return NULL;
     }
 
-    netmask = ~(0xffffffffU >> bits);
+    netmask = ~(~0U >> bits);
     cidr.__1st_addr = (ntohl(address) & netmask) + 1;
   }
   else

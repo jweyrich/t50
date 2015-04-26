@@ -1,7 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2014 - T50 developers
+ *  Copyright (C) 2010 - 2015 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ uint32_t NETMASK_RND(uint32_t foo)
   if (foo != INADDR_ANY)
     t = foo;
   else
-    t = ~(0xffffffffU >> (8 + (RANDOM() % 23)));
+    t = ~(~0U >> (8 + (RANDOM() % 23)));
 
   return htonl(t);
 }

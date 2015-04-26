@@ -1,7 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2014 - T50 developers
+ *  Copyright (C) 2010 - 2015 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,15 +37,16 @@ static const char *get_month(unsigned);
 /* Main function launches all T50 modules */
 int main(int argc, char *argv[])
 {
-  struct config_options *co;  /* Pointer to options. */
-  struct cidr *cidr_ptr;      /* Pointer to cidr host id and 1st ip address. */
-  modules_table_t *ptbl;      /* Pointer to modules table */
+  struct config_options *co;  
+  struct cidr *cidr_ptr;      
+  modules_table_t *ptbl;      
   int proto;                  /* Used on main loop. */
+  int has_threshold;
 
-  /* Configuring command line interface options. */
   co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
 
-  /* This is a requirement of t50. User must be root to use it. */
+  /* This is a requirement of t50. User must be root to use it. 
+     It's not the first call 'cause --help and --version can be used without root privileges. */
   if (getuid())
   {
     ERROR("User must have root priviledge to run.");
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
   fdebug = fopen("t50-debug.log", "wt");
 #endif
 
+  /* General initializations here. */
   initialize();
 
   if (co->flood) puts("Entering flood mode...");
@@ -65,7 +67,6 @@ int main(int argc, char *argv[])
   if (co->bits) puts("Performing stress testing...");
   puts("Hit Ctrl+C to stop...");
 
-/* Setting socket file descriptor. */
   /* NOTE: create_socket() handles its own errors before returning. */
   if (!create_socket())
     return EXIT_FAILURE;
@@ -75,7 +76,6 @@ int main(int argc, char *argv[])
   SRANDOM(time(NULL));
 
 #ifdef  __HAVE_TURBO__
-  /* Entering in TURBO. */
   if (co->turbo)
   {
     /* Decides if it's necessary to fork a new process. */
@@ -143,8 +143,9 @@ int main(int argc, char *argv[])
   if (proto != IPPROTO_T50)
     ptbl += co->ip.protoname;
 
-  /* Execute if flood or while threshold greater than 0. */
-  while (co->flood || (co->threshold-- > 0))
+  /* Execute if flood or if threshold is given. */
+  has_threshold = (co->threshold > 0); /* FIX */
+  while (co->flood || has_threshold)
   {
     /* Holds the actual packet size after module function call. */
     size_t size;
@@ -171,6 +172,10 @@ int main(int argc, char *argv[])
     if (proto == IPPROTO_T50)
       if ((++ptbl)->func == NULL)
         ptbl = mod_table;
+
+    /* FIX: Just to make sure we do not decrement the threshold value if isn't necessary! */
+    if (has_threshold)
+      has_threshold = (--co->threshold > 0);
   }
 
   /* Show termination message only for parent process. */
@@ -259,7 +264,7 @@ static void initialize(void)
      This is necessary to close the socket when terminating the parent process. */
   sa.sa_handler = signal_handler;
   sigaction(SIGHUP,  &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);
+  sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is it really necessary? */
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);

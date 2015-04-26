@@ -1,7 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2014 - T50 developers
+ *  Copyright (C) 2010 - 2015 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -72,6 +72,7 @@ in_addr_t resolv(char *name)
           inet_ntop(AF_INET,&target->sin_addr,tmp,46);
           return inet_addr(tmp);
 
+        /* FIXME: Is it really necessary? T50 only supports IPv4 until now! */
         case AF_INET6:
           inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr,tmp,46);
           return inet_addr(tmp);  /* FIXME: There is a potential problem here! */

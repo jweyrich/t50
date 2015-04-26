@@ -1,7 +1,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2014 - T50 developers
+ *  Copyright (C) 2010 - 2015 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ int send_packet(const void * const buffer, size_t size, const struct config_opti
   struct sockaddr_in sin = { 
     .sin_family = AF_INET, 
     .sin_port = htons(IPPORT_RND(co->dest)), 
-    .sin_addr = co->ip.daddr 
+    .sin_addr = co->ip.daddr    /* Already in network byte order! */ 
   };
 #pragma GCC diagnostic pop
 
