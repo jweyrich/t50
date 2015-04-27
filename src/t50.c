@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
   struct cidr *cidr_ptr;      
   modules_table_t *ptbl;      
   int proto;                  /* Used on main loop. */
-  int has_threshold;
 
   co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
 
@@ -60,10 +59,15 @@ int main(int argc, char *argv[])
   /* General initializations here. */
   initialize();
 
-  if (co->flood) puts("Entering flood mode...");
+  if (co->flood) 
+    puts("Entering flood mode...");
+  else
+    printf("Sending %u packets...\n", co->threshold);
+
 #ifdef __HAVE_TURBO__
   if (co->turbo) puts("Turbo mode active...");
 #endif
+
   if (co->bits) puts("Performing stress testing...");
   puts("Hit Ctrl+C to stop...");
 
@@ -144,8 +148,7 @@ int main(int argc, char *argv[])
     ptbl += co->ip.protoname;
 
   /* Execute if flood or if threshold is given. */
-  has_threshold = (co->threshold > 0); /* FIX */
-  while (co->flood || has_threshold)
+  while (co->flood || co->threshold)
   {
     /* Holds the actual packet size after module function call. */
     size_t size;
@@ -174,8 +177,8 @@ int main(int argc, char *argv[])
         ptbl = mod_table;
 
     /* FIX: Just to make sure we do not decrement the threshold value if isn't necessary! */
-    if (has_threshold)
-      has_threshold = (--co->threshold > 0);
+    if (!co->flood)
+      co->threshold--;
   }
 
   /* Show termination message only for parent process. */
