@@ -21,6 +21,7 @@ OBJ_DIR = ./build
 RELEASE_DIR = ./release
 MAN_DIR = /usr/share/man/man8
 INCLUDE_DIR = $(SRC_DIR)/include
+SBIN_DIR = /usr/sbin
 
 TARGET = $(RELEASE_DIR)/t50
 
@@ -123,19 +124,18 @@ $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 distclean: clean
-	-@rm $(RELEASE_DIR)/t50 $(RELEASE_DIR)/t50.8.gz
-	@echo Executable and manual files deleted.
+	if [ -f $(RELEASE_DIR)/t50.8.gz ]; then rm $(RELEASE_DIR)/t50.8.gz; fi
+	if [ -f $(RELEASE_DIR)/t50 ]; then rm $(RELEASE_DIR)/t50; fi
 
 clean:
-	-@rm $(OBJ_DIR)/*.o $(OBJ_DIR)/modules/*.o $(OBJ_DIR)/help/*.o
-	@echo Temporary failes deleted.
+	rm $(OBJS)
 
 install:
 	$(checkroot)
 	gzip -9c doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
-	install $(RELEASE_DIR)/t50 /usr/sbin/
+	install $(RELEASE_DIR)/t50 $(SBIN_DIR)/
 	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
 
 uninstall:
 	$(checkroot)
-	-rm -f $(MAN_DIR)/t50.8.gz /usr/sbin/t50
+	-rm -f $(MAN_DIR)/t50.8.gz $(SBIN_DIR)/t50
