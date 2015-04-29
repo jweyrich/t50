@@ -22,10 +22,6 @@
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_RETRYS  100
 
-#ifdef DUMP_DATA
-  extern FILE *fdebug;
-#endif
-
 /* Initialized for error condition, just in case! */
 static socket_t fd = -1;
 
@@ -38,7 +34,7 @@ int create_socket(void)
 	/* Setting SOCKET RAW. 
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
-           but links will cause an error. */
+           but on linux will cause an error. */
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
 	{
 		perror("error opening raw socket");
@@ -107,19 +103,18 @@ int create_socket(void)
 
 void close_socket(void)
 {
+  /* Close only if the descriptor is valid. */
   if (fd != -1)
     close(fd);
 }
 
-int send_packet(const void * const buffer, size_t size, const struct config_options * const __restrict__ co)
+int send_packet(const void * const buffer, 
+                size_t size, 
+                const struct config_options * const __restrict__ co)
 {
   void *p;
   ssize_t sent;
   int num_tries;
-
-#ifdef DUMP_DATA
-  size_t sz = size;
-#endif
 
 // Explicitly disabled warning 'cause this initialization is correct!
 #pragma GCC diagnostic push
@@ -159,18 +154,8 @@ int send_packet(const void * const buffer, size_t size, const struct config_opti
   if (num_tries < 0)
   {
     ERROR("Error sending packet (Timeout, tried 100 times!).");
-    
-#ifdef DUMP_DATA
-    fprintf(fdebug, "Error sending %zu bytes of data.\n", sz);
-#endif
     return FALSE;
   }
-#ifdef DUMP_DATA
-  else
-    fprintf(fdebug, "Data sent:\n");
-
-  dump_buffer(fdebug, buffer, sz);
-#endif
 
   return TRUE;
 }

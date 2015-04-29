@@ -74,7 +74,8 @@
  *   |                 Sequence Number (Optional)                    |
  *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct gre_hdr{
+struct gre_hdr
+{
 #if defined(__LITTLE_ENDIAN_BITFIELD)
   uint16_t  recur:3,                /* recursion control           */
             s:1,                    /* strict source route         */

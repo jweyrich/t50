@@ -30,8 +30,8 @@
 #define ON    1
 #define OFF   0
 
-/* Initial packet buffer preallocated size (1 kB). */
-#define INITIAL_PACKET_SIZE 1024
+/* Initial packet buffer preallocated size (2 kB). */
+#define INITIAL_PACKET_SIZE 2048
 
 /* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */
 #define CIDR_MINIMUM 8
@@ -54,9 +54,6 @@
 #define IPPROTO_T50        69
 #define FIELD_MUST_BE_NULL NULL
 #define FIELD_MUST_BE_ZERO 0
-
-/* NOTE: This will do nothing. Used only to prevent warnings. */
-#define UNUSED_PARAM(x) { (x) = (x); }
 
 /* NOTE: Macro used to test bitmasks */
 #define TEST_BITS(x,bits) ((x) & (bits))

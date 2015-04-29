@@ -19,14 +19,15 @@
 
 #include <common.h>
 
-#ifdef DUMP_DATA
-  extern FILE *fdebug;
-#endif
-
+/* Defined here 'cause we need them just here.
+   And since we are using linux/ip.h header, they are not
+   defined there! */
 #define IP_MF 0x2000
 #define IP_DF 0x4000
 
-struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_options * __restrict__ co)
+struct iphdr *ip_header(void *buffer, 
+                        size_t packet_size, 
+                        const struct config_options * __restrict__ co)
 {
   struct iphdr *ip;
 
@@ -40,7 +41,9 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   /* FIXME: MAYBE TOS is filled by kernel through the SO_PRIORITY option and this is completly useless. */
   ip->tos      = co->ip.tos;
 
-  ip->frag_off = htons(co->ip.frag_off ? (co->ip.frag_off >> 3) | IP_MF : co->ip.frag_off | IP_DF);
+  ip->frag_off = htons(co->ip.frag_off ? 
+                        (co->ip.frag_off >> 3) | IP_MF : 
+                        co->ip.frag_off | IP_DF);
 
   /* FIXME: Is it necessary to fill tot_len when IP_HDRINCL is used? */
   ip->tot_len  = htons(packet_size);
@@ -51,10 +54,6 @@ struct iphdr *ip_header(void *buffer, size_t packet_size, const struct config_op
   ip->saddr    = htonl(INADDR_RND(co->ip.saddr));
   ip->daddr    = co->ip.daddr;    // Already BIG ENDIAN?
   ip->check    = 0;               // NOTE: it will be calculated by the kernel!
-
-#ifdef DUMP_DATA
-  dump_ip(fdebug, ip);
-#endif
 
   return ip;
 }

@@ -20,7 +20,7 @@
 #include <common.h>
 
 /* Actual packet buffer. Allocated dynamically. */
-void *packet = NULL;
+void  *packet = NULL;
 size_t current_packet_size = 0;
 
 /* "private" variable holding the number of modules. Use get_number_of_registered_modules() funcion to get it. */
@@ -78,6 +78,8 @@ size_t get_number_of_registered_modules(void)
 }
 
 #ifdef __HAVE_RDRAND__
+/* WARNING: This routine is potentially SLOWER than using random(),
+            but gives us better "randomness" on newer processors. */
 uint32_t readrand(void)
 {
   uint32_t d;

@@ -19,10 +19,6 @@
 
 #include <common.h>
 
-#ifdef DUMP_DATA
-  extern FILE *fdebug;
-#endif
-
 /* Function Name: UDP packet header configuration.
 
 Description:   This function configures and sends the UDP packet header.
@@ -52,7 +48,8 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   ip = ip_header(packet, *size, co);
 
   gre_ip = gre_encapsulation(packet, co,
-    sizeof(struct iphdr) + sizeof(struct udphdr));
+                             sizeof(struct iphdr) + 
+                               sizeof(struct udphdr));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
@@ -62,7 +59,7 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
   udp->check  = 0;    /* needed 'cause of cksum(), below! */
 
   /* Fill PSEUDO Header structure. */
-  pseudo           = (struct psdhdr *)(udp + 1);
+  pseudo      = (struct psdhdr *)(udp + 1);
   if (co->encapsulated)
   {
     pseudo->saddr = gre_ip->saddr;
@@ -82,9 +79,4 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
     cksum(udp, (void *)(pseudo + 1) - (void *)udp);
 
   gre_checksum(packet, co, *size);
-
-#ifdef DUMP_DATA
-  dump_udp(fdebug, udp);
-  dump_psdhdr(fdebug, pseudo);
-#endif
 }

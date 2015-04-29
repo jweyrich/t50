@@ -20,7 +20,7 @@
 #ifndef __TYPEDEFS_INCLUDED__
 #define __TYPEDEFS_INCLUDED__
 
-struct config_options;
+struct config_options;    /* Just a reference. */
 
 /* Data types */
 typedef uint32_t in_addr_t;

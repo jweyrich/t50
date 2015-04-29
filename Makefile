@@ -48,7 +48,6 @@ $(OBJ_DIR)/resolv.o \
 $(OBJ_DIR)/sock.o \
 $(OBJ_DIR)/usage.o \
 $(OBJ_DIR)/config.o \
-$(OBJ_DIR)/check.o \
 $(OBJ_DIR)/modules.o \
 $(OBJ_DIR)/help/general_help.o \
 $(OBJ_DIR)/help/gre_help.o \
@@ -69,7 +68,6 @@ LDFLAGS =
 # You can define DEBUG if you want to use GDB. 
 #
 ifdef DEBUG
-  OBJS += $(OBJ_DIR)/debug.o
   CFLAGS += -g -O0 -D__HAVE_DEBUG__
 #
 # Define DUMP_DATA if you want to view a big log file...

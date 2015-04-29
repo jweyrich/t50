@@ -30,7 +30,13 @@ in_addr_t resolv(char *name)
 
   struct sockaddr_in *target = NULL;
   int error;
-  char tmp[46];
+
+#define ADDRSTRLEN INET6_ADDRSTRLEN
+#if INET_ADDRSTRLEN > ADDRSTRLEN
+  #define ADDRSTRLEN INET_ADDRSTRLEN
+#endif
+
+  char tmp[ADDRSTRLEN+1];
 
   assert(name != NULL);
 
@@ -62,19 +68,19 @@ in_addr_t resolv(char *name)
   {
     target = (struct sockaddr_in *)res->ai_addr;
 
-    /* FIXME: Is this safe? The return type is
-       in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */
     if (target)
     {
       switch (res->ai_family)
       {
         case AF_INET:
-          inet_ntop(AF_INET,&target->sin_addr,tmp,46);
+          inet_ntop(AF_INET,&target->sin_addr, tmp, INET_ADDRSTRLEN);
           return inet_addr(tmp);
 
         /* FIXME: Is it really necessary? T50 only supports IPv4 until now! */
+        /* FIXME: Is this safe? The return type is
+           in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */
         case AF_INET6:
-          inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr,tmp,46);
+          inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr, tmp, INET6_ADDRSTRLEN);
           return inet_addr(tmp);  /* FIXME: There is a potential problem here! */
       }
     }

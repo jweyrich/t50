@@ -54,7 +54,6 @@
 #include <linux/dccp.h>
 #include <linux/if_ether.h>
 
-#include <debug.h>
 #include <typedefs.h>
 #include <defines.h>
 #include <config.h>
@@ -64,29 +63,32 @@
 /* NOTE: Protocols and modules definitions are on modules.h now. */
 
 /* The packet buffer. Reallocated as needed! */
-extern void *packet;
-extern size_t current_packet_size; /* available if necessary! updated by alloc_packet(). */
+extern void     *packet;
+extern size_t   current_packet_size; /* Made public, if it's necessary! updated by alloc_packet(). */
 
 /* Realloc packet as needed. Used on module functions. */
-extern void alloc_packet(size_t);
+extern void     alloc_packet(size_t);
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
 extern uint32_t NETMASK_RND(uint32_t);
 
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
-extern uint16_t cksum(void *, size_t);  /* Checksum calc. */
-extern in_addr_t resolv(char *);  /* Resolve name to ip address. */
-extern int create_socket(void); /* Creates the sending socket */
-extern void close_socket(void);  /* Close the previously created socket */
+extern uint16_t     cksum(void *, size_t);  /* Checksum calc. */
+extern in_addr_t    resolv(char *);         /* Resolve name to ip address. */
+extern int          create_socket(void);    /* Creates the sending socket */
+extern void         close_socket(void);     /* Close the previously created socket */
+
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern int send_packet(const void * const, size_t, const struct config_options * const __restrict__);
-extern void show_version(void); /* Prints version info. */
-extern void usage(void);        /* Prints usage message */
-extern int check_threshold(const struct config_options * const __restrict__);
+extern int          send_packet(const void * const, 
+                                size_t, 
+                                const struct config_options * const __restrict__);
+
+extern void         show_version(void); /* Prints version info. */
+extern void         usage(void);        /* Prints usage message */
 
 #ifdef __HAVE_RDRAND__
-extern uint32_t readrand(void);
+extern uint32_t     readrand(void);
 #endif
 
 #endif /* __COMMON_H */

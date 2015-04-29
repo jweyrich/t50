@@ -20,11 +20,6 @@
 #include <common.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
 
-#ifdef DUMP_DATA
-  FILE *fdebug;
-  static unsigned long cnt = 1;
-#endif
-
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
 static void initialize(void);
@@ -38,11 +33,12 @@ static const char *get_month(unsigned);
 int main(int argc, char *argv[])
 {
   struct config_options *co;  
-  struct cidr *cidr_ptr;      
-  modules_table_t *ptbl;      
+  struct cidr           *cidr_ptr;      
+  modules_table_t       *ptbl;      
   int proto;                  /* Used on main loop. */
 
-  co = parse_command_line(argv);    /* NOTE: parse_command_line returns ONLY if there are no errors. */
+  /* NOTE: parse_command_line returns ONLY if there are no errors. */
+  co = parse_command_line(argv);
 
   /* This is a requirement of t50. User must be root to use it. 
      It's not the first call 'cause --help and --version can be used without root privileges. */
@@ -51,10 +47,6 @@ int main(int argc, char *argv[])
     ERROR("User must have root priviledge to run.");
     return EXIT_FAILURE;
   }
-
-#ifdef DUMP_DATA
-  fdebug = fopen("t50-debug.log", "wt");
-#endif
 
   /* General initializations here. */
   initialize();
@@ -65,10 +57,12 @@ int main(int argc, char *argv[])
     printf("Sending %u packets...\n", co->threshold);
 
 #ifdef __HAVE_TURBO__
-  if (co->turbo) puts("Turbo mode active...");
+  if (co->turbo) 
+    puts("Turbo mode active...");
 #endif
 
-  if (co->bits) puts("Performing stress testing...");
+  if (co->bits) 
+    puts("Performing stress testing...");
   puts("Hit Ctrl+C to stop...");
 
   /* NOTE: create_socket() handles its own errors before returning. */
@@ -153,10 +147,6 @@ int main(int argc, char *argv[])
     /* Holds the actual packet size after module function call. */
     size_t size;
 
-#ifdef DUMP_DATA
-    fprintf(fdebug, "*** Packet #%u\n", cnt++);
-#endif
-
     /* Set the destination IP address to RANDOM IP address. */
     /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
@@ -190,7 +180,7 @@ int main(int argc, char *argv[])
 #ifdef  __HAVE_TURBO__
     int status;
 
-    /* Wait 5 seconds for child process, then ungracefully closes the program. */
+    /* Wait 5 seconds for child process, then closes the program anyway. */
     alarm(5);
     wait(&status);
 #endif
@@ -213,10 +203,6 @@ int main(int argc, char *argv[])
       tm->tm_min,
       tm->tm_sec);
   }
-
-#ifdef DUMP_DATA
-  fclose(fdebug);
-#endif
 
   return 0;
 }
@@ -247,8 +233,8 @@ static void signal_handler(int signal)
   }
 #endif
 
-  /* FIX: The shell documentation (bash) specifies that a process
-          when exits because a signal, must return 128+signal#. */
+  /* The shell documentation (bash) specifies that a process
+     when exits because a signal, must return 128+signal#. */
   exit(128 + signal);
 }
 
@@ -261,19 +247,21 @@ static void initialize(void)
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART; /* same signal() semantics?! */
+  sa.sa_flags = SA_RESTART; /* same signal() semantics! */
 
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal'). 
      This is necessary to close the socket when terminating the parent process. */
   sa.sa_handler = signal_handler;
+
   sigaction(SIGHUP,  &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is it really necessary? */
+  sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is SIGPIPE handler really necessary? */
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGTRAP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGTSTP, &sa, NULL);
+
 #ifdef  __HAVE_TURBO__
   /* FIX: Is it wise to simply terminate the main process
           if the child terminates? 
@@ -283,7 +271,8 @@ static void initialize(void)
   sigaction(SIGALRM, &sa, NULL);
 #endif
 
-  /* --- Make sure stdout is unbuffered (otherwise, it's line buffered). --- */
+  /* --- To simplify things, make sure stdout is unbuffered 
+         (otherwise, it's line buffered). --- */
   fflush(stdout);
   setvbuf(stdout, NULL, _IONBF, 0); 
 }
@@ -304,6 +293,8 @@ static const char *get_ordinal_suffix(unsigned n)
   return suffixes[3];
 }
 
+/* Auxiliary function to return the [constant] string for a month. 
+   NOTE: 'n' must be between 0 and 11. */
 static const char *get_month(unsigned n)
 {
   /* Months */

@@ -39,18 +39,19 @@ typedef struct {
 } T50_tmp_addr_t;
 
 /* Local prototypes. */
-static int check_if_option(char *);
-static void check_options_rules(struct config_options * __restrict__);
+static int                    check_if_option(char *);
+static void                   check_options_rules(struct config_options * __restrict__);
 static struct options_table_s *find_option(char *);
-static void set_config_option(struct config_options * __restrict__, char *, int, char *);
-static unsigned int toULong(char *, char *);
-static unsigned int toULongCheckRange(char *, char *, unsigned int, unsigned int);
-static void check_list_separators(char *, char *);
-static void set_destination_addresses(char *, struct config_options * __restrict__); 
-static void list_protocols(void);
-static void set_default_protocol(struct config_options * __restrict__);
-static int get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
-static int get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
+static void                   set_config_option(struct config_options * __restrict__, char *, int, char *);
+static unsigned int           toULong(char *, char *);
+static unsigned int           toULongCheckRange(char *, char *, unsigned int, unsigned int);
+static void                   check_list_separators(char *, char *);
+static void                   set_destination_addresses(char *, struct config_options * __restrict__); 
+static void                   list_protocols(void);
+static void                   set_default_protocol(struct config_options * __restrict__);
+static int                    get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
+static int                    get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
+static int                    check_threshold(const struct config_options * const __restrict__);
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
@@ -605,8 +606,10 @@ static void check_options_rules(struct config_options * __restrict__ co)
     exit(EXIT_FAILURE);
   }
 
-  if (!check_threshold(co))
-    exit(EXIT_FAILURE);
+  /* FIX: Checks only if flooding isn't used! */
+  if (!co->flood)
+    if (!check_threshold(co))
+      exit(EXIT_FAILURE);
 
   /* NOTE: Insert other rules here! */
 }
@@ -1279,3 +1282,39 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
   /* Everything ok! */
   return 1;
 }
+
+/* Checks if threshold is valid. */
+/* NOTE: Moved here 'cause it's used just here. */
+static int check_threshold(const struct config_options * const __restrict__ co)
+{
+  char *s;
+  threshold_t minThreshold;
+
+  if (co->ip.protocol == IPPROTO_T50)
+  {
+    /* When sending multiple packets using T50 "protocol", the threshold
+       must be greater than the number of protocols! */
+    minThreshold = (threshold_t)get_number_of_registered_modules();
+  }
+  else
+    minThreshold = 1;
+
+  if (co->threshold < minThreshold)
+  { 
+    if (asprintf(&s, "Protocol %s cannot have threshold smaller than %d.",
+                 mod_table[co->ip.protoname].acronym, minThreshold) == -1)
+    {
+      fprintf(stderr, "ERROR allocating temporary string space.\n");
+      exit(EXIT_FAILURE);
+    }
+
+    ERROR(s);
+    free(s);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
