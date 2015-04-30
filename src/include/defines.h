@@ -71,13 +71,6 @@
 #define INADDR_RND(foo) __RND((foo))
 #define IPPORT_RND(foo) __RND((foo))
 
-/* ERROR macro */
-#ifdef __HAVE_DEBUG__
-#define ERROR(s) fprintf(stderr, PACKAGE ": %s at " __FILE__ ", line %d\n", s, __LINE__);
-#else
-#define ERROR(s) fprintf(stderr, PACKAGE ": %s\n", s);
-#endif
-
 /* Used to test if "pid" from fork() is from a child process. */
 #define IS_CHILD_PID(p) ((p) == 0)
 

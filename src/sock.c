@@ -84,7 +84,7 @@ int create_socket(void)
   /* NOTE: Enable the ability to send broadcasts. */
 	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
 	{
-		perror("error setting socket broadcast");
+		error("error setting socket broadcast (\"%s\").", strerror(errno));
 		return FALSE;
 	}
 #endif /* SO_BROADCAST */
@@ -93,7 +93,7 @@ int create_socket(void)
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
 	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
 	{
-		perror("error setting socket priority");
+		error("error setting socket priority (\"%s\").", strerror(errno));
 		return FALSE;
 	}
 #endif /* SO_PRIORITY */
@@ -146,14 +146,14 @@ int send_packet(const void * const buffer,
 
   if (errno == EPERM)
   {
-    ERROR("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
+    error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
     return FALSE;
   }
 
   /* FIX */
   if (num_tries < 0)
   {
-    ERROR("Error sending packet (Timeout, tried 100 times!).");
+    error("Error sending packet (Timeout, tried 100 times!).");
     return FALSE;
   }
 

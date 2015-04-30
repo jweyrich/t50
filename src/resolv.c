@@ -29,7 +29,7 @@ in_addr_t resolv(char *name)
 #pragma GCC diagnostic pop
 
   struct sockaddr_in *target = NULL;
-  int error;
+  int err;
 
 #define ADDRSTRLEN INET6_ADDRSTRLEN
 #if INET_ADDRSTRLEN > ADDRSTRLEN
@@ -44,24 +44,14 @@ in_addr_t resolv(char *name)
   hints.ai_socktype = 0;
 
   /* FIX: The "service" is not important here! */
-  error = getaddrinfo(name, NULL, &hints, &res0);
+  err = getaddrinfo(name, NULL, &hints, &res0);
 
-  if (error)
+  if (err)
   {
-    char *stmp;
-
     if (res0)
       freeaddrinfo(res0);
 
-    /* NOTE: Added proper error reporting. */
-    if (asprintf(&stmp, "Error on resolv(). getaddrinfo() reports: %s\n", gai_strerror(error)) == -1)
-    {
-      perror("Error allocating temporary string.");
-      abort();
-    }
-
-    ERROR(stmp);
-    free(stmp);
+    error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
   }
 
   for (res = res0; res; res = res->ai_next)

@@ -431,17 +431,11 @@ struct config_options *parse_command_line(char **argv)
     if (check_if_option(opt))
     {
       if ((ptbl = find_option(opt)) == NULL)
-      {
-        fprintf(stderr, "Unrecognized option '%s'.\n", opt);
-        exit(EXIT_FAILURE);
-      }
+        fatal_error("Unrecognized option '%s'.", opt);
 
       /* Estou assumindo que cada opção só pode ser informada uma vez! */
       if (ptbl->in_use)
-      {
-        fprintf(stderr, "Option '%s' already given.\n", opt);
-        exit(EXIT_FAILURE);
-      }
+        fatal_error("Option '%s' already given.", opt);
 
       ptbl->in_use = 1;
 
@@ -449,10 +443,7 @@ struct config_options *parse_command_line(char **argv)
       if (!ptbl->has_arg)
       {
         if (next_str != NULL && !check_if_option(next_str))
-        {
-          fprintf(stderr, "Option '%s' has no arguments.\n", opt);
-          exit(EXIT_FAILURE);
-        }
+          fatal_error("Option '%s' has no arguments.", opt);
       }
       else
         if (next_str)
@@ -464,10 +455,7 @@ struct config_options *parse_command_line(char **argv)
     {
       /* Check if already got an address. */
       if (dest_addr)
-      {
-        ERROR("Target address given twice. Aborting...\n");
-        exit(EXIT_FAILURE);
-      }
+        fatal_error("Target address given twice. Aborting...");
 
       dest_addr = *argv;
 
@@ -482,7 +470,7 @@ struct config_options *parse_command_line(char **argv)
     if (ptbl->in_use)
     {
       if (num_options > 1)
-        fprintf(stderr, "Option '-h' (or '--help') cannot be used with other options.\n");
+        error("Option '-h' (or '--help') cannot be used with other options.");
       else
         usage();
 
@@ -494,7 +482,7 @@ struct config_options *parse_command_line(char **argv)
     if (ptbl->in_use)
     {
       if (num_options > 1)
-        fprintf(stderr, "Option '-v' (or '--version') cannot be used with other options.\n");
+        error("Option '-v' (or '--version') cannot be used with other options.");
       else
         show_version();
 
@@ -506,7 +494,7 @@ struct config_options *parse_command_line(char **argv)
     if (ptbl->in_use)
     {
       if (num_options > 1)
-        fprintf(stderr, "Option '-l' (or '--list-protocols') cannot be used with other options.\n");
+        error("Option '-l' (or '--list-protocols') cannot be used with other options.");
       else
         list_protocols();
 
@@ -571,39 +559,26 @@ static void check_options_rules(struct config_options * __restrict__ co)
 {
   /* Address field is mandatory! */
   if (!co->ip.daddr) 
-  { 
-    fprintf(stderr, "Target address needed.\n"); 
-    exit(EXIT_FAILURE); 
-  }
+    fatal_error("Target address needed."); 
 
 #ifdef __HAVE_TURBO__
   if (co->turbo && !co->flood)
-  {
-    fprintf(stderr, "Turbo mode only available when flooding.\n");
-    exit(EXIT_FAILURE);
-  }
+    fatal_error("Turbo mode only available when flooding.");
 #endif
 
   /* --flood and --threshold are mutually exclusive! */
   if (co->flood && find_option("threshold")->in_use)
-  { 
-    fprintf(stderr, "--flood and --threshold cannot be used at the same time.\n");
-    exit(EXIT_FAILURE); 
-  }
+    fatal_error("--flood and --threshold cannot be used at the same time.\n");
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
       TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
-  {
-    ERROR("TCP options SACK-Permitted and SACK Edges are not allowed");
-    exit(EXIT_FAILURE);
-  }
+    fatal_error("TCP options SACK-Permitted and SACK Edges are not allowed");
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
   {
-    ERROR("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
-    exit(EXIT_FAILURE);
+    fatal_error("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
   }
 
   /* FIX: Checks only if flooding isn't used! */
@@ -1021,10 +996,7 @@ static __attribute__((noinline)) unsigned int toULong(char *optname, char *value
   errno = 0;    // errno is set only on error, so we have to reset it here.
   n = strtoul(value, NULL, 0);
   if (errno || n > UINT_MAX)
-  {
-    fprintf(stderr, "Invalid numeric value for option '%s'.\n", optname);
-    exit(EXIT_FAILURE);
-  }
+    fatal_error("Invalid numeric value for option '%s'.", optname);
 
   return (unsigned int)n;
 }
@@ -1040,10 +1012,7 @@ static __attribute__((noinline)) unsigned int toULongCheckRange(char *optname, c
 
   n = toULong(optname, value);
   if (n < min || n > max)
-  {
-    fprintf(stderr, "Value out of range for option '%s'. Range must be between %u and %u.\n", optname, min, max);
-    exit(EXIT_FAILURE);
-  }
+    fatal_error("Value out of range for option '%s'. Range must be between %u and %u.", optname, min, max);
 
   return n;
 }
@@ -1054,10 +1023,7 @@ static void check_list_separators(char *optname, char *arg)
   assert(arg != NULL);
 
   if (strpbrk(arg, ",;:"))
-  {
-    fprintf(stderr, "Option '%s' do not accept a list.\n", optname);
-    exit(EXIT_FAILURE);
-  }
+    fatal_error("Option '%s' do not accept a list.\n", optname);
 }
 
 /* List procotolos on modules table */
@@ -1118,10 +1084,7 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
   /* Allocate enough space for temporary string. */
   t = strdup(addr);
   if (t  == NULL)
-  {
     perror("Cannot allocate temporary string");
-    abort();
-  }
 
   /* Convert IP octects matches. */
   len = MATCH_LENGTH(rm[1]);
@@ -1180,11 +1143,7 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
   /* Validate cidr. */
   if (matches[4] < CIDR_MINIMUM || matches[4] > CIDR_MAXIMUM)
   {
-    char msg[64];
-
-    sprintf(msg, "CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM);
-    ERROR(msg);
-
+    error("CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM);
     regfree(&re);
     return FALSE;
   }
@@ -1225,7 +1184,7 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
   /* Error handling... */
   if (setjmp(jb))
   {
-    fprintf(stderr, "'%s' should be formated as 'n%s'.\n", optname, optional ? "[.n]" : ".n");
+    error("'%s' should be formated as 'n%s'.", optname, optional ? "[.n]" : ".n");
     return 0;
   }
 
@@ -1245,7 +1204,7 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
   /* Error handling... */
   if (setjmp(jb))
   {
-    fprintf(stderr, "'%s' arguments are out of range or invalid.\n", optname);
+    error("'%s' arguments are out of range or invalid.", optname);
     return 0;
   }
 
@@ -1275,7 +1234,7 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
   /* Check values ranges. */
   if (*px > max || *py > max)
   {
-    fprintf(stderr, "One or both arguments of '%s' option are out of range.\n", optname);
+    error("One or both arguments of '%s' option are out of range.", optname);
     return 0;
   }
 
@@ -1287,7 +1246,6 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
 /* NOTE: Moved here 'cause it's used just here. */
 static int check_threshold(const struct config_options * const __restrict__ co)
 {
-  char *s;
   threshold_t minThreshold;
 
   if (co->ip.protocol == IPPROTO_T50)
@@ -1300,17 +1258,9 @@ static int check_threshold(const struct config_options * const __restrict__ co)
     minThreshold = 1;
 
   if (co->threshold < minThreshold)
-  { 
-    if (asprintf(&s, "Protocol %s cannot have threshold smaller than %d.",
-                 mod_table[co->ip.protoname].acronym, minThreshold) == -1)
-    {
-      fprintf(stderr, "ERROR allocating temporary string space.\n");
-      exit(EXIT_FAILURE);
-    }
-
-    ERROR(s);
-    free(s);
-
+  {
+    error("Protool %s cannot have threshold smaller than %d.",
+          mod_table[co->ip.protoname].acronym, minThreshold);
     return FALSE;
   }
 

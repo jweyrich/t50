@@ -31,6 +31,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -90,5 +91,8 @@ extern void         usage(void);        /* Prints usage message */
 #ifdef __HAVE_RDRAND__
 extern uint32_t     readrand(void);
 #endif
+
+extern void error(char *, ...);
+extern void fatal_error(char *, ...);
 
 #endif /* __COMMON_H */
