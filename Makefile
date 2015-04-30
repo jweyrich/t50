@@ -122,11 +122,11 @@ $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 distclean: clean
-	if [ -f $(RELEASE_DIR)/t50.8.gz ]; then rm $(RELEASE_DIR)/t50.8.gz; fi
-	if [ -f $(RELEASE_DIR)/t50 ]; then rm $(RELEASE_DIR)/t50; fi
+	-if [ -f $(RELEASE_DIR)/t50.8.gz ]; then rm $(RELEASE_DIR)/t50.8.gz; fi
+	-if [ -f $(RELEASE_DIR)/t50 ]; then rm $(RELEASE_DIR)/t50; fi
 
 clean:
-	rm $(OBJS)
+	-rm $(OBJS)
 
 install:
 	$(checkroot)
