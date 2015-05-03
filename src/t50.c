@@ -43,10 +43,7 @@ int main(int argc, char *argv[])
   /* This is a requirement of t50. User must be root to use it. 
      It's not the first call 'cause --help and --version can be used without root privileges. */
   if (getuid())
-  {
-    ERROR("User must have root priviledge to run.");
-    return EXIT_FAILURE;
-  }
+    fatal_error("User must have root priviledge to run.");
 
   /* General initializations here. */
   initialize();
@@ -83,18 +80,12 @@ int main(int argc, char *argv[])
       threshold_t new_threshold;
 
       if ((pid = fork()) == -1)
-      {
-        perror("Error creating child process. Exiting...");
-        return EXIT_FAILURE;
-      }
+        fatal_error("Error creating child process (\"%s\").\nExiting...", strerror(errno));
 
       /* Setting the priority to both parent and child process to highly favorable scheduling value. */
       /* FIXME: Why not setup this value when t50 runs as a single process? */
       if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
-      {
-        perror("Error setting process priority. Exiting...");
-        return EXIT_FAILURE;
-      }
+        fatal_error("Error setting process priority (\"%s\"). Exiting...", strerror(errno));
 
       /* Divide the process iterations in main loop between processes. */
       new_threshold = co->threshold / 2; 

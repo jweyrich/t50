@@ -54,10 +54,7 @@ void alloc_packet(size_t new_packet_size)
   if (new_packet_size > current_packet_size)
   {
     if ((p = realloc(packet, new_packet_size)) == NULL)
-    {
-      ERROR("Error reallocating packet buffer");
-      exit(EXIT_FAILURE);
-    }
+      fatal_error("Error reallocating packet buffer");
 
     packet = p;
     current_packet_size = new_packet_size;
@@ -96,3 +93,38 @@ uint32_t readrand(void)
   return d;
 }
 #endif
+
+void error(char *fmt, ...)
+{
+  char *str;
+  va_list args;
+
+  if ((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1)
+  {
+    fprintf(stderr, PACKAGE ": Unknown error (not enough memory?).\n");
+    exit(EXIT_FAILURE);
+  }
+
+  va_start(args, fmt);
+  vfprintf(stderr, str, args);
+  va_end(args);
+  free(str);
+}
+
+void __attribute__((noreturn)) fatal_error(char *fmt, ...)
+{
+  char *str;
+  va_list args;
+
+  if ((asprintf(&str, PACKAGE ": %s\n", fmt)) != -1)
+  {
+    va_start(args, fmt);
+    vfprintf(stderr, str, args);
+    va_end(args);
+    free(str);
+  }
+  else
+    fprintf(stderr, PACKAGE ": Unknown error (not enough memory?).\n");
+
+  exit(EXIT_FAILURE);
+}
