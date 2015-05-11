@@ -61,7 +61,11 @@ $(OBJ_DIR)/help/ipsec_help.o \
 $(OBJ_DIR)/help/eigrp_help.o \
 $(OBJ_DIR)/help/ospf_help.o
 
-CFLAGS = -I$(INCLUDE_DIR) -std=gnu99 -Wall -Wextra
+#--- This will give us a lot of warnings. Useful to check if the code is alright (not quite!). Use carefully!
+#--- As seen on OWASP cheat sheet!
+#EXTRA_WARNINGS=-Wsign-conversion -Wcast-align -Wformat=2 -Wformat-security -fno-common -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wstrict-overflow -Wtrampolines
+
+CFLAGS = -I$(INCLUDE_DIR) -std=gnu99 -Wall -Wextra $(EXTRA_WARNINGS) 
 LDFLAGS =
 
 #
