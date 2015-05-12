@@ -49,7 +49,7 @@ void udp(const struct config_options * const __restrict__ co, size_t *size)
 
   gre_ip = gre_encapsulation(packet, co,
                              sizeof(struct iphdr) + 
-                               sizeof(struct udphdr));
+                             sizeof(struct udphdr));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);

@@ -154,8 +154,7 @@ void ripv2(const struct config_options * const __restrict__ co, size_t *size)
   {
     *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here! */
     *buffer.word_ptr++ = htons(0x0003);
-    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH +
-        RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
+    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = co->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
     *buffer.dword_ptr++ = htonl(__RND(co->rip.sequence));

@@ -78,9 +78,8 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
    * leaves 40 bytes (TCP header * 2) for options.
    */
   if (tcpopt > (sizeof(struct tcphdr) * 2))
-    fatal_error("%s() - TCP option size (%u bytes) is bigger than two times the TCP header size.",
-      __FUNCTION__,
-      (unsigned int)tcpopt);
+    fatal_error("%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
+      __FUNCTION__, tcpopt);
 
   /* TCP Header structure making a pointer to IP Header structure. */
   tcp          = (struct tcphdr *)((void *)(ip + 1) + greoptlen);

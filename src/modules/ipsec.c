@@ -26,8 +26,10 @@ Description:   This function configures and sends the IPSec packet header.
 Targets:       N/A */
 void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 {
+  /* IPSec AH Integrity Check Value (ICV). */
+  #define IP_AH_ICV (sizeof(uint32_t) * 3)
+
   size_t greoptlen,   /* GRE options size. */
-         ip_ah_icv,   /* IPSec AH Integrity Check Value (ICV). */
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
          counter;
 
@@ -43,12 +45,11 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   assert(co != NULL);
 
   greoptlen = gre_opt_len(co);
-  ip_ah_icv = sizeof(uint32_t) * 3;
   esp_data  = auth_hmac_md5_len(1);
   *size = sizeof(struct iphdr) +
     greoptlen                  +
     sizeof(struct ip_auth_hdr) +
-    ip_ah_icv                  +
+    IP_AH_ICV                  +
     sizeof(struct ip_esp_hdr)  +
     esp_data;
 
@@ -61,7 +62,7 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   gre_encapsulation(packet, co,
         sizeof(struct iphdr) +
         sizeof(struct ip_auth_hdr) +
-        ip_ah_icv                  +
+        IP_AH_ICV                  +
         sizeof(struct ip_esp_hdr)  +
         esp_data);
 
@@ -90,15 +91,16 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
     co->ipsec.ah_length :
-    (sizeof(struct ip_auth_hdr) / 4) + 1;   /* MUST CHECK: The previous line was:
-                                                 (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv) */
+    (sizeof(struct ip_auth_hdr) / 4) + 1;   /* FIX: The previous line was:
+                                                 (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv); */
+
   ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
   ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
 
   buffer.ptr = ip_auth + 1;
 
   /* Setting a fake encrypted content. */
-  for (counter = 0; counter < ip_ah_icv; counter++)
+  for (counter = 0; counter < IP_AH_ICV; counter++)
     *buffer.byte_ptr++ = RANDOM();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
