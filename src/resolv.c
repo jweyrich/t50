@@ -70,7 +70,14 @@ in_addr_t resolv(char *name)
                 Returns 0, otherwise. */
         case AF_INET6:
           if (!IN6_IS_ADDR_V4MAPPED(target))
+          {
+            #ifdef __HAVE_DEBUG__
+              char tmp[INET6_ADDRSTRLEN+1];
+              inet_ntop(AF_INET6, &((struct sockaddr_in6 *)target)->sin6_addr, tmp, INET6_ADDRSTRLEN); 
+              fprintf(stderr, "[DEBUG] resolv() trying to deal with address '%s'.\n", tmp);
+            #endif
             goto error;          
+          }
 
           addr = (in_addr_t)((struct sockaddr_in6 *)target)->sin6_addr.s6_addr32[3];
 
