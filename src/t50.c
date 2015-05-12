@@ -19,6 +19,9 @@
 
 #include <common.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
+#ifdef __HAVE_DEBUG__
+  #include <linux/if_ether.h>
+#endif
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
@@ -145,9 +148,17 @@ int main(int argc, char *argv[])
       co->ip.daddr += RANDOM() % cidr_ptr->hostid;
     co->ip.daddr = htonl(co->ip.daddr);
 
+
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
+
+    #ifdef __HAVE_DEBUG__
+      /* I'll use this to fine tune the alloc_packet() function, someday! */
+      if (size > ETH_DATA_LEN)
+        fprintf(stderr, "[DEBUG] Protocol %s packet size (%zd bytes) exceed max. Ethernet packet data length!\n",
+          ptbl->acronym, size);
+    #endif
 
     if (!send_packet(packet, size, co))
       return EXIT_FAILURE;
