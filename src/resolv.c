@@ -36,17 +36,13 @@ in_addr_t resolv(char *name)
   #define ADDRSTRLEN INET_ADDRSTRLEN
 #endif
 
-  char tmp[ADDRSTRLEN+1];
-
   assert(name != NULL);
 
   hints.ai_family = PF_UNSPEC;
   hints.ai_socktype = 0;
 
   /* FIX: The "service" is not important here! */
-  err = getaddrinfo(name, NULL, &hints, &res0);
-
-  if (err)
+  if ((err = getaddrinfo(name, NULL, &hints, &res0)) != 0)
   {
     if (res0)
       freeaddrinfo(res0);
@@ -60,22 +56,32 @@ in_addr_t resolv(char *name)
 
     if (target)
     {
+      in_addr_t addr;
+
       switch (res->ai_family)
       {
         case AF_INET:
-          inet_ntop(AF_INET,&target->sin_addr, tmp, INET_ADDRSTRLEN);
-          return inet_addr(tmp);
+          addr = target->sin_addr.s_addr;
+          if (res0)
+            freeaddrinfo(res0);
+          return addr;
 
-        /* FIXME: Is it really necessary? T50 only supports IPv4 until now! */
-        /* FIXME: Is this safe? The return type is
-           in_addr_t, that is an uint32_t, not an "unsigned __int128" (as ipv6 requires)! */
+        /* FIX: Added support only for IPv6 mapped to IPv4 addresses.
+                Returns 0, otherwise. */
         case AF_INET6:
-          inet_ntop(AF_INET6,&((struct sockaddr_in6 *)target)->sin6_addr, tmp, INET6_ADDRSTRLEN);
-          return inet_addr(tmp);  /* FIXME: There is a potential problem here! */
+          if (!IN6_IS_ADDR_V4MAPPED(target))
+            goto error;          
+
+          addr = (in_addr_t)((struct sockaddr_in6 *)target)->sin6_addr.s6_addr32[3];
+
+          if (res0)
+            freeaddrinfo(res0);
+          return addr;
       }
     }
   }
 
+error:
   if (res0)
     freeaddrinfo(res0);
 
