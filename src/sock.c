@@ -21,7 +21,7 @@
 #include <poll.h>
 
 /* Maximum number of tries to send the packet. */
-#define MAX_SENDTO_RETRYS  100
+#define MAX_SENDTO_RETRYS  10
 
 /* Polling timeout is 1 second. */
 #define TIMEOUT 1000
@@ -41,18 +41,16 @@ int create_socket(void)
            but on linux will cause an error. */
 	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
 	{
-		perror("error opening raw socket");
+		perror("Error opening raw socket");
 		return FALSE;
 	}
 
 	/* Setting IP_HDRINCL. */
-  /* NOTE: Enabling this option makes sure that checksum and total_length 
-           are calculated by the kernel. */
-  /* FIXME: MAYBE disabling this option could be a good thing on
-            OS/X. In this case, we MUST calculate the ip's checksum manually. */
+  /* NOTE: We will provide the IP header, but enabling this option, on linux, 
+           still makes the kernel calculates the checksum and total_length. */
 	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
 	{
-		perror("error setting socket options");
+		perror("Error setting socket options");
 		return FALSE;
 	}
 
@@ -62,7 +60,7 @@ int create_socket(void)
 	len = sizeof(n);
 	if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
 	{
-		perror("error getting socket buffer");
+		perror("Error getting socket buffer");
 		return FALSE;
 	}
 
@@ -77,15 +75,13 @@ int create_socket(void)
 			if(errno == ENOBUFS)	
 				break;
 
-			perror("error setting socket buffer");
+			perror("Error setting socket buffer");
 			return FALSE;
 		}
 	}
 #endif /* SO_SNDBUF */
 
 #ifdef SO_BROADCAST
-	/* Setting SO_BROADCAST. */
-  /* NOTE: Enable the ability to send broadcasts. */
 	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
 	{
 		error("error setting socket broadcast (\"%s\").", strerror(errno));
@@ -116,7 +112,7 @@ int send_packet(const void * const buffer,
                 size_t size, 
                 const struct config_options * const __restrict__ co)
 {
-  void *p;
+  char *p;
   ssize_t sent;
   int num_tries;
 
@@ -129,6 +125,7 @@ int send_packet(const void * const buffer,
     .sin_addr = co->ip.daddr    /* Already in network byte order! */ 
   };
 
+  // Setup event monitoring...
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
 
@@ -140,8 +137,8 @@ int send_packet(const void * const buffer,
 
   /* FIX: There is no garantee that sendto() will deliver the entire packet at once.
           So, we try MAX_SENDTO_RETRYS times before giving up. */ 
-  p = (void *)buffer;
-  for (num_tries = MAX_SENDTO_RETRYS; size > 0 && num_tries--;) 
+  p = (char *)buffer;
+  for (num_tries = MAX_SENDTO_RETRYS; size > 0 && num_tries; --num_tries) 
   {
 again:
     errno = 0;
@@ -170,6 +167,8 @@ again2:
 
       size -= sent;
       p += sent;
+      num_tries = MAX_SENDTO_RETRYS + 1; // Reset retry count 'cause
+                                         // we were successfull above!
     }
   }
 
@@ -180,9 +179,9 @@ again2:
   }
 
   /* FIX */
-  if (num_tries < 0)
+  if (!num_tries)
   {
-    error("Error sending packet (Timeout, tried 100 times!).");
+    error("Error sending packet (Timeout. Tried %d times!).", MAX_SENDTO_RETRYS);
     return FALSE;
   }
 
