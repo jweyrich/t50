@@ -18,9 +18,13 @@
 */
 
 #include <common.h>
+#include <poll.h>
 
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_RETRYS  100
+
+/* Polling timeout is 1 second. */
+#define TIMEOUT 1000
 
 /* Initialized for error condition, just in case! */
 static socket_t fd = -1;
@@ -124,7 +128,11 @@ int send_packet(const void * const buffer,
     .sin_port = htons(IPPORT_RND(co->dest)), 
     .sin_addr = co->ip.daddr    /* Already in network byte order! */ 
   };
+
+  struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
+
+  int pollret;
 
   assert(buffer != NULL);
   assert(size > 0);
@@ -135,13 +143,34 @@ int send_packet(const void * const buffer,
   p = (void *)buffer;
   for (num_tries = MAX_SENDTO_RETRYS; size > 0 && num_tries--;) 
   {
-    errno = 0;    // errno is set only on error, then we have to reset it here.
+again:
+    errno = 0;
+    if ((pollret = poll(&pfd, 1, TIMEOUT)) == -1)
+    {
+      if (errno == EINTR)
+        goto again;
+      else
+        break;
+    }
+    
+    if (pollret == 0)
+      continue;
 
-    if ((sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(sin))) == -1)
-      break;
+    if (pfd.revents & POLLOUT)
+    {
+again2:
+      errno = 0;    // errno is set only on error, then we have to reset it here.
+      if ((sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(sin))) == -1)
+      {
+        if (errno == EINTR)
+          goto again2;
+        else
+          break;
+      }
 
-    size -= sent;
-    p += sent;
+      size -= sent;
+      p += sent;
+    }
   }
 
   if (errno == EPERM)
