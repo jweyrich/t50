@@ -24,22 +24,15 @@ in_addr_t resolv(char *name)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-  /* try this method to follow posix, so i try with getaddinfo()  ;-) */
-  struct addrinfo hints = {}, *res, *res0 = NULL;
+  /* Hints getaddrinfo() to return only IPv4 compatible addresses. */
+  struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_flags = AI_ALL | AI_V4MAPPED }, 
+                 *res, *res0 = NULL;
 #pragma GCC diagnostic pop
 
-  struct sockaddr_in *target = NULL;
+  in_addr_t addr = 0;
   int err;
 
-#define ADDRSTRLEN INET6_ADDRSTRLEN
-#if INET_ADDRSTRLEN > ADDRSTRLEN
-  #define ADDRSTRLEN INET_ADDRSTRLEN
-#endif
-
   assert(name != NULL);
-
-  hints.ai_family = PF_UNSPEC;
-  hints.ai_socktype = 0;
 
   /* FIX: The "service" is not important here! */
   if ((err = getaddrinfo(name, NULL, &hints, &res0)) != 0)
@@ -50,47 +43,34 @@ in_addr_t resolv(char *name)
     error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
   }
 
-  for (res = res0; res; res = res->ai_next)
+  // FIX: Traverse the linked list trying to find an
+  //      IPv4 address (AF_INET is prioritary!) or an IPv6 mapped to IPv4.
+
+  // FIX: The previous routine (until commit 07bd72777a92530930617ec27327425d72d7b915)
+  //      had a nasty memory leak.
+  res = res0;
+  while (res)
   {
-    target = (struct sockaddr_in *)res->ai_addr;
-
-    if (target)
+    if (res->ai_family == AF_INET)
     {
-      in_addr_t addr;
-
-      switch (res->ai_family)
-      {
-        case AF_INET:
-          addr = target->sin_addr.s_addr;
-          if (res0)
-            freeaddrinfo(res0);
-          return addr;
-
-        /* FIX: Added support only for IPv6 mapped to IPv4 addresses.
-                Returns 0, otherwise. */
-        case AF_INET6:
-          if (!IN6_IS_ADDR_V4MAPPED(target))
-          {
-            #ifdef __HAVE_DEBUG__
-              char tmp[INET6_ADDRSTRLEN+1];
-              inet_ntop(AF_INET6, &((struct sockaddr_in6 *)target)->sin6_addr, tmp, INET6_ADDRSTRLEN); 
-              fprintf(stderr, "[DEBUG] resolv() trying to deal with address '%s'.\n", tmp);
-            #endif
-            goto error;          
-          }
-
-          addr = (in_addr_t)((struct sockaddr_in6 *)target)->sin6_addr.s6_addr32[3];
-
-          if (res0)
-            freeaddrinfo(res0);
-          return addr;
-      }
+      addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+      break;
     }
+    else if (res->ai_family == AF_INET6)
+    {
+      // If an IPv6 v4mapped address was already found,
+      // ignore this one. Otherwise gets the 4 IPv4 octects.
+      if (!addr)
+        addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
+    }
+
+    // Next node!
+    res = res->ai_next;
   }
 
-error:
+  // Free the linked list.
   if (res0)
     freeaddrinfo(res0);
 
-  return 0;
+  return addr;
 }
