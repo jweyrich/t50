@@ -161,7 +161,11 @@ int main(int argc, char *argv[])
     #endif
 
     if (!send_packet(packet, size, co))
+    #ifdef __HAVE_DEBUG__
+      error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
+    #else
       return EXIT_FAILURE;
+    #endif
   
     /* If protocol if 'T50', then get the next true protocol. */
     if (proto == IPPROTO_T50)
