@@ -145,7 +145,7 @@ int send_packet(const void * const buffer,
   if (socket_send(fd, &sin, (void *)buffer, size) == -1)
   {
     if (errno == EPERM)
-      error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
+      fatal_error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
     return FALSE;
   }
 
