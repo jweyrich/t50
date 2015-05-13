@@ -29,21 +29,37 @@
 /* Initialized for error condition, just in case! */
 static socket_t fd = -1;
 
+static int wait_for_io(int);
+static int socket_send(int, struct sockaddr_in *, void *, size_t);
+
 /* Socket configuration */
 int create_socket(void)
 {
 	socklen_t len;
 	unsigned i, n = 1;
+  int flag;
 
 	/* Setting SOCKET RAW. 
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
            but on linux will cause an error. */
-	if( (fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1 )
+	if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
 	{
 		perror("Error opening raw socket");
 		return FALSE;
 	}
+
+  /* Try to change the socket mode to NON BLOCKING. */
+  if ((flag = fcntl(fd, F_GETFL)) == -1)
+  {
+    perror("Error getting socket flags");
+    return FALSE;
+  }
+  if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
+  {
+    perror("Error setting socket to non-blocking mode");
+    return FALSE;
+  }
 
 	/* Setting IP_HDRINCL. */
   /* NOTE: We will provide the IP header, but enabling this option, on linux, 
@@ -112,10 +128,6 @@ int send_packet(const void * const buffer,
                 size_t size, 
                 const struct config_options * const __restrict__ co)
 {
-  char *p;
-  ssize_t sent;
-  int num_tries;
-
 // Explicitly disabled warning 'cause this initialization is correct!
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-braces"
@@ -124,66 +136,55 @@ int send_packet(const void * const buffer,
     .sin_port = htons(IPPORT_RND(co->dest)), 
     .sin_addr = co->ip.daddr    /* Already in network byte order! */ 
   };
-
-  // Setup event monitoring...
-  struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
-
-  int pollret;
 
   assert(buffer != NULL);
   assert(size > 0);
   assert(co != NULL);
 
-  /* FIX: There is no garantee that sendto() will deliver the entire packet at once.
-          So, we try MAX_SENDTO_RETRYS times before giving up. */ 
-  p = (char *)buffer;
-  for (num_tries = MAX_SENDTO_RETRYS; size > 0 && num_tries; --num_tries) 
+  if (socket_send(fd, &sin, (void *)buffer, size) == -1)
   {
-again:
-    errno = 0;
-    if ((pollret = poll(&pfd, 1, TIMEOUT)) == -1)
-    {
-      if (errno == EINTR)
-        goto again;
-      else
-        break;
-    }
-    
-    if (pollret == 0)
-      continue;
-
-    if (pfd.revents & POLLOUT)
-    {
-again2:
-      errno = 0;    // errno is set only on error, then we have to reset it here.
-      if ((sent = sendto(fd, p, size, MSG_NOSIGNAL, (struct sockaddr *)&sin, sizeof(sin))) == -1)
-      {
-        if (errno == EINTR)
-          goto again2;
-        else
-          break;
-      }
-
-      size -= sent;
-      p += sent;
-      num_tries = MAX_SENDTO_RETRYS + 1; // Reset retry count 'cause
-                                         // we were successfull above!
-    }
-  }
-
-  if (errno == EPERM)
-  {
-    error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
-    return FALSE;
-  }
-
-  /* FIX */
-  if (!num_tries)
-  {
-    error("Error sending packet (Timeout. Tried %d times!).", MAX_SENDTO_RETRYS);
+    if (errno == EPERM)
+      error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
     return FALSE;
   }
 
   return TRUE;
 }
+
+static int wait_for_io(int fd)
+{
+  int r;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+  struct pollfd pfd = { .fd = fd, .events = POLLOUT };
+#pragma GCC diagnostic pop
+
+  do {
+    r = poll(&pfd, 1, TIMEOUT);
+  } while (r == -1 && errno == EINTR);
+
+  return r;
+}
+
+static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t size)
+{
+  int r;
+
+  do {
+    r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
+  } while (r == -1 && errno == EINTR);
+
+  while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+  {
+    if ((r = wait_for_io(fd)) <= 0)
+      break;
+
+    do {
+      r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
+    } while (r == -1 && errno == EINTR);
+  }
+
+  return r;
+}
+
