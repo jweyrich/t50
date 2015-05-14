@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     #ifdef __HAVE_DEBUG__
       error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
     #else
-      return EXIT_FAILURE;
+      fatal_error("Unspecified error sending a packet.");
     #endif
   
     /* If protocol if 'T50', then get the next true protocol. */
