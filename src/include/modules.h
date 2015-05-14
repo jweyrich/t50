@@ -41,16 +41,20 @@ typedef struct {
 	char *acronym;
   char *description;
   module_func_ptr_t func;
+  int *valid_options;
 } modules_table_t;
 
 #define BEGIN_MODULES_TABLE modules_table_t mod_table[] = {
-#define END_MODULES_TABLE { 0, NULL, NULL, NULL } };
+#define END_MODULES_TABLE { 0, NULL, NULL, NULL, NULL } };
 
-#define MODULE_ENTRY(id,acronym,descr,func) { (id), acronym, descr, func },
+#define MODULE_ENTRY(id,acronym,descr,func) { (id), acronym, descr, func, func ## _validopts },
+
+#define VALID_OPTIONS_TABLE(func, ...) static int func ## _validopts[] = { __VA_ARGS__, 0 };
 
 extern modules_table_t mod_table[];
 
 extern size_t get_number_of_registered_modules(void);
+extern int *get_module_valid_options_list(int);
 
 /* Modules functions prototypes. 
    They took 'struct config_options' pointer and returns 'size'. */

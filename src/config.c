@@ -52,6 +52,7 @@ static void                   set_default_protocol(struct config_options * __res
 static int                    get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
 static int                    get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
 static int                    check_threshold(const struct config_options * const __restrict__);
+static int                    check_for_valid_options(int, int *);
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
@@ -150,7 +151,7 @@ static struct config_options co = {
     .key_id = 1                       /* default authentication key ID          */
   }
 
-    /* NOTE: Add configuration structured values for new protocols here! */
+  /* NOTE: Add configuration structured values for new protocols here! */
 };
 
 
@@ -402,8 +403,8 @@ static struct options_table_s options[] = {
   { OPTION_OSPF_VERTEX_ROUTER,     0, "ospf-vertex-router", 0 },
   { OPTION_OSPF_VERTEX_NETWORK,    0, "ospf-vertex-network", 0 },
   { OPTION_OSPF_VERTEX_ID,         0, "ospf-vertex-id",     1 },
-  { OPTIONS_OSPF_LLS_OPTION_LR,    0, "ospf-lls-extended-LR", 0 },
-  { OPTIONS_OSPF_LLS_OPTION_RS,    0, "ospf-lls-extended-RS", 0 },
+  { OPTION_OSPF_LLS_OPTION_LR,     0, "ospf-lls-extended-LR", 0 },
+  { OPTION_OSPF_LLS_OPTION_RS,     0, "ospf-lls-extended-RS", 0 },
   { OPTION_OSPF_AUTHENTICATION,    0, "ospf-authentication", 0 },
   { OPTION_OSPF_AUTH_KEY_ID,       0, "ospf-auth-key-id",   1 },
   { OPTION_OSPF_AUTH_SEQUENCE,     0, "ospf-auth-sequence", 1 },
@@ -587,6 +588,20 @@ static void check_options_rules(struct config_options * __restrict__ co)
       exit(EXIT_FAILURE);
 
   /* NOTE: Insert other rules here! */
+
+  // Checks here if protocol isn't IPPROTO_T50 if the set of options
+  // are applyable to the choosen protocol.
+  if (co->ip.protocol != IPPROTO_T50)
+  {
+    struct options_table_s *ptbl = find_option("--encapsulated");
+
+    while (ptbl->id != 0)
+    {
+      if (!check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
+        fatal_error("One or more options are not available to chosen protocol.");  
+      ptbl++;
+    }
+  }
 }
 
 /* Get the IP PROTOCOL. */
@@ -975,8 +990,8 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
     case OPTION_OSPF_VERTEX_ROUTER:     co->ospf.vertex_type = VERTEX_TYPE_ROUTER; break;
     case OPTION_OSPF_VERTEX_NETWORK:    co->ospf.vertex_type = VERTEX_TYPE_NETWORK; break;
     case OPTION_OSPF_VERTEX_ID:         co->ospf.vertex_id = resolv(arg); break;
-    case OPTIONS_OSPF_LLS_OPTION_LR:    co->ospf.lls_options = EXTENDED_OPTIONS_LR; break;
-    case OPTIONS_OSPF_LLS_OPTION_RS:    co->ospf.lls_options = EXTENDED_OPTIONS_RS; break;
+    case OPTION_OSPF_LLS_OPTION_LR:     co->ospf.lls_options = EXTENDED_OPTIONS_LR; break;
+    case OPTION_OSPF_LLS_OPTION_RS:     co->ospf.lls_options = EXTENDED_OPTIONS_RS; break;
     case OPTION_OSPF_AUTHENTICATION:    co->ospf.auth = TRUE; break;
     case OPTION_OSPF_AUTH_KEY_ID:       co->ospf.key_id = toULong(optname, arg); break;
     case OPTION_OSPF_AUTH_SEQUENCE:     co->ospf.sequence = toULong(optname, arg); break;
@@ -1267,4 +1282,24 @@ static int check_threshold(const struct config_options * const __restrict__ co)
   return TRUE;
 }
 
+// Cheks if an option is on a list of valid options.
+// The lists of valid options are contained on the modules table!
+static int check_for_valid_options(int option, int *list)
+{
+  assert(option > 0);
+
+  // If the first item is negative, all options are valid!
+  if (list != NULL)
+  {
+    if (list[0] < 0)
+      return 1;
+
+    // Scan the valid options list and cheks if 'option' is in it.
+    for (; *list; list++)
+      if (option == *list)
+        return 1;
+  }
+
+  return 0;
+}
 
