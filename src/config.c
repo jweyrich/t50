@@ -593,8 +593,11 @@ static void check_options_rules(struct config_options * __restrict__ co)
   // are applyable to the choosen protocol.
   if (co->ip.protocol != IPPROTO_T50)
   {
+    /* Need to scan only beggining with --encapsulated option. 
+       Use the fact that the options are sequentially organized. */
     struct options_table_s *ptbl = find_option("--encapsulated");
 
+    /* ptbl->id is an option id on options table entry. */
     while (ptbl->id != 0)
     {
       if (!check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))

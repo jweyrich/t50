@@ -19,6 +19,7 @@
 
 #include <common.h>
 
+// Valid options tables for specific protocols.
 VALID_OPTIONS_TABLE(tcp, \
                       OPTION_ENCAPSULATED, \
                       OPTION_BOGUSCSUM, \
