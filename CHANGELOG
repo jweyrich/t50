@@ -8,6 +8,8 @@ Legend:
 
 
 T50 5.5 - February 3rd, 2015
+ ! Changed the behavior of signals from RESTART to INTERRUPT.
+ * The raw socket is NON BLOCKING now.
  ! Improved command line parser: No more duplicated options accepted!
      --protocol is case insensitive now.
  - Add call to tcp_help() to usage().
