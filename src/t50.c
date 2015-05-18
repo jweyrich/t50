@@ -231,7 +231,7 @@ static void signal_handler(int signal)
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
   {
-    /* Kills the child process! */
+    /* Ungracefully kills the child process! */
     kill(pid, SIGKILL);
 #endif
     close_socket();
@@ -253,7 +253,8 @@ static void initialize(void)
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART; /* same signal() semantics! */
+  sa.sa_flags = SA_INTERRUPT; /* FIX: These signals MUST interrupt
+                                 a system call! */
 
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal'). 
      This is necessary to close the socket when terminating the parent process. */
@@ -263,10 +264,10 @@ static void initialize(void)
   sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is SIGPIPE handler really necessary? */
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
-  sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGTRAP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGTSTP, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
 
 #ifdef  __HAVE_TURBO__
   /* FIX: Is it wise to simply terminate the main process
