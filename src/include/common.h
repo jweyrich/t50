@@ -81,8 +81,8 @@ extern int          create_socket(void);    /* Creates the sending socket */
 extern void         close_socket(void);     /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern int          send_packet(const void * const, 
-                                size_t, 
+extern int          send_packet(const void * const,
+                                size_t,
                                 const struct config_options * const __restrict__);
 
 extern void         show_version(void); /* Prints version info. */
@@ -96,3 +96,4 @@ extern void error(char *, ...);
 extern void fatal_error(char *, ...);
 
 #endif /* __COMMON_H */
+

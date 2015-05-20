@@ -35,3 +35,4 @@ void rip_help(void)
          "    --rip-auth-sequence NUM   RIPv2 authentication sequence #  (default RANDOM)\n\n",
          AF_INET);
 }
+

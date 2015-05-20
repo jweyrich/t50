@@ -31,7 +31,8 @@ typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
 typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
 
 /* This will ease the buffers pointers manipulations. */
-typedef union {
+typedef union
+{
   void    *ptr;
   uint8_t *byte_ptr;
   uint16_t *word_ptr;
@@ -78,3 +79,4 @@ struct psdhdr
 };
 
 #endif
+

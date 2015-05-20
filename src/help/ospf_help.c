@@ -80,3 +80,4 @@ void ospf_help(void)
          LSA_TYPE_ROUTER,
          LINK_TYPE_PTP);
 }
+

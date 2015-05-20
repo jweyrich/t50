@@ -30,12 +30,13 @@
 
 /* Calculating RIP Header length */
 #define rip_hdr_len(foo) \
-			(RIP_HEADER_LENGTH + \
-			 RIP_MESSAGE_LENGTH + \
-			((foo) ? \
-				RIP_AUTH_LENGTH + \
-				RIP_TRAILER_LENGTH + \
-				AUTH_TLEN_HMACMD5 : \
-			0))
+      (RIP_HEADER_LENGTH + \
+       RIP_MESSAGE_LENGTH + \
+      ((foo) ? \
+        RIP_AUTH_LENGTH + \
+        RIP_TRAILER_LENGTH + \
+        AUTH_TLEN_HMACMD5 : \
+      0))
 
 #endif  /* __RIP_H */
+

@@ -27,7 +27,7 @@ Targets:       N/A */
 void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 {
   /* IPSec AH Integrity Check Value (ICV). */
-  #define IP_AH_ICV (sizeof(uint32_t) * 3)
+#define IP_AH_ICV (sizeof(uint32_t) * 3)
 
   size_t greoptlen,   /* GRE options size. */
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
@@ -47,11 +47,11 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
   esp_data  = auth_hmac_md5_len(1);
   *size = sizeof(struct iphdr) +
-    greoptlen                  +
-    sizeof(struct ip_auth_hdr) +
-    IP_AH_ICV                  +
-    sizeof(struct ip_esp_hdr)  +
-    esp_data;
+          greoptlen                  +
+          sizeof(struct ip_auth_hdr) +
+          IP_AH_ICV                  +
+          sizeof(struct ip_esp_hdr)  +
+          esp_data;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -60,11 +60,11 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        sizeof(struct ip_auth_hdr) +
-        IP_AH_ICV                  +
-        sizeof(struct ip_esp_hdr)  +
-        esp_data);
+                    sizeof(struct iphdr) +
+                    sizeof(struct ip_auth_hdr) +
+                    IP_AH_ICV                  +
+                    sizeof(struct ip_esp_hdr)  +
+                    esp_data);
 
   /*
    * IP Authentication Header (RFC 2402)
@@ -90,8 +90,8 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   ip_auth          = (struct ip_auth_hdr *)((void *)(ip + 1) + greoptlen);
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
-    co->ipsec.ah_length :
-    (sizeof(struct ip_auth_hdr) / 4) + 1;   /* FIX: The previous line was:
+                     co->ipsec.ah_length :
+                     (sizeof(struct ip_auth_hdr) / 4) + 1;   /* FIX: The previous line was:
                                                  (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv); */
 
   ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
@@ -117,3 +117,4 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+

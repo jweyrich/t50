@@ -35,19 +35,19 @@ static int socket_send(int, struct sockaddr_in *, void *, size_t);
 /* Socket configuration */
 int create_socket(void)
 {
-	socklen_t len;
-	unsigned i, n = 1;
+  socklen_t len;
+  unsigned i, n = 1;
   int flag;
 
-	/* Setting SOCKET RAW. 
+  /* Setting SOCKET RAW.
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
            but on linux will cause an error. */
-	if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
-	{
-		perror("Error opening raw socket");
-		return FALSE;
-	}
+  if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+  {
+    perror("Error opening raw socket");
+    return FALSE;
+  }
 
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
@@ -61,57 +61,57 @@ int create_socket(void)
     return FALSE;
   }
 
-	/* Setting IP_HDRINCL. */
-  /* NOTE: We will provide the IP header, but enabling this option, on linux, 
+  /* Setting IP_HDRINCL. */
+  /* NOTE: We will provide the IP header, but enabling this option, on linux,
            still makes the kernel calculates the checksum and total_length. */
-	if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
-	{
-		perror("Error setting socket options");
-		return FALSE;
-	}
+  if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
+  {
+    perror("Error setting socket options");
+    return FALSE;
+  }
 
-/* Taken from libdnet by Dug Song. */
+  /* Taken from libdnet by Dug Song. */
 #ifdef SO_SNDBUF
-	/* Getting SO_SNDBUF. */
-	len = sizeof(n);
-	if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
-	{
-		perror("Error getting socket buffer");
-		return FALSE;
-	}
+  /* Getting SO_SNDBUF. */
+  len = sizeof(n);
+  if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
+  {
+    perror("Error getting socket buffer");
+    return FALSE;
+  }
 
-	/* Setting the maximum SO_SNDBUF in bytes.
-	 * 128      =  1 kbits
-	 * 10485760 = 80 Mbits */
-	for (i = n + 128; i < 10485760; i += 128)
-	{
-		/* Setting SO_SNDBUF. */
-		if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(unsigned int)) == -1 )
-		{
-			if(errno == ENOBUFS)	
-				break;
+  /* Setting the maximum SO_SNDBUF in bytes.
+   * 128      =  1 kbits
+   * 10485760 = 80 Mbits */
+  for (i = n + 128; i < 10485760; i += 128)
+  {
+    /* Setting SO_SNDBUF. */
+    if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(unsigned int)) == -1 )
+    {
+      if(errno == ENOBUFS)
+        break;
 
-			perror("Error setting socket buffer");
-			return FALSE;
-		}
-	}
+      perror("Error setting socket buffer");
+      return FALSE;
+    }
+  }
 #endif /* SO_SNDBUF */
 
 #ifdef SO_BROADCAST
-	if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
-	{
-		error("error setting socket broadcast (\"%s\").", strerror(errno));
-		return FALSE;
-	}
+  if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
+  {
+    error("error setting socket broadcast (\"%s\").", strerror(errno));
+    return FALSE;
+  }
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
-	if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
-	{
-		error("error setting socket priority (\"%s\").", strerror(errno));
-		return FALSE;
-	}
+  if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
+  {
+    error("error setting socket priority (\"%s\").", strerror(errno));
+    return FALSE;
+  }
 #endif /* SO_PRIORITY */
 
   return TRUE;
@@ -124,17 +124,18 @@ void close_socket(void)
     close(fd);
 }
 
-int send_packet(const void * const buffer, 
-                size_t size, 
+int send_packet(const void * const buffer,
+                size_t size,
                 const struct config_options * const __restrict__ co)
 {
 // Explicitly disabled warning 'cause this initialization is correct!
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-braces"
-  struct sockaddr_in sin = { 
-    .sin_family = AF_INET, 
-    .sin_port = htons(IPPORT_RND(co->dest)), 
-    .sin_addr = co->ip.daddr    /* Already in network byte order! */ 
+  struct sockaddr_in sin =
+  {
+    .sin_family = AF_INET,
+    .sin_port = htons(IPPORT_RND(co->dest)),
+    .sin_addr = co->ip.daddr    /* Already in network byte order! */
   };
 #pragma GCC diagnostic pop
 
@@ -160,9 +161,11 @@ static int wait_for_io(int fd)
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
 
-  do {
+  do
+  {
     r = poll(&pfd, 1, TIMEOUT);
-  } while (r == -1 && errno == EINTR);
+  }
+  while (r == -1 && errno == EINTR);
 
   return r;
 }
@@ -171,20 +174,25 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 {
   int r;
 
-  do {
+  do
+  {
     r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-  } while (r == -1 && errno == EINTR);
+  }
+  while (r == -1 && errno == EINTR);
 
   while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
   {
     if ((r = wait_for_io(fd)) <= 0)
       break;
 
-    do {
+    do
+    {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-    } while (r == -1 && errno == EINTR);
+    }
+    while (r == -1 && errno == EINTR);
   }
 
   return r;
 }
+
 

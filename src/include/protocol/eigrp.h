@@ -99,7 +99,8 @@
  */
 
 /* EIGRP PROTOCOL STRUCTURES */
-struct eigrp_hdr {
+struct eigrp_hdr
+{
   uint16_t version:8,              /* version                     */
            opcode:8;               /* opcode                      */
   uint16_t check;                  /* checksum                    */
@@ -111,3 +112,4 @@ struct eigrp_hdr {
 };
 
 #endif  /* __EIGRP_H */
+

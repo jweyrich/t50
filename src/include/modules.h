@@ -36,9 +36,10 @@
 /* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
 /* NOTE: Specific for modules definitions. Placed here, instead of defines.h. */
-typedef struct {
-	int protocol_id;
-	char *acronym;
+typedef struct
+{
+  int protocol_id;
+  char *acronym;
   char *description;
   module_func_ptr_t func;
 } modules_table_t;
@@ -52,7 +53,7 @@ extern modules_table_t mod_table[];
 
 extern size_t get_number_of_registered_modules(void);
 
-/* Modules functions prototypes. 
+/* Modules functions prototypes.
    They took 'struct config_options' pointer and returns 'size'. */
 extern void icmp  (const struct config_options * const __restrict__, size_t *size);
 extern void igmpv1(const struct config_options * const __restrict__, size_t *size);
@@ -70,3 +71,4 @@ extern void ospf  (const struct config_options * const __restrict__, size_t *siz
 /* --- add yours here */
 
 #endif
+

@@ -40,8 +40,8 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr) +
-    greoptlen            +
-    igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
+          greoptlen            +
+          igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -51,8 +51,8 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        igmpv3_hdr_len(co->igmp.type, co->igmp.sources));
+                    sizeof(struct iphdr) +
+                    igmpv3_hdr_len(co->igmp.type, co->igmp.sources));
 
   /* Identifying the IGMP Type and building it. */
   if (co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT)
@@ -80,9 +80,9 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
     /* Computing the checksum. */
     igmpv3_report->csum     = co->bogus_csum ?
-      RANDOM() :
-      cksum(igmpv3_report,
-        buffer.ptr - (void *)igmpv3_report);
+                              RANDOM() :
+                              cksum(igmpv3_report,
+                                    buffer.ptr - (void *)igmpv3_report);
   }
   else
   {
@@ -105,11 +105,12 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
 
     /* Computing the checksum. */
     igmpv3_query->csum     = co->bogus_csum ?
-      RANDOM() :
-      cksum(igmpv3_query, 
-        buffer.ptr - (void *)igmpv3_query);
+                             RANDOM() :
+                             cksum(igmpv3_query,
+                                   buffer.ptr - (void *)igmpv3_query);
   }
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+

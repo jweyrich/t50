@@ -62,7 +62,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
      * XXX Should never reaches here!!! */
     if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
     {
-      error("internal error detecded -- please, report.\n"                                      
+      error("internal error detecded -- please, report.\n"
             "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
             cidr.hostid, MAXIMUM_IP_ADDRESSES);
 
@@ -80,3 +80,4 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 
   return &cidr;
 }
+

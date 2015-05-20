@@ -33,3 +33,4 @@ void egp_help(void)
          EGP_ACQ_CODE_CEASE_CMD,
          EGP_ACQ_STAT_ACTIVE_MODE);
 }
+

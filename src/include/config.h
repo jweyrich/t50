@@ -26,7 +26,8 @@
 /* Command line interface options which do not have short options */
 /* NOTE: All options are greater or equal than 128 to avoid ASCII character
          collision on getopt_long(). */
-enum {
+enum
+{
   OPTION_NULL = 0,
 
   OPTION_VERSION,
@@ -285,12 +286,14 @@ enum {
 };
 
 /* Config structures */
-struct cidr {
+struct cidr
+{
   uint32_t  hostid;                 /* hosts identifiers           */
   in_addr_t __1st_addr;             /* first IP address            */
 };
 
-struct config_options {
+struct config_options
+{
   /* XXX COMMON OPTIONS                                            */
   threshold_t threshold;            /* amount of packets           */
   int       flood;                  /* flood                       */
@@ -306,7 +309,8 @@ struct config_options {
   uint32_t  bits;                   /* CIDR bits                   */
 
   /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                       */
-  struct {
+  struct
+  {
     uint8_t   tos;            /* type of service             */
     uint16_t  id;             /* identification              */
     uint16_t  frag_off;       /* fragmentation offset        */
@@ -318,7 +322,8 @@ struct config_options {
   } ip;
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47)                     */
-  struct {
+  struct
+  {
     //uint8_t   options;      /* GRE options bitmask         */
     int       S;              /* sequence number present     */
     int       K;              /* key present                 */
@@ -330,7 +335,8 @@ struct config_options {
   } gre;
 
   /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1)                    */
-  struct {
+  struct
+  {
     uint8_t   type;           /* type                        */
     uint8_t   code;           /* code                        */
     uint16_t  id;             /* identification              */
@@ -339,7 +345,8 @@ struct config_options {
   } icmp;
 
   /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2)                    */
-  struct {
+  struct
+  {
     uint8_t   type;           /* type                        */
     uint8_t   code;           /* code                        */
     in_addr_t group;          /* group address               */
@@ -353,7 +360,8 @@ struct config_options {
   } igmp;
 
   /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6)                      */
-  struct {
+  struct
+  {
     uint32_t  sequence;       /* initial sequence number     */
     uint32_t  acknowledge;    /* acknowledgment sequence     */
     uint8_t   doff:4;         /* data offset                 */
@@ -385,7 +393,8 @@ struct config_options {
   } tcp;
 
   /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8)                      */
-  struct {
+  struct
+  {
     uint8_t   type;           /* type                        */
     uint8_t   code;           /* code                        */
     uint8_t   status;         /* status                      */
@@ -396,7 +405,8 @@ struct config_options {
   } egp;
 
   /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17)                     */
-  struct {
+  struct
+  {
     uint8_t   command;        /* command                     */
     uint16_t  family;         /* address family identifier   */
     in_addr_t address;        /* IP address                  */
@@ -411,7 +421,8 @@ struct config_options {
   } rip;
 
   /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33)                   */
-  struct {
+  struct
+  {
     uint8_t   doff;           /* data offset                 */
     uint8_t   cscov:4;        /* checksum coverage           */
     uint8_t   ccval:4;        /* HC-sender CCID              */
@@ -427,7 +438,8 @@ struct config_options {
   } dccp;
 
   /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46)                   */
-  struct {
+  struct
+  {
     uint8_t   flags:4;        /* flags                       */
     uint8_t   type;           /* message type                */
     uint8_t   ttl;            /* time to live                */
@@ -466,7 +478,8 @@ struct config_options {
   } rsvp;
 
   /* XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROTO_ESP = 50) */
-  struct {
+  struct
+  {
     uint8_t   ah_length;      /* AH header length            */
     uint32_t  ah_spi;         /* AH SPI                      */
     uint32_t  ah_sequence;    /* AH sequence number          */
@@ -475,7 +488,8 @@ struct config_options {
   } ipsec;
 
   /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88)                 */
-  struct {
+  struct
+  {
     uint8_t   opcode;         /* opcode                      */
     uint32_t  flags;          /* flags                       */
     uint32_t  sequence;       /* sequence number             */
@@ -516,7 +530,8 @@ struct config_options {
   } eigrp;
 
   /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89)                   */
-  struct {
+  struct
+  {
     uint8_t   type;           /* type                        */
     uint16_t  length;         /* length                      */
     in_addr_t rid;            /* router ID                   */
@@ -564,3 +579,4 @@ struct config_options {
 struct config_options *parse_command_line(char **);
 
 #endif /* CONFIG_H */
+

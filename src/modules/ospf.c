@@ -59,12 +59,12 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   ospf_length = ospf_hdr_len(co->ospf.type, co->ospf.neighbor, co->ospf.lsa_type, co->ospf.dd_include_lsa);
 
   *size = sizeof(struct iphdr) +
-    greoptlen                      +
-    sizeof(struct ospf_hdr)        +
-    sizeof(struct ospf_auth_hdr)   +
-    ospf_length                    +
-    auth_hmac_md5_len(co->ospf.auth) +
-    ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
+          greoptlen                      +
+          sizeof(struct ospf_hdr)        +
+          sizeof(struct ospf_auth_hdr)   +
+          ospf_length                    +
+          auth_hmac_md5_len(co->ospf.auth) +
+          ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -73,12 +73,12 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   ip = ip_header(packet, *size, co);
 
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr)           +
-        sizeof(struct ospf_hdr)        +
-        sizeof(struct ospf_auth_hdr)   +
-        ospf_length                    +
-        auth_hmac_md5_len(co->ospf.auth) +
-        ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
+                    sizeof(struct iphdr)           +
+                    sizeof(struct ospf_hdr)        +
+                    sizeof(struct ospf_auth_hdr)   +
+                    ospf_length                    +
+                    auth_hmac_md5_len(co->ospf.auth) +
+                    ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
   ospf          = (struct ospf_hdr *)((void *)(ip + 1) + greoptlen);
@@ -96,10 +96,10 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
    * is included in the packet's IP header length field.
    */
   ospf->length  = htons(co->ospf.length ?
-      co->ospf.length :
-      sizeof(struct ospf_hdr)      +
-      sizeof(struct ospf_auth_hdr) +
-      ospf_length);
+                        co->ospf.length :
+                        sizeof(struct ospf_hdr)      +
+                        sizeof(struct ospf_auth_hdr) +
+                        ospf_length);
   ospf->rid     = htonl(INADDR_RND(co->ospf.rid));
   ospf->aid     = htonl(co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid);
   ospf->check   = 0;
@@ -159,316 +159,316 @@ void ospf(const struct config_options * const __restrict__ co, size_t *size)
   /* Identifying the OSPF Type and building it. */
   switch (co->ospf.type)
   {
-    case OSPF_TYPE_HELLO:
+  case OSPF_TYPE_HELLO:
+    /*
+     * OSPF Version 2 (RFC 2328)
+     *
+     * A.3.2 The Hello packet
+     *
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                        Network Mask                           |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |         HelloInterval         |    Options    |    Rtr Pri    |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                     RouterDeadInterval                        |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                      Designated Router                        |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                   Backup Designated Router                    |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                          Neighbor                             |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                              ...                              |
+     */
+    *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
+    *buffer.word_ptr++ = htons(__RND(co->ospf.hello_interval));
+    *buffer.byte_ptr++ = ospf_options;
+    *buffer.byte_ptr++ = __RND(co->ospf.hello_priority);
+    *buffer.dword_ptr++ = htonl(__RND(co->ospf.hello_dead));
+    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_design));
+    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_backup));
+
+    /* Dealing with neighbor address(es). */
+    for (counter = 0; counter < co->ospf.neighbor; counter++)
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
+    break;
+
+  case OSPF_TYPE_DD:
+    /*
+     * OSPF Version 2 (RFC 2328)
+     *
+     * A.3.3 The Database Description packet
+     *
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |         Interface MTU         |    Options    |0|0|0|0|0|I|M|MS
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                     DD sequence number                        |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-                      An LSA Header                          -+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
+    *buffer.word_ptr++ = htons(__RND(co->ospf.dd_mtu));
+    *buffer.byte_ptr++ = ospf_options;
+    *buffer.byte_ptr++ = __RND(co->ospf.dd_dbdesc);
+    *buffer.dword_ptr++ = htonl(__RND(co->ospf.dd_sequence));
+    break;
+
+  case OSPF_TYPE_LSREQUEST:
+    /*
+     * OSPF Version 2 (RFC 2328)
+     *
+     * A.3.4 The Link State Request packet
+     *
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                          LS type                              |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                       Link State ID                           |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                     Advertising Router                        |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
+    *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);
+    *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_lsid));
+    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_router));
+    break;
+
+  case OSPF_TYPE_LSUPDATE:
+    /*
+     * OSPF Version 2 (RFC 2328)
+     *
+     * A.3.5 The Link State Update packet
+     *
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                            # LSAs                             |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                                                               |
+     *  +-                                                            +-+
+     *  |                             LSAs                              |
+     *  +-                                                            +-+
+     *  |                              ...                              |
+     */
+    *buffer.inaddr_ptr++ = htonl(1);
+    /* Going to the OSPF LSA Header and building it. */
+    goto build_ospf_lsa;
+
+    /* Identifying the LSA Type and building it. */
+build_ospf_lsupdate:
+    if (co->ospf.lsa_type == LSA_TYPE_ROUTER)
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_ROUTER);
       /*
-       * OSPF Version 2 (RFC 2328)
+       * The OSPF Not-So-Stubby Area (NSSA) Option (RFC 3101)
        *
-       * A.3.2 The Hello packet
+       * Appendix B: Router-LSAs
        *
        *   0                   1                   2                   3
        *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                        Network Mask                           |
+       *  |  0  Nt|W|V|E|B|        0      |            # links            |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |         HelloInterval         |    Options    |    Rtr Pri    |
+       *  |                          Link ID                              |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                     RouterDeadInterval                        |
+       *  |                         Link Data                             |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                      Designated Router                        |
+       *  |     Type      |     # TOS     |            metric             |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                   Backup Designated Router                    |
+       */
+      *buffer.byte_ptr++ = __RND(co->ospf.lsa_flags);
+      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+      *buffer.word_ptr++ = htons(1);
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_link_id));
+      *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.lsa_link_data);
+      *buffer.byte_ptr++ = __RND(co->ospf.lsa_link_type);
+      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+      *buffer.word_ptr++ = htons(__RND(co->ospf.lsa_metric));
+
+      /* Computing the checksum. */
+      ospf_lsa->check      =  co->bogus_csum ?
+                              RANDOM() :
+                              cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
+    }
+    else if (co->ospf.lsa_type == LSA_TYPE_NETWORK)
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_NETWORK);
+      /*
+       * OSPF Version 2 (RFC 2328)
+       *
+       * A.4.3 Network-LSAs
+       *
+       *   0                   1                   2                   3
+       *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                          Neighbor                             |
+       *  |                         Network Mask                          |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                              ...                              |
+       *  |                        Attached Router                        |
+       *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-      *buffer.word_ptr++ = htons(__RND(co->ospf.hello_interval));
-      *buffer.byte_ptr++ = ospf_options;
-      *buffer.byte_ptr++ = __RND(co->ospf.hello_priority);
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.hello_dead));
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_design));
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_backup));
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_attached));
 
-      /* Dealing with neighbor address(es). */
-      for (counter = 0; counter < co->ospf.neighbor; counter++)
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
-      break;
+      //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
 
-    case OSPF_TYPE_DD:
+      /* Computing the checksum. */
+      ospf_lsa->check      =  co->bogus_csum  ?
+                              RANDOM() :
+                              cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
+    }
+    else if (co->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
+             co->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_SUMMARY);
       /*
        * OSPF Version 2 (RFC 2328)
        *
-       * A.3.3 The Database Description packet
+       * A.4.4 Summary-LSAs
        *
        *   0                   1                   2                   3
        *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |         Interface MTU         |    Options    |0|0|0|0|0|I|M|MS
+       *  |                         Network Mask                          |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                     DD sequence number                        |
-       *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
-       *  +-                      An LSA Header                          -+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
+       *  |      0        |                  metric                       |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
-      *buffer.word_ptr++ = htons(__RND(co->ospf.dd_mtu));
-      *buffer.byte_ptr++ = ospf_options;
-      *buffer.byte_ptr++ = __RND(co->ospf.dd_dbdesc);
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.dd_sequence));
-      break;
+      *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
+      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
+      buffer.ptr--; /* hack! */
 
-    case OSPF_TYPE_LSREQUEST:
+      /* Computing the checksum. */
+      ospf_lsa->check =  co->bogus_csum ?
+                         RANDOM() :
+                         cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
+    }
+    else if (co->ospf.lsa_type == LSA_TYPE_ASBR ||
+             co->ospf.lsa_type == LSA_TYPE_NSSA)
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_ASBR);
       /*
        * OSPF Version 2 (RFC 2328)
        *
-       * A.3.4 The Link State Request packet
+       * A.4.5 AS-external-LSAs
+       *
+       * The OSPF NSSA Option (RFC 1587)
+       *
+       * Appendix A: Type-7 Packet Format
        *
        *   0                   1                   2                   3
        *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                          LS type                              |
+       *  |                         Network Mask                          |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                       Link State ID                           |
+       *  |E|     0       |                  metric                       |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                     Advertising Router                        |
+       *  |                      Forwarding address                       |
+       *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       *  |                      External Route Tag                       |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
-      *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_lsid));
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_router));
-      break;
+      *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
+      *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
+      buffer.ptr--;   /* hack! */
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_forward));
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
 
-    case OSPF_TYPE_LSUPDATE:
+      /* Computing the checksum. */
+      ospf_lsa->check      =  co->bogus_csum ?
+                              RANDOM() :
+                              cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
+    }
+    else if (co->ospf.lsa_type == LSA_TYPE_MULTICAST)
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_MULTICAST);
       /*
-       * OSPF Version 2 (RFC 2328)
+       * Multicast Extensions to OSPF (RFC 1584)
        *
-       * A.3.5 The Link State Update packet
+       * A.3 Group-membership-LSA
        *
        *   0                   1                   2                   3
        *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                            # LSAs                             |
+       *  |                        Vertex type                            |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                                                               |
-       *  +-                                                            +-+
-       *  |                             LSAs                              |
-       *  +-                                                            +-+
-       *  |                              ...                              |
-       */
-      *buffer.inaddr_ptr++ = htonl(1);
-      /* Going to the OSPF LSA Header and building it. */
-      goto build_ospf_lsa;
-
-      /* Identifying the LSA Type and building it. */
-build_ospf_lsupdate:
-      if (co->ospf.lsa_type == LSA_TYPE_ROUTER)
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_ROUTER);
-        /*
-         * The OSPF Not-So-Stubby Area (NSSA) Option (RFC 3101)
-         *
-         * Appendix B: Router-LSAs
-         *
-         *   0                   1                   2                   3
-         *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |  0  Nt|W|V|E|B|        0      |            # links            |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                          Link ID                              |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                         Link Data                             |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |     Type      |     # TOS     |            metric             |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        *buffer.byte_ptr++ = __RND(co->ospf.lsa_flags);
-        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons(1);
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_link_id));
-        *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.lsa_link_data);
-        *buffer.byte_ptr++ = __RND(co->ospf.lsa_link_type);
-        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons(__RND(co->ospf.lsa_metric));
-
-        /* Computing the checksum. */
-        ospf_lsa->check      =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
-      }
-      else if (co->ospf.lsa_type == LSA_TYPE_NETWORK)
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_NETWORK);
-        /*
-         * OSPF Version 2 (RFC 2328)
-         *
-         * A.4.3 Network-LSAs
-         *
-         *   0                   1                   2                   3
-         *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                         Network Mask                          |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                        Attached Router                        |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_attached));
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
-
-        /* Computing the checksum. */
-        ospf_lsa->check      =  co->bogus_csum  ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
-      }
-      else if (co->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
-          co->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_SUMMARY);
-        /*
-         * OSPF Version 2 (RFC 2328)
-         *
-         * A.4.4 Summary-LSAs
-         *
-         *   0                   1                   2                   3
-         *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                         Network Mask                          |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |      0        |                  metric                       |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
-        buffer.ptr--; /* hack! */
-
-        /* Computing the checksum. */
-        ospf_lsa->check =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
-      }
-      else if (co->ospf.lsa_type == LSA_TYPE_ASBR ||
-          co->ospf.lsa_type == LSA_TYPE_NSSA)
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_ASBR);
-        /*
-         * OSPF Version 2 (RFC 2328)
-         *
-         * A.4.5 AS-external-LSAs
-         *
-         * The OSPF NSSA Option (RFC 1587)
-         *
-         * Appendix A: Type-7 Packet Format
-         *
-         *   0                   1                   2                   3
-         *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                         Network Mask                          |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |E|     0       |                  metric                       |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                      Forwarding address                       |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                      External Route Tag                       |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-        *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
-        *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
-        buffer.ptr--;   /* hack! */
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_forward));
-        *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
-
-        /* Computing the checksum. */
-        ospf_lsa->check      =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
-      }
-      else if (co->ospf.lsa_type == LSA_TYPE_MULTICAST)
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_MULTICAST);
-        /*
-         * Multicast Extensions to OSPF (RFC 1584)
-         *
-         * A.3 Group-membership-LSA
-         *
-         *   0                   1                   2                   3
-         *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                        Vertex type                            |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         *  |                         Vertex ID                             |
-         *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        *buffer.dword_ptr++ = htonl(__RND(co->ospf.vertex_type));
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.vertex_id));
-
-        /* Computing the checksum. */
-        ospf_lsa->check      =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
-        /* Building a generic OSPF LSA Header. */
-      }
-      else
-      {
-        /* Setting the correct OSPF LSA Header length. */
-        ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_GENERIC(0));
-
-        /* Computing the checksum. */
-        ospf_lsa->check      =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0));
-      }
-      break;
-
-    case OSPF_TYPE_LSACK:
-      /*
-       * OSPF Version 2 (RFC 2328)
-       *
-       * A.3.6 The Link State Acknowledgment packet
-       *
-       *   0                   1                   2                   3
-       *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
-       *  +-                         An LSA Header                       -+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
-       *  +-                                                             -+
-       *  |                                                               |
+       *  |                         Vertex ID                             |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
-      /* Going to the OSPF LSA Header and building it. */
-      goto build_ospf_lsa;
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.vertex_type));
+      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.vertex_id));
+
+      /* Computing the checksum. */
+      ospf_lsa->check      =  co->bogus_csum ?
+                              RANDOM() :
+                              cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
+      /* Building a generic OSPF LSA Header. */
+    }
+    else
+    {
+      /* Setting the correct OSPF LSA Header length. */
+      ospf_lsa->length     = htons(co->ospf.length ?
+                                   co->ospf.length :
+                                   LSA_TLEN_GENERIC(0));
+
+      /* Computing the checksum. */
+      ospf_lsa->check      =  co->bogus_csum ?
+                              RANDOM() :
+                              cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0));
+    }
+    break;
+
+  case OSPF_TYPE_LSACK:
+    /*
+     * OSPF Version 2 (RFC 2328)
+     *
+     * A.3.6 The Link State Acknowledgment packet
+     *
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-                         An LSA Header                       -+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-                                                             -+
+     *  |                                                               |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
+    /* Going to the OSPF LSA Header and building it. */
+    goto build_ospf_lsa;
   }
 
   /*
@@ -512,35 +512,35 @@ build_ospf_lsa:
        */
       if (co->ospf.lsa_type == LSA_TYPE_ROUTER)
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_ROUTER);
+                                     co->ospf.length :
+                                     LSA_TLEN_ROUTER);
       else if (co->ospf.lsa_type == LSA_TYPE_NETWORK)
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_NETWORK);
+                                     co->ospf.length :
+                                     LSA_TLEN_NETWORK);
       else if (co->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
-          co->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
+               co->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_SUMMARY);
+                                     co->ospf.length :
+                                     LSA_TLEN_SUMMARY);
       else if (co->ospf.lsa_type == LSA_TYPE_ASBR ||
-          co->ospf.lsa_type == LSA_TYPE_NSSA)
+               co->ospf.lsa_type == LSA_TYPE_NSSA)
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_ASBR);
+                                     co->ospf.length :
+                                     LSA_TLEN_ASBR);
       else if (co->ospf.lsa_type == LSA_TYPE_MULTICAST)
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_MULTICAST);
+                                     co->ospf.length :
+                                     LSA_TLEN_MULTICAST);
       else
         ospf_lsa->length     = htons(co->ospf.length ?
-            co->ospf.length :
-            LSA_TLEN_GENERIC(0));
+                                     co->ospf.length :
+                                     LSA_TLEN_GENERIC(0));
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
-        RANDOM() :
-        cksum(ospf_lsa, LSA_TLEN_GENERIC(0));
+                              RANDOM() :
+                              cksum(ospf_lsa, LSA_TLEN_GENERIC(0));
     }
   }
 
@@ -567,8 +567,8 @@ build_ospf_lsa:
       /* OSPF LLS TLVs structure making a pointer to Checksum. */
       ospf_lls         = buffer.ptr;
       ospf_lls->length = htons(co->ospf.length ?
-          co->ospf.length :
-          ospf_tlv_len(co->ospf.type, lls, co->ospf.auth)/4);
+                               co->ospf.length :
+                               ospf_tlv_len(co->ospf.type, lls, co->ospf.auth)/4);
       ospf_lls->check  = 0;
 
       buffer.ptr = ospf_lls + 1;
@@ -654,8 +654,8 @@ build_ospf_lsa:
       {
         /* Computing the checksum. */
         ospf_lls->check  =  co->bogus_csum ?
-          RANDOM() :
-          cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
+                            RANDOM() :
+                            cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
       }
     }
   }
@@ -671,8 +671,8 @@ build_ospf_lsa:
   if (!co->ospf.auth)
     /* Computing the checksum. */
     ospf->check   = co->bogus_csum ?
-      RANDOM() :
-      cksum(ospf, buffer.ptr - (void *)ospf);
+                    RANDOM() :
+                    cksum(ospf, buffer.ptr - (void *)ospf);
 
   gre_checksum(packet, co, *size);
 }
@@ -694,51 +694,65 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
 
   switch (foo)
   {
-    /*
-     * The size of a HELLO Message Type may vary based on the presence
-     * of neighbor address and the number of neighbor address(es).
-     */
-    case OSPF_TYPE_HELLO:
-      size += OSPF_TLEN_HELLO;
-      size += OSPF_TLEN_NEIGHBOR(bar);
-      break;
-      /*
-       * The size of a Database Description (DD)  Message Type may vary
-       * based on the presence of a LSA Header,  depending on the case,
-       * it may or may not be included.
-       */
-    case OSPF_TYPE_DD:
-      size += OSPF_TLEN_DD;
-      if (qux)
-        size += LSA_TLEN_GENERIC(0);
-      break;
-
-    case OSPF_TYPE_LSREQUEST:
-      size += OSPF_TLEN_LSREQUEST;
-      break;
-      /*
-       * The size of a LS Update Message Type may vary based on the type
-       * of the LSA Header included in the message.
-       */
-    case OSPF_TYPE_LSUPDATE:
-      size += OSPF_TLEN_LSUPDATE;
-      switch (baz)
-      {
-        case LSA_TYPE_ROUTER:     size += LSA_TLEN_ROUTER; break;
-        case LSA_TYPE_NETWORK:    size += LSA_TLEN_NETWORK; break;
-        case LSA_TYPE_SUMMARY_IP:
-        case LSA_TYPE_SUMMARY_AS: size += LSA_TLEN_SUMMARY; break;
-        case LSA_TYPE_ASBR:       size += LSA_TLEN_ASBR; break;
-        case LSA_TYPE_MULTICAST:  size += LSA_TLEN_MULTICAST; break;
-        case LSA_TYPE_NSSA:       size += LSA_TLEN_NSSA; break;
-        default:                  size += LSA_TLEN_GENERIC(0);
-      }
-      break;
-
-    case OSPF_TYPE_LSACK:
+  /*
+   * The size of a HELLO Message Type may vary based on the presence
+   * of neighbor address and the number of neighbor address(es).
+   */
+  case OSPF_TYPE_HELLO:
+    size += OSPF_TLEN_HELLO;
+    size += OSPF_TLEN_NEIGHBOR(bar);
+    break;
+  /*
+   * The size of a Database Description (DD)  Message Type may vary
+   * based on the presence of a LSA Header,  depending on the case,
+   * it may or may not be included.
+   */
+  case OSPF_TYPE_DD:
+    size += OSPF_TLEN_DD;
+    if (qux)
       size += LSA_TLEN_GENERIC(0);
+    break;
+
+  case OSPF_TYPE_LSREQUEST:
+    size += OSPF_TLEN_LSREQUEST;
+    break;
+  /*
+   * The size of a LS Update Message Type may vary based on the type
+   * of the LSA Header included in the message.
+   */
+  case OSPF_TYPE_LSUPDATE:
+    size += OSPF_TLEN_LSUPDATE;
+    switch (baz)
+    {
+    case LSA_TYPE_ROUTER:
+      size += LSA_TLEN_ROUTER;
       break;
+    case LSA_TYPE_NETWORK:
+      size += LSA_TLEN_NETWORK;
+      break;
+    case LSA_TYPE_SUMMARY_IP:
+    case LSA_TYPE_SUMMARY_AS:
+      size += LSA_TLEN_SUMMARY;
+      break;
+    case LSA_TYPE_ASBR:
+      size += LSA_TLEN_ASBR;
+      break;
+    case LSA_TYPE_MULTICAST:
+      size += LSA_TLEN_MULTICAST;
+      break;
+    case LSA_TYPE_NSSA:
+      size += LSA_TLEN_NSSA;
+      break;
+    default:
+      size += LSA_TLEN_GENERIC(0);
+    }
+    break;
+
+  case OSPF_TYPE_LSACK:
+    size += LSA_TLEN_GENERIC(0);
+    break;
   }
 
   return size;
 }
+

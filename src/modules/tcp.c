@@ -67,9 +67,9 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
   ip = ip_header(packet, *size, co);
 
   gre_ip = gre_encapsulation(packet, co,
-              sizeof(struct iphdr)  +
-              sizeof(struct tcphdr) +
-              tcpopt);
+                             sizeof(struct iphdr)  +
+                             sizeof(struct tcphdr) +
+                             tcpopt);
 
   /*
    * The RFC 793 has defined a 4-bit field in the TCP header which encodes the size
@@ -79,7 +79,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
    */
   if (tcpopt > (sizeof(struct tcphdr) * 2))
     fatal_error("%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
-      __FUNCTION__, tcpopt);
+                __FUNCTION__, tcpopt);
 
   /* TCP Header structure making a pointer to IP Header structure. */
   tcp          = (struct tcphdr *)((void *)(ip + 1) + greoptlen);
@@ -257,8 +257,8 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++ = TCPOLEN_CC;
     *buffer.dword_ptr++ = htonl(co->tcp.cc_new ?
-        __RND(co->tcp.cc_new) : 
-        __RND(co->tcp.cc_echo));
+                                __RND(co->tcp.cc_new) :
+                                __RND(co->tcp.cc_echo));
 
     tcp->syn = 1;
     tcp->seq = htonl(__RND(co->tcp.sequence));
@@ -515,4 +515,5 @@ static size_t tcp_options_len(const uint8_t foo, int bar, int baz)
 
   return size;
 }
+
 

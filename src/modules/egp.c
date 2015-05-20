@@ -50,9 +50,9 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr)    +
-        sizeof(struct egp_hdr)  +
-        sizeof(struct egp_acq_hdr));
+                    sizeof(struct iphdr)    +
+                    sizeof(struct egp_hdr)  +
+                    sizeof(struct egp_acq_hdr));
 
   /*
    * @nbrito -- Tue Jan 18 11:09:34 BRST 2011
@@ -75,9 +75,10 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   egp_acq->poll  = __RND(co->egp.poll);
 
   /* Computing the checksum. */
-  egp->check    = co->bogus_csum ? RANDOM() : 
-    cksum(egp, (void *)(egp_acq + 1) - (void *)egp);
+  egp->check    = co->bogus_csum ? RANDOM() :
+                  cksum(egp, (void *)(egp_acq + 1) - (void *)egp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+

@@ -147,7 +147,8 @@
  *   |  Send_TTL   | (Reserved)  |        RSVP Length        |
  *   +-------------+-------------+-------------+-------------+
  */
-struct rsvp_common_hdr{
+struct rsvp_common_hdr
+{
 #if defined(__LITTLE_ENDIAN_BITFIELD)
   uint16_t flags:4,                /* flags                       */
            version:4,              /* version                     */
@@ -166,3 +167,4 @@ struct rsvp_common_hdr{
 };
 
 #endif  /* __RSVP_H */
+

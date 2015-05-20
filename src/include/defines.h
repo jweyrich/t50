@@ -30,7 +30,7 @@
 #define ON    1
 #define OFF   0
 
-/* Initial packet buffer preallocated size (2 kB). 
+/* Initial packet buffer preallocated size (2 kB).
    This size should be sufficient for all packets since MTU
    is 1500 bytes maximum, over ethernet! */
 #define INITIAL_PACKET_SIZE 2048
@@ -77,4 +77,5 @@
 #define IS_CHILD_PID(p) ((p) == 0)
 
 #endif
+
 

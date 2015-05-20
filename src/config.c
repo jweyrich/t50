@@ -22,7 +22,8 @@
 #include <limits.h>
 #include <regex.h>
 
-struct options_table_s {
+struct options_table_s
+{
   int id;             /* This is the value returned by find_option(). */
   char short_opt;     /* Single char short option (ou '\0' if none). */
   char *long_opt;     /* String for long option name (or NULL is none.) */
@@ -33,7 +34,8 @@ struct options_table_s {
 };
 
 /* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
-typedef struct {
+typedef struct
+{
   unsigned addr;
   unsigned cidr;
 } T50_tmp_addr_t;
@@ -46,7 +48,7 @@ static void                   set_config_option(struct config_options * __restri
 static unsigned int           toULong(char *, char *);
 static unsigned int           toULongCheckRange(char *, char *, unsigned int, unsigned int);
 static void                   check_list_separators(char *, char *);
-static void                   set_destination_addresses(char *, struct config_options * __restrict__); 
+static void                   set_destination_addresses(char *, struct config_options * __restrict__);
 static void                   list_protocols(void);
 static void                   set_default_protocol(struct config_options * __restrict__);
 static int                    get_ip_and_cidr_from_string(char const * const, T50_tmp_addr_t *);
@@ -62,7 +64,8 @@ static int                    check_threshold(const struct config_options * cons
          make sure that all fields are initialized correctly. */
 /* NOTE: As C standandard goes, any field not explicitly initialized
          will be filled with zero. */
-static struct config_options co = {
+static struct config_options co =
+{
   /* XXX COMMON OPTIONS                                                         */
   .threshold = 1000,                  /* default threshold                      */
 
@@ -150,12 +153,13 @@ static struct config_options co = {
     .key_id = 1                       /* default authentication key ID          */
   }
 
-    /* NOTE: Add configuration structured values for new protocols here! */
+  /* NOTE: Add configuration structured values for new protocols here! */
 };
 
 
 /* Examplo de tabela de opções. */
-static struct options_table_s options[] = {
+static struct options_table_s options[] =
+{
   { OPTION_VERSION,               'v',  "version",          0 },
   { OPTION_HELP,                  'h',  "help",             0 },
   { OPTION_LIST_PROTOCOLS,        'l',  "list-protocols",   0 },
@@ -234,7 +238,7 @@ static struct options_table_s options[] = {
   { OPTION_TCP_AUTH_KEY_ID,        0,    "auth-key-id",     1 },
   { OPTION_TCP_AUTH_NEXT_KEY,      0,    "auth-next-key",   1 },
   { OPTION_TCP_NOP,                0,    "nop",             0 },
-  
+
   /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8) */
   { OPTION_EGP_TYPE,               0, "egp-type",           1 },
   { OPTION_EGP_CODE,               0, "egp-code",           1 },
@@ -243,7 +247,7 @@ static struct options_table_s options[] = {
   { OPTION_EGP_SEQUENCE,           0, "egp-sequence",       1 },
   { OPTION_EGP_HELLO,              0, "egp-hello",          1 },
   { OPTION_EGP_POLL,               0, "egp-poll",           1 },
-  
+
   /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17) */
   { OPTION_RIP_COMMAND,            0, "rip-command",        1 },
   { OPTION_RIP_FAMILY,             0, "rip-family",         1 },
@@ -256,7 +260,7 @@ static struct options_table_s options[] = {
   { OPTION_RIP_AUTHENTICATION,     0, "rip-authentication", 0 },
   { OPTION_RIP_AUTH_KEY_ID,        0, "rip-auth-key-id",    1 },
   { OPTION_RIP_AUTH_SEQUENCE,      0, "rip-auth-sequence",  1 },
-  
+
   /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33) */
   { OPTION_DCCP_OFFSET,            0, "dccp-data-offset",   1 },
   { OPTION_DCCP_CSCOV,             0, "dccp-cscov",         1 },
@@ -270,7 +274,7 @@ static struct options_table_s options[] = {
   { OPTION_DCCP_ACKNOWLEDGE_01,    0, "dccp-acknowledge-1", 1 },
   { OPTION_DCCP_ACKNOWLEDGE_02,    0, "dccp-acknowledge-2", 1 },
   { OPTION_DCCP_RESET_CODE,        0, "dccp-reset-code",    1 },
-  
+
   /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46) */
   { OPTION_RSVP_FLAGS,             0, "rsvp-flags",         1 },
   { OPTION_RSVP_TYPE,              0, "rsvp-type",          1 },
@@ -309,14 +313,14 @@ static struct options_table_s options[] = {
   { OPTION_RSVP_ADSPEC_DSUM,       0, "rsvp-adspec-Dsum",   1 },
   { OPTION_RSVP_ADSPEC_CONTROLLED, 0, "rsvp-adspec-controlled", 0 },
   { OPTION_RSVP_CONFIRM_ADDR,      0, "rsvp-confirm-addr",  1 },
-  
+
   /*O_ESP = 50) XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROT*/
   { OPTION_IPSEC_AH_LENGTH,        0, "ipsec-ah-length",    1 },
   { OPTION_IPSEC_AH_SPI,           0, "ipsec-ah-spi",       1 },
   { OPTION_IPSEC_AH_SEQUENCE,      0, "ipsec-ah-sequence",  1 },
   { OPTION_IPSEC_ESP_SPI,          0, "ipsec-esp-spi",      1 },
   { OPTION_IPSEC_ESP_SEQUENCE,     0, "ipsec-esp-sequence", 1 },
-  
+
   /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88) */
   { OPTION_EIGRP_OPCODE,           0, "eigrp-opcode",       1 },
   { OPTION_EIGRP_FLAGS,            0, "eigrp-flags",        1 },
@@ -351,7 +355,7 @@ static struct options_table_s options[] = {
   { OPTION_EIGRP_MULTICAST,        0, "eigrp-multicast",    1 },
   { OPTION_EIGRP_AUTHENTICATION,   0, "eigrp-authentication", 0 },
   { OPTION_EIGRP_AUTH_KEY_ID,      0, "eigrp-auth-key-id",  1 },
-  
+
   /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89) */
   { OPTION_OSPF_TYPE,              0,  "ospf-type",         1 },
   { OPTION_OSPF_LENGTH,            0,  "ospf-length",       1 },
@@ -445,9 +449,8 @@ struct config_options *parse_command_line(char **argv)
         if (next_str != NULL && !check_if_option(next_str))
           fatal_error("Option '%s' has no arguments.", opt);
       }
-      else
-        if (next_str)
-          argv++;
+      else if (next_str)
+        argv++;
 
       set_config_option(&co, opt, ptbl->id, next_str);
     }
@@ -459,7 +462,7 @@ struct config_options *parse_command_line(char **argv)
 
       dest_addr = *argv;
 
-      set_destination_addresses(dest_addr, &co); 
+      set_destination_addresses(dest_addr, &co);
     }
 
     num_options++;
@@ -507,9 +510,12 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-static int check_if_option(char *s) { return *s == '-'; }
+static int check_if_option(char *s)
+{
+  return *s == '-';
+}
 
-/* NOTE: Ugly hack, but necessary! */ 
+/* NOTE: Ugly hack, but necessary! */
 static void set_default_protocol(struct config_options * __restrict__ co)
 {
   modules_table_t *ptbl;
@@ -526,12 +532,12 @@ static void set_default_protocol(struct config_options * __restrict__ co)
   }
 }
 
-/* Scans the option table trying to find the option. 
+/* Scans the option table trying to find the option.
    NOTE: "option" points to a string beginning with '-', always! */
 static struct options_table_s *find_option(char *option)
 {
   struct options_table_s *ptbl;
-  
+
   for (ptbl = options; ptbl->id; ptbl++)
   {
     /* Is it a long option? */
@@ -558,8 +564,8 @@ static struct options_table_s *find_option(char *option)
 static void check_options_rules(struct config_options * __restrict__ co)
 {
   /* Address field is mandatory! */
-  if (!co->ip.daddr) 
-    fatal_error("Target address needed."); 
+  if (!co->ip.daddr)
+    fatal_error("Target address needed.");
 
 #ifdef __HAVE_TURBO__
   if (co->turbo && !co->flood)
@@ -577,9 +583,7 @@ static void check_options_rules(struct config_options * __restrict__ co)
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
-  {
     fatal_error("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
-  }
 
   /* FIX: Checks only if flooding isn't used! */
   if (!co->flood)
@@ -651,339 +655,755 @@ static void set_config_option(struct config_options * __restrict__ co, char *opt
   switch (optid)
   {
 #ifdef __HAVE_TURBO__
-    case OPTION_TURBO:                  co->turbo = TRUE; break;
+  case OPTION_TURBO:
+    co->turbo = TRUE;
+    break;
 #endif
-    case OPTION_THRESHOLD:              co->threshold = toULong(optname, arg); break;
-    case OPTION_FLOOD:                  co->flood = TRUE; break;
-    case OPTION_ENCAPSULATED:           co->encapsulated = TRUE; break;
-    case OPTION_BOGUSCSUM:              co->bogus_csum = TRUE; break;
+  case OPTION_THRESHOLD:
+    co->threshold = toULong(optname, arg);
+    break;
+  case OPTION_FLOOD:
+    co->flood = TRUE;
+    break;
+  case OPTION_ENCAPSULATED:
+    co->encapsulated = TRUE;
+    break;
+  case OPTION_BOGUSCSUM:
+    co->bogus_csum = TRUE;
+    break;
 
-    case OPTION_GRE_SEQUENCE_PRESENT:   co->gre.S = TRUE; break;
-    case OPTION_GRE_KEY_PRESENT:        co->gre.K = TRUE; break;
-    case OPTION_GRE_CHECKSUM_PRESENT:   co->gre.C = TRUE; break;
-    case OPTION_GRE_KEY:                co->gre.key = toULong(optname, arg); break;
-    case OPTION_GRE_SEQUENCE:           co->gre.sequence = toULong(optname, arg); break; 
-    case OPTION_GRE_SADDR:              check_list_separators(optname, arg);
-                                        co->gre.saddr = resolv(arg); break;
-    case OPTION_GRE_DADDR:              check_list_separators(optname, arg);
-                                        co->gre.daddr = resolv(arg); break;
+  case OPTION_GRE_SEQUENCE_PRESENT:
+    co->gre.S = TRUE;
+    break;
+  case OPTION_GRE_KEY_PRESENT:
+    co->gre.K = TRUE;
+    break;
+  case OPTION_GRE_CHECKSUM_PRESENT:
+    co->gre.C = TRUE;
+    break;
+  case OPTION_GRE_KEY:
+    co->gre.key = toULong(optname, arg);
+    break;
+  case OPTION_GRE_SEQUENCE:
+    co->gre.sequence = toULong(optname, arg);
+    break;
+  case OPTION_GRE_SADDR:
+    check_list_separators(optname, arg);
+    co->gre.saddr = resolv(arg);
+    break;
+  case OPTION_GRE_DADDR:
+    check_list_separators(optname, arg);
+    co->gre.daddr = resolv(arg);
+    break;
 
-    case OPTION_SOURCE:                 check_list_separators(optname, arg); 
-                                        co->source = toULongCheckRange(optname, arg, 0, 65535); break;
+  case OPTION_SOURCE:
+    check_list_separators(optname, arg);
+    co->source = toULongCheckRange(optname, arg, 0, 65535);
+    break;
 
-    case OPTION_DESTINATION:            check_list_separators(optname, arg);
-                                        co->dest   = toULongCheckRange(optname, arg, 0, 65535); break;
+  case OPTION_DESTINATION:
+    check_list_separators(optname, arg);
+    co->dest   = toULongCheckRange(optname, arg, 0, 65535);
+    break;
 
-    case OPTION_IP_SOURCE:              check_list_separators(optname, arg);
-                                        co->ip.saddr = resolv(arg); break;
-    case OPTION_IP_TOS:                 co->ip.tos = toULong(optname, arg); break;
-    case OPTION_IP_ID:                  co->ip.id = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_IP_OFFSET:              co->ip.frag_off = toULongCheckRange(optname, arg, 0, 0x1fff); break;
-    case OPTION_IP_TTL:                 co->ip.ttl = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_IP_PROTOCOL:            check_list_separators(optname, arg);
-                                        get_ip_protocol(co, arg); break;
+  case OPTION_IP_SOURCE:
+    check_list_separators(optname, arg);
+    co->ip.saddr = resolv(arg);
+    break;
+  case OPTION_IP_TOS:
+    co->ip.tos = toULong(optname, arg);
+    break;
+  case OPTION_IP_ID:
+    co->ip.id = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_IP_OFFSET:
+    co->ip.frag_off = toULongCheckRange(optname, arg, 0, 0x1fff);
+    break;
+  case OPTION_IP_TTL:
+    co->ip.ttl = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_IP_PROTOCOL:
+    check_list_separators(optname, arg);
+    get_ip_protocol(co, arg);
+    break;
 
-    case OPTION_ICMP_TYPE:              co->icmp.type = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_ICMP_CODE:              co->icmp.code = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_ICMP_GATEWAY:           check_list_separators(optname, arg);
-                                        co->icmp.gateway = resolv(arg); break;
-    case OPTION_ICMP_ID:                co->icmp.id = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_ICMP_SEQUENCE:          co->icmp.sequence = toULongCheckRange(optname, arg, 0, 255); break;
+  case OPTION_ICMP_TYPE:
+    co->icmp.type = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_ICMP_CODE:
+    co->icmp.code = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_ICMP_GATEWAY:
+    check_list_separators(optname, arg);
+    co->icmp.gateway = resolv(arg);
+    break;
+  case OPTION_ICMP_ID:
+    co->icmp.id = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_ICMP_SEQUENCE:
+    co->icmp.sequence = toULongCheckRange(optname, arg, 0, 255);
+    break;
 
-    case OPTION_IGMP_TYPE:              co->igmp.type = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_IGMP_CODE:              co->igmp.code = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_IGMP_GROUP:             check_list_separators(optname, arg);
-                                        co->igmp.group = resolv(arg); break;
-    case OPTION_IGMP_QRV:               co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7); break;
-    case OPTION_IGMP_SUPPRESS:          co->igmp.suppress = TRUE; break;
-    case OPTION_IGMP_QQIC:              co->igmp.qqic = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_IGMP_GREC_TYPE:         co->igmp.grec_type = toULong(optname, arg); break;
-    case OPTION_IGMP_SOURCES:           co->igmp.sources = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_IGMP_GREC_MULTICAST:    check_list_separators(optname, arg);
-                                        co->igmp.grec_mca = resolv(arg); break;
-    case OPTION_IGMP_ADDRESS:         
-      /* '--igmp-address' can contain a list. */
-      for (counter = 0, tmp_ptr = strtok(arg, ",");
-           tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
-           counter++, tmp_ptr = strtok(NULL, ","))
-        co->igmp.address[counter] = resolv(tmp_ptr);
-      co->igmp.sources = counter;
-      break;
+  case OPTION_IGMP_TYPE:
+    co->igmp.type = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_IGMP_CODE:
+    co->igmp.code = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_IGMP_GROUP:
+    check_list_separators(optname, arg);
+    co->igmp.group = resolv(arg);
+    break;
+  case OPTION_IGMP_QRV:
+    co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7);
+    break;
+  case OPTION_IGMP_SUPPRESS:
+    co->igmp.suppress = TRUE;
+    break;
+  case OPTION_IGMP_QQIC:
+    co->igmp.qqic = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_IGMP_GREC_TYPE:
+    co->igmp.grec_type = toULong(optname, arg);
+    break;
+  case OPTION_IGMP_SOURCES:
+    co->igmp.sources = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_IGMP_GREC_MULTICAST:
+    check_list_separators(optname, arg);
+    co->igmp.grec_mca = resolv(arg);
+    break;
+  case OPTION_IGMP_ADDRESS:
+    /* '--igmp-address' can contain a list. */
+    for (counter = 0, tmp_ptr = strtok(arg, ",");
+         tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
+         counter++, tmp_ptr = strtok(NULL, ","))
+      co->igmp.address[counter] = resolv(tmp_ptr);
+    co->igmp.sources = counter;
+    break;
 
-    case OPTION_TCP_FIN:                co->tcp.fin = TRUE; break;
-    case OPTION_TCP_SYN:                co->tcp.syn = TRUE; break;
-    case OPTION_TCP_RST:                co->tcp.rst = TRUE; break;
-    case OPTION_TCP_PSH:                co->tcp.psh = TRUE; break;
-    case OPTION_TCP_ACK:                co->tcp.ack = TRUE; break;
-    case OPTION_TCP_URG:                co->tcp.urg = TRUE; break;
-    case OPTION_TCP_ECE:                co->tcp.ece = TRUE; break;
-    case OPTION_TCP_CWR:                co->tcp.cwr = TRUE; break;
-    case OPTION_TCP_WINDOW:             co->tcp.window = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_TCP_MSS:                co->tcp.options |= TCP_OPTION_MSS;
-                                        co->tcp.mss = toULong(optname, arg); break; 
-    case OPTION_TCP_WSOPT:              co->tcp.options |= TCP_OPTION_WSOPT;           
-                                        co->tcp.wsopt = toULong(optname, arg); break; 
-    case OPTION_TCP_TSOPT:            
-      /* This option can contain 2 values separated by ':' (second is optional). */
-      co->tcp.options |= TCP_OPTION_TSOPT;
+  case OPTION_TCP_FIN:
+    co->tcp.fin = TRUE;
+    break;
+  case OPTION_TCP_SYN:
+    co->tcp.syn = TRUE;
+    break;
+  case OPTION_TCP_RST:
+    co->tcp.rst = TRUE;
+    break;
+  case OPTION_TCP_PSH:
+    co->tcp.psh = TRUE;
+    break;
+  case OPTION_TCP_ACK:
+    co->tcp.ack = TRUE;
+    break;
+  case OPTION_TCP_URG:
+    co->tcp.urg = TRUE;
+    break;
+  case OPTION_TCP_ECE:
+    co->tcp.ece = TRUE;
+    break;
+  case OPTION_TCP_CWR:
+    co->tcp.cwr = TRUE;
+    break;
+  case OPTION_TCP_WINDOW:
+    co->tcp.window = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_TCP_MSS:
+    co->tcp.options |= TCP_OPTION_MSS;
+    co->tcp.mss = toULong(optname, arg);
+    break;
+  case OPTION_TCP_WSOPT:
+    co->tcp.options |= TCP_OPTION_WSOPT;
+    co->tcp.wsopt = toULong(optname, arg);
+    break;
+  case OPTION_TCP_TSOPT:
+    /* This option can contain 2 values separated by ':' (second is optional). */
+    co->tcp.options |= TCP_OPTION_TSOPT;
 
-      if (!get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
-        exit(EXIT_FAILURE);
+    if (!get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
+      exit(EXIT_FAILURE);
 
-      co->tcp.tsval = a;
-      co->tcp.tsecr = b;
-      break;
-    case OPTION_TCP_SACK_OK:            co->tcp.options |= TCP_OPTION_SACK_OK; break;
-    case OPTION_TCP_CC:                 co->tcp.options |= TCP_OPTION_CC; 
-                                        co->tcp.cc = toULong(optname, arg); break;
-    case OPTION_TCP_CC_NEW:             co->tcp.options |= TCP_OPTION_CC_NEXT; 
-                                        co->tcp.cc_new = toULong(optname, arg); break;
-    case OPTION_TCP_CC_ECHO:            co->tcp.options |= TCP_OPTION_CC_NEXT; 
-                                        co->tcp.cc_echo = toULong(optname, arg); break;
-    case OPTION_TCP_SACK_EDGE:        
-      /* NOTE: This option expects 2 values, separated by ':'. */
-      co->tcp.options |= TCP_OPTION_SACK_EDGE;
+    co->tcp.tsval = a;
+    co->tcp.tsecr = b;
+    break;
+  case OPTION_TCP_SACK_OK:
+    co->tcp.options |= TCP_OPTION_SACK_OK;
+    break;
+  case OPTION_TCP_CC:
+    co->tcp.options |= TCP_OPTION_CC;
+    co->tcp.cc = toULong(optname, arg);
+    break;
+  case OPTION_TCP_CC_NEW:
+    co->tcp.options |= TCP_OPTION_CC_NEXT;
+    co->tcp.cc_new = toULong(optname, arg);
+    break;
+  case OPTION_TCP_CC_ECHO:
+    co->tcp.options |= TCP_OPTION_CC_NEXT;
+    co->tcp.cc_echo = toULong(optname, arg);
+    break;
+  case OPTION_TCP_SACK_EDGE:
+    /* NOTE: This option expects 2 values, separated by ':'. */
+    co->tcp.options |= TCP_OPTION_SACK_EDGE;
 
-      if (!get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
-        exit(EXIT_FAILURE);
+    if (!get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
+      exit(EXIT_FAILURE);
 
-      co->tcp.sack_left = a;
-      co->tcp.sack_right = b;
-      break;
-    case OPTION_TCP_MD5_SIGNATURE:      co->tcp.md5 = !(co->tcp.auth = FALSE); break;
-    case OPTION_TCP_AUTHENTICATION:     co->tcp.auth = !(co->tcp.md5 = FALSE); break;
-    case OPTION_TCP_AUTH_KEY_ID:        co->tcp.key_id = toULong(optname, arg); break;
-    case OPTION_TCP_AUTH_NEXT_KEY:      co->tcp.next_key = toULong(optname, arg); break;
-    case OPTION_TCP_NOP:                co->tcp.nop = TCPOPT_NOP; break;
- 
-    case OPTION_EGP_TYPE:               co->egp.type = toULong(optname, arg);  break;    
-    case OPTION_EGP_CODE:               co->egp.code = toULong(optname, arg);  break;
-    case OPTION_EGP_STATUS:             co->egp.status = toULong(optname, arg); break;
-    case OPTION_EGP_AS:                 co->egp.as = toULong(optname, arg); break;
-    case OPTION_EGP_SEQUENCE:           co->egp.sequence = toULong(optname, arg); break;
-    case OPTION_EGP_HELLO:              co->egp.hello = toULong(optname, arg); break;
-    case OPTION_EGP_POLL:               co->egp.poll = toULong(optname, arg);  break;
- 
-    case OPTION_RIP_COMMAND:            co->rip.command = toULong(optname, arg); break;
-    case OPTION_RIP_FAMILY:             co->rip.family = toULong(optname, arg); break;
-    case OPTION_RIP_ADDRESS:            check_list_separators(optname, arg);
-                                        co->rip.address = resolv(arg); break;
-    case OPTION_RIP_METRIC:             co->rip.metric = toULong(optname, arg); break;
-    case OPTION_RIP_DOMAIN:             co->rip.domain = toULong(optname, arg); break;
-    case OPTION_RIP_TAG:                co->rip.tag = toULong(optname, arg); break;
-    case OPTION_RIP_NETMASK:            co->rip.netmask = resolv(arg); break;  /* Is this correct? */
-    case OPTION_RIP_NEXTHOP:            check_list_separators(optname, arg);
-                                        co->rip.next_hop = resolv(arg); break;
-    case OPTION_RIP_AUTHENTICATION:     co->rip.auth = TRUE; break;
-    case OPTION_RIP_AUTH_KEY_ID:        co->rip.key_id = toULong(optname, arg); break;
-    case OPTION_RIP_AUTH_SEQUENCE:      co->rip.sequence = toULong(optname, arg); break;
- 
-    case OPTION_DCCP_OFFSET:            co->dccp.doff = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_DCCP_CSCOV:             co->dccp.cscov = toULongCheckRange(optname, arg, 0, 15); break;
-    case OPTION_DCCP_CCVAL:             co->dccp.ccval = toULongCheckRange(optname, arg, 0, 15); break;
-    case OPTION_DCCP_TYPE:              co->dccp.type = toULongCheckRange(optname, arg, 0, 15); break;
-    case OPTION_DCCP_EXTEND:            co->dccp.ext = TRUE; break;
-    case OPTION_DCCP_SEQUENCE_01:       co->dccp.sequence_01 = toULong(optname, arg); break;
-    case OPTION_DCCP_SEQUENCE_02:       co->dccp.sequence_02 = toULong(optname, arg); break;
-    case OPTION_DCCP_SEQUENCE_03:       co->dccp.sequence_03 = toULong(optname, arg); break;
-    case OPTION_DCCP_SERVICE:           co->dccp.service = toULong(optname, arg); break;
-    case OPTION_DCCP_ACKNOWLEDGE_01:    co->dccp.acknowledge_01 = toULong(optname, arg); break;
-    case OPTION_DCCP_ACKNOWLEDGE_02:    co->dccp.acknowledge_02 = toULong(optname, arg); break;
-    case OPTION_DCCP_RESET_CODE:        co->dccp.rst_code = toULongCheckRange(optname, arg, 0, 255); break;
- 
-    case OPTION_RSVP_FLAGS:             co->rsvp.flags = toULongCheckRange(optname, arg, 0, 15); break;
-    case OPTION_RSVP_TYPE:              co->rsvp.type = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_TTL:               co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_SESSION_ADDRESS:   check_list_separators(optname, arg);
-                                        co->rsvp.session_addr = resolv(arg); break;
-    case OPTION_RSVP_SESSION_PROTOCOL:  check_list_separators(optname, arg);
-                                        co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_SESSION_FLAGS:     co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_SESSION_PORT:      check_list_separators(optname, arg);
-                                        co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_RSVP_HOP_ADDRESS:       check_list_separators(optname, arg);
-                                        co->rsvp.hop_addr = resolv(arg); break;
-    case OPTION_RSVP_HOP_IFACE:         co->rsvp.hop_iface = toULong(optname, arg); break;
-    case OPTION_RSVP_TIME_REFRESH:      co->rsvp.time_refresh = toULong(optname, arg); break;
-    case OPTION_RSVP_ERROR_ADDRESS:     check_list_separators(optname, arg);
-                                        co->rsvp.error_addr = resolv(arg); break;
-    case OPTION_RSVP_ERROR_FLAGS:       co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_ERROR_CODE:        co->rsvp.error_code = toULongCheckRange(optname, arg, 0, 255); break;
-    case OPTION_RSVP_ERROR_VALUE:       co->rsvp.error_value = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_RSVP_SCOPE:             co->rsvp.scope = toULong(optname, arg); break;
-    case OPTION_RSVP_SCOPE_ADDRESS:       
-      /* '--rsvp-address' can have a list of addresses separated by ','. */
-      for (counter = 0, tmp_ptr = strtok(arg, ",");
-           tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
-           counter++, tmp_ptr = strtok(NULL, ","))
-        co->rsvp.address[counter] = resolv(tmp_ptr);
-      co->rsvp.scope = counter;
-      break;
-    case OPTION_RSVP_STYLE_OPTION:      co->rsvp.style_opt = toULong(optname, arg); break;
-    case OPTION_RSVP_SENDER_ADDRESS:    check_list_separators(optname, arg);
-                                        co->rsvp.sender_addr = resolv(arg); break;
-    case OPTION_RSVP_SENDER_PORT:       check_list_separators(optname, arg);
-                                        co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535); break;
-    case OPTION_RSVP_TSPEC_TRAFFIC:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE; break;
-    case OPTION_RSVP_TSPEC_GUARANTEED:  co->rsvp.tspec = TSPEC_GUARANTEED_SERVICE; break;
-    case OPTION_RSVP_TSPEC_TOKEN_R:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                        co->rsvp.tspec_r = toULong(optname, arg); break;
-    case OPTION_RSVP_TSPEC_TOKEN_B:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                        co->rsvp.tspec_b = toULong(optname, arg); break;
-    case OPTION_RSVP_TSPEC_DATA_P:      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                        co->rsvp.tspec_p = toULong(optname, arg); break;
-    case OPTION_RSVP_TSPEC_MINIMUM:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                        co->rsvp.tspec_m = toULong(optname, arg); break;
-    case OPTION_RSVP_TSPEC_MAXIMUM:     co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-                                        co->rsvp.tspec_M = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_ISHOP:      co->rsvp.adspec_hop = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_PATH:       co->rsvp.adspec_path = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_MINIMUM:    co->rsvp.adspec_minimum = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_MTU:        co->rsvp.adspec_mtu = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_GUARANTEED: co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE; break;
-    case OPTION_RSVP_ADSPEC_CTOT:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                        co->rsvp.adspec_Ctot = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_DTOT:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                        co->rsvp.adspec_Dtot = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_CSUM:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                        co->rsvp.adspec_Csum = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_DSUM:       co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-                                        co->rsvp.adspec_Dsum = toULong(optname, arg); break;
-    case OPTION_RSVP_ADSPEC_CONTROLLED: co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE; break;
-    case OPTION_RSVP_CONFIRM_ADDR:      check_list_separators(optname, arg);
-                                        co->rsvp.confirm_addr = resolv(arg); break;
- 
-    case OPTION_IPSEC_AH_LENGTH:        co->ipsec.ah_length = toULong(optname, arg); break;
-    case OPTION_IPSEC_AH_SPI:           co->ipsec.ah_spi = toULong(optname, arg); break;
-    case OPTION_IPSEC_AH_SEQUENCE:      co->ipsec.ah_sequence = toULong(optname, arg); break;
-    case OPTION_IPSEC_ESP_SPI:          co->ipsec.esp_spi = toULong(optname, arg); break;
-    case OPTION_IPSEC_ESP_SEQUENCE:     co->ipsec.esp_sequence = toULong(optname, arg); break;
- 
-    case OPTION_EIGRP_OPCODE:           co->eigrp.opcode = toULong(optname, arg); break;
-    case OPTION_EIGRP_FLAGS:            co->eigrp.flags = toULong(optname, arg); break;
-    case OPTION_EIGRP_SEQUENCE:         co->eigrp.sequence = toULong(optname, arg); break;
-    case OPTION_EIGRP_ACKNOWLEDGE:      co->eigrp.acknowledge = toULong(optname, arg); break;
-    case OPTION_EIGRP_AS:               co->eigrp.as = toULong(optname, arg); break;
-    case OPTION_EIGRP_TYPE:             co->eigrp.type = toULong(optname, arg); break;
-    case OPTION_EIGRP_LENGTH:           co->eigrp.length = toULong(optname, arg); break;
-    case OPTION_EIGRP_K1:               co->eigrp.values |= EIGRP_KVALUE_K1;
-                                        co->eigrp.k1 = toULong(optname, arg); break;
-    case OPTION_EIGRP_K2:               co->eigrp.values |= EIGRP_KVALUE_K2;
-                                        co->eigrp.k2 = toULong(optname, arg); break;
-    case OPTION_EIGRP_K3:               co->eigrp.values |= EIGRP_KVALUE_K3;
-                                        co->eigrp.k3 = toULong(optname, arg); break;
-    case OPTION_EIGRP_K4:               co->eigrp.values |= EIGRP_KVALUE_K4;
-                                        co->eigrp.k4 = toULong(optname, arg); break;
-    case OPTION_EIGRP_K5:               co->eigrp.values |= EIGRP_KVALUE_K5;
-                                        co->eigrp.k5 = toULong(optname, arg); break;
-    case OPTION_EIGRP_HOLD:             co->eigrp.hold = toULong(optname, arg); break;
-    case OPTION_EIGRP_IOS_VERSION:        
-      if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
-        exit(EXIT_FAILURE);
+    co->tcp.sack_left = a;
+    co->tcp.sack_right = b;
+    break;
+  case OPTION_TCP_MD5_SIGNATURE:
+    co->tcp.md5 = !(co->tcp.auth = FALSE);
+    break;
+  case OPTION_TCP_AUTHENTICATION:
+    co->tcp.auth = !(co->tcp.md5 = FALSE);
+    break;
+  case OPTION_TCP_AUTH_KEY_ID:
+    co->tcp.key_id = toULong(optname, arg);
+    break;
+  case OPTION_TCP_AUTH_NEXT_KEY:
+    co->tcp.next_key = toULong(optname, arg);
+    break;
+  case OPTION_TCP_NOP:
+    co->tcp.nop = TCPOPT_NOP;
+    break;
 
-      co->eigrp.ios_major = a;
-      co->eigrp.ios_minor = b;
-      break;
-    case OPTION_EIGRP_PROTO_VERSION:      
-      if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
-        exit(EXIT_FAILURE);
+  case OPTION_EGP_TYPE:
+    co->egp.type = toULong(optname, arg);
+    break;
+  case OPTION_EGP_CODE:
+    co->egp.code = toULong(optname, arg);
+    break;
+  case OPTION_EGP_STATUS:
+    co->egp.status = toULong(optname, arg);
+    break;
+  case OPTION_EGP_AS:
+    co->egp.as = toULong(optname, arg);
+    break;
+  case OPTION_EGP_SEQUENCE:
+    co->egp.sequence = toULong(optname, arg);
+    break;
+  case OPTION_EGP_HELLO:
+    co->egp.hello = toULong(optname, arg);
+    break;
+  case OPTION_EGP_POLL:
+    co->egp.poll = toULong(optname, arg);
+    break;
 
-      co->eigrp.ver_major = a;
-      co->eigrp.ver_minor = b;
-      break;
-    case OPTION_EIGRP_NEXTHOP:          check_list_separators(optname, arg);
-                                        co->eigrp.next_hop = resolv(arg); break;
-    case OPTION_EIGRP_DELAY:            co->eigrp.delay = toULong(optname, arg); break;
-    case OPTION_EIGRP_BANDWIDTH:        co->eigrp.bandwidth = toULong(optname, arg); break;
-    case OPTION_EIGRP_MTU:              co->eigrp.mtu = toULong(optname, arg); break;
-    case OPTION_EIGRP_HOP_COUNT:        co->eigrp.hop_count = toULong(optname, arg); break;
-    case OPTION_EIGRP_LOAD:             co->eigrp.load = toULong(optname, arg); break;
-    case OPTION_EIGRP_RELIABILITY:      co->eigrp.reliability = toULong(optname, arg); break;
-    case OPTION_EIGRP_DESINATION:         
-      if ( (tmp_ptr = strchr(arg, '/')) != NULL )
-      {
-        *tmp_ptr++ = '\0';
-        co->eigrp.prefix = toULong(optname, tmp_ptr);
-      }
-      co->eigrp.dest = resolv(arg);
-      break;
-    case OPTION_EIGRP_SOURCE_ROUTER:    co->eigrp.src_router = resolv(arg); break;
-    case OPTION_EIGRP_SOURCE_AS:        co->eigrp.src_as = toULong(optname, arg); break;
-    case OPTION_EIGRP_TAG:              co->eigrp.tag = toULong(optname, arg); break;
-    case OPTION_EIGRP_METRIC:           co->eigrp.proto_metric = toULong(optname, arg); break;
-    case OPTION_EIGRP_ID:               co->eigrp.proto_id = toULong(optname, arg); break;
-    case OPTION_EIGRP_EXTERNAL_FLAGS:   co->eigrp.ext_flags = toULong(optname, arg); break;
-    case OPTION_EIGRP_ADDRESS:          check_list_separators(optname, arg);
-                                        co->eigrp.address = resolv(arg); break;
-    case OPTION_EIGRP_MULTICAST:        co->eigrp.multicast = toULong(optname, arg); break;
-    case OPTION_EIGRP_AUTHENTICATION:   co->eigrp.auth = TRUE; break;
-    case OPTION_EIGRP_AUTH_KEY_ID:      co->eigrp.key_id = toULong(optname, arg); break;
- 
-    case OPTION_OSPF_TYPE:              co->ospf.type = toULong(optname, arg); break;
-    case OPTION_OSPF_LENGTH:            co->ospf.length = toULong(optname, arg); break;
-    case OPTION_OSPF_ROUTER_ID:         co->ospf.rid = resolv(arg); break;
-    case OPTION_OSPF_AREA_ID:           co->ospf.AID = TRUE;
-                                        co->ospf.aid = resolv(arg); break;
-    case OPTION_OSPF_MT:                co->ospf.options |= OSPF_OPTION_TOS; break;
-    case OPTION_OSPF_E:                 co->ospf.options |= OSPF_OPTION_EXTERNAL; break;
-    case OPTION_OSPF_MC:                co->ospf.options |= OSPF_OPTION_MULTICAST; break;
-    case OPTION_OSPF_NP:                co->ospf.options |= OSPF_OPTION_NSSA; break;
-    case OPTION_OSPF_L:                 co->ospf.options |= OSPF_OPTION_LLS; break;
-    case OPTION_OSPF_DC:                co->ospf.options |= OSPF_OPTION_DEMAND; break;
-    case OPTION_OSPF_O:                 co->ospf.options |= OSPF_OPTION_OPAQUE; break;
-    case OPTION_OSPF_DN:                co->ospf.options |= OSPF_OPTION_DOWN; break;
-    case OPTION_OSPF_NETMASK:           co->ospf.netmask = resolv(arg); break;
-    case OPTION_OSPF_HELLO_INTERVAL:    co->ospf.hello_interval = toULong(optname, arg); break;
-    case OPTION_OSPF_HELLO_PRIORITY:    co->ospf.hello_priority = toULong(optname, arg); break;
-    case OPTION_OSPF_HELLO_DEAD:        co->ospf.hello_dead = toULong(optname, arg); break;
-    case OPTION_OSPF_HELLO_DESIGN:      co->ospf.hello_design = resolv(arg); break;
-    case OPTION_OSPF_HELLO_BACKUP:      co->ospf.hello_backup = resolv(arg); break;
-    case OPTION_OSPF_HELLO_NEIGHBOR:    co->ospf.neighbor = toULong(optname, arg); break;
-    case OPTION_OSPF_HELLO_ADDRESS:       
-      for (counter = 0, tmp_ptr = strtok(arg, ",");
-           tmp_ptr && (counter < (sizeof(co->ospf.address) / sizeof(in_addr_t)));
-           counter++, tmp_ptr = strtok(NULL, ","))
-        co->ospf.address[counter] = resolv(tmp_ptr);
-      co->ospf.neighbor = counter;
-      break;
-    case OPTION_OSPF_DD_MTU:            co->ospf.dd_mtu = toULong(optname, arg); break;
-    case OPTION_OSPF_DD_MASTER_SLAVE:   co->ospf.dd_dbdesc |= DD_DBDESC_MSLAVE; break;
-    case OPTION_OSPF_DD_MORE:           co->ospf.dd_dbdesc |= DD_DBDESC_MORE; break;
-    case OPTION_OSPF_DD_INIT:           co->ospf.dd_dbdesc |= DD_DBDESC_INIT; break;
-    case OPTION_OSPF_DD_OOBRESYNC:      co->ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC; break;
-    case OPTION_OSPF_DD_SEQUENCE:       co->ospf.dd_sequence = toULong(optname, arg); break;
-    case OPTION_OSPF_DD_INCLUDE_LSA:    co->ospf.dd_include_lsa = TRUE; break;
-    case OPTION_OSPF_LSA_AGE:           co->ospf.lsa_age = toULong(optname, arg); break;
-    case OPTION_OSPF_LSA_DO_NOT_AGE:    co->ospf.lsa_dage = TRUE; break;
-    case OPTION_OSPF_LSA_TYPE:          co->ospf.lsa_type = toULong(optname, arg); break;
-    case OPTION_OSPF_LSA_LSID:          co->ospf.lsa_lsid = resolv(arg); break;
-    case OPTION_OSPF_LSA_ROUTER:        co->ospf.lsa_router = resolv(arg); break;
-    case OPTION_OSPF_LSA_SEQUENCE:      co->ospf.lsa_sequence = toULong(optname, arg); break;
-    case OPTION_OSPF_LSA_METRIC:        co->ospf.lsa_metric = toULong(optname, arg); break;
-    case OPTION_OSPF_LSA_FLAG_BORDER:   co->ospf.lsa_flags |= ROUTER_FLAG_BORDER; break;
-    case OPTION_OSPF_LSA_FLAG_EXTERNAL: co->ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL; break;
-    case OPTION_OSPF_LSA_FLAG_VIRTUAL:  co->ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL; break;
-    case OPTION_OSPF_LSA_FLAG_WILD:     co->ospf.lsa_flags |= ROUTER_FLAG_WILD; break;
-    case OPTION_OSPF_LSA_FLAG_NSSA_TR:  co->ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR; break;
-    case OPTION_OSPF_LSA_LINK_ID:       co->ospf.lsa_link_id = resolv(arg); break;
-    case OPTION_OSPF_LSA_LINK_DATA:     co->ospf.lsa_link_data = resolv(arg); break;
-    case OPTION_OSPF_LSA_LINK_TYPE:     co->ospf.lsa_link_type = toULong(optname, arg); break;
-    case OPTION_OSPF_LSA_ATTACHED:      co->ospf.lsa_attached = resolv(arg); break;
-    case OPTION_OSPF_LSA_LARGER:        co->ospf.lsa_larger = TRUE; break;
-    case OPTION_OSPF_LSA_FORWARD:       co->ospf.lsa_forward = resolv(arg); break;
-    case OPTION_OSPF_LSA_EXTERNAL:      co->ospf.lsa_external = resolv(arg); break;
-    case OPTION_OSPF_VERTEX_ROUTER:     co->ospf.vertex_type = VERTEX_TYPE_ROUTER; break;
-    case OPTION_OSPF_VERTEX_NETWORK:    co->ospf.vertex_type = VERTEX_TYPE_NETWORK; break;
-    case OPTION_OSPF_VERTEX_ID:         co->ospf.vertex_id = resolv(arg); break;
-    case OPTIONS_OSPF_LLS_OPTION_LR:    co->ospf.lls_options = EXTENDED_OPTIONS_LR; break;
-    case OPTIONS_OSPF_LLS_OPTION_RS:    co->ospf.lls_options = EXTENDED_OPTIONS_RS; break;
-    case OPTION_OSPF_AUTHENTICATION:    co->ospf.auth = TRUE; break;
-    case OPTION_OSPF_AUTH_KEY_ID:       co->ospf.key_id = toULong(optname, arg); break;
-    case OPTION_OSPF_AUTH_SEQUENCE:     co->ospf.sequence = toULong(optname, arg); break;
+  case OPTION_RIP_COMMAND:
+    co->rip.command = toULong(optname, arg);
+    break;
+  case OPTION_RIP_FAMILY:
+    co->rip.family = toULong(optname, arg);
+    break;
+  case OPTION_RIP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rip.address = resolv(arg);
+    break;
+  case OPTION_RIP_METRIC:
+    co->rip.metric = toULong(optname, arg);
+    break;
+  case OPTION_RIP_DOMAIN:
+    co->rip.domain = toULong(optname, arg);
+    break;
+  case OPTION_RIP_TAG:
+    co->rip.tag = toULong(optname, arg);
+    break;
+  case OPTION_RIP_NETMASK:
+    co->rip.netmask = resolv(arg);
+    break;  /* Is this correct? */
+  case OPTION_RIP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->rip.next_hop = resolv(arg);
+    break;
+  case OPTION_RIP_AUTHENTICATION:
+    co->rip.auth = TRUE;
+    break;
+  case OPTION_RIP_AUTH_KEY_ID:
+    co->rip.key_id = toULong(optname, arg);
+    break;
+  case OPTION_RIP_AUTH_SEQUENCE:
+    co->rip.sequence = toULong(optname, arg);
+    break;
+
+  case OPTION_DCCP_OFFSET:
+    co->dccp.doff = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_DCCP_CSCOV:
+    co->dccp.cscov = toULongCheckRange(optname, arg, 0, 15);
+    break;
+  case OPTION_DCCP_CCVAL:
+    co->dccp.ccval = toULongCheckRange(optname, arg, 0, 15);
+    break;
+  case OPTION_DCCP_TYPE:
+    co->dccp.type = toULongCheckRange(optname, arg, 0, 15);
+    break;
+  case OPTION_DCCP_EXTEND:
+    co->dccp.ext = TRUE;
+    break;
+  case OPTION_DCCP_SEQUENCE_01:
+    co->dccp.sequence_01 = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_SEQUENCE_02:
+    co->dccp.sequence_02 = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_SEQUENCE_03:
+    co->dccp.sequence_03 = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_SERVICE:
+    co->dccp.service = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_ACKNOWLEDGE_01:
+    co->dccp.acknowledge_01 = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_ACKNOWLEDGE_02:
+    co->dccp.acknowledge_02 = toULong(optname, arg);
+    break;
+  case OPTION_DCCP_RESET_CODE:
+    co->dccp.rst_code = toULongCheckRange(optname, arg, 0, 255);
+    break;
+
+  case OPTION_RSVP_FLAGS:
+    co->rsvp.flags = toULongCheckRange(optname, arg, 0, 15);
+    break;
+  case OPTION_RSVP_TYPE:
+    co->rsvp.type = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_TTL:
+    co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_SESSION_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.session_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SESSION_PROTOCOL:
+    check_list_separators(optname, arg);
+    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_SESSION_FLAGS:
+    co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_SESSION_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_RSVP_HOP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.hop_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_HOP_IFACE:
+    co->rsvp.hop_iface = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_TIME_REFRESH:
+    co->rsvp.time_refresh = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ERROR_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.error_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_ERROR_FLAGS:
+    co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_ERROR_CODE:
+    co->rsvp.error_code = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_ERROR_VALUE:
+    co->rsvp.error_value = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_RSVP_SCOPE:
+    co->rsvp.scope = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_SCOPE_ADDRESS:
+    /* '--rsvp-address' can have a list of addresses separated by ','. */
+    for (counter = 0, tmp_ptr = strtok(arg, ",");
+         tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
+         counter++, tmp_ptr = strtok(NULL, ","))
+      co->rsvp.address[counter] = resolv(tmp_ptr);
+    co->rsvp.scope = counter;
+    break;
+  case OPTION_RSVP_STYLE_OPTION:
+    co->rsvp.style_opt = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_SENDER_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SENDER_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_RSVP_TSPEC_TRAFFIC:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    break;
+  case OPTION_RSVP_TSPEC_GUARANTEED:
+    co->rsvp.tspec = TSPEC_GUARANTEED_SERVICE;
+    break;
+  case OPTION_RSVP_TSPEC_TOKEN_R:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    co->rsvp.tspec_r = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_TSPEC_TOKEN_B:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    co->rsvp.tspec_b = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_TSPEC_DATA_P:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    co->rsvp.tspec_p = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_TSPEC_MINIMUM:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    co->rsvp.tspec_m = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_TSPEC_MAXIMUM:
+    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+    co->rsvp.tspec_M = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_ISHOP:
+    co->rsvp.adspec_hop = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_PATH:
+    co->rsvp.adspec_path = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_MINIMUM:
+    co->rsvp.adspec_minimum = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_MTU:
+    co->rsvp.adspec_mtu = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_GUARANTEED:
+    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+    break;
+  case OPTION_RSVP_ADSPEC_CTOT:
+    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+    co->rsvp.adspec_Ctot = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_DTOT:
+    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+    co->rsvp.adspec_Dtot = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_CSUM:
+    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+    co->rsvp.adspec_Csum = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_DSUM:
+    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+    co->rsvp.adspec_Dsum = toULong(optname, arg);
+    break;
+  case OPTION_RSVP_ADSPEC_CONTROLLED:
+    co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
+    break;
+  case OPTION_RSVP_CONFIRM_ADDR:
+    check_list_separators(optname, arg);
+    co->rsvp.confirm_addr = resolv(arg);
+    break;
+
+  case OPTION_IPSEC_AH_LENGTH:
+    co->ipsec.ah_length = toULong(optname, arg);
+    break;
+  case OPTION_IPSEC_AH_SPI:
+    co->ipsec.ah_spi = toULong(optname, arg);
+    break;
+  case OPTION_IPSEC_AH_SEQUENCE:
+    co->ipsec.ah_sequence = toULong(optname, arg);
+    break;
+  case OPTION_IPSEC_ESP_SPI:
+    co->ipsec.esp_spi = toULong(optname, arg);
+    break;
+  case OPTION_IPSEC_ESP_SEQUENCE:
+    co->ipsec.esp_sequence = toULong(optname, arg);
+    break;
+
+  case OPTION_EIGRP_OPCODE:
+    co->eigrp.opcode = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_FLAGS:
+    co->eigrp.flags = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_SEQUENCE:
+    co->eigrp.sequence = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_ACKNOWLEDGE:
+    co->eigrp.acknowledge = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_AS:
+    co->eigrp.as = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_TYPE:
+    co->eigrp.type = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_LENGTH:
+    co->eigrp.length = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_K1:
+    co->eigrp.values |= EIGRP_KVALUE_K1;
+    co->eigrp.k1 = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_K2:
+    co->eigrp.values |= EIGRP_KVALUE_K2;
+    co->eigrp.k2 = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_K3:
+    co->eigrp.values |= EIGRP_KVALUE_K3;
+    co->eigrp.k3 = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_K4:
+    co->eigrp.values |= EIGRP_KVALUE_K4;
+    co->eigrp.k4 = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_K5:
+    co->eigrp.values |= EIGRP_KVALUE_K5;
+    co->eigrp.k5 = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_HOLD:
+    co->eigrp.hold = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_IOS_VERSION:
+    if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+      exit(EXIT_FAILURE);
+
+    co->eigrp.ios_major = a;
+    co->eigrp.ios_minor = b;
+    break;
+  case OPTION_EIGRP_PROTO_VERSION:
+    if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+      exit(EXIT_FAILURE);
+
+    co->eigrp.ver_major = a;
+    co->eigrp.ver_minor = b;
+    break;
+  case OPTION_EIGRP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->eigrp.next_hop = resolv(arg);
+    break;
+  case OPTION_EIGRP_DELAY:
+    co->eigrp.delay = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_BANDWIDTH:
+    co->eigrp.bandwidth = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_MTU:
+    co->eigrp.mtu = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_HOP_COUNT:
+    co->eigrp.hop_count = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_LOAD:
+    co->eigrp.load = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_RELIABILITY:
+    co->eigrp.reliability = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_DESINATION:
+    if ( (tmp_ptr = strchr(arg, '/')) != NULL )
+    {
+      *tmp_ptr++ = '\0';
+      co->eigrp.prefix = toULong(optname, tmp_ptr);
+    }
+    co->eigrp.dest = resolv(arg);
+    break;
+  case OPTION_EIGRP_SOURCE_ROUTER:
+    co->eigrp.src_router = resolv(arg);
+    break;
+  case OPTION_EIGRP_SOURCE_AS:
+    co->eigrp.src_as = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_TAG:
+    co->eigrp.tag = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_METRIC:
+    co->eigrp.proto_metric = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_ID:
+    co->eigrp.proto_id = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_EXTERNAL_FLAGS:
+    co->eigrp.ext_flags = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->eigrp.address = resolv(arg);
+    break;
+  case OPTION_EIGRP_MULTICAST:
+    co->eigrp.multicast = toULong(optname, arg);
+    break;
+  case OPTION_EIGRP_AUTHENTICATION:
+    co->eigrp.auth = TRUE;
+    break;
+  case OPTION_EIGRP_AUTH_KEY_ID:
+    co->eigrp.key_id = toULong(optname, arg);
+    break;
+
+  case OPTION_OSPF_TYPE:
+    co->ospf.type = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LENGTH:
+    co->ospf.length = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_ROUTER_ID:
+    co->ospf.rid = resolv(arg);
+    break;
+  case OPTION_OSPF_AREA_ID:
+    co->ospf.AID = TRUE;
+    co->ospf.aid = resolv(arg);
+    break;
+  case OPTION_OSPF_MT:
+    co->ospf.options |= OSPF_OPTION_TOS;
+    break;
+  case OPTION_OSPF_E:
+    co->ospf.options |= OSPF_OPTION_EXTERNAL;
+    break;
+  case OPTION_OSPF_MC:
+    co->ospf.options |= OSPF_OPTION_MULTICAST;
+    break;
+  case OPTION_OSPF_NP:
+    co->ospf.options |= OSPF_OPTION_NSSA;
+    break;
+  case OPTION_OSPF_L:
+    co->ospf.options |= OSPF_OPTION_LLS;
+    break;
+  case OPTION_OSPF_DC:
+    co->ospf.options |= OSPF_OPTION_DEMAND;
+    break;
+  case OPTION_OSPF_O:
+    co->ospf.options |= OSPF_OPTION_OPAQUE;
+    break;
+  case OPTION_OSPF_DN:
+    co->ospf.options |= OSPF_OPTION_DOWN;
+    break;
+  case OPTION_OSPF_NETMASK:
+    co->ospf.netmask = resolv(arg);
+    break;
+  case OPTION_OSPF_HELLO_INTERVAL:
+    co->ospf.hello_interval = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_HELLO_PRIORITY:
+    co->ospf.hello_priority = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_HELLO_DEAD:
+    co->ospf.hello_dead = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_HELLO_DESIGN:
+    co->ospf.hello_design = resolv(arg);
+    break;
+  case OPTION_OSPF_HELLO_BACKUP:
+    co->ospf.hello_backup = resolv(arg);
+    break;
+  case OPTION_OSPF_HELLO_NEIGHBOR:
+    co->ospf.neighbor = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_HELLO_ADDRESS:
+    for (counter = 0, tmp_ptr = strtok(arg, ",");
+         tmp_ptr && (counter < (sizeof(co->ospf.address) / sizeof(in_addr_t)));
+         counter++, tmp_ptr = strtok(NULL, ","))
+      co->ospf.address[counter] = resolv(tmp_ptr);
+    co->ospf.neighbor = counter;
+    break;
+  case OPTION_OSPF_DD_MTU:
+    co->ospf.dd_mtu = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_DD_MASTER_SLAVE:
+    co->ospf.dd_dbdesc |= DD_DBDESC_MSLAVE;
+    break;
+  case OPTION_OSPF_DD_MORE:
+    co->ospf.dd_dbdesc |= DD_DBDESC_MORE;
+    break;
+  case OPTION_OSPF_DD_INIT:
+    co->ospf.dd_dbdesc |= DD_DBDESC_INIT;
+    break;
+  case OPTION_OSPF_DD_OOBRESYNC:
+    co->ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC;
+    break;
+  case OPTION_OSPF_DD_SEQUENCE:
+    co->ospf.dd_sequence = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_DD_INCLUDE_LSA:
+    co->ospf.dd_include_lsa = TRUE;
+    break;
+  case OPTION_OSPF_LSA_AGE:
+    co->ospf.lsa_age = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LSA_DO_NOT_AGE:
+    co->ospf.lsa_dage = TRUE;
+    break;
+  case OPTION_OSPF_LSA_TYPE:
+    co->ospf.lsa_type = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LSA_LSID:
+    co->ospf.lsa_lsid = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_ROUTER:
+    co->ospf.lsa_router = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_SEQUENCE:
+    co->ospf.lsa_sequence = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LSA_METRIC:
+    co->ospf.lsa_metric = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LSA_FLAG_BORDER:
+    co->ospf.lsa_flags |= ROUTER_FLAG_BORDER;
+    break;
+  case OPTION_OSPF_LSA_FLAG_EXTERNAL:
+    co->ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL;
+    break;
+  case OPTION_OSPF_LSA_FLAG_VIRTUAL:
+    co->ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL;
+    break;
+  case OPTION_OSPF_LSA_FLAG_WILD:
+    co->ospf.lsa_flags |= ROUTER_FLAG_WILD;
+    break;
+  case OPTION_OSPF_LSA_FLAG_NSSA_TR:
+    co->ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR;
+    break;
+  case OPTION_OSPF_LSA_LINK_ID:
+    co->ospf.lsa_link_id = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_LINK_DATA:
+    co->ospf.lsa_link_data = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_LINK_TYPE:
+    co->ospf.lsa_link_type = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_LSA_ATTACHED:
+    co->ospf.lsa_attached = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_LARGER:
+    co->ospf.lsa_larger = TRUE;
+    break;
+  case OPTION_OSPF_LSA_FORWARD:
+    co->ospf.lsa_forward = resolv(arg);
+    break;
+  case OPTION_OSPF_LSA_EXTERNAL:
+    co->ospf.lsa_external = resolv(arg);
+    break;
+  case OPTION_OSPF_VERTEX_ROUTER:
+    co->ospf.vertex_type = VERTEX_TYPE_ROUTER;
+    break;
+  case OPTION_OSPF_VERTEX_NETWORK:
+    co->ospf.vertex_type = VERTEX_TYPE_NETWORK;
+    break;
+  case OPTION_OSPF_VERTEX_ID:
+    co->ospf.vertex_id = resolv(arg);
+    break;
+  case OPTIONS_OSPF_LLS_OPTION_LR:
+    co->ospf.lls_options = EXTENDED_OPTIONS_LR;
+    break;
+  case OPTIONS_OSPF_LLS_OPTION_RS:
+    co->ospf.lls_options = EXTENDED_OPTIONS_RS;
+    break;
+  case OPTION_OSPF_AUTHENTICATION:
+    co->ospf.auth = TRUE;
+    break;
+  case OPTION_OSPF_AUTH_KEY_ID:
+    co->ospf.key_id = toULong(optname, arg);
+    break;
+  case OPTION_OSPF_AUTH_SEQUENCE:
+    co->ospf.sequence = toULong(optname, arg);
+    break;
   }
 }
 
-/* Tries to convert string to an unsigned value. 
+/* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
 static __attribute__((noinline)) unsigned int toULong(char *optname, char *value)
 {
@@ -1001,8 +1421,8 @@ static __attribute__((noinline)) unsigned int toULong(char *optname, char *value
   return (unsigned int)n;
 }
 
-/* Tries to convert string to unsigned int, checking range. 
-   NOTE: 'min' MUST BE smaller than 'max'. 
+/* Tries to convert string to unsigned int, checking range.
+   NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
 static __attribute__((noinline)) unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
 {
@@ -1153,10 +1573,10 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
   /* Prepare CIDR structure */
   addr_ptr->cidr = matches[4];
   addr_ptr->addr = ( matches[3]        |
-                    (matches[2] << 8)  |
-                    (matches[1] << 16) |
-                    (matches[0] << 24)) &
-                      (0xffffffffUL << (32 - addr_ptr->cidr));
+                     (matches[2] << 8)  |
+                     (matches[1] << 16) |
+                     (matches[0] << 24)) &
+                   (0xffffffffUL << (32 - addr_ptr->cidr));
 
   return TRUE;
 }
@@ -1164,7 +1584,7 @@ static int get_ip_and_cidr_from_string(char const * const addr, T50_tmp_addr_t *
 /* Convert strings like "10.3" to it's components.
    check if both values conforms to a maximum (max).
    check if the second argument is optional.
-   allows the use of 2 separators: '.' or ':'. 
+   allows the use of 2 separators: '.' or ':'.
 
    Also, check for invalid separators: ',', ';'. If '.' is the separator, ':'
    and vice-versa.
@@ -1176,7 +1596,7 @@ static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *p
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";
-  static char sep[2] = " ";  
+  static char sep[2] = " ";
 
   char *p1, *p2;
   jmp_buf jb;
@@ -1266,5 +1686,6 @@ static int check_threshold(const struct config_options * const __restrict__ co)
 
   return TRUE;
 }
+
 
 

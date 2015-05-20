@@ -25,8 +25,8 @@
 #define IP_MF 0x2000
 #define IP_DF 0x4000
 
-struct iphdr *ip_header(void *buffer, 
-                        size_t packet_size, 
+struct iphdr *ip_header(void *buffer,
+                        size_t packet_size,
                         const struct config_options * __restrict__ co)
 {
   struct iphdr *ip;
@@ -55,3 +55,4 @@ struct iphdr *ip_header(void *buffer,
 
   return ip;
 }
+

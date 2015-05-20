@@ -120,7 +120,8 @@ struct gre_hdr
  *    contains  valid  information  only if the Checksum Present bit is set
  *    to 1.
  */
-struct gre_sum_hdr {
+struct gre_sum_hdr
+{
   uint16_t check;                  /* checksum                    */
   uint16_t offset;                 /* offset                      */
 };
@@ -136,7 +137,8 @@ struct gre_sum_hdr {
  *    outside of the scope of this document.  The Key field is only present
  *    if the Key Present field is set to 1.
  */
-struct gre_key_hdr {
+struct gre_key_hdr
+{
   uint32_t key;                    /* key                         */
 };
 
@@ -149,15 +151,17 @@ struct gre_key_hdr {
  *    is inserted by  the  encapsulator.  It may be used by the receiver to
  *    establish the  order  in which packets have been transmitted from the
  *    encapsulator to the receiver. The exact algorithms for the generation
- *    of  the  Sequence  Number  and  the  semantics  of their reception is 
+ *    of  the  Sequence  Number  and  the  semantics  of their reception is
  *    outside of the scope of this document.
  */
-struct gre_seq_hdr {
+struct gre_seq_hdr
+{
   uint32_t sequence;          /* sequence number             */
-};  
+};
 
 size_t gre_opt_len(const struct config_options * const __restrict__);
 struct iphdr *gre_encapsulation(void *, const struct config_options * const __restrict__, uint32_t);
 void gre_checksum(void *, const struct config_options *, size_t);
 
 #endif  /* __GRE_H */
+

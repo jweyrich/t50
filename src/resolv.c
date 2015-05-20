@@ -25,8 +25,8 @@ in_addr_t resolv(char *name)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
   /* Hints getaddrinfo() to return only IPv4 compatible addresses. */
-  struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_flags = AI_ALL | AI_V4MAPPED }, 
-                 *res, *res0 = NULL;
+  struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_flags = AI_ALL | AI_V4MAPPED },
+         *res, *res0 = NULL;
 #pragma GCC diagnostic pop
 
   in_addr_t addr = 0;
@@ -74,3 +74,4 @@ in_addr_t resolv(char *name)
 
   return addr;
 }
+

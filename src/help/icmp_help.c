@@ -29,3 +29,4 @@ void icmp_help(void)
          "    --icmp-sequence NUM       ICMP sequence #                  (default RANDOM)\n\n",
          ICMP_ECHO);
 }
+

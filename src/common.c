@@ -40,7 +40,7 @@ uint32_t NETMASK_RND(uint32_t foo)
 }
 
 /* NOTE: Since VLAs are "dirty" allocations on stack frame, it's not a problem to use
-   the technique below. 
+   the technique below.
 
    The function will reallocate memory only if the buffer isn't big enough to acomodate
    new_packet_size bytes. */
@@ -48,7 +48,7 @@ void alloc_packet(size_t new_packet_size)
 {
   void *p;
 
-	/* TEST: Because 0 will free the buffer!!! */
+  /* TEST: Because 0 will free the buffer!!! */
   assert(new_packet_size != 0);
 
   if (new_packet_size > current_packet_size)
@@ -66,12 +66,12 @@ void alloc_packet(size_t new_packet_size)
 /* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
 size_t get_number_of_registered_modules(void)
 {
-	modules_table_t *ptbl;
+  modules_table_t *ptbl;
 
   if (number_of_modules == 0)
-	  for (ptbl = mod_table; ptbl->func != NULL; ptbl++, number_of_modules++);
+    for (ptbl = mod_table; ptbl->func != NULL; ptbl++, number_of_modules++);
 
-	return number_of_modules;
+  return number_of_modules;
 }
 
 #ifdef __HAVE_RDRAND__
@@ -85,7 +85,7 @@ uint32_t readrand(void)
   __asm__ __volatile__ (
     "1:\n"
     "rdrand %0\n"
-    "jnc 1b\n"         /* Carry flag is zero if RDRAND fails. 
+    "jnc 1b\n"         /* Carry flag is zero if RDRAND fails.
                           No need to implement a failsafe here. RDRAND will work eventually. */
     : "=r" (d)
   );
@@ -128,3 +128,4 @@ void __attribute__((noreturn)) fatal_error(char *fmt, ...)
 
   exit(EXIT_FAILURE);
 }
+

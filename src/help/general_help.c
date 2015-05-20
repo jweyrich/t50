@@ -27,9 +27,10 @@ void general_help(void)
        "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
        " -B,--bogus-csum              Bogus checksum                   (default OFF)\n"
 #ifdef  __HAVE_TURBO__
-			 "    --turbo                   Extend the performance           (default OFF)\n"
+       "    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */
        " -l,--list-protocols          List all available protocols\n"
        " -v,--version                 Print version and exit\n"
-			 " -h,--help                    Display this help and exit\n");
+       " -h,--help                    Display this help and exit\n");
 }
+

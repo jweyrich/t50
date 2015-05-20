@@ -141,7 +141,8 @@
  *  |           Checksum            |             AuType            |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_hdr {
+struct ospf_hdr
+{
   uint16_t version:8,              /* version                     */
            type:8;                 /* type                        */
   uint16_t length;                 /* length                      */
@@ -176,10 +177,11 @@ struct ospf_hdr {
  *  |                 Cryptographic sequence number                 |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_auth_hdr {
+struct ospf_auth_hdr
+{
   uint16_t reserved;               /* reserved must be zero       */
   uint16_t key_id:8,               /* authentication key ID       */
-            length:8;               /* authentication length       */
+           length:8;               /* authentication length       */
   uint32_t sequence;               /* authentication sequence #   */
 };
 
@@ -202,7 +204,8 @@ struct ospf_auth_hdr {
  *  |         LS checksum           |             length            |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_lsa_hdr {
+struct ospf_lsa_hdr
+{
   uint16_t age;                    /* LSA age                     */
   uint8_t  options;                /* LSA options                 */
   uint8_t  type;                   /* LSA type                    */
@@ -230,9 +233,11 @@ struct ospf_lsa_hdr {
  *  .                                                               .
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct ospf_lls_hdr {
+struct ospf_lls_hdr
+{
   uint16_t check;                  /* LLS checksum                */
   uint16_t length;                 /* LLS length                  */
 };
 
 #endif  /* __OSPF_H */
+

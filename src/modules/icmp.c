@@ -37,8 +37,8 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr) +
-                greoptlen            +
-                sizeof(struct icmphdr);
+          greoptlen            +
+          sizeof(struct icmphdr);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -48,8 +48,8 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        sizeof(struct icmphdr));
+                    sizeof(struct iphdr) +
+                    sizeof(struct icmphdr));
 
   /* ICMP Header structure making a pointer to Packet. */
   icmp                   = (struct icmphdr *)((void *)(ip + 1) + greoptlen);
@@ -60,9 +60,9 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   if (co->icmp.type == ICMP_REDIRECT)
     switch (co->icmp.code)
     {
-      case ICMP_REDIR_HOST:
-      case ICMP_REDIR_NET:
-        icmp->un.gateway = htonl(INADDR_RND(co->icmp.gateway));
+    case ICMP_REDIR_HOST:
+    case ICMP_REDIR_NET:
+      icmp->un.gateway = htonl(INADDR_RND(co->icmp.gateway));
     }
   icmp->checksum = 0;
 
@@ -72,3 +72,4 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+

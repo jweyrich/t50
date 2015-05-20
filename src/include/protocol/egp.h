@@ -95,7 +95,8 @@
  *                         variable (responses and indications)
  */
 
-struct egp_hdr {
+struct egp_hdr
+{
   uint8_t  version;                /* version                     */
   uint8_t  type;                   /* type                        */
   uint8_t  code;                   /* code                        */
@@ -148,9 +149,11 @@ struct egp_hdr {
  * Poll Interval           minimum Poll command polling interval (seconds)
  */
 
-struct egp_acq_hdr {
+struct egp_acq_hdr
+{
   __be16    hello;                  /* hello interval              */
   __be16    poll;                   /* poll interval               */
 };
 
 #endif  /* __EGP_H */
+

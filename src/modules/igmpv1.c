@@ -48,8 +48,8 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-        sizeof(struct iphdr) +
-        sizeof(struct igmphdr));
+                    sizeof(struct iphdr) +
+                    sizeof(struct igmphdr));
 
   /* IGMPv1 Header structure making a pointer to Packet. */
   igmpv1        = (struct igmphdr *)((void *)(ip + 1) + greoptlen);
@@ -64,3 +64,4 @@ void igmpv1(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+

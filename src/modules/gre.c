@@ -19,8 +19,8 @@
 
 #include <common.h>
 
-struct iphdr *gre_encapsulation(void *buffer, 
-                                const struct config_options * const __restrict__ co, 
+struct iphdr *gre_encapsulation(void *buffer,
+                                const struct config_options * const __restrict__ co,
                                 uint32_t total_len)
 {
   struct iphdr       *ip, *gre_ip;
@@ -124,14 +124,14 @@ struct iphdr *gre_encapsulation(void *buffer,
   gre_ip->daddr    = co->gre.daddr ? co->gre.daddr : ip->daddr;
 
   /* Computing the checksum. */
-  gre_ip->check    = co->bogus_csum ? RANDOM() : 
-    cksum(gre_ip, sizeof(struct iphdr));
+  gre_ip->check    = co->bogus_csum ? RANDOM() :
+                     cksum(gre_ip, sizeof(struct iphdr));
 
   return gre_ip;
 }
 
-void gre_checksum(void *buffer, 
-                  const struct config_options * __restrict__ co, 
+void gre_checksum(void *buffer,
+                  const struct config_options * __restrict__ co,
                   size_t packet_size)
 {
   struct gre_hdr *gre;
@@ -148,8 +148,8 @@ void gre_checksum(void *buffer,
 
     /* Computing the checksum. */
     gre_sum->check  = co->bogus_csum ?
-      RANDOM() :
-      cksum(gre, packet_size - sizeof(struct iphdr)); // All packet, except the main IP header.
+                      RANDOM() :
+                      cksum(gre, packet_size - sizeof(struct iphdr)); // All packet, except the main IP header.
   }
 }
 
@@ -203,4 +203,5 @@ size_t gre_opt_len(const struct config_options * const __restrict__ co)
 
   return size;
 }
+
 
