@@ -57,12 +57,15 @@ int main(int argc, char *argv[])
     printf("Sending %u packets...\n", co->threshold);
 
 #ifdef __HAVE_TURBO__
+
   if (co->turbo)
     puts("Turbo mode active...");
+
 #endif
 
   if (co->bits)
     puts("Performing stress testing...");
+
   puts("Hit Ctrl+C to stop...");
 
   /* NOTE: create_socket() handles its own errors before returning. */
@@ -74,6 +77,7 @@ int main(int argc, char *argv[])
   SRANDOM(time(NULL));
 
 #ifdef  __HAVE_TURBO__
+
   if (co->turbo)
   {
     /* Decides if it's necessary to fork a new process. */
@@ -100,6 +104,7 @@ int main(int argc, char *argv[])
       co->threshold = new_threshold;
     }
   }
+
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
@@ -132,6 +137,7 @@ int main(int argc, char *argv[])
   /* Selects the initial protocol to use. */
   proto = co->ip.protocol;
   ptbl = mod_table;
+
   if (proto != IPPROTO_T50)
     ptbl += co->ip.protoname;
 
@@ -144,8 +150,10 @@ int main(int argc, char *argv[])
     /* Set the destination IP address to RANDOM IP address. */
     /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
+
     if (cidr_ptr->hostid)
       co->ip.daddr += RANDOM() % cidr_ptr->hostid;
+
     co->ip.daddr = htonl(co->ip.daddr);
 
 
@@ -154,15 +162,18 @@ int main(int argc, char *argv[])
     ptbl->func(co, &size);
 
 #ifdef __HAVE_DEBUG__
+
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
       fprintf(stderr, "[DEBUG] Protocol %s packet size (%zd bytes) exceed max. Ethernet packet data length!\n",
               ptbl->acronym, size);
+
 #endif
 
     if (!send_packet(packet, size, co))
 #ifdef __HAVE_DEBUG__
       error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
+
 #else
       fatal_error("Unspecified error sending a packet.");
 #endif
@@ -229,6 +240,7 @@ static void signal_handler(int signal)
     return;
 
 #ifdef __HAVE_TURBO__
+
   if (!IS_CHILD_PID(pid))
   {
     /* Ungracefully kills the child process! */
@@ -237,6 +249,7 @@ static void signal_handler(int signal)
     close_socket();
 #ifdef __HAVE_TURBO__
   }
+
 #endif
 
   /* The shell documentation (bash) specifies that a process
@@ -295,8 +308,10 @@ static const char *get_ordinal_suffix(unsigned n)
     {
     case 1:
       return suffixes[0];
+
     case 2:
       return suffixes[1];
+
     case 3:
       return suffixes[2];
     }
@@ -309,7 +324,7 @@ static const char *get_ordinal_suffix(unsigned n)
 static const char *get_month(unsigned n)
 {
   /* Months */
-  static const char * const months[] =
+  static const char *const months[] =
   {
     "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec"
@@ -320,4 +335,5 @@ static const char *get_month(unsigned n)
 
   return months[n];
 }
+
 

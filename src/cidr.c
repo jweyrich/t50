@@ -81,3 +81,4 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
   return &cidr;
 }
 
+

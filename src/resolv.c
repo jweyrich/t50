@@ -49,6 +49,7 @@ in_addr_t resolv(char *name)
   // FIX: The previous routine (until commit 07bd72777a92530930617ec27327425d72d7b915)
   //      had a nasty memory leak.
   res = res0;
+
   while (res)
   {
     if (res->ai_family == AF_INET)
@@ -56,13 +57,14 @@ in_addr_t resolv(char *name)
       addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
       break;
     }
-    else if (res->ai_family == AF_INET6)
-    {
-      // If an IPv6 v4mapped address was already found,
-      // ignore this one. Otherwise gets the 4 IPv4 octects.
-      if (!addr)
-        addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
-    }
+    else
+      if (res->ai_family == AF_INET6)
+      {
+        // If an IPv6 v4mapped address was already found,
+        // ignore this one. Otherwise gets the 4 IPv4 octects.
+        if (!addr)
+          addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
+      }
 
     // Next node!
     res = res->ai_next;
@@ -74,4 +76,5 @@ in_addr_t resolv(char *name)
 
   return addr;
 }
+
 

@@ -55,6 +55,7 @@ int create_socket(void)
     perror("Error getting socket flags");
     return FALSE;
   }
+
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
     perror("Error setting socket to non-blocking mode");
@@ -64,7 +65,7 @@ int create_socket(void)
   /* Setting IP_HDRINCL. */
   /* NOTE: We will provide the IP header, but enabling this option, on linux,
            still makes the kernel calculates the checksum and total_length. */
-  if( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
+  if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
     perror("Error setting socket options");
     return FALSE;
@@ -74,6 +75,7 @@ int create_socket(void)
 #ifdef SO_SNDBUF
   /* Getting SO_SNDBUF. */
   len = sizeof(n);
+
   if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
     perror("Error getting socket buffer");
@@ -88,30 +90,35 @@ int create_socket(void)
     /* Setting SO_SNDBUF. */
     if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(unsigned int)) == -1 )
     {
-      if(errno == ENOBUFS)
+      if (errno == ENOBUFS)
         break;
 
       perror("Error setting socket buffer");
       return FALSE;
     }
   }
+
 #endif /* SO_SNDBUF */
 
 #ifdef SO_BROADCAST
-  if( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
+
+  if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
     error("error setting socket broadcast (\"%s\").", strerror(errno));
     return FALSE;
   }
+
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
+
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
-  if( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
+  if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
     error("error setting socket priority (\"%s\").", strerror(errno));
     return FALSE;
   }
+
 #endif /* SO_PRIORITY */
 
   return TRUE;
@@ -124,11 +131,11 @@ void close_socket(void)
     close(fd);
 }
 
-int send_packet(const void * const buffer,
+int send_packet(const void *const buffer,
                 size_t size,
-                const struct config_options * const __restrict__ co)
+                const struct config_options *const __restrict__ co)
 {
-// Explicitly disabled warning 'cause this initialization is correct!
+  // Explicitly disabled warning 'cause this initialization is correct!
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-braces"
   struct sockaddr_in sin =
@@ -147,6 +154,7 @@ int send_packet(const void * const buffer,
   {
     if (errno == EPERM)
       fatal_error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
+
     return FALSE;
   }
 
@@ -194,5 +202,6 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 
   return r;
 }
+
 
 
