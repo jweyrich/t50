@@ -29,7 +29,7 @@ static size_t tcp_options_len(const uint8_t, int, int);
 Description:   This function configures and sends the TCP packet header.
 
 Targets:       N/A */
-void tcp(const struct config_options * const __restrict__ co, size_t *size)
+void tcp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          tcpolen,     /* TCP options size. */
@@ -374,6 +374,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
      * The Authentication key uses HMAC-MD5 digest.
      */
     stemp = auth_hmac_md5_len(co->tcp.md5);
+
     for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
@@ -411,6 +412,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
      * The Authentication key uses HMAC-MD5 digest.
      */
     stemp = auth_hmac_md5_len(co->tcp.auth);
+
     for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
@@ -423,6 +425,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* Fill PSEUDO Header structure. */
   pseudo           = buffer.ptr;
+
   if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -433,6 +436,7 @@ void tcp(const struct config_options * const __restrict__ co, size_t *size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
+
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length);
@@ -515,5 +519,6 @@ static size_t tcp_options_len(const uint8_t foo, int bar, int baz)
 
   return size;
 }
+
 
 

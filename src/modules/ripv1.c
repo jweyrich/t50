@@ -26,17 +26,17 @@
 Description:   This function configures and sends the RIPv1 packet header.
 
 Targets:       N/A */
-void ripv1(const struct config_options * const __restrict__ co, size_t *size)
+void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          length;
 
   memptr_t buffer;
 
-  struct iphdr * ip;
-  struct iphdr * gre_ip;
-  struct udphdr * udp;
-  struct psdhdr * pseudo;
+  struct iphdr *ip;
+  struct iphdr *gre_ip;
+  struct udphdr *udp;
+  struct psdhdr *pseudo;
 
   assert(co != NULL);
 
@@ -101,6 +101,7 @@ void ripv1(const struct config_options * const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
+
   if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -111,6 +112,7 @@ void ripv1(const struct config_options * const __restrict__ co, size_t *size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
+
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = (buffer.ptr - (void *)udp));
@@ -122,4 +124,5 @@ void ripv1(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+
 

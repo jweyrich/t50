@@ -24,7 +24,7 @@
 Description:   This function configures and sends the IPSec packet header.
 
 Targets:       N/A */
-void ipsec(const struct config_options * const __restrict__ co, size_t *size)
+void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 {
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
@@ -36,11 +36,11 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet. */
   memptr_t buffer;
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* IPSec AH header and IPSec ESP Header. */
-  struct ip_auth_hdr * ip_auth;
-  struct ip_esp_hdr * ip_esp;
+  struct ip_auth_hdr *ip_auth;
+  struct ip_esp_hdr *ip_esp;
 
   assert(co != NULL);
 
@@ -117,4 +117,5 @@ void ipsec(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+
 

@@ -24,7 +24,7 @@
 Description:   This function configures and sends the DCCP packet header.
 
 Targets:       N/A */
-void dccp(const struct config_options * const __restrict__ co, size_t *size)
+void dccp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          dccp_length, /* DCCP header length. */
@@ -33,21 +33,21 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   void *buffer_ptr;
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* GRE Encapsulated IP Header. */
-  struct iphdr * gre_ip;
+  struct iphdr *gre_ip;
 
   /* DCCP header and PSEUDO header. */
-  struct dccp_hdr * dccp;
+  struct dccp_hdr *dccp;
   struct psdhdr *pseudo;
 
   /* DCCP Headers. */
-  struct dccp_hdr_ext * dccp_ext;
-  struct dccp_hdr_request * dccp_req;
-  struct dccp_hdr_response * dccp_res;
-  struct dccp_hdr_ack_bits * dccp_ack;
-  struct dccp_hdr_reset * dccp_rst;
+  struct dccp_hdr_ext *dccp_ext;
+  struct dccp_hdr_request *dccp_req;
+  struct dccp_hdr_response *dccp_res;
+  struct dccp_hdr_ack_bits *dccp_ack;
+  struct dccp_hdr_reset *dccp_rst;
 
   assert(co != NULL);
 
@@ -190,6 +190,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     dccp_res->dccph_resp_service               = htonl(__RND(co->dccp.service));
 
     buffer_ptr = dccp_res + 1;
+
   case DCCP_PKT_DATA:
     break;
 
@@ -203,6 +204,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     dccp_ack = buffer_ptr;
     dccp_ack->dccph_reserved1   = FIELD_MUST_BE_ZERO;
     dccp_ack->dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
+
     /* Until DCCP Options implementation. */
     if (co->dccp.type == DCCP_PKT_DATAACK ||
         co->dccp.type == DCCP_PKT_ACK)
@@ -227,6 +229,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure??? */
   pseudo = buffer_ptr;
+
   if (co->encapsulated)
   {
     pseudo->saddr = gre_ip->saddr;
@@ -237,6 +240,7 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
     pseudo->saddr = ip->saddr;
     pseudo->daddr = ip->daddr;
   }
+
   pseudo->zero  = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(buffer_ptr - (void *)dccp);
@@ -248,4 +252,5 @@ void dccp(const struct config_options * const __restrict__ co, size_t *size)
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);
 }
+
 

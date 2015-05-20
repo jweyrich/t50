@@ -28,7 +28,7 @@ typedef int socket_t;
 typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
                                   this type can be changed to int64_t. */
 
-typedef void (*module_func_ptr_t)(const struct config_options * const __restrict__, size_t *);
+typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, size_t *);
 
 /* This will ease the buffers pointers manipulations. */
 typedef union
@@ -79,4 +79,5 @@ struct psdhdr
 };
 
 #endif
+
 

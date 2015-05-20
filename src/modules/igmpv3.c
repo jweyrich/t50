@@ -21,7 +21,7 @@
 
 /* Function Name: IGMPv3 packet header configuration.
 Description:   This function configures and sends the IGMPv3 packet header. */
-void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
+void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          counter;
@@ -29,12 +29,12 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   memptr_t buffer;
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* IGMPv3 Query header, IGMPv3 Report header and IGMPv3 GREC header. */
-  struct igmpv3_query * igmpv3_query;
-  struct igmpv3_report * igmpv3_report;
-  struct igmpv3_grec * igmpv3_grec;
+  struct igmpv3_query *igmpv3_query;
+  struct igmpv3_report *igmpv3_report;
+  struct igmpv3_grec *igmpv3_grec;
 
   assert(co != NULL);
 
@@ -113,4 +113,5 @@ void igmpv3(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+
 

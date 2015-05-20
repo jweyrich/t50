@@ -350,7 +350,7 @@ struct config_options
     uint8_t   type;           /* type                        */
     uint8_t   code;           /* code                        */
     in_addr_t group;          /* group address               */
-    uint8_t   qrv:3;          /* querier robustness variable */
+    uint8_t   qrv: 3;         /* querier robustness variable */
     int       suppress;       /* suppress router-side        */
     uint8_t   qqic;           /* querier query interv. code  */
     uint8_t   grec_type;      /* group record type           */
@@ -364,7 +364,7 @@ struct config_options
   {
     uint32_t  sequence;       /* initial sequence number     */
     uint32_t  acknowledge;    /* acknowledgment sequence     */
-    uint8_t   doff:4;         /* data offset                 */
+    uint8_t   doff: 4;        /* data offset                 */
     int       fin;            /* end of data flag            */
     int       syn;            /* synchronize ISN flag        */
     int       rst;            /* reset connection flag       */
@@ -424,9 +424,9 @@ struct config_options
   struct
   {
     uint8_t   doff;           /* data offset                 */
-    uint8_t   cscov:4;        /* checksum coverage           */
-    uint8_t   ccval:4;        /* HC-sender CCID              */
-    uint8_t   type:4;         /* DCCP type                   */
+    uint8_t   cscov: 4;       /* checksum coverage           */
+    uint8_t   ccval: 4;       /* HC-sender CCID              */
+    uint8_t   type: 4;        /* DCCP type                   */
     int       ext;            /* extend the sequence number  */
     uint16_t  sequence_01;    /* sequence number             */
     uint8_t   sequence_02;    /* extended sequence number    */
@@ -440,7 +440,7 @@ struct config_options
   /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46)                   */
   struct
   {
-    uint8_t   flags:4;        /* flags                       */
+    uint8_t   flags: 4;       /* flags                       */
     uint8_t   type;           /* message type                */
     uint8_t   ttl;            /* time to live                */
     in_addr_t session_addr;   /* SESSION destination address */
@@ -451,12 +451,12 @@ struct config_options
     uint32_t  hop_iface;      /* RESV_HOP logical interface  */
     uint32_t  time_refresh;   /* TIME refresh interval       */
     in_addr_t error_addr;     /* ERROR node address          */
-    uint8_t   error_flags:3;  /* ERROR flags                 */
+    uint8_t   error_flags: 3; /* ERROR flags                 */
     uint8_t   error_code;     /* ERROR code                  */
     uint16_t  error_value;    /* ERROR value                 */
     uint8_t   scope;          /* number of SCOPE(s)          */
     in_addr_t address[255];   /* SCOPE address(es)           */
-    uint32_t  style_opt:24;   /* STYLE option vector         */
+    uint32_t  style_opt: 24;  /* STYLE option vector         */
     in_addr_t sender_addr;    /* SENDER TEMPLATE address     */
     uint16_t  sender_port;    /* SENDER TEMPLATE port        */
     uint8_t   tspec;          /* TSPEC services              */
@@ -511,11 +511,11 @@ struct config_options
     in_addr_t next_hop;       /* next hop address            */
     uint32_t  delay;          /* delay                       */
     uint32_t  bandwidth;      /* bandwidth                   */
-    uint32_t  mtu:24;         /* maximum transmission unit   */
+    uint32_t  mtu: 24;        /* maximum transmission unit   */
     uint8_t   hop_count;      /* hop count                   */
     uint8_t   load;           /* load                        */
     uint8_t   reliability;    /* reliability                 */
-    uint8_t   prefix:5;       /* subnet prefix - aka CIDR    */
+    uint8_t   prefix: 5;      /* subnet prefix - aka CIDR    */
     in_addr_t dest;           /* destination address         */
     in_addr_t src_router;     /* originating router          */
     uint32_t  src_as;         /* originating autonomous sys  */
@@ -525,7 +525,7 @@ struct config_options
     uint8_t   ext_flags;      /* external flags              */
     in_addr_t address;        /* IP address sequence         */
     uint32_t  multicast;      /* multicast sequence          */
-    uint8_t   auth:1;         /* authentication              */
+    uint8_t   auth: 1;        /* authentication              */
     uint32_t  key_id;         /* authentication key ID       */
   } eigrp;
 
@@ -556,7 +556,7 @@ struct config_options
     in_addr_t lsa_lsid;       /* LSA ID                      */
     in_addr_t lsa_router;     /* LSA advertising router      */
     uint32_t  lsa_sequence;   /* LSA sequence number         */
-    uint32_t  lsa_metric:24;  /* LSA metric                  */
+    uint32_t  lsa_metric: 24; /* LSA metric                  */
     uint8_t   lsa_flags;      /* Router-LSA flags            */
     in_addr_t lsa_link_id;    /* Router-LSA link ID          */
     in_addr_t lsa_link_data;  /* Router-LSA link data        */
@@ -579,4 +579,5 @@ struct config_options
 struct config_options *parse_command_line(char **);
 
 #endif /* CONFIG_H */
+
 

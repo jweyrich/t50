@@ -55,20 +55,21 @@ extern size_t get_number_of_registered_modules(void);
 
 /* Modules functions prototypes.
    They took 'struct config_options' pointer and returns 'size'. */
-extern void icmp  (const struct config_options * const __restrict__, size_t *size);
-extern void igmpv1(const struct config_options * const __restrict__, size_t *size);
-extern void igmpv3(const struct config_options * const __restrict__, size_t *size);
-extern void tcp   (const struct config_options * const __restrict__, size_t *size);
-extern void egp   (const struct config_options * const __restrict__, size_t *size);
-extern void udp   (const struct config_options * const __restrict__, size_t *size);
-extern void ripv1 (const struct config_options * const __restrict__, size_t *size);
-extern void ripv2 (const struct config_options * const __restrict__, size_t *size);
-extern void dccp  (const struct config_options * const __restrict__, size_t *size);
-extern void rsvp  (const struct config_options * const __restrict__, size_t *size);
-extern void ipsec (const struct config_options * const __restrict__, size_t *size);
-extern void eigrp (const struct config_options * const __restrict__, size_t *size);
-extern void ospf  (const struct config_options * const __restrict__, size_t *size);
+extern void icmp  (const struct config_options *const __restrict__, size_t *size);
+extern void igmpv1(const struct config_options *const __restrict__, size_t *size);
+extern void igmpv3(const struct config_options *const __restrict__, size_t *size);
+extern void tcp   (const struct config_options *const __restrict__, size_t *size);
+extern void egp   (const struct config_options *const __restrict__, size_t *size);
+extern void udp   (const struct config_options *const __restrict__, size_t *size);
+extern void ripv1 (const struct config_options *const __restrict__, size_t *size);
+extern void ripv2 (const struct config_options *const __restrict__, size_t *size);
+extern void dccp  (const struct config_options *const __restrict__, size_t *size);
+extern void rsvp  (const struct config_options *const __restrict__, size_t *size);
+extern void ipsec (const struct config_options *const __restrict__, size_t *size);
+extern void eigrp (const struct config_options *const __restrict__, size_t *size);
+extern void ospf  (const struct config_options *const __restrict__, size_t *size);
 /* --- add yours here */
 
 #endif
+
 

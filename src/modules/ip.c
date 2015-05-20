@@ -27,7 +27,7 @@
 
 struct iphdr *ip_header(void *buffer,
                         size_t packet_size,
-                        const struct config_options * __restrict__ co)
+                        const struct config_options *__restrict__ co)
 {
   struct iphdr *ip;
 
@@ -55,4 +55,5 @@ struct iphdr *ip_header(void *buffer,
 
   return ip;
 }
+
 

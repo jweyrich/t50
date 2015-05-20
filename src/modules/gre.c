@@ -20,7 +20,7 @@
 #include <common.h>
 
 struct iphdr *gre_encapsulation(void *buffer,
-                                const struct config_options * const __restrict__ co,
+                                const struct config_options *const __restrict__ co,
                                 uint32_t total_len)
 {
   struct iphdr       *ip, *gre_ip;
@@ -131,7 +131,7 @@ struct iphdr *gre_encapsulation(void *buffer,
 }
 
 void gre_checksum(void *buffer,
-                  const struct config_options * __restrict__ co,
+                  const struct config_options *__restrict__ co,
                   size_t packet_size)
 {
   struct gre_hdr *gre;
@@ -158,7 +158,7 @@ void gre_checksum(void *buffer,
    Description:   This function calculates the size of GRE header.
 
    Targets:       N/A */
-size_t gre_opt_len(const struct config_options * const __restrict__ co)
+size_t gre_opt_len(const struct config_options *const __restrict__ co)
 {
   size_t size;
 
@@ -203,5 +203,6 @@ size_t gre_opt_len(const struct config_options * const __restrict__ co)
 
   return size;
 }
+
 
 

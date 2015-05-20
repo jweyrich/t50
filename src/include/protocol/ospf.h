@@ -67,8 +67,8 @@
 #define LSA_TYPE_OPAQUE_FLOOD 11
 
 #define LSA_TLEN_GENERIC(foo) \
-      (sizeof(struct ospf_lsa_hdr) + \
-      ((foo) * sizeof(uint32_t)))
+  (sizeof(struct ospf_lsa_hdr) + \
+   ((foo) * sizeof(uint32_t)))
 
 #define LSA_TLEN_ROUTER        LSA_TLEN_GENERIC(4)
 #define LSA_TLEN_NETWORK       LSA_TLEN_GENERIC(2)
@@ -108,17 +108,17 @@
 
 /* Calculating OSPF LLS Type/Length/Value length */
 #define ospf_tlv_len(foo, bar, baz) \
-      ((((foo) == OSPF_TYPE_HELLO) || \
-        ((foo) == OSPF_TYPE_DD)) ? \
-        ((bar) ? \
-          OSPF_TLV_HEADER * 2 + \
-          OSPF_LEN_EXTENDED   + \
-          ((baz) ? \
-            OSPF_TLV_HEADER + \
-            OSPF_LEN_CRYPTO : \
-          0) : \
-        0) : \
-      0)
+  ((((foo) == OSPF_TYPE_HELLO) || \
+    ((foo) == OSPF_TYPE_DD)) ? \
+   ((bar) ? \
+    OSPF_TLV_HEADER * 2 + \
+    OSPF_LEN_EXTENDED   + \
+    ((baz) ? \
+     OSPF_TLV_HEADER + \
+     OSPF_LEN_CRYPTO : \
+     0) : \
+    0) : \
+   0)
 
 /* OSPF PROTOCOL STRUCTURES
 
@@ -143,8 +143,8 @@
  */
 struct ospf_hdr
 {
-  uint16_t version:8,              /* version                     */
-           type:8;                 /* type                        */
+  uint16_t version: 8,             /* version                     */
+           type: 8;                /* type                        */
   uint16_t length;                 /* length                      */
   in_addr_t rid;                   /* router ID                   */
   in_addr_t aid;                   /* area ID                     */
@@ -180,8 +180,8 @@ struct ospf_hdr
 struct ospf_auth_hdr
 {
   uint16_t reserved;               /* reserved must be zero       */
-  uint16_t key_id:8,               /* authentication key ID       */
-           length:8;               /* authentication length       */
+  uint16_t key_id: 8,              /* authentication key ID       */
+           length: 8;              /* authentication length       */
   uint32_t sequence;               /* authentication sequence #   */
 };
 
@@ -240,4 +240,5 @@ struct ospf_lls_hdr
 };
 
 #endif  /* __OSPF_H */
+
 

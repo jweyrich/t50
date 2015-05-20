@@ -29,7 +29,7 @@ static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const
 Description:   This function configures and sends the EIGRP packet header.
 
 Targets:       N/A */
-void eigrp(const struct config_options * const __restrict__ co, size_t *size)
+void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
          eigrp_tlv_len, /* EIGRP TLV size. */
@@ -41,8 +41,8 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   memptr_t buffer;
 
-  struct iphdr * ip;
-  struct eigrp_hdr * eigrp;
+  struct iphdr *ip;
+  struct eigrp_hdr *eigrp;
 
   assert(co != NULL);
 
@@ -259,6 +259,7 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
                                   EIGRP_TLEN_EXTERNAL) +
                                  EIGRP_DADDR_LENGTH(prefix));
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.next_hop));
+
       /*
        * The only difference between Internal and External Routes TLVs is 20
        * octets. Building 20 extra octets for IP External Routes TLV.
@@ -295,137 +296,139 @@ void eigrp(const struct config_options * const __restrict__ co, size_t *size)
           EIGRP_TLEN_EXTERNAL) +
         EIGRP_DADDR_LENGTH(prefix); */
     }
+
     /*
      * In the other hand,   EIGRP Packet for Hello can carry Paremeter,
      * Software Version, Multicast Sequence or nothing (Acknowledge).
      */
   }
-  else if (co->eigrp.opcode == EIGRP_OPCODE_HELLO)
-  {
-    /*
-     * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
-     * be built. I am not sure whether any TLV's precedence will impact
-     * in the routers'  processing of  EIGRP Packet,  so I am following
-     * exactly what I saw on live  EIGRP PCAP files.  Read the code and
-     * you will understand what I am talking about.
-     */
-    switch (co->eigrp.type)
+  else
+    if (co->eigrp.opcode == EIGRP_OPCODE_HELLO)
     {
-    case EIGRP_TYPE_PARAMETER:
-    case EIGRP_TYPE_SOFTWARE:
-    case EIGRP_TYPE_MULTICAST:
       /*
-       * Enhanced Interior Gateway Routing Protocol (EIGRP)
-       *
-       * General Parameter TLV (EIGRP Type = 0x0001)
-       *
-       *    0                   1                   2                   3 3
-       *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *   |             Type              |            Length             |
-       *   +---------------------------------------------------------------+
-       *   |      K1       |      K2       |      K3       |      K4       |
-       *   +---------------------------------------------------------------+
-       *   |      K5       |    Reserved   |           Hold Time           |
-       *   +---------------------------------------------------------------+
+       * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
+       * be built. I am not sure whether any TLV's precedence will impact
+       * in the routers'  processing of  EIGRP Packet,  so I am following
+       * exactly what I saw on live  EIGRP PCAP files.  Read the code and
+       * you will understand what I am talking about.
        */
-      *buffer.word_ptr++ = htons(EIGRP_TYPE_PARAMETER);
-      *buffer.word_ptr++ = htons(co->eigrp.length ?
-                                 co->eigrp.length : EIGRP_TLEN_PARAMETER);
-      *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K1) ?
-                           __RND(co->eigrp.k1) : co->eigrp.k1;
-      *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K2) ?
-                           __RND(co->eigrp.k2) : co->eigrp.k2;
-      *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K3) ?
-                           __RND(co->eigrp.k3) : co->eigrp.k3;
-      *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K4) ?
-                           __RND(co->eigrp.k4) : co->eigrp.k4;
-      *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K5) ?
-                           __RND(co->eigrp.k5) : co->eigrp.k5;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(co->eigrp.hold);
-
-      /* DON'T NEED THIS. */
-      /* length += EIGRP_TLEN_PARAMETER; */
-
-      /* Going to the next TLV, if it needs to do sco-> */
-      if (co->eigrp.type == EIGRP_TYPE_SOFTWARE ||
-          co->eigrp.type == EIGRP_TYPE_MULTICAST)
+      switch (co->eigrp.type)
       {
+      case EIGRP_TYPE_PARAMETER:
+      case EIGRP_TYPE_SOFTWARE:
+      case EIGRP_TYPE_MULTICAST:
         /*
          * Enhanced Interior Gateway Routing Protocol (EIGRP)
          *
-         * Software Version TLV (EIGRP Type = 0x0004)
+         * General Parameter TLV (EIGRP Type = 0x0001)
          *
          *    0                   1                   2                   3 3
          *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
          *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          *   |             Type              |            Length             |
          *   +---------------------------------------------------------------+
-         *   |   IOS Major   |   IOS Minor   |  EIGRP Major  |  EIGRP Minor  |
+         *   |      K1       |      K2       |      K3       |      K4       |
+         *   +---------------------------------------------------------------+
+         *   |      K5       |    Reserved   |           Hold Time           |
          *   +---------------------------------------------------------------+
          */
-        *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
+        *buffer.word_ptr++ = htons(EIGRP_TYPE_PARAMETER);
         *buffer.word_ptr++ = htons(co->eigrp.length ?
-                                   co->eigrp.length : EIGRP_TLEN_SOFTWARE);
-        *buffer.byte_ptr++ = __RND(co->eigrp.ios_major);
-        *buffer.byte_ptr++ = __RND(co->eigrp.ios_minor);
-        *buffer.byte_ptr++ = __RND(co->eigrp.ver_major);
-        *buffer.byte_ptr++ = __RND(co->eigrp.ver_minor);
+                                   co->eigrp.length : EIGRP_TLEN_PARAMETER);
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K1) ?
+                             __RND(co->eigrp.k1) : co->eigrp.k1;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K2) ?
+                             __RND(co->eigrp.k2) : co->eigrp.k2;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K3) ?
+                             __RND(co->eigrp.k3) : co->eigrp.k3;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K4) ?
+                             __RND(co->eigrp.k4) : co->eigrp.k4;
+        *buffer.byte_ptr++ = TEST_BITS(co->eigrp.values, EIGRP_KVALUE_K5) ?
+                             __RND(co->eigrp.k5) : co->eigrp.k5;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(co->eigrp.hold);
 
         /* DON'T NEED THIS. */
-        /* length += EIGRP_TLEN_SOFTWARE; */
+        /* length += EIGRP_TLEN_PARAMETER; */
 
         /* Going to the next TLV, if it needs to do sco-> */
-        if (co->eigrp.type == EIGRP_TYPE_MULTICAST)
+        if (co->eigrp.type == EIGRP_TYPE_SOFTWARE ||
+            co->eigrp.type == EIGRP_TYPE_MULTICAST)
         {
           /*
            * Enhanced Interior Gateway Routing Protocol (EIGRP)
            *
-           * Sequence TLV (EIGRP Type = 0x0003)
+           * Software Version TLV (EIGRP Type = 0x0004)
            *
            *    0                   1                   2                   3 3
            *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
            *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
            *   |             Type              |            Length             |
            *   +---------------------------------------------------------------+
-           *   |  Addr Length  //
-           *   +---------------+
-           *
-           *   +---------------------------------------------------------------+
-           *   //                         IP Address                           |
+           *   |   IOS Major   |   IOS Minor   |  EIGRP Major  |  EIGRP Minor  |
            *   +---------------------------------------------------------------+
            */
-          *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
+          *buffer.word_ptr++ = htons(EIGRP_TYPE_SOFTWARE);
           *buffer.word_ptr++ = htons(co->eigrp.length ?
-                                     co->eigrp.length : EIGRP_TLEN_SEQUENCE);
-          *buffer.byte_ptr++ = sizeof(co->eigrp.address);
-          *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.address));
-
-          /*
-           * Enhanced Interior Gateway Routing Protocol (EIGRP)
-           *
-           * Next Multicast Sequence TLV (EIGRP Type = 0x0005)
-           *
-           *    0                   1                   2                   3 3
-           *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-           *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-           *   |             Type              |            Length             |
-           *   +---------------------------------------------------------------+
-           *   |                    Next Multicast Sequence                    |
-           *   +---------------------------------------------------------------+
-           */
-          *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
-          *buffer.word_ptr++ = htons(co->eigrp.length ?
-                                     co->eigrp.length : EIGRP_TLEN_MULTICAST);
-          *buffer.dword_ptr++ = htonl(__RND(co->eigrp.multicast));
+                                     co->eigrp.length : EIGRP_TLEN_SOFTWARE);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ios_major);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ios_minor);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ver_major);
+          *buffer.byte_ptr++ = __RND(co->eigrp.ver_minor);
 
           /* DON'T NEED THIS. */
-          /* length += EIGRP_TLEN_MULTICAST + EIGRP_TLEN_SEQUENCE; */
+          /* length += EIGRP_TLEN_SOFTWARE; */
+
+          /* Going to the next TLV, if it needs to do sco-> */
+          if (co->eigrp.type == EIGRP_TYPE_MULTICAST)
+          {
+            /*
+             * Enhanced Interior Gateway Routing Protocol (EIGRP)
+             *
+             * Sequence TLV (EIGRP Type = 0x0003)
+             *
+             *    0                   1                   2                   3 3
+             *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             *   |             Type              |            Length             |
+             *   +---------------------------------------------------------------+
+             *   |  Addr Length  //
+             *   +---------------+
+             *
+             *   +---------------------------------------------------------------+
+             *   //                         IP Address                           |
+             *   +---------------------------------------------------------------+
+             */
+            *buffer.word_ptr++ = htons(EIGRP_TYPE_SEQUENCE);
+            *buffer.word_ptr++ = htons(co->eigrp.length ?
+                                       co->eigrp.length : EIGRP_TLEN_SEQUENCE);
+            *buffer.byte_ptr++ = sizeof(co->eigrp.address);
+            *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.address));
+
+            /*
+             * Enhanced Interior Gateway Routing Protocol (EIGRP)
+             *
+             * Next Multicast Sequence TLV (EIGRP Type = 0x0005)
+             *
+             *    0                   1                   2                   3 3
+             *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             *   |             Type              |            Length             |
+             *   +---------------------------------------------------------------+
+             *   |                    Next Multicast Sequence                    |
+             *   +---------------------------------------------------------------+
+             */
+            *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
+            *buffer.word_ptr++ = htons(co->eigrp.length ?
+                                       co->eigrp.length : EIGRP_TLEN_MULTICAST);
+            *buffer.dword_ptr++ = htonl(__RND(co->eigrp.multicast));
+
+            /* DON'T NEED THIS. */
+            /* length += EIGRP_TLEN_MULTICAST + EIGRP_TLEN_SEQUENCE; */
+          }
         }
       }
     }
-  }
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
@@ -457,6 +460,7 @@ static size_t eigrp_hdr_len(const uint16_t foo,
           bar == EIGRP_TYPE_SOFTWARE)))
       size += EIGRP_TLEN_AUTH;
   }
+
   /*
    * AFAIK,   there are differences when building the EIGRP packet for
    * Update, Request, Query and Reply.  Any EIGRP PCAP file I saw does
@@ -479,39 +483,45 @@ static size_t eigrp_hdr_len(const uint16_t foo,
       size += EIGRP_TLEN_INTERNAL;
       size += EIGRP_DADDR_LENGTH(baz);
     }
-    else if (bar == EIGRP_TYPE_EXTERNAL)
-    {
-      size += EIGRP_TLEN_EXTERNAL;
-      size += EIGRP_DADDR_LENGTH(baz);
-    }
+    else
+      if (bar == EIGRP_TYPE_EXTERNAL)
+      {
+        size += EIGRP_TLEN_EXTERNAL;
+        size += EIGRP_DADDR_LENGTH(baz);
+      }
+
     /*
      * In the other hand, EIGRP Packet for Hello can carry Parameter,
      * Software Version, Multicast Sequence or nothing (Acknowledge).
      */
   }
-  else if (foo == EIGRP_OPCODE_HELLO)
-  {
-    /*
-     * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
-     * be built. I am not sure whether any TLV's precedence will impact
-     * in the routers'  processing of  EIGRP Packet,  so I am following
-     * exactly what I saw on live  EIGRP PCAP files.  Read the code and
-     * you will understand what I am talking about.
-     */
-    switch (bar)
+  else
+    if (foo == EIGRP_OPCODE_HELLO)
     {
-    case EIGRP_TYPE_MULTICAST:
-      size += EIGRP_TLEN_MULTICAST;
-      size += EIGRP_TLEN_SEQUENCE;
-    case EIGRP_TYPE_SOFTWARE:
-      size += EIGRP_TLEN_SOFTWARE;
-    case EIGRP_TYPE_PARAMETER:
-      size += EIGRP_TLEN_PARAMETER;
-      break;
+      /*
+       * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
+       * be built. I am not sure whether any TLV's precedence will impact
+       * in the routers'  processing of  EIGRP Packet,  so I am following
+       * exactly what I saw on live  EIGRP PCAP files.  Read the code and
+       * you will understand what I am talking about.
+       */
+      switch (bar)
+      {
+      case EIGRP_TYPE_MULTICAST:
+        size += EIGRP_TLEN_MULTICAST;
+        size += EIGRP_TLEN_SEQUENCE;
+
+      case EIGRP_TYPE_SOFTWARE:
+        size += EIGRP_TLEN_SOFTWARE;
+
+      case EIGRP_TYPE_PARAMETER:
+        size += EIGRP_TLEN_PARAMETER;
+        break;
+      }
     }
-  }
 
   return size;
 }
+
 
 

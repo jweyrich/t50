@@ -28,7 +28,7 @@ static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, con
 Description:   This function configures and sends the RSVP packet header.
 
 Targets:       N/A */
-void rsvp(const struct config_options * const __restrict__ co, size_t *size)
+void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
@@ -37,10 +37,10 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
   /* Packet and Checksum. */
   memptr_t buffer;
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* RSVP Common header. */
-  struct rsvp_common_hdr * rsvp;
+  struct rsvp_common_hdr *rsvp;
 
   assert(co != NULL);
 
@@ -282,7 +282,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
                                 RSVP_LENGTH_SENDER_TSPEC) / 4);
     *buffer.byte_ptr++ = co->rsvp.tspec;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons(TSPEC_SERVICES(co->rsvp.tspec)/4);
+    *buffer.word_ptr++ = htons(TSPEC_SERVICES(co->rsvp.tspec) / 4);
 
     /* Identifying the RSVP TSPEC and building it. */
     switch (co->rsvp.tspec)
@@ -375,7 +375,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
      */
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_SERVICE;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.word_ptr++ = htons((ADSPEC_PARAMETER_LENGTH - ADSPEC_MESSAGE_HEADER)/4);
+    *buffer.word_ptr++ = htons((ADSPEC_PARAMETER_LENGTH - ADSPEC_MESSAGE_HEADER) / 4);
     *buffer.byte_ptr++ = ADSPEC_PARAMETER_ISHOPCNT;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
@@ -434,19 +434,19 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
       *buffer.word_ptr++ = htons((ADSPEC_GUARANTEED_LENGTH - ADSPEC_MESSAGE_HEADER) / 4);
       *buffer.byte_ptr++ = 133;
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Ctot));
       *buffer.byte_ptr++ = 134;
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dtot));
       *buffer.byte_ptr++ = 135;
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Csum));
       *buffer.byte_ptr++ = 136;
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER/4);
+      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dsum));
 
       /* Going to the next ADSPEC, if it needs to do sco-> */
@@ -471,6 +471,7 @@ void rsvp(const struct config_options * const __restrict__ co, size_t *size)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
       }
+
       break;
     }
   }
@@ -695,4 +696,5 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
 
   return size;
 }
+
 

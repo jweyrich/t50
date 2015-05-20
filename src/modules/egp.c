@@ -24,15 +24,15 @@
 Description:   This function configures and sends the EGP packet header.
 
 Targets:       N/A */
-void egp(const struct config_options * const __restrict__ co, size_t *size)
+void egp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen;   /* GRE options size. */
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* EGP header and EGP acquire header. */
-  struct egp_hdr * egp;
-  struct egp_acq_hdr * egp_acq;
+  struct egp_hdr *egp;
+  struct egp_acq_hdr *egp_acq;
 
   assert(co != NULL);
 
@@ -81,4 +81,5 @@ void egp(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+
 

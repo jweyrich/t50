@@ -98,9 +98,9 @@
 #define TSPECT_TOKEN_BUCKET_SERVICE 127
 #define TSPEC_TOKEN_BUCKET_LENGTH   24
 #define TSPEC_SERVICES(foo) \
-    ((((foo) == TSPEC_TRAFFIC_SERVICE) || \
-      ((foo) == TSPEC_GUARANTEED_SERVICE)) ? \
-      TSPEC_TOKEN_BUCKET_LENGTH : 0)
+  ((((foo) == TSPEC_TRAFFIC_SERVICE) || \
+    ((foo) == TSPEC_GUARANTEED_SERVICE)) ? \
+   TSPEC_TOKEN_BUCKET_LENGTH : 0)
 
 /* RSVP ADSPEC Class Service */
 #define ADSPEC_PARAMETER_SERVICE  1
@@ -111,25 +111,25 @@
 #define ADSPEC_SERVDATA_HEADER      4
 #define ADSPEC_PARAMETER_DATA       4
 #define ADSPEC_PARAMETER_LENGTH \
-      (ADSPEC_MESSAGE_HEADER   + \
-      ((ADSPEC_SERVDATA_HEADER + \
-      ADSPEC_PARAMETER_DATA) * 4))
+  (ADSPEC_MESSAGE_HEADER   + \
+   ((ADSPEC_SERVDATA_HEADER + \
+     ADSPEC_PARAMETER_DATA) * 4))
 #define ADSPEC_PARAMETER_ISHOPCNT   4
 #define ADSPEC_PARAMETER_BANDWIDTH  6
 #define ADSPEC_PARAMETER_LATENCY    8
 #define ADSPEC_PARAMETER_COMPMTU    10
 #define ADSPEC_GUARANTEED_LENGTH \
-      (ADSPEC_MESSAGE_HEADER   + \
-      ((ADSPEC_SERVDATA_HEADER + \
-      ADSPEC_PARAMETER_DATA) * 4))
+  (ADSPEC_MESSAGE_HEADER   + \
+   ((ADSPEC_SERVDATA_HEADER + \
+     ADSPEC_PARAMETER_DATA) * 4))
 #define ADSPEC_CONTROLLED_LENGTH    ADSPEC_MESSAGE_HEADER
 #define ADSPEC_SERVICES(foo) \
-      (ADSPEC_PARAMETER_LENGTH + \
-      ((((foo) == ADSPEC_CONTROLLED_SERVICE) || \
-       ((foo) == ADSPEC_GUARANTEED_SERVICE)) ? \
-        ADSPEC_GUARANTEED_LENGTH : 0) + \
-      (((foo) == ADSPEC_CONTROLLED_SERVICE) ? \
-        ADSPEC_CONTROLLED_LENGTH : 0))
+  (ADSPEC_PARAMETER_LENGTH + \
+   ((((foo) == ADSPEC_CONTROLLED_SERVICE) || \
+     ((foo) == ADSPEC_GUARANTEED_SERVICE)) ? \
+    ADSPEC_GUARANTEED_LENGTH : 0) + \
+   (((foo) == ADSPEC_CONTROLLED_SERVICE) ? \
+    ADSPEC_CONTROLLED_LENGTH : 0))
 
 /* RSVP PROTOCOL STRUCTURES
 
@@ -150,13 +150,13 @@
 struct rsvp_common_hdr
 {
 #if defined(__LITTLE_ENDIAN_BITFIELD)
-  uint16_t flags:4,                /* flags                       */
-           version:4,              /* version                     */
-           type:8;                 /* message type                */
+  uint16_t flags: 4,               /* flags                       */
+           version: 4,             /* version                     */
+           type: 8;                /* message type                */
 #elif defined(__BIG_ENDIAN_BITFIELD)
-  uint16_t version:4,              /* version                     */
-           flags:4,                /* flags                       */
-           type:8;                 /* message type                */
+  uint16_t version: 4,             /* version                     */
+           flags: 4,               /* flags                       */
+           type: 8;                /* message type                */
 #else
 # error "Adjust your <asm/byteorder.h> defines"
 #endif
@@ -167,4 +167,5 @@ struct rsvp_common_hdr
 };
 
 #endif  /* __RSVP_H */
+
 

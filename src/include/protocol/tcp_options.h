@@ -65,7 +65,7 @@
  *  zeros.
  */
 #define TCPOLEN_PADDING(foo) \
-      (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
+  (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
 
 /* TCP Options bitmask. */
 #define TCP_OPTION_MSS        0x01
@@ -77,4 +77,5 @@
 #define TCP_OPTION_SACK_EDGE  0x40
 
 #endif  /* __TCP_OPTIONS_H */
+
 

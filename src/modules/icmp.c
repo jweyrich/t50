@@ -24,14 +24,14 @@
 Description:   This function configures and sends the ICMP packet header.
 
 Targets:       N/A */
-void icmp(const struct config_options * const __restrict__ co, size_t *size)
+void icmp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen;   /* GRE options size. */
 
-  struct iphdr * ip;
+  struct iphdr *ip;
 
   /* ICMP header. */
-  struct icmphdr * icmp;
+  struct icmphdr *icmp;
 
   assert(co != NULL);
 
@@ -57,6 +57,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   icmp->code             = co->icmp.code;
   icmp->un.echo.id       = htons(__RND(co->icmp.id));
   icmp->un.echo.sequence = htons(__RND(co->icmp.sequence));
+
   if (co->icmp.type == ICMP_REDIRECT)
     switch (co->icmp.code)
     {
@@ -64,6 +65,7 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
     case ICMP_REDIR_NET:
       icmp->un.gateway = htonl(INADDR_RND(co->icmp.gateway));
     }
+
   icmp->checksum = 0;
 
   /* Computing the checksum. */
@@ -72,4 +74,5 @@ void icmp(const struct config_options * const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
+
 

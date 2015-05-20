@@ -55,10 +55,10 @@
 #define EIGRP_TLEN_EXTERNAL    45
 
 #define EIGRP_DADDR_BUILD(foo, bar) \
-      ((foo) &= htonl(~(0xffffffff >> (((bar) >> 3) * 8))))
+  ((foo) &= htonl(~(0xffffffff >> (((bar) >> 3) * 8))))
 
 #define EIGRP_DADDR_LENGTH(foo) \
-      ((((foo) >> 3) & 3) + ((foo) % 8 ? 1 : 0))
+  ((((foo) >> 3) & 3) + ((foo) % 8 ? 1 : 0))
 
 /* EIGRP K Values bitmask */
 #define EIGRP_KVALUE_K1   0x01
@@ -101,8 +101,8 @@
 /* EIGRP PROTOCOL STRUCTURES */
 struct eigrp_hdr
 {
-  uint16_t version:8,              /* version                     */
-           opcode:8;               /* opcode                      */
+  uint16_t version: 8,             /* version                     */
+           opcode: 8;              /* opcode                      */
   uint16_t check;                  /* checksum                    */
   uint32_t flags;                  /* flags                       */
   uint32_t sequence;               /* sequence number             */
@@ -112,4 +112,5 @@ struct eigrp_hdr
 };
 
 #endif  /* __EIGRP_H */
+
 
