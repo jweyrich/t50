@@ -40,7 +40,8 @@
 #define CIDR_MAXIMUM 32 // fix #7
 
 /* 24 bits?! */
-#define MAXIMUM_IP_ADDRESSES  16777215
+/* FIX: Changed to hexadecimal 'cause is easier to debug. */
+#define MAXIMUM_IP_ADDRESSES  0xffffffU
 
 /* #define INADDR_ANY 0 */ /* NOTE: Already defined @ linux/in.h */
 #define IPPORT_ANY 0
@@ -77,6 +78,3 @@
 #define IS_CHILD_PID(p) ((p) == 0)
 
 #endif
-
-
-

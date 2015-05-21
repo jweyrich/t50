@@ -151,29 +151,28 @@ int main(int argc, char *argv[])
     /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
 
+    /* FIXME: Shouldn't be +1? */
     if (cidr_ptr->hostid)
       co->ip.daddr += RANDOM() % cidr_ptr->hostid;
 
+    /* We need the address in network order now. */
     co->ip.daddr = htonl(co->ip.daddr);
-
 
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
 
 #ifdef __HAVE_DEBUG__
-
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
       fprintf(stderr, "[DEBUG] Protocol %s packet size (%zd bytes) exceed max. Ethernet packet data length!\n",
               ptbl->acronym, size);
-
 #endif
 
     if (!send_packet(packet, size, co))
 #ifdef __HAVE_DEBUG__
       error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
-
+      /* continue trying to send other packets on debug mode! */
 #else
       fatal_error("Unspecified error sending a packet.");
 #endif
@@ -199,7 +198,15 @@ int main(int argc, char *argv[])
 
     /* Wait 5 seconds for child process, then closes the program anyway. */
     alarm(5);
-    wait(&status);
+
+    /* This could block, until SIGALARM interrupts! */
+    if (wait(&status) == -1)
+    {
+      /* If wait() was interrupted, then kills ungracefully the child process! */
+      kill(pid, SIGKILL);
+    }
+    else
+      alarm(0);
 #endif
 
     /* FIX: To graciously end the program, only the parent process can close the socket.
@@ -223,7 +230,6 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-
 #pragma GCC diagnostic pop
 
 /* This function handles interruptions. */
@@ -290,6 +296,10 @@ static void initialize(void)
           timeout when waiting for the child to terminate. */
   sigaction(SIGALRM, &sa, NULL);
 #endif
+
+  /* We don't need SIGCHLD */
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGCHLD, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */

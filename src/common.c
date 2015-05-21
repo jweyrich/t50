@@ -27,7 +27,7 @@ size_t current_packet_size = 0;
 static size_t number_of_modules = 0;
 
 /* NOTE: This routine shouldn't be inlined due to its compliexity. */
-uint32_t NETMASK_RND(uint32_t foo)
+uint32_t __attribute__((noinline)) NETMASK_RND(uint32_t foo)
 {
   uint32_t t;
 
@@ -54,7 +54,7 @@ void alloc_packet(size_t new_packet_size)
   if (new_packet_size > current_packet_size)
   {
     if ((p = realloc(packet, new_packet_size)) == NULL)
-      fatal_error("Error reallocating packet buffer");
+      fatal_error("Error reallocating packet buffer.");
 
     packet = p;
     current_packet_size = new_packet_size;
@@ -106,11 +106,12 @@ void error(char *fmt, ...)
   }
 
   va_start(args, fmt);
-  vfprintf(stderr, str, args);
+    vfprintf(stderr, str, args);
   va_end(args);
   free(str);
 }
 
+/* Same as error(), but exits with errorcode EXIT_FAILURE. */
 void __attribute__((noreturn)) fatal_error(char *fmt, ...)
 {
   char *str;
@@ -119,7 +120,7 @@ void __attribute__((noreturn)) fatal_error(char *fmt, ...)
   if ((asprintf(&str, PACKAGE ": %s\n", fmt)) != -1)
   {
     va_start(args, fmt);
-    vfprintf(stderr, str, args);
+      vfprintf(stderr, str, args);
     va_end(args);
     free(str);
   }

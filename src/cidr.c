@@ -21,7 +21,8 @@
 
 static struct cidr cidr = {0, 0};
 
-/* CIDR configuration tiny C algorithm */
+/* CIDR configuration tiny C algorithm 
+   This will setup cidr structure with values in host order. */
 struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 {
   /* FIXME: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
@@ -56,6 +57,24 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
   {
     uint32_t netmask;
 
+    //
+    // Calc maximum number of ip addresses based on cidr.
+    //
+    // These will cause "internal error":
+    // 0 bits: 0xfffffffe ok
+    // 1 bit : 0x7ffffffe ok
+    // ...
+    //
+    // These will work well:
+    // 8 bits : 0x00fffffe ok
+    // 16 bits: 0x0000fffe ok
+    // 30 bits: 2 ok
+    //
+    // This will work as if 32 bits.
+    // 31 bits: 0
+    //
+    // hostid == 0 means: use the address as is!
+    //
     cidr.hostid = (1U << (32 - bits)) - 2U;
 
     /* XXX Sanitizing the maximum host identifier's IP addresses.
@@ -63,14 +82,14 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
     if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
     {
       error("internal error detecded -- please, report.\n"
-            "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error",
+            "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error.",
             cidr.hostid, MAXIMUM_IP_ADDRESSES);
 
       return NULL;
     }
 
     netmask = ~(~0U >> bits);
-    cidr.__1st_addr = (ntohl(address) & netmask) + 1;
+    cidr.__1st_addr = (ntohl(address) & netmask) + 1; // avoid bit 0 = 0 (loopback).
   }
   else
   {
