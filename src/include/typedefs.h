@@ -30,7 +30,9 @@ typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
 
 typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, size_t *);
 
-/* This will ease the buffers pointers manipulations. */
+/** 
+ * Union used to ease buffer pointer manipulation.
+ */
 typedef union
 {
   void    *ptr;
@@ -42,7 +44,7 @@ typedef union
 } memptr_t;
 
 /* Common protocol structures used by code */
-/*
+/**
  * User Datagram Protocol (RFC 768)
  *
  * Checksum is the 16-bit one's complement of the one's complement sum of a
