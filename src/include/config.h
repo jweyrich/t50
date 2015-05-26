@@ -285,13 +285,16 @@ enum
   OPTION_OSPF_AUTH_SEQUENCE
 };
 
-/* Config structures */
+/** @struct cidr
+    T50 cidr structure. */
 struct cidr
 {
   uint32_t  hostid;                 /* hosts identifiers           */
   in_addr_t __1st_addr;             /* first IP address            */
 };
 
+/** @struct config_options
+    T50 configuration structure. */
 struct config_options
 {
   /* XXX COMMON OPTIONS                                            */

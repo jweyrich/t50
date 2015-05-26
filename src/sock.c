@@ -1,3 +1,4 @@
+/** @file sock.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -32,7 +33,11 @@ static socket_t fd = -1;
 static int wait_for_io(int);
 static int socket_send(int, struct sockaddr_in *, void *, size_t);
 
-/* Socket configuration */
+/**
+ * Creates and configure a raw socket.
+ *
+ * @return TRUE (success!) or FALSE (error).
+ */
 int create_socket(void)
 {
   socklen_t len;
@@ -124,6 +129,9 @@ int create_socket(void)
   return TRUE;
 }
 
+/**
+ * Tiny routine used to make sure the socket file descriptor is closed.
+ */
 void close_socket(void)
 {
   /* Close only if the descriptor is valid. */
@@ -131,6 +139,14 @@ void close_socket(void)
     close(fd);
 }
 
+/**
+ * Send a packet through the wire.
+ *
+ * @param buffer Pointer to the packet buffer.
+ * @param size Size of the buffer.
+ * @param co Pointer to configurations for T50.
+ * @return TRUE (success) or FALSE (error).
+ */
 int send_packet(const void *const buffer,
                 size_t size,
                 const struct config_options *const __restrict__ co)
@@ -150,6 +166,7 @@ int send_packet(const void *const buffer,
   assert(size > 0);
   assert(co != NULL);
 
+  /* Use socket_send(), below. */
   if (socket_send(fd, &sin, (void *)buffer, size) == -1)
   {
     if (errno == EPERM)

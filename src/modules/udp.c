@@ -1,3 +1,4 @@
+/** @file udp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,11 +20,15 @@
 
 #include <common.h>
 
-/* Function Name: UDP packet header configuration.
-
-Description:   This function configures and sends the UDP packet header.
-
-Targets:       N/A */
+/**
+ * UDP packet header configuration.
+ *
+ * Configures the UDP packet header.
+ * A pointer to this function will be on modules table.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void udp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen;   /* GRE options size. */

@@ -1,3 +1,4 @@
+/** @file cidr.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,7 +20,15 @@
 
 #include <common.h>
 
-/* Calculates checksum */
+/**
+ * Calculates checksum. 
+ *
+ * RFC 1071 compliant checksum routine.
+ *
+ * @param data Pointer to buffer.
+ * @param length Length of the buffer.
+ * @return 16 bits checksum.
+ */
 uint16_t cksum(void *data, size_t length)
 {
   uint32_t sum;

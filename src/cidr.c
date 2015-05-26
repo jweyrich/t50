@@ -1,3 +1,4 @@
+/** @file cidr.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -21,14 +22,21 @@
 
 static struct cidr cidr = {0, 0};
 
-/* CIDR configuration tiny C algorithm 
-   This will setup cidr structure with values in host order. */
+/**
+ * CIDR configuration tiny C algorithm.
+ *
+ * This will setup cidr structure with values in host order. 
+ *
+ * @param bits Number of "valid" bits on netmask.
+ * @param address IP address from command line.
+ * @return Pointer to cidr structure.
+ */
 struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 {
   /* FIXME: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
 
   /*
-   * @nbrito -- Thu Dec 23 13:06:39 BRST 2010
+   * nbrito -- Thu Dec 23 13:06:39 BRST 2010
    * Here is a description of how to calculate,  correctly,  the number of
    * hosts and IP addresses based on CIDR -- three instructions line.
    *
@@ -99,5 +107,3 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
 
   return &cidr;
 }
-
-

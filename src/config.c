@@ -1,3 +1,4 @@
+/** @file common.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *

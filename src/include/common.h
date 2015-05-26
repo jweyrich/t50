@@ -71,7 +71,7 @@ extern size_t   current_packet_size; /* Made public, if it's necessary! updated 
 extern void     alloc_packet(size_t);
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
-extern uint32_t NETMASK_RND(uint32_t);
+extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 
 /* Common routines used by code */
 extern struct cidr *config_cidr(uint32_t, in_addr_t);
@@ -93,7 +93,7 @@ extern uint32_t     readrand(void);
 #endif
 
 extern void error(char *, ...);
-extern void fatal_error(char *, ...);
+extern void fatal_error(char *, ...) __attribute__((noreturn));
 
 #endif /* __COMMON_H */
 

@@ -1,3 +1,4 @@
+/** @file gre.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,14 @@
 
 #include <common.h>
 
+/**
+ * GRE encapsulation routine.
+ *
+ * @param buffer Pointer to the begining of the packet buffer.
+ * @param co Pointer to T50 configuration structure.
+ * @param total_len Length of the buffer.
+ * @return Pointer to IP header (the begining of the buffer).
+ */
 struct iphdr *gre_encapsulation(void *buffer,
                                 const struct config_options *const __restrict__ co,
                                 uint32_t total_len)
@@ -130,6 +139,13 @@ struct iphdr *gre_encapsulation(void *buffer,
   return gre_ip;
 }
 
+/**
+ * Calculates GRE checksum.
+ *
+ * @param buffer Pointer to the begining of packet buffer.
+ * @param co Pointer to T50 configuration structure.
+ * @packet_size Size of the packet.
+ */
 void gre_checksum(void *buffer,
                   const struct config_options *__restrict__ co,
                   size_t packet_size)
@@ -153,11 +169,7 @@ void gre_checksum(void *buffer,
   }
 }
 
-/* Function Name: GRE header size calculation.
-
-   Description:   This function calculates the size of GRE header.
-
-   Targets:       N/A */
+/* GRE header size calculation. */
 size_t gre_opt_len(const struct config_options *const __restrict__ co)
 {
   size_t size;

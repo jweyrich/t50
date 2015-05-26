@@ -1,3 +1,4 @@
+/** @file t50.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -32,7 +33,9 @@ static const char *get_month(unsigned);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-/* Main function launches all T50 modules */
+/**
+ * Main function launches all T50 modules 
+ */
 int main(int argc, char *argv[])
 {
   struct config_options *co;
@@ -57,10 +60,8 @@ int main(int argc, char *argv[])
     printf("Sending %u packets...\n", co->threshold);
 
 #ifdef __HAVE_TURBO__
-
   if (co->turbo)
     puts("Turbo mode active...");
-
 #endif
 
   if (co->bits)
@@ -77,7 +78,6 @@ int main(int argc, char *argv[])
   SRANDOM(time(NULL));
 
 #ifdef  __HAVE_TURBO__
-
   if (co->turbo)
   {
     /* Decides if it's necessary to fork a new process. */
@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
       co->threshold = new_threshold;
     }
   }
-
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */

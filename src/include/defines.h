@@ -20,7 +20,10 @@
 #ifndef __DEFINES_INCLUDED__
 #define __DEFINES_INCLUDED__
 
+/** @def PACKAGE Defines the project name. */
 #define PACKAGE "T50"
+
+/** @def VERSION Defines the T50 current version. */
 #define VERSION "5.5"
 #define SITE    "http://github.com/fredericopissarra/t50"
 
@@ -39,6 +42,9 @@
 #define CIDR_MINIMUM 8
 #define CIDR_MAXIMUM 32 // fix #7
 
+/** @def MAXIMUM_IP_ADDRESSES
+ *  MAXIMUM_IP_ADDRESSES defines the maximum number of iterations on
+    main loop, for multiple targets (defined by cidr). */
 /* 24 bits?! */
 /* FIX: Changed to hexadecimal 'cause is easier to debug. */
 #define MAXIMUM_IP_ADDRESSES  0xffffffU
@@ -53,15 +59,17 @@
 
 #define auth_hmac_md5_len(foo) ((foo) ? AUTH_TLEN_HMACMD5 : 0)
 
-/* T50 DEFINITIONS. */
+/** @def IPPROTO_T50 This is our new ficticious protocol. */
 #define IPPROTO_T50        69
 #define FIELD_MUST_BE_NULL NULL
 #define FIELD_MUST_BE_ZERO 0
 
-/* NOTE: Macro used to test bitmasks */
+/** @def TEST_BITS Macro used to isolate bits from a value. */
 #define TEST_BITS(x,bits) ((x) & (bits))
 
-/* Randomizer macros and function */
+/** 
+ * @def RANDOM Macro used to get random value.
+ * @def SRANDOM Macro used to initialize random seed on LCPNG. */
 #ifdef __HAVE_RDRAND__
 #define RANDOM() readrand()
 #define SRANDOM(x) {}
@@ -70,6 +78,7 @@
 #define SRANDOM(x) { srandom((x)); }
 #endif
 
+/** @def __RND Macro used to conditionally generate a random value. */
 #define __RND(foo) (((foo) == 0) ? RANDOM() : (foo))
 #define INADDR_RND(foo) __RND((foo))
 #define IPPORT_RND(foo) __RND((foo))

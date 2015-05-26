@@ -1,3 +1,4 @@
+/** @file resolv.c */ 
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,7 +20,12 @@
 
 #include <common.h>
 
-/* IP address and name resolving */
+/**
+ * IPv4 name resolver using getaddrinfo().
+ *
+ * @param name The name, as in "www.target.com"...
+ * @return IPv4 address found, or 0 if not found.
+ */
 in_addr_t resolv(char *name)
 {
 #pragma GCC diagnostic push
@@ -76,5 +82,3 @@ in_addr_t resolv(char *name)
 
   return addr;
 }
-
-

@@ -1,3 +1,4 @@
+/** @file tcp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -24,11 +25,15 @@
  */
 static size_t tcp_options_len(const uint8_t, int, int);
 
-/* Function Name: TCP packet header configuration.
-
-Description:   This function configures and sends the TCP packet header.
-
-Targets:       N/A */
+/**
+ * TCP packet header configuration.
+ *
+ * Configures the TCP packet header.
+ * A pointer to this function will be on modules table.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to size of the packet (updated by the function).
+ */
 void tcp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
@@ -449,11 +454,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   gre_checksum(packet, co, *size);
 }
 
-/* Function Name: TCP options size calculation.
-
-Description:   This function calculates the size of TCP options.
-
-Targets:       N/A */
+/* TCP options size calculation. */
 static size_t tcp_options_len(const uint8_t foo, int bar, int baz)
 {
   size_t size;

@@ -1,3 +1,4 @@
+/** @file ip.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -25,6 +26,16 @@
 #define IP_MF 0x2000
 #define IP_DF 0x4000
 
+/**
+ * IP header configuration.
+ *
+ * Every module uses this to build the IP portion of the packet.
+ *
+ * @param buffer Pointer to the begining of the packet.
+ * @param packet_size size of the buffer.
+ * @param co Pointer to T50 configuration structure.
+ * @return Pointer to IP header structure (points to the begining of the buffer).
+ */
 struct iphdr *ip_header(void *buffer,
                         size_t packet_size,
                         const struct config_options *__restrict__ co)

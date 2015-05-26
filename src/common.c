@@ -1,3 +1,4 @@
+/** @file common.h */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -26,8 +27,15 @@ size_t current_packet_size = 0;
 /* "private" variable holding the number of modules. Use get_number_of_registered_modules() funcion to get it. */
 static size_t number_of_modules = 0;
 
-/* NOTE: This routine shouldn't be inlined due to its compliexity. */
-uint32_t __attribute__((noinline)) NETMASK_RND(uint32_t foo)
+/** 
+ * Returns the Randomized netmask if foo is 0 or the parameter, otherwise.
+ *
+ * This routine shouldn't be inlined due to its compliexity. 
+ *
+ * @param foo IPv4 netmask (or 0 if randomized).
+ * @return Netmask (randomized or otherwise).
+ */
+uint32_t NETMASK_RND(uint32_t foo) 
 {
   uint32_t t;
 
@@ -39,11 +47,17 @@ uint32_t __attribute__((noinline)) NETMASK_RND(uint32_t foo)
   return htonl(t);
 }
 
-/* NOTE: Since VLAs are "dirty" allocations on stack frame, it's not a problem to use
-   the technique below.
-
-   The function will reallocate memory only if the buffer isn't big enough to acomodate
-   new_packet_size bytes. */
+/**
+ * Preallocates the packet buffer.
+ *
+ * Since VLAs are "dirty" allocations on stack frame, it's not a problem to use
+ * the technique below.
+ *
+ * The function will reallocate memory only if the buffer isn't big enough to acomodate
+ * new_packet_size bytes. 
+ *
+ * @param size Size of the new 'global' packet buffer.
+ */
 void alloc_packet(size_t new_packet_size)
 {
   void *p;
@@ -53,15 +67,24 @@ void alloc_packet(size_t new_packet_size)
 
   if (new_packet_size > current_packet_size)
   {
+    /* Tries to reallocate memory. */
     if ((p = realloc(packet, new_packet_size)) == NULL)
       fatal_error("Error reallocating packet buffer.");
 
+    /* Only assign a new pointer if successfull */
     packet = p;
     current_packet_size = new_packet_size;
   }
 }
 
-/* Scan the list of modules (ONCE!), returning the number of itens in the list. */
+/**
+ * Get the number of registered modules on modules.c.
+ *
+ * Scan the list of modules (ONCE!), returning the number of itens found on
+ * modules list.
+ *
+ * @return The number of registered modules.
+ */
 /* Function prototype moved to modules.h. */
 /* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
 size_t get_number_of_registered_modules(void)
@@ -75,8 +98,14 @@ size_t get_number_of_registered_modules(void)
 }
 
 #ifdef __HAVE_RDRAND__
-/* WARNING: This routine is potentially SLOWER than using random(),
-            but gives us better "randomness" on newer processors. */
+/**
+ * Get a random value from Quantum Real Random Number Generator embeded on the processor.
+ *
+ * This routine is potentially SLOWER than using the linear conguential pseudo random
+ * number generator (using random()), but gives better "randomness" on newer processors.
+ *
+ * @return 32 bit random value.
+ */
 uint32_t readrand(void)
 {
   uint32_t d;
@@ -94,6 +123,9 @@ uint32_t readrand(void)
 }
 #endif
 
+/**
+ * Standard error reporting routine. Non fatal version.
+ */
 void error(char *fmt, ...)
 {
   char *str;
@@ -111,8 +143,12 @@ void error(char *fmt, ...)
   free(str);
 }
 
-/* Same as error(), but exits with errorcode EXIT_FAILURE. */
-void __attribute__((noreturn)) fatal_error(char *fmt, ...)
+/**
+ * Standard error reporting routine. Fatal Version.
+ *
+ * This function never returns!
+ */
+void fatal_error(char *fmt, ...) 
 {
   char *str;
   va_list args;
@@ -129,5 +165,3 @@ void __attribute__((noreturn)) fatal_error(char *fmt, ...)
 
   exit(EXIT_FAILURE);
 }
-
-
