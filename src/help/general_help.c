@@ -1,3 +1,4 @@
+/** @file general_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** Common options help function. */
 void general_help(void)
 {
   puts("Common Options:\n"

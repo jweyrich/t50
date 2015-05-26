@@ -1,3 +1,4 @@
+/** @file egp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** EGP help */
 void egp_help(void)
 {
   printf("EGP Options:\n"

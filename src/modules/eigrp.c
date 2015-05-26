@@ -1,3 +1,4 @@
+/** @file eigrp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,16 +20,16 @@
 
 #include <common.h>
 
-/*
- * prototypes.
- */
 static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const int);
 
-/* Function Name: EIGRP packet header configuration.
-
-Description:   This function configures and sends the EIGRP packet header.
-
-Targets:       N/A */
+/**
+ * EIGRP packet header configuration.
+ *
+ * This function configures and sends the EIGRP packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */
@@ -522,6 +523,3 @@ static size_t eigrp_hdr_len(const uint16_t foo,
 
   return size;
 }
-
-
-

@@ -1,3 +1,4 @@
+/** @file ospf_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** OSPF options help. */
 void ospf_help(void)
 {
   printf("OSPF Options:\n"

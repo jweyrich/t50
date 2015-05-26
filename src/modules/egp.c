@@ -1,3 +1,4 @@
+/** @file egp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,11 +20,14 @@
 
 #include <common.h>
 
-/* Function Name: EGP packet header configuration.
-
-Description:   This function configures and sends the EGP packet header.
-
-Targets:       N/A */
+/**
+ * EGP packet header configuration.
+ *
+ * This function configures and sends the EGP packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void egp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen;   /* GRE options size. */

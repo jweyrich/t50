@@ -1,3 +1,4 @@
+/** @file igmp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** IGMP options help. */
 void igmp_help(void)
 {
   printf("IGMP Options:\n"

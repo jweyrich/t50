@@ -1,3 +1,4 @@
+/** @file ip_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** IP options help. */
 void ip_help(void)
 {
   printf("IP Options:\n"

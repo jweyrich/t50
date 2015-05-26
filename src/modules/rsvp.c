@@ -1,3 +1,4 @@
+/** @file rsvp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -18,16 +19,16 @@
 */
 #include <common.h>
 
-/*
- * prototypes.
- */
 static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
 
-/* Function Name: RSVP packet header configuration.
-
-Description:   This function configures and sends the RSVP packet header.
-
-Targets:       N/A */
+/**
+ * RSVP packet header configuration.
+ *
+ * This function configures and sends the RSVP packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,       /* GRE options size. */
@@ -587,11 +588,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
   gre_checksum(packet, co, *size);
 }
 
-/* Function Name: RSVP objects size claculation.
-
-Description:   This function calculates the size of RSVP objects.
-
-Targets:       N/A */
+/* RSVP objects size claculation. */
 static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8_t baz, const uint8_t qux)
 {
   size_t size;

@@ -1,3 +1,4 @@
+/** @file gre_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** GRE options help. */
 void gre_help(void)
 {
   puts("GRE Options:\n"

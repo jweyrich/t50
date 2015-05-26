@@ -1,3 +1,4 @@
+/** @file eigrp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** EIGRP help. */
 void eigrp_help(void)
 {
   printf("EIGRP Options:\n"

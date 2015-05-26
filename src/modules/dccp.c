@@ -1,3 +1,4 @@
+/** @file dccp.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,11 +20,14 @@
 
 #include <common.h>
 
-/* Function Name: DCCP packet header configuration.
-
-Description:   This function configures and sends the DCCP packet header.
-
-Targets:       N/A */
+/**
+ * DCCP packet header configuration.
+ *
+ * This function configures and sends the DCCP packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void dccp(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */

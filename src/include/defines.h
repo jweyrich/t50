@@ -58,7 +58,7 @@
 #define FIELD_MUST_BE_NULL NULL
 #define FIELD_MUST_BE_ZERO 0
 
-/* NOTE: Macro used to test bitmasks */
+/** Macro used to test bitmasks */
 #define TEST_BITS(x,bits) ((x) & (bits))
 
 /* Randomizer macros and function */

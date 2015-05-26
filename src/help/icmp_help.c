@@ -1,3 +1,4 @@
+/** @file icmp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** ICMP options help. */
 void icmp_help(void)
 {
   printf("ICMP Options:\n"

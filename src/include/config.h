@@ -293,8 +293,7 @@ struct cidr
   in_addr_t __1st_addr;             /* first IP address            */
 };
 
-/** @struct config_options
-    T50 configuration structure. */
+/** T50 Configuration structure. */
 struct config_options
 {
   /* XXX COMMON OPTIONS                                            */

@@ -1,3 +1,4 @@
+/** @file rsvp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** RSVP options help. */
 void rsvp_help(void)
 {
   puts("RSVP Options:\n"

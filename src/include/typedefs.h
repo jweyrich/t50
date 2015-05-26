@@ -43,7 +43,6 @@ typedef union
   uint64_t *qword_ptr;
 } memptr_t;
 
-/* Common protocol structures used by code */
 /**
  * User Datagram Protocol (RFC 768)
  *

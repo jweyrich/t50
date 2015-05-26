@@ -1,3 +1,4 @@
+/** @file ipsec.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,11 +20,14 @@
 
 #include <common.h>
 
-/* Function Name: IPSec packet header configuration.
-
-Description:   This function configures and sends the IPSec packet header.
-
-Targets:       N/A */
+/**
+ * IPSec packet header configuration.
+ *
+ * This function configures and sends the IPSec packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 {
   /* IPSec AH Integrity Check Value (ICV). */

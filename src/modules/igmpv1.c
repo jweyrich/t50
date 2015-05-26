@@ -1,3 +1,4 @@
+/** @file igmpv1.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,8 +20,14 @@
 
 #include <common.h>
 
-/* Function Name: IGMPv1 packet header configuration.
-Description:   This function configures and sends the IGMPv1 packet header. */
+/** 
+ * IGMPv1 packet header configuration.
+ *
+ * This function configures and sends the IGMPv1 packet header. 
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen;     /* GRE options size. */

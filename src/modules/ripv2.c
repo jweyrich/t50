@@ -1,3 +1,4 @@
+/** @file ripv2.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -21,11 +22,14 @@
 
 #include <common.h>
 
-/* Function Name: RIPv2 packet header configuration.
-
-Description:   This function configures and sends the RIPv2 packet header.
-
-Targets:       N/A */
+/**
+ * RIPv2 packet header configuration.
+ *
+ * This function configures and sends the RIPv2 packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void ripv2(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,     /* GRE options size. */

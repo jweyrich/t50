@@ -1,3 +1,4 @@
+/** @file rip_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** RIP options help. */
 void rip_help(void)
 {
   printf("RIP Options:\n"

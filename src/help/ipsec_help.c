@@ -1,4 +1,5 @@
-  /*
+/** @file ipsec_help.c */
+/*
  *  T50 - Experimental Mixed Packet Injector
  *
  *  Copyright (C) 2010 - 2015 - T50 developers
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** IPSec options help. */
 void ipsec_help(void)
 {
   puts("IPSEC Options:\n"

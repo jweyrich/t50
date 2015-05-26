@@ -1,3 +1,4 @@
+/** @file igmpv3.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,8 +20,14 @@
 
 #include <common.h>
 
-/* Function Name: IGMPv3 packet header configuration.
-Description:   This function configures and sends the IGMPv3 packet header. */
+/** 
+ * IGMPv3 packet header configuration.
+ *
+ * This function configures and sends the IGMPv3 packet header. 
+ *
+ * @para co Pointer to T50 configuration structure.
+ * @para size Pointer to packet size (updated by the function).
+ */
 void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
@@ -113,5 +120,3 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
-
-

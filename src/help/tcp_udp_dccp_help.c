@@ -1,3 +1,4 @@
+/** @file tcp_udp_dccp_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,6 +20,7 @@
 
 #include <common.h>
 
+/** UDP and DCCP options help. */
 void tcp_udp_dccp_help(void)
 {
   puts("DCCP/TCP/UDP Options:\n"
@@ -27,6 +29,7 @@ void tcp_udp_dccp_help(void)
 
 }
 
+/** TCP options help. */
 void tcp_help(void)
 {
   printf("TCP Options:\n"
@@ -59,6 +62,7 @@ void tcp_help(void)
          (int)(sizeof(struct tcphdr) / 4));
 }
 
+/** DCCP only options help. */
 void dccp_help(void)
 {
   printf("DCCP Options:\n"

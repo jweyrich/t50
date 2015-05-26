@@ -1,3 +1,4 @@
+/** @file ospf.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,16 +20,16 @@
 
 #include <common.h>
 
-/*
- * prototypes.
- */
 static size_t ospf_hdr_len(const unsigned int, const int, const int, const int);
 
-/* Function Name: OSPF packet header configuration.
-
-Description:   This function configures and sends the OSPF packet header.
-
-Targets:       N/A */
+/**
+ * OSPF packet header configuration.
+ *
+ * This function configures and sends the OSPF packet header.
+ *
+ * @param co Pointer to T50 configuration structure.
+ * @param size Pointer to packet size (updated by the function).
+ */
 void ospf(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
@@ -693,11 +694,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
   gre_checksum(packet, co, *size);
 }
 
-/* Function Name: OSPF header size calculation.
-
-Description:   This function calculates the size of OSPF header.
-
-Targets:       N/A */
+/* OSPF header size calculation. */
 static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz, const int qux)
 {
   size_t size;
