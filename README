@@ -1,10 +1,8 @@
-<pre>
-  ___________._______________
-  \__    ___/|   ____/\   _  \   the fatest network packet injector
-    |    |   |____  \ /  /_\  \
-    |    |   /       \\  \_/   \
-    |____|  /______  / \_____  /
-                   \/        \/
+      __________ ________  _____
+     |__    ___/|   ____/ /  _  \ the fastest packet injector.
+       |    |   |____  \ /  /_\  \
+       |    |   /       \\  \_/   \
+       |____|  /________/\\_______/
 
 T50 (f.k.a. F22 Raptor) is a tool designed to perform "Stress Testing".
 The concept started on 2001, right after release 'nb-isakmp.c', and
@@ -99,4 +97,3 @@ The main differentiator of the T50 is that it is able to send  all protocols,
 sequentially,  using one single SOCKET,   besides it is capable to be used to
 modify network routes,  letting IT Security Professionals performing advanced
 "Penetration Test".
-</pre>
