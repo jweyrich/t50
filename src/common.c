@@ -97,6 +97,20 @@ size_t get_number_of_registered_modules(void)
   return number_of_modules;
 }
 
+int *get_module_valid_options_list(int protocol)
+{
+  modules_table_t *ptbl;
+
+  for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
+  {
+    if (ptbl->protocol_id == protocol)
+      return ptbl->valid_options;
+  }
+
+  return NULL;
+}
+
+
 #ifdef __HAVE_RDRAND__
 /**
  * Get a random value from Quantum Real Random Number Generator embeded on the processor.
