@@ -63,16 +63,14 @@ typedef union
  * length.   This information gives protection against misrouted datagrams.
  * This checksum procedure is the same as is used in TCP.
  *
- * <pre>
- *    0      7 8     15 16    23 24    31
- *   +--------+--------+--------+--------+
- *   |          source address           |
- *   +--------+--------+--------+--------+
- *   |        destination address        |
- *   +--------+--------+--------+--------+
- *   |  zero  |protocol|   UDP length    |
- *   +--------+--------+--------+--------+
- * </pre>
+ *      0      7 8     15 16    23 24    31
+ *     +--------+--------+--------+--------+
+ *     |          source address           |
+ *     +--------+--------+--------+--------+
+ *     |        destination address        |
+ *     +--------+--------+--------+--------+
+ *     |  zero  |protocol|   UDP length    |
+ *     +--------+--------+--------+--------+
  *
  * If the computed  checksum  is zero,  it is transmitted  as all ones (the
  * equivalent  in one's complement  arithmetic).   An all zero  transmitted

@@ -70,31 +70,30 @@
 /**
  * Enhanced Interior Gateway Routing Protocol (EIGRP)
  *
- * <pre>
- *    0                   1                   2                   3 3
- *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *   -----------------------------------------------------------------
- *   |    Version    |    Opcode     |           Checksum            |
- *   -----------------------------------------------------------------
- *   |                             Flags                             |
- *   -----------------------------------------------------------------
- *   |                        Sequence Number                        |
- *   -----------------------------------------------------------------
- *   |                     Acknowledgment Number                     |
- *   -----------------------------------------------------------------
- *   |                   Autonomous System Number                    |
- *   -----------------------------------------------------------------
- *   |                                                               |
- *   //                  TLV (Type/Length/Value)                    //
- *   |                                                               |
- *   -----------------------------------------------------------------
- * </pre>
+ *      0                   1                   2                   3 3
+ *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *     -----------------------------------------------------------------
+ *     |    Version    |    Opcode     |           Checksum            |
+ *     -----------------------------------------------------------------
+ *     |                             Flags                             |
+ *     -----------------------------------------------------------------
+ *     |                        Sequence Number                        |
+ *     -----------------------------------------------------------------
+ *     |                     Acknowledgment Number                     |
+ *     -----------------------------------------------------------------
+ *     |                   Autonomous System Number                    |
+ *     -----------------------------------------------------------------
+ *     |                                                               |
+ *     //                  TLV (Type/Length/Value)                    //
+ *     |                                                               |
+ *     -----------------------------------------------------------------
  *
  * Please,  be advised that there is no deep information about EIGRP,  no
  * other than EIGRP PCAP files public available.  Due to that I have done
  * a deep analysis using live EIGRP PCAP files to build the EIGRP Packet.
  *
  * There are some really good resources, such as:
+ *
  * http://www.protocolbase.net/protocols/protocol_EIGRP.php
  * http://packetlife.net/captures/category/cisco-proprietary/
  * http://oreilly.com/catalog/iprouting/chapter/ch04.html
