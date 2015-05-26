@@ -7,10 +7,9 @@
 # The final executable will be created at release/ sub-directory.
 #
 
-# Macro used to check if we are running make as root.
-define checkroot
-	@test $$(id -u) -ne 0 && ( echo 'Need root priviledge'; exit 1 )
-endef
+.PHONY: all doxygen distclean clean install uninstall
+
+INSTALLPROG = /usr/bin/install
 
 # Define this variable if you really want to use RDRAND instruction, if present.
 # This can make T50 to be SLOW... But the RNG is accurate...
@@ -105,8 +104,6 @@ else
   endif
 endif
 
-.PHONY: all distclean clean install uninstall
-
 all: $(TARGET)
 
 # link
@@ -125,19 +122,25 @@ $(OBJ_DIR)/help/%.o: $(SRC_DIR)/help/%.c
 $(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+doxygen:
+	doxygen
+
 distclean: clean
 	-if [ -f $(RELEASE_DIR)/t50.8.gz ]; then rm $(RELEASE_DIR)/t50.8.gz; fi
 	-if [ -f $(RELEASE_DIR)/t50 ]; then rm $(RELEASE_DIR)/t50; fi
+	-if [ -d doc/html ]; then rm -rf doc/html; fi
+	-if [ -d doc/latex ]; then rm -rf doc/latex; fi
+	-if [ -f doc/doxy*.db ]; rhen rm -f doc/doxy*.db; fi
 
 clean:
 	-rm $(OBJS)
 
 install:
-	$(checkroot)
-	gzip -9c doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
-	install $(RELEASE_DIR)/t50 $(SBIN_DIR)/
-	install -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
+	@[ "`id -u`" -ne 0 ] && ( echo "Need root privilege"; exit 1 )
+	@gzip -9c doc/t50.8 > $(RELEASE_DIR)/t50.8.gz
+	$(INSTALLPROG) $(RELEASE_DIR)/t50 $(SBIN_DIR)/
+	$(INSTALLPROG) -m 0644 $(RELEASE_DIR)/t50.8.gz $(MAN_DIR)/
 
 uninstall:
-	$(checkroot)
+	@[ "`id -u`" -ne 0 ] && ( echo "Need root privilege"; exit 1 )
 	-rm -f $(MAN_DIR)/t50.8.gz $(SBIN_DIR)/t50
