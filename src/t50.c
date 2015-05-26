@@ -27,6 +27,7 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
 static void initialize(void);
+static modules_table_t *selectProtocol(const struct config_options * const, int *);
 static const char *get_ordinal_suffix(unsigned);
 static const char *get_month(unsigned);
 
@@ -46,8 +47,7 @@ int main(int argc, char *argv[])
   /* NOTE: parse_command_line returns ONLY if there are no errors. */
   co = parse_command_line(argv);
 
-  /* This is a requirement of t50. User must be root to use it.
-     It's not the first call 'cause --help and --version can be used without root privileges. */
+  /** User must have root privileges to run T50, unless --help or --version options are found on command line. */
   if (getuid())
     fatal_error("User must have root priviledge to run.");
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
   puts("Hit Ctrl+C to stop...");
 
-  /* NOTE: create_socket() handles its own errors before returning. */
+  /* Create_socket() handles its own errors before returning. */
   if (!create_socket())
     return EXIT_FAILURE;
 
@@ -81,8 +81,10 @@ int main(int argc, char *argv[])
   if (co->turbo)
   {
     /* Decides if it's necessary to fork a new process. */
-    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)get_number_of_registered_modules()) ||
-        (co->ip.protocol != IPPROTO_T50 && co->threshold > 1))
+    if ((co->ip.protocol == IPPROTO_T50 && 
+         co->threshold > (threshold_t)get_number_of_registered_modules()) ||
+        (co->ip.protocol != IPPROTO_T50 && 
+         co->threshold > 1))
     {
       threshold_t new_threshold;
 
@@ -94,13 +96,15 @@ int main(int argc, char *argv[])
       if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
         fatal_error("Error setting process priority (\"%s\"). Exiting...", strerror(errno));
 
-      /* Divide the process iterations in main loop between processes. */
+      /* Divide the process iterations in main loop between processes. 
+         Since we have only 2 processes, max, i'll divide by 2. */
       new_threshold = co->threshold / 2;
 
-      /* FIX: Ooops! Parent process get the extra packet, if given threshold is odd. */
-      if ((co->threshold % 2) && !IS_CHILD_PID(pid))
-        new_threshold++;
+      /* FIX: Ooops! Parent process get the extra packet, if threshold is odd. */
+      if (!IS_CHILD_PID(pid))
+        new_threshold += (co->threshold & 1);
 
+      /* Updates threshold for this process. */
       co->threshold = new_threshold;
     }
   }
@@ -134,11 +138,7 @@ int main(int argc, char *argv[])
   alloc_packet(INITIAL_PACKET_SIZE);
 
   /* Selects the initial protocol to use. */
-  proto = co->ip.protocol;
-  ptbl = mod_table;
-
-  if (proto != IPPROTO_T50)
-    ptbl += co->ip.protoname;
+  ptbl = selectProtocol(co, &proto);
 
   /* Execute if flood or if threshold is given. */
   while (co->flood || co->threshold)
@@ -150,9 +150,8 @@ int main(int argc, char *argv[])
     /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
 
-    /* FIXME: Shouldn't be +1? */
     if (cidr_ptr->hostid)
-      co->ip.daddr += RANDOM() % cidr_ptr->hostid;
+      co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */ 
 
     /* We need the address in network order now. */
     co->ip.daddr = htonl(co->ip.daddr);
@@ -168,6 +167,7 @@ int main(int argc, char *argv[])
               ptbl->acronym, size);
 #endif
 
+    /* Try to send the packet. */
     if (!send_packet(packet, size, co))
 #ifdef __HAVE_DEBUG__
       error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
@@ -315,14 +315,9 @@ static const char *get_ordinal_suffix(unsigned n)
   if ((n < 11) || (n > 13))
     switch (n % 10)
     {
-    case 1:
-      return suffixes[0];
-
-    case 2:
-      return suffixes[1];
-
-    case 3:
-      return suffixes[2];
+    case 1: return suffixes[0];
+    case 2: return suffixes[1];
+    case 3: return suffixes[2];
     }
 
   return suffixes[3];
@@ -345,4 +340,15 @@ static const char *get_month(unsigned n)
   return months[n];
 }
 
+/* Selects the initial protocol based on the configuration. */
+static modules_table_t *selectProtocol(const struct config_options *const co, int *proto)
+{
+  modules_table_t *ptbl;
+
+  ptbl = mod_table;
+  if ((*proto = co->ip.protocol) != IPPROTO_T50)
+    ptbl += co->ip.protoname;
+
+  return ptbl;
+}
 

@@ -28,7 +28,7 @@
 #define RIP_AUTH_LENGTH        20
 #define RIP_TRAILER_LENGTH     4
 
-/* Calculating RIP Header length */
+/** Calculating RIP Header length */
 #define rip_hdr_len(foo) \
   (RIP_HEADER_LENGTH + \
    RIP_MESSAGE_LENGTH + \

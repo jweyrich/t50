@@ -32,6 +32,13 @@ typedef void (*module_func_ptr_t)(const struct config_options *const __restrict_
 
 /** 
  * Union used to ease buffer pointer manipulation.
+ *
+ * This will help with pointer arithmetic. When we have to point to the next
+ * field, on the packet buffer.
+ *
+ * Since an address have a fixed size, we have a generic pointer (void *) and
+ * pointers to other types. When incrementing 'dword_ptr' on this union, we are
+ * adding 4 to the pointer, for instance.
  */
 typedef union
 {
@@ -44,7 +51,7 @@ typedef union
 } memptr_t;
 
 /**
- * User Datagram Protocol (RFC 768)
+ * User Datagram Protocol (RFC 768) Pseudo Header structure.
  *
  * Checksum is the 16-bit one's complement of the one's complement sum of a
  * pseudo header of information from the IP header, the UDP header, and the
@@ -56,14 +63,16 @@ typedef union
  * length.   This information gives protection against misrouted datagrams.
  * This checksum procedure is the same as is used in TCP.
  *
- *                   0      7 8     15 16    23 24    31
- *                  +--------+--------+--------+--------+
- *                  |          source address           |
- *                  +--------+--------+--------+--------+
- *                  |        destination address        |
- *                  +--------+--------+--------+--------+
- *                  |  zero  |protocol|   UDP length    |
- *                  +--------+--------+--------+--------+
+ * <pre>
+ *    0      7 8     15 16    23 24    31
+ *   +--------+--------+--------+--------+
+ *   |          source address           |
+ *   +--------+--------+--------+--------+
+ *   |        destination address        |
+ *   +--------+--------+--------+--------+
+ *   |  zero  |protocol|   UDP length    |
+ *   +--------+--------+--------+--------+
+ * </pre>
  *
  * If the computed  checksum  is zero,  it is transmitted  as all ones (the
  * equivalent  in one's complement  arithmetic).   An all zero  transmitted
@@ -80,5 +89,3 @@ struct psdhdr
 };
 
 #endif
-
-

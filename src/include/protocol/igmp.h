@@ -22,10 +22,10 @@
 
 #include <common.h>
 
-/* IGMP Header DEFINITIONS. */
+/** IGMP Header DEFINITIONS. */
 #define IGMPV3_TLEN_NSRCS(foo) ((foo) * sizeof(in_addr_t))
 
-/* Calculating IGMPv3 Header length */
+/** Calculating IGMPv3 Header length */
 #define igmpv3_hdr_len(foo, bar) \
   ((((foo) == IGMPV3_HOST_MEMBERSHIP_REPORT) ? \
     sizeof(struct igmpv3_report) + sizeof(struct igmpv3_grec) : \

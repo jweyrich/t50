@@ -38,14 +38,15 @@
 #define RSVP_MESSAGE_TYPE_HELLO    20
 #define RSVP_MESSAGE_TYPE_NOTIFY   21
 
-/*
+/**
  * Resource ReSerVation Protocol (RSVP) (RFC 2205)
  *
  * 3.1.2 Object Formats
  *
- *       Every  object  consists of  one or more 32-bit words with a one-
- *       word header, with the following format:
+ * Every  object  consists of  one or more 32-bit words with a one-
+ * word header, with the following format:
  *
+ * <pre>
  *          0             1              2             3
  *   +-------------+-------------+-------------+-------------+
  *   |       Length (bytes)      |  Class-Num  |   C-Type    |
@@ -54,6 +55,7 @@
  *   //                  (Object contents)                   //
  *   |                                                       |
  *   +-------------+-------------+-------------+-------------+
+ * </pre>
  */
 #define RSVP_OBJECT_HEADER_LENGTH (sizeof(uint16_t) + (sizeof(uint8_t) * 2))
 
@@ -110,18 +112,12 @@
 #define ADSPEC_MESSAGE_HEADER       4
 #define ADSPEC_SERVDATA_HEADER      4
 #define ADSPEC_PARAMETER_DATA       4
-#define ADSPEC_PARAMETER_LENGTH \
-  (ADSPEC_MESSAGE_HEADER   + \
-   ((ADSPEC_SERVDATA_HEADER + \
-     ADSPEC_PARAMETER_DATA) * 4))
+#define ADSPEC_PARAMETER_LENGTH     (ADSPEC_MESSAGE_HEADER + ((ADSPEC_SERVDATA_HEADER + ADSPEC_PARAMETER_DATA) * 4))
 #define ADSPEC_PARAMETER_ISHOPCNT   4
 #define ADSPEC_PARAMETER_BANDWIDTH  6
 #define ADSPEC_PARAMETER_LATENCY    8
 #define ADSPEC_PARAMETER_COMPMTU    10
-#define ADSPEC_GUARANTEED_LENGTH \
-  (ADSPEC_MESSAGE_HEADER   + \
-   ((ADSPEC_SERVDATA_HEADER + \
-     ADSPEC_PARAMETER_DATA) * 4))
+#define ADSPEC_GUARANTEED_LENGTH    (ADSPEC_MESSAGE_HEADER + ((ADSPEC_SERVDATA_HEADER + ADSPEC_PARAMETER_DATA) * 4))
 #define ADSPEC_CONTROLLED_LENGTH    ADSPEC_MESSAGE_HEADER
 #define ADSPEC_SERVICES(foo) \
   (ADSPEC_PARAMETER_LENGTH + \
@@ -131,21 +127,19 @@
    (((foo) == ADSPEC_CONTROLLED_SERVICE) ? \
     ADSPEC_CONTROLLED_LENGTH : 0))
 
-/* RSVP PROTOCOL STRUCTURES
-
-   RSVP protocol structures used by code.
-   Any new RSVP protocol structure should be added in this section. */
-/*
+/**
  * Resource ReSerVation Protocol (RSVP) (RFC 2205)
  *
  * 3.1.1 Common Header
  *
+ * <pre>
  *          0             1              2             3
  *   +-------------+-------------+-------------+-------------+
  *   | Vers | Flags|  Msg Type   |       RSVP Checksum       |
  *   +-------------+-------------+-------------+-------------+
  *   |  Send_TTL   | (Reserved)  |        RSVP Length        |
  *   +-------------+-------------+-------------+-------------+
+ * </pre>
  */
 struct rsvp_common_hdr
 {

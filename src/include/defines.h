@@ -20,19 +20,23 @@
 #ifndef __DEFINES_INCLUDED__
 #define __DEFINES_INCLUDED__
 
+/* This can be changed between releases. */
 #define PACKAGE "T50"
 #define VERSION "5.5"
 #define SITE    "http://github.com/fredericopissarra/t50"
 
-/* NOTE: Used to set/reset individual bits */
+/* Boolean aliases. */
 #define TRUE  1
 #define FALSE 0
 #define ON    1
 #define OFF   0
 
-/* Initial packet buffer preallocated size (2 kB).
-   This size should be sufficient for all packets since MTU
-   is 1500 bytes maximum, over ethernet! */
+/** 
+ * Initial packet buffer preallocation size (2 kB).
+ *
+ * This size should be sufficient for all packets. 
+ * MTU usually is 1500 bytes long, over ethernet! 
+ */
 #define INITIAL_PACKET_SIZE 2048
 
 /* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */
@@ -40,7 +44,7 @@
 #define CIDR_MAXIMUM 32 // fix #7
 
 /* 24 bits?! */
-/* FIX: Changed to hexadecimal 'cause is easier to debug. */
+/* FIX: Changed to hexadecimal 'cause it's easier to debug. */
 #define MAXIMUM_IP_ADDRESSES  0xffffffU
 
 /* #define INADDR_ANY 0 */ /* NOTE: Already defined @ linux/in.h */
@@ -74,7 +78,7 @@
 #define INADDR_RND(foo) __RND((foo))
 #define IPPORT_RND(foo) __RND((foo))
 
-/* Used to test if "pid" from fork() is from a child process. */
+/** Used to test if "pid" from fork() is from a child process. */
 #define IS_CHILD_PID(p) ((p) == 0)
 
 #endif

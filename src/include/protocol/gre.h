@@ -36,43 +36,44 @@
 #define GRE_OPTLEN_CHECKSUM    sizeof(struct gre_sum_hdr)
 
 
-/* GRE PROTOCOL STRUCTURES
-
-   GRE protocol structures used by code.
-   Any new GRE protocol structure should be added in this section. */
-/*
+/**
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
- *   The GRE packet header has form:
+ * The GRE packet header has form:
  *
- *    0                   1                   2                   3
- *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |C|R|K|S|s|Recur|  Flags  | Ver |         Protocol Type         |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |      Checksum (optional)      |       Offset (optional)       |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |                         Key (optional)                        |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |                    Sequence Number (optional)                 |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |                         Routing (optional)
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |C|R|K|S|s|Recur|  Flags  | Ver |         Protocol Type         |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |      Checksum (optional)      |       Offset (optional)       |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                         Key (optional)                        |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                    Sequence Number (optional)                 |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                         Routing (optional)
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  *
  * Key and Sequence Number Extensions to GRE (RFC 2890)
  *
- *   The proposed GRE header will have the following format:
+ * The proposed GRE header will have the following format:
  *
- *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |C| |K|S| Reserved0       | Ver |         Protocol Type         |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |      Checksum (optional)      |       Reserved1 (Optional)    |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |                         Key (optional)                        |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *   |                 Sequence Number (Optional)                    |
- *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |C| |K|S| Reserved0       | Ver |         Protocol Type         |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |      Checksum (optional)      |       Reserved1 (Optional)    |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                         Key (optional)                        |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                 Sequence Number (Optional)                    |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 struct gre_hdr
 {
@@ -101,10 +102,10 @@ struct gre_hdr
   uint8_t  __optional[0];          /* optional                    */
 };
 
-/*
+/**
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
- *    Offset (2 octets)
+ * Offset (2 octets)
  *
  *    The  offset  field  indicates  the octet offset from the start of the
  *    Routing  field  to  the  first octet of the active Source Route Entry
@@ -112,7 +113,7 @@ struct gre_hdr
  *    the Checksum Present bit is set to 1, and contains valid  information
  *    only if the Routing Present bit is set to 1.
  *
- *    Checksum (2 octets)
+ *  Checksum (2 octets)
  *
  *    The Checksum  field  contains the IP (one's complement)  checksum  of
  *    the GRE  header  and  the  payload  packet.  This field is present if
@@ -126,10 +127,10 @@ struct gre_sum_hdr
   uint16_t offset;                 /* offset                      */
 };
 
-/*
+/**
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
- *    Key (4 octets)
+ * Key (4 octets)
  *
  *    The  Key  field  contains  a  four octet number which was inserted by
  *    the encapsulator.  It may be used by the receiver to authenticate the
@@ -142,10 +143,10 @@ struct gre_key_hdr
   uint32_t key;                    /* key                         */
 };
 
-/*
+/**
  * Generic Routing Encapsulation (GRE) (RFC 1701)
  *
- *    Sequence Number (4 octets)
+ * Sequence Number (4 octets)
  *
  *    The Sequence Number  field  contains an unsigned 32 bit integer which
  *    is inserted by  the  encapsulator.  It may be used by the receiver to
@@ -164,5 +165,3 @@ struct iphdr *gre_encapsulation(void *, const struct config_options *const __res
 void gre_checksum(void *, const struct config_options *, size_t);
 
 #endif  /* __GRE_H */
-
-

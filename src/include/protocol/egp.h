@@ -48,30 +48,28 @@
 #define EGP_ACQ_STAT_PARAMETER    6
 #define EGP_ACQ_STAT_VIOLATION    7
 
-/* EGP PROTOCOL STRUCTURES
-
-   EGP protocol structures used by code.
-   Any new EGP protocol structure should be added in this section. */
-/*
+/**
  * Exterior Gateway Protocol (EGP) Formal Specification (RFC 904)
  *
  * Appendix A.  EGP Message Formats
  *
- *      The  formats  for  the  various  EGP messages are described in this
+ * The  formats  for  the  various  EGP messages are described in this
  * section.  All  EGP  messages  include  a ten-octet header of six fields,
  * which may  be followed  by  additional fields depending on message type.
  * The format of the  header is shown below along with a description of its
  * fields.
  *
- *   0                   1                   2                   3
- *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  | EGP Version # |     Type      |     Code      |    Status     |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |        Checksum               |       Autonomous System #     |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |        Sequence #             |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * -----------------------------------------------------------------
+ * | EGP Version # |     Type      |     Code      |    Status     |
+ * -----------------------------------------------------------------
+ * |        Checksum               |       Autonomous System #     |
+ * -----------------------------------------------------------------
+ * |        Sequence #             |
+ * ---------------------------------
+ * </pre>
  *
  * EGP Version #           assigned number identifying the EGP version
  *                         (currently 2)
@@ -94,7 +92,6 @@
  * Sequence #              send state variable (commands) or  receive state
  *                         variable (responses and indications)
  */
-
 struct egp_hdr
 {
   uint8_t  version;                /* version                     */
@@ -107,22 +104,24 @@ struct egp_hdr
   uint8_t  __data[0];              /* data                        */
 };
 
-/*
+/**
  * Exterior Gateway Protocol (EGP) Formal Specification (RFC 904)
  *
  * A.1.  Neighbor Acquisition Messages
  *
+ * <pre>
  *   0                   1                   2                   3
  *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  -----------------------------------------------------------------
  *  | EGP Version # |     Type      |     Code      |    Status     |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  -----------------------------------------------------------------
  *  |        Checksum               |       Autonomous System #     |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  -----------------------------------------------------------------
  *  |        Sequence #             |          Hello Interval       |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  -----------------------------------------------------------------
  *  |        Poll Interval          |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  ---------------------------------
+ * </pre>
  *
  * Note:  the Hello Interval and Poll Interval fields are present  only  in
  * Request and Confirm messages.
@@ -148,7 +147,6 @@ struct egp_hdr
  *
  * Poll Interval           minimum Poll command polling interval (seconds)
  */
-
 struct egp_acq_hdr
 {
   __be16    hello;                  /* hello interval              */

@@ -43,7 +43,7 @@
 #define TCPOLEN_MD5       18
 #define TCPOLEN_AO        20
 
-/*
+/**
  * TCP Selective Acknowledgement Options (SACK) (RFC 2018)
  *
  * A SACK option that specifies n blocks will  have a length of 8*n+2
@@ -55,14 +55,14 @@
  */
 #define TCPOLEN_SACK_EDGE(foo) (((foo) * (sizeof(uint32_t) * 2)) + TCPOLEN_SACK_OK)
 
-/*
+/**
  * Transmission Control Protocol (TCP) (RFC 793)
  *
  * Padding:  variable
  *
- *  The TCP header padding is used to ensure that the TCP header ends
- *  and data begins on a 32 bit boundary.  The padding is composed of
- *  zeros.
+ * The TCP header padding is used to ensure that the TCP header ends
+ * and data begins on a 32 bit boundary.  The padding is composed of
+ * zeros.
  */
 #define TCPOLEN_PADDING(foo) \
   (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)

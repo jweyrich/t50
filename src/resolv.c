@@ -23,6 +23,10 @@
 /**
  * IPv4 name resolver using getaddrinfo().
  *
+ * Since T50 don't support IPv6 addresses, this routine will
+ * try to get only the first IPv6 address mapped to IPv4, if
+ * no IPv4 address can be found.
+ *
  * @param name The name, as in "www.target.com"...
  * @return IPv4 address found, or 0 if not found.
  */

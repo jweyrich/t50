@@ -35,7 +35,11 @@
 #include <protocol/tcp_options.h>
 /* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
-/* NOTE: Specific for modules definitions. Placed here, instead of defines.h. */
+/** 
+ * Modules entry structure.
+ *
+ * Used for modules definitions. And table iterators.
+ */
 typedef struct
 {
   int protocol_id;
@@ -46,15 +50,16 @@ typedef struct
 
 #define BEGIN_MODULES_TABLE modules_table_t mod_table[] = {
 #define END_MODULES_TABLE { 0, NULL, NULL, NULL } };
-
 #define MODULE_ENTRY(id,acronym,descr,func) { (id), acronym, descr, func },
 
+/**
+ * The modules table is global through all the code.
+ */
 extern modules_table_t mod_table[];
 
 extern size_t get_number_of_registered_modules(void);
 
-/* Modules functions prototypes.
-   They took 'struct config_options' pointer and returns 'size'. */
+/* Modules functions prototypes. */
 extern void icmp  (const struct config_options *const __restrict__, size_t *size);
 extern void igmpv1(const struct config_options *const __restrict__, size_t *size);
 extern void igmpv3(const struct config_options *const __restrict__, size_t *size);

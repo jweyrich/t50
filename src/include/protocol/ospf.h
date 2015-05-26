@@ -106,7 +106,7 @@
 #define EXTENDED_OPTIONS_RS    0x00000002
 #define OSPF_LEN_CRYPTO        ( OSPF_TLV_HEADER + AUTH_TLEN_HMACMD5 )
 
-/* Calculating OSPF LLS Type/Length/Value length */
+/** Calculating OSPF LLS Type/Length/Value length */
 #define ospf_tlv_len(foo, bar, baz) \
   ((((foo) == OSPF_TYPE_HELLO) || \
     ((foo) == OSPF_TYPE_DD)) ? \
@@ -120,26 +120,24 @@
     0) : \
    0)
 
-/* OSPF PROTOCOL STRUCTURES
-
-   OSPF protocol structures used by code.
-   Any new OSPF protocol structure should be added in this section. */
-/*
+/**
  * OSPF Version 2 (RFC 2328)
  *
  * A.3.1 The OSPF packet header
  *
- *   0                   1                   2                   3
- *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |   Version #   |     Type      |         Packet length         |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |                         Router ID                            |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |                           Area ID                             |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *  |           Checksum            |             AuType            |
- *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |   Version #   |     Type      |         Packet length         |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                         Router ID                            |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                           Area ID                             |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |           Checksum            |             AuType            |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 struct ospf_hdr
 {
@@ -154,11 +152,12 @@ struct ospf_hdr
   uint8_t  __ospf_type_hdr[0];     /* type header                 */
 };
 
-/*
+/**
  * OSPF Version 2 (RFC 2328)
  *
  * A.3.1 The OSPF packet header
  *
+ * <pre>
  *   0                   1                   2                   3
  *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -166,9 +165,11 @@ struct ospf_hdr
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  *  |                       Authentication                          |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  *
  * D.3 Cryptographic authentication
  *
+ * <pre>
  *   0                   1                   2                   3
  *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -176,6 +177,7 @@ struct ospf_hdr
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  *  |                 Cryptographic sequence number                 |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 struct ospf_auth_hdr
 {
@@ -185,11 +187,12 @@ struct ospf_auth_hdr
   uint32_t sequence;               /* authentication sequence #   */
 };
 
-/*
+/**
  * OSPF Version 2 (RFC 2328)
  *
  * A.4.1 The Link State Advertisement (LSA) header
  *
+ * <pre>
  *   0                   1                   2                   3
  *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -203,6 +206,7 @@ struct ospf_auth_hdr
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  *  |         LS checksum           |             length            |
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 struct ospf_lsa_hdr
 {
@@ -216,11 +220,12 @@ struct ospf_lsa_hdr
   uint16_t length;                 /* LSA length                  */
 };
 
-/*
+/**
  * OSPF Link-Local Signaling (RFC 5613)
  *
  * 2.2.  LLS Data Block
  *
+ * <pre>
  *   0                   1                   2                   3
  *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -232,6 +237,7 @@ struct ospf_lsa_hdr
  *  .                                                               .
  *  .                                                               .
  *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 struct ospf_lls_hdr
 {
