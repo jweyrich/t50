@@ -41,10 +41,10 @@ void udp(const struct config_options *const __restrict__ co, size_t *size)
   assert(co != NULL);
 
   greoptlen = gre_opt_len(co);
-  *size = sizeof(struct iphdr) +
-          greoptlen +
+  *size = sizeof(struct iphdr)  +
           sizeof(struct udphdr) +
-          sizeof(struct psdhdr);
+          sizeof(struct psdhdr) +
+          greoptlen;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -87,5 +87,6 @@ void udp(const struct config_options *const __restrict__ co, size_t *size)
 
   gre_checksum(packet, co, *size);
 }
+
 
 

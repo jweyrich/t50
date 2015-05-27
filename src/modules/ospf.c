@@ -59,11 +59,11 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
   ospf_length = ospf_hdr_len(co->ospf.type, co->ospf.neighbor, co->ospf.lsa_type, co->ospf.dd_include_lsa);
 
-  *size = sizeof(struct iphdr) +
-          greoptlen                      +
-          sizeof(struct ospf_hdr)        +
-          sizeof(struct ospf_auth_hdr)   +
-          ospf_length                    +
+  *size = sizeof(struct iphdr)             +
+          sizeof(struct ospf_hdr)          +
+          sizeof(struct ospf_auth_hdr)     +
+          greoptlen                        +
+          ospf_length                      +
           auth_hmac_md5_len(co->ospf.auth) +
           ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
 
@@ -695,7 +695,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* OSPF header size calculation. */
-static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz, const int qux)
+static size_t ospf_hdr_len(const unsigned int type, const int neighbor, const int lsa_type, const int dd_include_lsa)
 {
   size_t size;
 
@@ -705,7 +705,7 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
    */
   size = 0;
 
-  switch (foo)
+  switch (type)
   {
   /*
    * The size of a HELLO Message Type may vary based on the presence
@@ -713,7 +713,7 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
    */
   case OSPF_TYPE_HELLO:
     size += OSPF_TLEN_HELLO;
-    size += OSPF_TLEN_NEIGHBOR(bar);
+    size += OSPF_TLEN_NEIGHBOR(neighbor);
     break;
 
   /*
@@ -724,7 +724,7 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
   case OSPF_TYPE_DD:
     size += OSPF_TLEN_DD;
 
-    if (qux)
+    if (dd_include_lsa)
       size += LSA_TLEN_GENERIC(0);
 
     break;
@@ -740,7 +740,7 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
   case OSPF_TYPE_LSUPDATE:
     size += OSPF_TLEN_LSUPDATE;
 
-    switch (baz)
+    switch (lsa_type)
     {
     case LSA_TYPE_ROUTER:
       size += LSA_TLEN_ROUTER;
@@ -780,5 +780,6 @@ static size_t ospf_hdr_len(const unsigned int foo, const int bar, const int baz,
 
   return size;
 }
+
 
 

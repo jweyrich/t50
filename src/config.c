@@ -31,7 +31,7 @@ struct options_table_s
   int has_arg;        /* If option must have an argument, this is 1. */
 
   /* "private" part. */
-  int  in_use;        /* Boolean used to check if option was already used. */
+  int  in_use_;        /* Boolean used to check if option was already used. */
 };
 
 /* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
@@ -440,10 +440,10 @@ struct config_options *parse_command_line(char **argv)
         fatal_error("Unrecognized option '%s'.", opt);
 
       /* Estou assumindo que cada opção só pode ser informada uma vez! */
-      if (ptbl->in_use)
+      if (ptbl->in_use_)
         fatal_error("Option '%s' already given.", opt);
 
-      ptbl->in_use = 1;
+      ptbl->in_use_ = 1;
 
       next_str = *(argv + 1);
 
@@ -474,7 +474,7 @@ struct config_options *parse_command_line(char **argv)
 
   /* if '-h' (or '--help') option is given... */
   if ((ptbl = find_option("-h")) != NULL)
-    if (ptbl->in_use)
+    if (ptbl->in_use_)
     {
       if (num_options > 1)
         error("Option '-h' (or '--help') cannot be used with other options.");
@@ -486,7 +486,7 @@ struct config_options *parse_command_line(char **argv)
 
   /* if '-v' (or '--version') option is given... */
   if ((ptbl = find_option("-v")) != NULL)
-    if (ptbl->in_use)
+    if (ptbl->in_use_)
     {
       if (num_options > 1)
         error("Option '-v' (or '--version') cannot be used with other options.");
@@ -498,7 +498,7 @@ struct config_options *parse_command_line(char **argv)
 
   /* if '-l' (or '--list-protocols') option is given... */
   if ((ptbl = find_option("-l")) != NULL)
-    if (ptbl->in_use)
+    if (ptbl->in_use_)
     {
       if (num_options > 1)
         error("Option '-l' (or '--list-protocols') cannot be used with other options.");
@@ -528,13 +528,11 @@ static void set_default_protocol(struct config_options *__restrict__ co)
   co->ip.protocol = IPPROTO_TCP;
 
   for (i = 0, ptbl = mod_table; ptbl->protocol_id; i++, ptbl++)
-  {
     if (ptbl->protocol_id == IPPROTO_TCP)
     {
       co->ip.protoname = i;
       break;
     }
-  }
 }
 
 /* Scans the option table trying to find the option.
@@ -580,7 +578,7 @@ static void check_options_rules(struct config_options *__restrict__ co)
 #endif
 
   /* --flood and --threshold are mutually exclusive! */
-  if (co->flood && find_option("threshold")->in_use)
+  if (co->flood && find_option("threshold")->in_use_)
     fatal_error("--flood and --threshold cannot be used at the same time.\n");
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
@@ -631,13 +629,23 @@ static void get_ip_protocol(struct config_options *co, char *arg)
   {
     /* Scan the modules table trying to get the protocol. */
     int i;
+    modules_table_t *ptbl;
 
-    for (i = 0; mod_table[i].acronym; i++)
-      if (!strcasecmp(mod_table[i].acronym, arg))
+    i = 0;
+    ptbl = mod_table;
+
+    while (ptbl->acronym)
+    {
+      if (!strcasecmp(ptbl->acronym, arg))
       {
-        co->ip.protocol = mod_table[co->ip.protoname = i].protocol_id;
+        co->ip.protoname = i;
+        co->ip.protocol = ptbl->protocol_id;
         return;
       }
+
+      i++;
+      ptbl++;
+    }
 
     fprintf(stderr, "Unknown protocol '%s'.\n", arg);
     exit(EXIT_FAILURE);
@@ -1689,11 +1697,14 @@ static void list_protocols(void)
 
   puts("List of supported protocols (--protocol):");
 
-  for (i = 1, ptbl = mod_table; ptbl->func != NULL; ptbl++, i++)
-    printf("\t%2d - %s\t(%s)\n",
-           i,
-           ptbl->acronym,
-           ptbl->description);
+  i = 1;
+  ptbl = mod_table;
+
+  while (ptbl->func != NULL)
+  {
+    printf("\t%2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
+    ptbl++;
+  }
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
@@ -1946,6 +1957,7 @@ static int check_for_valid_options(int option, int *list)
 
   return 0;
 }
+
 
 
 

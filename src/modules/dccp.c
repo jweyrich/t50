@@ -58,12 +58,13 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
   dccp_length = dccp_packet_hdr_len(co->dccp.type);
   dccp_ext_length = (co->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
-  *size = sizeof(struct iphdr) +
-          greoptlen               +
+
+  *size = sizeof(struct iphdr)    +
           sizeof(struct dccp_hdr) +
+          sizeof(struct psdhdr)   +
           dccp_ext_length         +
           dccp_length             +
-          sizeof(struct psdhdr);
+          greoptlen;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -73,7 +74,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* Prepare GRE encapsulation, if needed */
   gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr) +
+                             sizeof(struct iphdr)    +
                              sizeof(struct dccp_hdr) +
                              dccp_ext_length         +
                              dccp_length);
@@ -256,5 +257,3 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);
 }
-
-

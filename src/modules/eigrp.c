@@ -50,10 +50,11 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
   prefix = __RND(co->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
+
   *size = sizeof(struct iphdr)     +
-          greoptlen                +
           sizeof(struct eigrp_hdr) +
           eigrp_tlv_len            +
+          greoptlen                +
           8;    /* OBS: Ugly workaround! Must change this later! */
 
   /* Try to reallocate packet, if necessary */
@@ -64,7 +65,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-                    sizeof(struct iphdr) +
+                    sizeof(struct iphdr)     +
                     sizeof(struct eigrp_hdr) +
                     eigrp_tlv_len);
 
@@ -440,8 +441,8 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* EIGRP header size calculation */
-static size_t eigrp_hdr_len(const uint16_t foo,
-                            const uint16_t bar, const uint8_t baz, const int qux)
+static size_t eigrp_hdr_len(const uint16_t opcode,
+                            const uint16_t type, const uint8_t prefix, const int auth)
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */
@@ -453,12 +454,12 @@ static size_t eigrp_hdr_len(const uint16_t foo,
    * 2. Software Version with Parameter TLVs for Hello
    * 3. Next Multicast Sequence TLV for Hello
    */
-  if (qux)
+  if (auth)
   {
-    if (foo == EIGRP_OPCODE_UPDATE  ||
-        (foo == EIGRP_OPCODE_HELLO   &&
-         (bar == EIGRP_TYPE_MULTICAST ||
-          bar == EIGRP_TYPE_SOFTWARE)))
+    if (opcode == EIGRP_OPCODE_UPDATE  ||
+        (opcode == EIGRP_OPCODE_HELLO   &&
+         (type == EIGRP_TYPE_MULTICAST ||
+          type == EIGRP_TYPE_SOFTWARE)))
       size += EIGRP_TLEN_AUTH;
   }
 
@@ -469,27 +470,27 @@ static size_t eigrp_hdr_len(const uint16_t foo,
    * instead, it carries Authentication Data, IP Internal and External
    * Routes or nothing (depends on the EIGRP Type).
    */
-  if (foo == EIGRP_OPCODE_UPDATE   ||
-      foo == EIGRP_OPCODE_REQUEST  ||
-      foo == EIGRP_OPCODE_QUERY    ||
-      foo == EIGRP_OPCODE_REPLY)
+  if (opcode == EIGRP_OPCODE_UPDATE   ||
+      opcode == EIGRP_OPCODE_REQUEST  ||
+      opcode == EIGRP_OPCODE_QUERY    ||
+      opcode == EIGRP_OPCODE_REPLY)
   {
     /*
      * For both Internal and External Routes TLV the code must perform
      * an additional step to compute the EIGRP header length,  because
      * it depends on the the EIGRP Prefix, and it can be 1-4 octets.
      */
-    if (bar == EIGRP_TYPE_INTERNAL)
+    switch (type)
     {
+    case EIGRP_TYPE_INTERNAL:
       size += EIGRP_TLEN_INTERNAL;
-      size += EIGRP_DADDR_LENGTH(baz);
+      size += EIGRP_DADDR_LENGTH(prefix);
+      break;
+
+    case EIGRP_TYPE_EXTERNAL:
+      size += EIGRP_TLEN_EXTERNAL;
+      size += EIGRP_DADDR_LENGTH(prefix);
     }
-    else
-      if (bar == EIGRP_TYPE_EXTERNAL)
-      {
-        size += EIGRP_TLEN_EXTERNAL;
-        size += EIGRP_DADDR_LENGTH(baz);
-      }
 
     /*
      * In the other hand, EIGRP Packet for Hello can carry Parameter,
@@ -497,7 +498,7 @@ static size_t eigrp_hdr_len(const uint16_t foo,
      */
   }
   else
-    if (foo == EIGRP_OPCODE_HELLO)
+    if (opcode == EIGRP_OPCODE_HELLO)
     {
       /*
        * AFAIK,  EIGRP TLVs must follow a predefined sequence in order to
@@ -506,7 +507,7 @@ static size_t eigrp_hdr_len(const uint16_t foo,
        * exactly what I saw on live  EIGRP PCAP files.  Read the code and
        * you will understand what I am talking about.
        */
-      switch (bar)
+      switch (type)
       {
       case EIGRP_TYPE_MULTICAST:
         size += EIGRP_TLEN_MULTICAST;
@@ -523,3 +524,5 @@ static size_t eigrp_hdr_len(const uint16_t foo,
 
   return size;
 }
+
+

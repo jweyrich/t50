@@ -102,28 +102,23 @@ int create_socket(void)
       return FALSE;
     }
   }
-
 #endif /* SO_SNDBUF */
 
 #ifdef SO_BROADCAST
-
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
     error("error setting socket broadcast (\"%s\").", strerror(errno));
     return FALSE;
   }
-
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
-
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
     error("error setting socket priority (\"%s\").", strerror(errno));
     return FALSE;
   }
-
 #endif /* SO_PRIORITY */
 
   return TRUE;
@@ -199,22 +194,18 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 {
   int r;
 
-  do
-  {
+  do { 
     r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-  }
-  while (r == -1 && errno == EINTR);
+  } while (r == -1 && errno == EINTR);
 
   while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
   {
     if ((r = wait_for_io(fd)) <= 0)
       break;
 
-    do
-    {
+    do {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-    }
-    while (r == -1 && errno == EINTR);
+    } while (r == -1 && errno == EINTR);
   }
 
   return r;

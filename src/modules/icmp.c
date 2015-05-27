@@ -40,9 +40,9 @@ void icmp(const struct config_options *const __restrict__ co, size_t *size)
   assert(co != NULL);
 
   greoptlen = gre_opt_len(co);
-  *size = sizeof(struct iphdr) +
-          greoptlen            +
-          sizeof(struct icmphdr);
+  *size = sizeof(struct iphdr)   +
+          sizeof(struct icmphdr) +
+          greoptlen;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -78,5 +78,3 @@ void icmp(const struct config_options *const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
-
-

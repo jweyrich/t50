@@ -22,9 +22,11 @@
 
 /* Actual packet buffer. Allocated dynamically. */
 void  *packet = NULL;
-size_t current_packet_size = 0;
 
-/* "private" variable holding the number of modules. Use get_number_of_registered_modules() funcion to get it. */
+/* Used by alloc_packet(). */
+static size_t current_packet_size = 0;
+
+/* Holds the number of modules. Use get_number_of_registered_modules() funcion to get it. */
 static size_t number_of_modules = 0;
 
 /** 
@@ -89,10 +91,17 @@ void alloc_packet(size_t new_packet_size)
 /* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
 size_t get_number_of_registered_modules(void)
 {
-  modules_table_t *ptbl;
-
   if (number_of_modules == 0)
-    for (ptbl = mod_table; ptbl->func != NULL; ptbl++, number_of_modules++);
+  {
+    modules_table_t *ptbl;
+
+    ptbl = mod_table;
+    while (ptbl->func != NULL)
+    {
+      ptbl++;
+      number_of_modules++;
+    }
+  }
 
   return number_of_modules;
 }
@@ -101,10 +110,13 @@ int *get_module_valid_options_list(int protocol)
 {
   modules_table_t *ptbl;
 
-  for (ptbl = mod_table; ptbl->func != NULL; ptbl++)
+  ptbl = mod_table;
+  while (ptbl->func != NULL)
   {
     if (ptbl->protocol_id == protocol)
       return ptbl->valid_options;
+
+    ptbl++;
   }
 
   return NULL;

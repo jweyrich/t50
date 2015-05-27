@@ -65,7 +65,6 @@
 
 /* The packet buffer. Reallocated as needed! */
 extern void     *packet;
-extern size_t   current_packet_size; /* Made public, if it's necessary! updated by alloc_packet(). */
 
 /* Realloc packet as needed. Used on module functions. */
 extern void     alloc_packet(size_t);

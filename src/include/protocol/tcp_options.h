@@ -64,8 +64,7 @@
  * and data begins on a 32 bit boundary.  The padding is composed of
  * zeros.
  */
-#define TCPOLEN_PADDING(foo) \
-  (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
+#define TCPOLEN_PADDING(foo) (((foo) & 3) ? sizeof(uint32_t) - ((foo) & 3) : 0)
 
 /* TCP Options bitmask. */
 #define TCP_OPTION_MSS        0x01
