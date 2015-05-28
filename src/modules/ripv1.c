@@ -46,10 +46,10 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr)  +
-          greoptlen             +
           sizeof(struct udphdr) +
-          rip_hdr_len(0)        +
-          sizeof(struct psdhdr);
+          sizeof(struct psdhdr) +
+          greoptlen             +
+          rip_hdr_len(0);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -59,8 +59,8 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr) +
-                             sizeof(struct udphdr)      +
+                             sizeof(struct iphdr)  +
+                             sizeof(struct udphdr) +
                              rip_hdr_len(0));
 
   /* UDP Header structure making a pointer to IP Header structure. */
@@ -128,5 +128,3 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
-
-

@@ -47,10 +47,10 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   *size = sizeof(struct iphdr)  +
-          greoptlen             +
           sizeof(struct udphdr) +
-          rip_hdr_len(co->rip.auth) +
-          sizeof(struct psdhdr);
+          sizeof(struct psdhdr) +
+          greoptlen             +
+          rip_hdr_len(co->rip.auth);
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);

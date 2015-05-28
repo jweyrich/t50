@@ -43,9 +43,9 @@ void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
 
   /* Packet size. */
-  *size = sizeof(struct iphdr) +
-          greoptlen            +
-          sizeof(struct igmphdr);
+  *size = sizeof(struct iphdr)   +
+          sizeof(struct igmphdr) +
+          greoptlen;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -71,5 +71,3 @@ void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
-
-

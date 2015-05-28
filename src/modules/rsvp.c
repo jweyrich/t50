@@ -589,7 +589,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* RSVP objects size claculation. */
-static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8_t baz, const uint8_t qux)
+static size_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec)
 {
   size_t size;
 
@@ -611,11 +611,11 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.6 Resv Teardown Messages
    * 3.1.8 Resv Error Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_PATH     ||
-      foo == RSVP_MESSAGE_TYPE_RESV     ||
-      foo == RSVP_MESSAGE_TYPE_PATHTEAR ||
-      foo == RSVP_MESSAGE_TYPE_RESVTEAR ||
-      foo == RSVP_MESSAGE_TYPE_RESVERR)
+  if (type == RSVP_MESSAGE_TYPE_PATH     ||
+      type == RSVP_MESSAGE_TYPE_RESV     ||
+      type == RSVP_MESSAGE_TYPE_PATHTEAR ||
+      type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+      type == RSVP_MESSAGE_TYPE_RESVERR)
     size += RSVP_LENGTH_RESV_HOP;
 
   /*
@@ -623,8 +623,8 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.3 Path Messages
    * 3.1.4 Resv Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_PATH ||
-      foo == RSVP_MESSAGE_TYPE_RESV)
+  if (type == RSVP_MESSAGE_TYPE_PATH ||
+      type == RSVP_MESSAGE_TYPE_RESV)
     size += RSVP_LENGTH_TIME_VALUES;
 
   /*
@@ -633,9 +633,9 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.8 Resv Error Messages
    * 3.1.9 Confirmation Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_PATHERR ||
-      foo == RSVP_MESSAGE_TYPE_RESVERR ||
-      foo == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (type == RSVP_MESSAGE_TYPE_PATHERR ||
+      type == RSVP_MESSAGE_TYPE_RESVERR ||
+      type == RSVP_MESSAGE_TYPE_RESVCONF)
     size += RSVP_LENGTH_ERROR_SPEC;
 
   /*
@@ -645,15 +645,15 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.5 Path Teardown Messages
    * 3.1.7 Path Error Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_PATH     ||
-      foo == RSVP_MESSAGE_TYPE_PATHTEAR ||
-      foo == RSVP_MESSAGE_TYPE_PATHERR)
+  if (type == RSVP_MESSAGE_TYPE_PATH     ||
+      type == RSVP_MESSAGE_TYPE_PATHTEAR ||
+      type == RSVP_MESSAGE_TYPE_PATHERR)
   {
     size += RSVP_LENGTH_SENDER_TEMPLATE;
     size += RSVP_LENGTH_SENDER_TSPEC;
-    size += TSPEC_SERVICES(qux);
+    size += TSPEC_SERVICES(tspec);
     size += RSVP_LENGTH_ADSPEC;
-    size += ADSPEC_SERVICES(baz);
+    size += ADSPEC_SERVICES(adspec);
   }
 
   /*
@@ -661,8 +661,8 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.4 Resv Messages
    * 3.1.9 Confirmation Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_RESV ||
-      foo == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (type == RSVP_MESSAGE_TYPE_RESV ||
+      type == RSVP_MESSAGE_TYPE_RESVCONF)
     size += RSVP_LENGTH_RESV_CONFIRM;
 
   /*
@@ -672,10 +672,10 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
    * 3.1.8 Resv Error Messages
    * 3.1.9 Confirmation Messages
    */
-  if (foo == RSVP_MESSAGE_TYPE_RESV     ||
-      foo == RSVP_MESSAGE_TYPE_RESVTEAR ||
-      foo == RSVP_MESSAGE_TYPE_RESVERR  ||
-      foo == RSVP_MESSAGE_TYPE_RESVCONF)
+  if (type == RSVP_MESSAGE_TYPE_RESV     ||
+      type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+      type == RSVP_MESSAGE_TYPE_RESVERR  ||
+      type == RSVP_MESSAGE_TYPE_RESVCONF)
   {
     /*
      * The SCOPE Object Classes is present for the following:
@@ -683,10 +683,10 @@ static size_t rsvp_objects_len(const uint8_t foo, const uint8_t bar, const uint8
      * 3.1.6 Resv Teardown Messages
      * 3.1.8 Resv Error Messages
      */
-    if (foo == RSVP_MESSAGE_TYPE_RESV     ||
-        foo == RSVP_MESSAGE_TYPE_RESVTEAR ||
-        foo == RSVP_MESSAGE_TYPE_RESVERR)
-      size += RSVP_LENGTH_SCOPE(bar);
+    if (type == RSVP_MESSAGE_TYPE_RESV     ||
+        type == RSVP_MESSAGE_TYPE_RESVTEAR ||
+        type == RSVP_MESSAGE_TYPE_RESVERR)
+      size += RSVP_LENGTH_SCOPE(scope);
 
     size += RSVP_LENGTH_STYLE;
   }

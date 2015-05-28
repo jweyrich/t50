@@ -50,11 +50,11 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   esp_data  = auth_hmac_md5_len(1);
-  *size = sizeof(struct iphdr) +
-          greoptlen                  +
+  *size = sizeof(struct iphdr)       +
           sizeof(struct ip_auth_hdr) +
-          IP_AH_ICV                  +
           sizeof(struct ip_esp_hdr)  +
+          greoptlen                  +
+          IP_AH_ICV                  +
           esp_data;
 
   /* Try to reallocate packet, if necessary */
@@ -64,10 +64,10 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 
   /* GRE Encapsulation takes place. */
   gre_encapsulation(packet, co,
-                    sizeof(struct iphdr) +
+                    sizeof(struct iphdr)       +
                     sizeof(struct ip_auth_hdr) +
-                    IP_AH_ICV                  +
                     sizeof(struct ip_esp_hdr)  +
+                    IP_AH_ICV                  +
                     esp_data);
 
   /*
