@@ -130,7 +130,7 @@ distclean: clean
 	-if [ -f $(RELEASE_DIR)/t50 ]; then rm $(RELEASE_DIR)/t50; fi
 	-if [ -d doc/html ]; then rm -rf doc/html; fi
 	-if [ -d doc/latex ]; then rm -rf doc/latex; fi
-	-if [ -f doc/doxy*.db ]; rhen rm -f doc/doxy*.db; fi
+	-if [ -f doc/doxy*.db ]; then rm -f doc/doxy*.db; fi
 
 clean:
 	-rm $(OBJS)
