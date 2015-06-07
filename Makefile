@@ -15,6 +15,20 @@ INSTALLPROG = /usr/bin/install
 # This can make T50 to be SLOW... But the RNG is accurate...
 #USE_RDRAND=1
 
+#
+# T50 directories structure:
+# .
+# ├── build
+# │   ├── help
+# │   └── modules
+# ├── doc
+# ├── release
+# └── src
+#     ├── help
+#     ├── include
+#     │   └── protocol
+#     └── modules
+#
 SRC_DIR = ./src
 OBJ_DIR = ./build
 RELEASE_DIR = ./release
@@ -22,6 +36,7 @@ MAN_DIR = /usr/share/man/man8
 INCLUDE_DIR = $(SRC_DIR)/include
 SBIN_DIR = /usr/sbin
 
+# 't50' executable is our target!
 TARGET = $(RELEASE_DIR)/t50
 
 OBJS = $(OBJ_DIR)/modules/ip.o \
