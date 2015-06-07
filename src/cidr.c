@@ -101,7 +101,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
   }
   else
   {
-    cidr.hostid = 0;
+    cidr.hostid = 0;    // means "no random address".
     cidr.__1st_addr = ntohl(address);
   }
 
