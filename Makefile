@@ -75,6 +75,22 @@ $(OBJ_DIR)/help/ipsec_help.o \
 $(OBJ_DIR)/help/eigrp_help.o \
 $(OBJ_DIR)/help/ospf_help.o
 
+DEPS = $(SRC_DIR)/include/config.h \
+$(SRC_DIR)/include/common.h \
+$(SRC_DIR)/include/protocol/eigrp.h \
+$(SRC_DIR)/include/protocol/gre.h \
+$(SRC_DIR)/include/protocol/egp.h \
+$(SRC_DIR)/include/protocol/ip.h \
+$(SRC_DIR)/include/protocol/igmp.h \
+$(SRC_DIR)/include/protocol/tcp_options.h \
+$(SRC_DIR)/include/protocol/rsvp.h \
+$(SRC_DIR)/include/protocol/rip.h \
+$(SRC_DIR)/include/protocol/ospf.h \
+$(SRC_DIR)/include/typedefs.h \
+$(SRC_DIR)/include/help.h \
+$(SRC_DIR)/include/defines.h \
+$(SRC_DIR)/include/modules.h
+
 #--- This will give us a lot of warnings. Useful to check if the code is alright (not quite!). Use carefully!
 #--- As seen on OWASP cheat sheet!
 #EXTRA_WARNINGS=-Wsign-conversion -Wcast-align -Wformat=2 -Wformat-security -fno-common -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wstrict-overflow -Wtrampolines
@@ -126,15 +142,15 @@ $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # Compile main
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Compile Help
-$(OBJ_DIR)/help/%.o: $(SRC_DIR)/help/%.c
+$(OBJ_DIR)/help/%.o: $(SRC_DIR)/help/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Compile modules
-$(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c
+$(OBJ_DIR)/modules/%.o: $(SRC_DIR)/modules/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 doxygen:
