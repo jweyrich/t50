@@ -370,15 +370,15 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    *    +-----------------+
    */
   if (co->tcp.md5)
-{
-  size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+  {
+    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
-  *buffer.byte_ptr++ = TCPOPT_MD5;
-  *buffer.byte_ptr++ = TCPOLEN_MD5;
-  /*
-   * The Authentication key uses HMAC-MD5 digest.
-   */
-  stemp = auth_hmac_md5_len(co->tcp.md5);
+    *buffer.byte_ptr++ = TCPOPT_MD5;
+    *buffer.byte_ptr++ = TCPOLEN_MD5;
+    /*
+     * The Authentication key uses HMAC-MD5 digest.
+     */
+    stemp = auth_hmac_md5_len(co->tcp.md5);
 
     for (counter = 0; counter < stemp; counter++)
       *buffer.byte_ptr++ = RANDOM();
@@ -406,12 +406,12 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    *    +-----------------+
    */
   if (co->tcp.auth)
-{
-  size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+  {
+    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
-  *buffer.byte_ptr++ = TCPOPT_AO;
-  *buffer.byte_ptr++ = TCPOLEN_AO;
-  *buffer.byte_ptr++ = __RND(co->tcp.key_id);
+    *buffer.byte_ptr++ = TCPOPT_AO;
+    *buffer.byte_ptr++ = TCPOLEN_AO;
+    *buffer.byte_ptr++ = __RND(co->tcp.key_id);
     *buffer.byte_ptr++ = __RND(co->tcp.next_key);
     /*
      * The Authentication key uses HMAC-MD5 digest.
@@ -424,14 +424,13 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* Padding the TCP Options. */
   for (; tcpolen & 3; tcpolen++)
-*buffer.byte_ptr++ = co->tcp.nop;
+    *buffer.byte_ptr++ = co->tcp.nop;
 
-length = sizeof(struct tcphdr) + tcpolen;
+  length = sizeof(struct tcphdr) + tcpolen;
 
-/* Fill PSEUDO Header structure. */
-    pseudo           = buffer.ptr;
-
-    if (co->encapsulated)
+  /* Fill PSEUDO Header structure. */
+  pseudo           = buffer.ptr;
+  if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
     pseudo->daddr    = gre_ip->daddr;
@@ -441,17 +440,16 @@ length = sizeof(struct tcphdr) + tcpolen;
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
+  pseudo->zero     = 0;
+  pseudo->protocol = co->ip.protocol;
+  pseudo->len      = htons(length);
 
-pseudo->zero     = 0;
-pseudo->protocol = co->ip.protocol;
-pseudo->len      = htons(length);
+  length += sizeof(struct psdhdr);
 
-length += sizeof(struct psdhdr);
+  /* Computing the checksum. */
+  tcp->check   = co->bogus_csum ? RANDOM() : cksum(tcp, length);
 
-/* Computing the checksum. */
-tcp->check   = co->bogus_csum ? RANDOM() : cksum(tcp, length);
-
-gre_checksum(packet, co, *size);
+  gre_checksum(packet, co, *size);
 }
 
 /* TCP options size calculation. */

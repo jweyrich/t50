@@ -173,6 +173,7 @@ int send_packet(const void *const buffer,
   return TRUE;
 }
 
+/* NOTE: Code inspired on Apache httpd source. */
 static int wait_for_io(int fd)
 {
   int r;
@@ -190,6 +191,7 @@ static int wait_for_io(int fd)
   return r;
 }
 
+/* NOTE: Code inspired on Apache httpd source. */
 static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t size)
 {
   int r;
@@ -210,6 +212,3 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 
   return r;
 }
-
-
-

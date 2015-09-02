@@ -61,6 +61,8 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
    *     address and 'Network Mask' adding one  gives the first IP address
    *     for the CIDR.
    */
+
+  /* FIXME: Maybe this is an unecessary test. */
   if (bits < CIDR_MAXIMUM)
   {
     uint32_t netmask;

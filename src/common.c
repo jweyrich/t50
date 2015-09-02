@@ -141,7 +141,7 @@ uint32_t readrand(void)
     "1:\n"
     "rdrand %0\n"
     "jnc 1b\n"         /* Carry flag is zero if RDRAND fails.
-                          No need to implement a failsafe here. RDRAND will work eventually. */
+                          No need to implement a safeguard here. RDRAND will work eventually. */
     : "=r" (d)
   );
 
@@ -179,7 +179,7 @@ void fatal_error(char *fmt, ...)
   char *str;
   va_list args;
 
-  if ((asprintf(&str, PACKAGE ": %s\n", fmt)) != -1)
+  if ((asprintf(&str, "\a\n" PACKAGE ": %s\n", fmt)) != -1)
   {
     va_start(args, fmt);
       vfprintf(stderr, str, args);
