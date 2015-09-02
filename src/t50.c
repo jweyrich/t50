@@ -54,21 +54,6 @@ int main(int argc, char *argv[])
   /* General initializations here. */
   initialize();
 
-  if (co->flood)
-    puts("Entering flood mode...");
-  else
-    printf("Sending %u packets...\n", co->threshold);
-
-#ifdef __HAVE_TURBO__
-  if (co->turbo)
-    puts("Turbo mode active...");
-#endif
-
-  if (co->bits)
-    puts("Performing stress testing...");
-
-  puts("Hit Ctrl+C to stop...");
-
   /* Create_socket() handles its own errors before returning. */
   if (!create_socket())
     return EXIT_FAILURE;
@@ -124,7 +109,7 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\b\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\a\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -217,7 +202,7 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\b\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\a\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -304,6 +289,21 @@ static void initialize(void)
          (otherwise, it's line buffered). --- */
   fflush(stdout);
   setvbuf(stdout, NULL, _IONBF, 0);
+
+  if (co->flood)
+    puts("Entering flood mode...");
+  else
+    printf("Sending %u packets...\n", co->threshold);
+
+#ifdef __HAVE_TURBO__
+  if (co->turbo)
+    puts("Turbo mode active...");
+#endif
+
+  if (co->bits)
+    puts("Performing stress testing...");
+
+  puts("Hit Ctrl+C to stop...");
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
@@ -351,4 +351,3 @@ static modules_table_t *selectProtocol(const struct config_options *const co, in
 
   return ptbl;
 }
-
