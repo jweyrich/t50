@@ -26,7 +26,7 @@
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 
-static void initialize(void);
+static void initialize(const struct config_options *);
 static modules_table_t *selectProtocol(const struct config_options * const, int *);
 static const char *get_ordinal_suffix(unsigned);
 static const char *get_month(unsigned);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     fatal_error("User must have root priviledge to run.");
 
   /* General initializations here. */
-  initialize();
+  initialize(co);
 
   /* Create_socket() handles its own errors before returning. */
   if (!create_socket())
@@ -247,7 +247,7 @@ static void signal_handler(int signal)
   exit(128 + signal);
 }
 
-static void initialize(void)
+static void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
   struct sigaction sa;
