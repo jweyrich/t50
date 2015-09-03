@@ -34,7 +34,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
 {
   size_t greoptlen,   /* GRE options size. */
          ospf_length, /* OSPF header length. */
-         //length,
          counter,
          stemp;
 
@@ -98,9 +97,9 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
    */
   ospf->length  = htons(co->ospf.length ?
                         co->ospf.length :
-                        sizeof(struct ospf_hdr)      +
-                        sizeof(struct ospf_auth_hdr) +
-                        ospf_length);
+                          sizeof(struct ospf_hdr)      +
+                          sizeof(struct ospf_auth_hdr) +
+                          ospf_length);
   ospf->rid     = htonl(INADDR_RND(co->ospf.rid));
   ospf->aid     = htonl(co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid);
   ospf->check   = 0;
@@ -154,8 +153,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
     ospf_auth->sequence = FIELD_MUST_BE_ZERO;
   }
 
-  //length = sizeof(struct ospf_auth_hdr);
-
   buffer.ptr = ospf_auth + 1;
 
   /* Identifying the OSPF Type and building it. */
@@ -195,7 +192,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
     /* Dealing with neighbor address(es). */
     for (counter = 0; counter < co->ospf.neighbor; counter++)
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
-
     break;
 
   case OSPF_TYPE_DD:
@@ -271,8 +267,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
     goto build_ospf_lsa;
 
     /* Identifying the LSA Type and building it. */
-  build_ospf_lsupdate:
-
+build_ospf_lsupdate:
     if (co->ospf.lsa_type == LSA_TYPE_ROUTER)
     {
       /* Setting the correct OSPF LSA Header length. */
@@ -332,8 +327,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
          */
         *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
         *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_attached));
-
-        //length += OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK;
 
         /* Computing the checksum. */
         ospf_lsa->check      =  co->bogus_csum  ?
@@ -496,7 +489,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
     if (co->ospf.dd_include_lsa)
     {
       /* OSPF LSA Header structure making a pointer to Checksum. */
-    build_ospf_lsa:
+build_ospf_lsa:
       ospf_lsa             = buffer.ptr;
       ospf_lsa->age        = htons(__RND(co->ospf.lsa_age));
 
@@ -563,7 +556,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
    * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
    */
   stemp = auth_hmac_md5_len(co->ospf.auth);
-
   for (counter = 0; counter < stemp; counter++)
     *buffer.byte_ptr++ = RANDOM();
 
@@ -652,7 +644,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
          * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
          */
         stemp = auth_hmac_md5_len(co->ospf.auth);
-
         for (counter = 0; counter < stemp; counter++)
           *buffer.byte_ptr++ = RANDOM();
 
@@ -723,10 +714,8 @@ static size_t ospf_hdr_len(const unsigned int type, const int neighbor, const in
    */
   case OSPF_TYPE_DD:
     size += OSPF_TLEN_DD;
-
     if (dd_include_lsa)
       size += LSA_TLEN_GENERIC(0);
-
     break;
 
   case OSPF_TYPE_LSREQUEST:
@@ -780,6 +769,3 @@ static size_t ospf_hdr_len(const unsigned int type, const int neighbor, const in
 
   return size;
 }
-
-
-

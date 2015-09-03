@@ -236,5 +236,3 @@ struct ospf_lls_hdr
 };
 
 #endif  /* __OSPF_H */
-
-

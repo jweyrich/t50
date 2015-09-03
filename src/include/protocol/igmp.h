@@ -33,5 +33,3 @@
    IGMPV3_TLEN_NSRCS((bar)))
 
 #endif  /* __IGMP_H */
-
-

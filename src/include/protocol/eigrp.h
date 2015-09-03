@@ -111,5 +111,3 @@ struct eigrp_hdr
 };
 
 #endif  /* __EIGRP_H */
-
-

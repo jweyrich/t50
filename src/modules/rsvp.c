@@ -47,6 +47,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 
   greoptlen = gre_opt_len(co);
   objects_length = rsvp_objects_len(co->rsvp.type, co->rsvp.scope, co->rsvp.adspec, co->rsvp.tspec);
+
   *size = sizeof(struct iphdr)           +
           sizeof(struct rsvp_common_hdr) +
           greoptlen                      +
@@ -299,7 +300,6 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_p));
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_m));
       *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_M));
-      break;
     }
 
     /*
@@ -472,8 +472,6 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
         *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
       }
-
-      break;
     }
   }
 

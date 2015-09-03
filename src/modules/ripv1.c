@@ -95,7 +95,6 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
   *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-
   *buffer.word_ptr++ = htons(__RND(co->rip.family));
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.address));
@@ -105,7 +104,6 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
-
   if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -116,7 +114,6 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
-
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = (buffer.ptr - (void *)udp));

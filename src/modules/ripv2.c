@@ -226,14 +226,12 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
      */
     size = auth_hmac_md5_len(co->rip.auth);
-
     for (counter = 0; counter < size; counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
-
   if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -244,7 +242,6 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
-
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length = (buffer.ptr - (void *)udp));

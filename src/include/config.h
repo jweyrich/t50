@@ -578,8 +578,6 @@ struct config_options
   /* NOTE: Add structures configuration for new protocols here! */
 };
 
-struct config_options *parse_command_line(char **);
+extern struct config_options *parse_command_line(char **);
 
 #endif /* CONFIG_H */
-
-

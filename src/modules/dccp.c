@@ -234,7 +234,6 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* PSEUDO Header structure??? */
   pseudo = buffer_ptr;
-
   if (co->encapsulated)
   {
     pseudo->saddr = gre_ip->saddr;
@@ -245,7 +244,6 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
     pseudo->saddr = ip->saddr;
     pseudo->daddr = ip->daddr;
   }
-
   pseudo->zero  = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(buffer_ptr - (void *)dccp);

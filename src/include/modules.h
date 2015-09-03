@@ -80,5 +80,3 @@ extern void ospf  (const struct config_options *const __restrict__, size_t *size
 /* --- add yours here */
 
 #endif
-
-

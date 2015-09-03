@@ -121,5 +121,3 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
 }
-
-

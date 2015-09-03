@@ -39,13 +39,10 @@
  */
 #define INITIAL_PACKET_SIZE 2048
 
-/* #define RAND_MAX 2147483647 */ /* NOTE: Already defined @ stdlib.h */
 #define CIDR_MINIMUM 8
 #define CIDR_MAXIMUM 32 // fix #7
 
-/* 24 bits?! */
-/* FIX: Changed to hexadecimal 'cause it's easier to debug. */
-#define MAXIMUM_IP_ADDRESSES  0xffffffU
+#define MAXIMUM_IP_ADDRESSES  ((1U << 24) - 1)
 
 /* #define INADDR_ANY 0 */ /* NOTE: Already defined @ linux/in.h */
 #define IPPORT_ANY 0

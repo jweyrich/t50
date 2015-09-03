@@ -524,5 +524,3 @@ static size_t eigrp_hdr_len(const uint16_t opcode,
 
   return size;
 }
-
-

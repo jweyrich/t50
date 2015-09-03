@@ -157,5 +157,3 @@ struct rsvp_common_hdr
 };
 
 #endif  /* __RSVP_H */
-
-

@@ -95,5 +95,3 @@ extern void error(char *, ...);
 extern void fatal_error(char *, ...) __attribute__((noreturn));
 
 #endif /* __COMMON_H */
-
-

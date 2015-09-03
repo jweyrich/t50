@@ -38,5 +38,3 @@ extern void eigrp_help(void);
 extern void ospf_help(void);
 
 #endif
-
-

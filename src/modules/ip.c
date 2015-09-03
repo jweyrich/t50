@@ -70,5 +70,3 @@ struct iphdr *ip_header(void *buffer,
 
   return ip;
 }
-
-
