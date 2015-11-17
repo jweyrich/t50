@@ -566,6 +566,8 @@ static struct options_table_s *find_option(char *option)
 /* Check rules for options, after we get them all. */
 static void check_options_rules(struct config_options *__restrict__ co)
 {
+  struct options_table_s *ptbl;
+
   /* Address field is mandatory! */
   if (!co->ip.daddr)
     fatal_error("Target address needed.");
@@ -577,8 +579,10 @@ static void check_options_rules(struct config_options *__restrict__ co)
 
 #endif
 
+  ptbl = find_option("threshold");
+
   /* --flood and --threshold are mutually exclusive! */
-  if (co->flood && find_option("threshold")->in_use_)
+  if (co->flood && (ptbl && ptbl->in_use_))
     fatal_error("--flood and --threshold cannot be used at the same time.\n");
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
@@ -603,16 +607,17 @@ static void check_options_rules(struct config_options *__restrict__ co)
   {
     /* Need to scan only beggining with --encapsulated option.
        Use the fact that the options are sequentially organized. */
-    struct options_table_s *ptbl = find_option("--encapsulated");
+    struct options_table_s *ptbl;
+    
+    if ((ptbl = find_option("--encapsulated")) != NULL)
+      /* ptbl->id is an option id on options table entry. */
+      while (ptbl->id != 0)
+      {
+        if (!check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
+          fatal_error("One or more options are not available to chosen protocol.");
 
-    /* ptbl->id is an option id on options table entry. */
-    while (ptbl->id != 0)
-    {
-      if (!check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
-        fatal_error("One or more options are not available to chosen protocol.");
-
-      ptbl++;
-    }
+        ptbl++;
+      }
   }
 }
 

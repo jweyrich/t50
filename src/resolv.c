@@ -53,13 +53,7 @@ in_addr_t resolv(char *name)
     error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
   }
 
-  // FIX: Traverse the linked list trying to find an
-  //      IPv4 address (AF_INET is prioritary!) or an IPv6 mapped to IPv4.
-
-  // FIX: The previous routine (until commit 07bd72777a92530930617ec27327425d72d7b915)
-  //      had a nasty memory leak.
   res = res0;
-
   while (res)
   {
     if (res->ai_family == AF_INET)

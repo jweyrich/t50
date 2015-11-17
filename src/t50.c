@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
   struct config_options *co;
   struct cidr           *cidr_ptr;
   modules_table_t       *ptbl;
-  int proto;                  /* Used on main loop. */
+  int                   proto; /* Used on main loop. */
 
   /* NOTE: parse_command_line returns ONLY if there are no errors. */
   co = parse_command_line(argv);
 
-  /** User must have root privileges to run T50, unless --help or --version options are found on command line. */
+  /* User must have root privileges to run T50, unless --help or --version options are found on command line. */
   if (getuid())
     fatal_error("User must have root priviledge to run.");
 

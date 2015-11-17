@@ -185,8 +185,7 @@ static int wait_for_io(int fd)
   do
   {
     r = poll(&pfd, 1, TIMEOUT);
-  }
-  while (r == -1 && errno == EINTR);
+  } while (r == -1 && errno == EINTR);
 
   return r;
 }
