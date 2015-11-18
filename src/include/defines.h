@@ -76,6 +76,7 @@
 #define IPPORT_RND(foo) __RND((foo))
 
 /** Used to test if "pid" from fork() is from a child process. */
+/* NOTE: fork returns always 0 for the child process. */
 #define IS_CHILD_PID(p) ((p) == 0)
 
 #endif

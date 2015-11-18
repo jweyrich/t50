@@ -185,12 +185,10 @@ int main(int argc, char *argv[])
 
     /* This could block, until SIGALARM interrupts! */
     if (wait(&status) == -1)
-    {
-      /* If wait() was interrupted, then kills ungracefully the child process! */
-      kill(pid, SIGKILL);
-    }
-    else
-      alarm(0);
+      kill(pid, SIGKILL);   /* If wait() was interrupted, then kills ungracefully the child process! */ 
+
+    /* Resets the alarm */
+    alarm(0);
 #endif
 
     /* FIX: To graciously end the program, only the parent process can close the socket.
