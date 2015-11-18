@@ -87,10 +87,6 @@ extern int          send_packet(const void *const,
 extern void         show_version(void); /* Prints version info. */
 extern void         usage(void);        /* Prints usage message */
 
-#ifdef __HAVE_RDRAND__
-extern uint32_t     readrand(void);
-#endif
-
 extern void error(char *, ...);
 extern void fatal_error(char *, ...) __attribute__((noreturn));
 

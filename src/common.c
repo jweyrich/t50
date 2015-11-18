@@ -123,32 +123,6 @@ int *get_module_valid_options_list(int protocol)
 }
 
 
-#ifdef __HAVE_RDRAND__
-/**
- * Get a random value from Quantum Real Random Number Generator embeded on the processor.
- *
- * This routine is potentially SLOWER than using the linear conguential pseudo random
- * number generator (using random()), but gives better "randomness" on newer processors.
- *
- * @return 32 bit random value.
- */
-uint32_t readrand(void)
-{
-  uint32_t d;
-
-  /* Using assembly here is more reliable than using the intrinsic funcion! */
-  __asm__ __volatile__ (
-    "1:\n"
-    "rdrand %0\n"
-    "jnc 1b\n"         /* Carry flag is zero if RDRAND fails.
-                          No need to implement a safeguard here. RDRAND will work eventually. */
-    : "=r" (d)
-  );
-
-  return d;
-}
-#endif
-
 /**
  * Standard error reporting routine. Non fatal version.
  */
