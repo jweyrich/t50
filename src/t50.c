@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
   alloc_packet(INITIAL_PACKET_SIZE);
 
   /* Selects the initial protocol to use. */
-  ptbl = selectProtocol(co, &proto);
+  ptbl = selectProtocol(co, &proto);  /* No problems here. ptbl will never be NULL. */
 
   /* Execute if flood or if threshold is given. */
   while (co->flood || co->threshold)

@@ -119,11 +119,6 @@ else
 
   LDFLAGS += -s -O3 -fuse-linker-plugin -flto
 
-  ifdef USE_RDRAND
-    ifeq ($(shell grep rdrand /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
-      CFLAGS += -D__HAVE_RDRAND__
-    endif
-  endif
   ifeq ($(shell grep bmi2 /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mbmi2
   endif
