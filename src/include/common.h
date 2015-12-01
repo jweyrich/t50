@@ -70,6 +70,8 @@ extern void     *packet;
 extern void     alloc_packet(size_t);
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
+extern uint32_t RANDOM(void);
+extern void SRANDOM(void);
 extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 
 /* Common routines used by code */

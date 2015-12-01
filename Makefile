@@ -96,7 +96,7 @@ $(SRC_DIR)/include/modules.h
 #EXTRA_WARNINGS=-Wsign-conversion -Wcast-align -Wformat=2 -Wformat-security -fno-common -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wstrict-overflow -Wtrampolines
 
 CFLAGS = -I$(INCLUDE_DIR) -std=gnu99 -Wall -Wextra $(EXTRA_WARNINGS) 
-LDFLAGS =
+LDFLAGS = 
 
 #
 # You can define DEBUG if you want to use GDB. 
@@ -109,7 +109,7 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O3 -mtune=native -flto -fomit-frame-pointer -DNDEBUG -D__HAVE_TURBO__
+  CFLAGS += -O3 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG -D__HAVE_TURBO__
 
 	# Get architecture
   ARCH = $(shell arch)
@@ -119,12 +119,7 @@ else
 
   LDFLAGS += -s -O3 -fuse-linker-plugin -flto
 
-  ifeq ($(shell grep bmi2 /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
-    CFLAGS += -mbmi2
-  endif
-  ifeq ($(shell grep popcnt /proc/cpuinfo 2>&1 > /dev/null; echo $$?),0)
-    CFLAGS += -mpopcnt
-  endif
+  # FIX: BMI2 isn't very useful for us, but MOVBE is!
   ifeq ($(shell grep movbe /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
     CFLAGS += -mmovbe
   endif

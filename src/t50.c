@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
   /* Setup random seed using current date/time timestamp. */
   /* NOTE: Random seed don't need to be so precise! */
-  SRANDOM(time(NULL));
+  SRANDOM();
 
 #ifdef  __HAVE_TURBO__
   if (co->turbo)

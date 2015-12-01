@@ -29,6 +29,36 @@ static size_t current_packet_size = 0;
 /* Holds the number of modules. Use get_number_of_registered_modules() funcion to get it. */
 static size_t number_of_modules = 0;
 
+/**
+ * This is the same as rand(), but fixes the problem the upper bit.
+ * RAND_MAX is 31 bits long, not 32! And this value is plataform dependent!
+ *
+ * @return unsigned int pseudo-random number.
+ */
+static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
+uint32_t RANDOM(void) { return _seed = 0x5DEECE66DUL * _seed + 11UL; } /* Same parameters as in glibc! */
+
+/**
+ * Gets an random seed from /dev/random.
+ *
+ * Since this routine is used only once there is no problem using "/device/random".
+ */
+void SRANDOM(void)
+{
+  int _fd;
+  int r;
+
+  if ((_fd = open("/dev/random", O_RDONLY)) == -1)
+    fatal_error("Cannot open /dev/random to get initial random seed.");
+
+  r = read(_fd, &_seed, sizeof(uint64_t));
+
+  close(_fd);
+
+  if (r == -1)
+    fatal_error("Cannot read initial seed from /dev/random.");
+}
+
 /** 
  * Returns the Randomized netmask if foo is 0 or the parameter, otherwise.
  *
