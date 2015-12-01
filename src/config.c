@@ -1651,7 +1651,7 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-static __attribute__((noinline)) unsigned int toULong(char *optname, char *value)
+static _NOINLINE unsigned int toULong(char *optname, char *value)
 {
   unsigned long n;
 
@@ -1671,7 +1671,7 @@ static __attribute__((noinline)) unsigned int toULong(char *optname, char *value
 /* Tries to convert string to unsigned int, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-static __attribute__((noinline)) unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+static _NOINLINE unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
 {
   unsigned int n;
 
@@ -1845,7 +1845,7 @@ static int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *a
   NOTE: Since this funcion is defined and used in this module, it's marked with
         the attribute "noinline". Because it's big!
 */
-static __attribute__((noinline)) int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
+static _NOINLINE int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";

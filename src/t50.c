@@ -305,7 +305,7 @@ static void initialize(const struct config_options *co)
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
-static const char *get_ordinal_suffix(unsigned n)
+static const char * _NOINLINE get_ordinal_suffix(unsigned n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
@@ -323,7 +323,7 @@ static const char *get_ordinal_suffix(unsigned n)
 
 /* Auxiliary function to return the [constant] string for a month.
    NOTE: 'n' must be between 0 and 11. */
-static const char *get_month(unsigned n)
+static const char * _NOINLINE get_month(unsigned n)
 {
   /* Months */
   static const char *const months[] =

@@ -55,6 +55,8 @@
 #include <linux/dccp.h>
 #include <linux/if_ether.h>
 
+#define _NOINLINE __attribute__((noinline))
+
 #include <typedefs.h>
 #include <defines.h>
 #include <config.h>

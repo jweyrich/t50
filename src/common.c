@@ -36,7 +36,7 @@ static size_t number_of_modules = 0;
  * @return unsigned int pseudo-random number.
  */
 static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-uint32_t RANDOM(void) { return _seed = 0x5DEECE66DUL * _seed + 11UL; } /* Same parameters as in glibc! */
+uint32_t _NOINLINE RANDOM(void) { return _seed = 0x5DEECE66DUL * _seed + 11UL; } /* Same parameters as in glibc! */
 
 /**
  * Gets an random seed from /dev/random.
@@ -67,11 +67,19 @@ void SRANDOM(void)
  * @param foo IPv4 netmask (or 0 if randomized).
  * @return Netmask (randomized or otherwise).
  */
-uint32_t NETMASK_RND(uint32_t foo) 
+uint32_t _NOINLINE NETMASK_RND(uint32_t foo) 
 {
   if (foo == INADDR_ANY)
+  {
+    unsigned int t = RANDOM() >> 27; /* Upper 5 bits are more random! */
+
+    /* FIX: This is faster than getting an reminder! */
+    if (t > 22)
+      t = -(23 - t);
+    
     /* Rotate between 8 and 30 bits only! */
-    foo = ~(~0U >> (8U + (RANDOM() % 23U)));
+    foo = ~(~0U >> (t + 8));
+  }
 
   /* NOTE: htonl or ntohl? Invert the bytes anyway! */
   return __builtin_bswap32(foo);
