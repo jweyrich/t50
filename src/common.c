@@ -69,14 +69,12 @@ void SRANDOM(void)
  */
 uint32_t NETMASK_RND(uint32_t foo) 
 {
-  uint32_t t;
+  if (foo == INADDR_ANY)
+    /* Rotate between 8 and 30 bits only! */
+    foo = ~(~0U >> (8U + (RANDOM() % 23U)));
 
-  if (foo != INADDR_ANY)
-    t = foo;
-  else
-    t = ~(~0U >> (8 + (RANDOM() % 23)));
-
-  return htonl(t);
+  /* NOTE: htonl or ntohl? Invert the bytes anyway! */
+  return __builtin_bswap32(foo);
 }
 
 /**
