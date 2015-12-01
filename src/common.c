@@ -73,7 +73,7 @@ uint32_t _NOINLINE NETMASK_RND(uint32_t foo)
   {
     unsigned int t = RANDOM() >> 27; /* Upper 5 bits are more random! */
 
-    /* FIX: This is faster than getting an reminder! */
+    /* FIX: This is faster than getting a reminder! */
     if (t > 22)
       t = -(23 - t);
     
