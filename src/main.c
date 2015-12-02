@@ -65,9 +65,6 @@ int main(int argc, char *argv[])
   if ((cidr_ptr = config_cidr(co)) == NULL)
     return EXIT_FAILURE;
 
-  /* Selects the initial protocol to use. */
-  ptbl = selectProtocol(co, &proto);  /* No problems here. ptbl will never be NULL. */
-
 #ifdef  __HAVE_TURBO__
   if (co->turbo)
   {
@@ -122,6 +119,10 @@ int main(int argc, char *argv[])
 
   /* Preallocate packet buffer. */
   alloc_packet(INITIAL_PACKET_SIZE);
+
+  /* Selects the initial protocol to use. */
+  /* NOTE: Minor hack: back here from the last branch to avoid page fault using ptbl pointer. */
+  ptbl = selectProtocol(co, &proto);  /* No problems here. ptbl will never be NULL. */
 
   /* MAIN LOOP: Executed if flooding or if threshold is given. */
   while (co->flood || co->threshold)
