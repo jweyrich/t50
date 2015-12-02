@@ -71,7 +71,7 @@ uint32_t _NOINLINE NETMASK_RND(uint32_t foo)
 {
   if (foo == INADDR_ANY)
   {
-    unsigned int t = RANDOM() >> 27; /* Upper 5 bits are more random! */
+    uint32_t t = RANDOM() >> 27; /* Upper 5 bits are more random! */
 
     /* FIX: This is faster than getting a reminder! */
     if (t > 22)
@@ -124,7 +124,6 @@ void alloc_packet(size_t new_packet_size)
  * @return The number of registered modules.
  */
 /* Function prototype moved to modules.h. */
-/* NOTE: This function is here to not polute modules.c, where we keep only the modules definitions. */
 size_t get_number_of_registered_modules(void)
 {
   if (number_of_modules == 0)
@@ -159,13 +158,9 @@ int *get_module_valid_options_list(int protocol)
 }
 
 
-/**
- * Standard error reporting routine. Non fatal version.
- */
-void error(char *fmt, ...)
+static void _NOINLINE verror(char *fmt, va_list args)
 {
   char *str;
-  va_list args;
 
   if ((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1)
   {
@@ -173,10 +168,20 @@ void error(char *fmt, ...)
     exit(EXIT_FAILURE);
   }
 
-  va_start(args, fmt);
-    vfprintf(stderr, str, args);
-  va_end(args);
+  vfprintf(stderr, str, args);
   free(str);
+}
+
+/**
+ * Standard error reporting routine. Non fatal version.
+ */
+void _NOINLINE error(char *fmt, ...)
+{
+  va_list args;
+
+  va_start(args, fmt);
+    verror(fmt, args);
+  va_end(args);
 }
 
 /**
@@ -184,20 +189,14 @@ void error(char *fmt, ...)
  *
  * This function never returns!
  */
-void fatal_error(char *fmt, ...) 
+void _NOINLINE fatal_error(char *fmt, ...) 
 {
-  char *str;
   va_list args;
 
-  if ((asprintf(&str, "\a\n" PACKAGE ": %s\n", fmt)) != -1)
-  {
-    va_start(args, fmt);
-      vfprintf(stderr, str, args);
-    va_end(args);
-    free(str);
-  }
-  else
-    fprintf(stderr, PACKAGE ": Unknown error (not enough memory?).\n");
+  fputs("\a\n", stderr);  /* BEEP! */
+  va_start(args, fmt);
+    verror(fmt,args);
+  va_end(args);
 
   exit(EXIT_FAILURE);
 }

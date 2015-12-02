@@ -50,20 +50,20 @@ int create_socket(void)
            but on linux will cause an error. */
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
-    perror("Error opening raw socket");
+    error("Error opening raw socket");
     return FALSE;
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
-    perror("Error getting socket flags");
+    error("Error getting socket flags");
     return FALSE;
   }
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
-    perror("Error setting socket to non-blocking mode");
+    error("Error setting socket to non-blocking mode");
     return FALSE;
   }
 
@@ -72,7 +72,7 @@ int create_socket(void)
            still makes the kernel calculates the checksum and total_length. */
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
-    perror("Error setting socket options");
+    error("Error setting socket options");
     return FALSE;
   }
 
@@ -83,7 +83,7 @@ int create_socket(void)
 
   if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
-    perror("Error getting socket buffer");
+    error("Error getting socket buffer");
     return FALSE;
   }
 
@@ -98,7 +98,7 @@ int create_socket(void)
       if (errno == ENOBUFS)
         break;
 
-      perror("Error setting socket buffer");
+      error("Error setting socket buffer");
       return FALSE;
     }
   }
@@ -107,7 +107,7 @@ int create_socket(void)
 #ifdef SO_BROADCAST
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
-    error("error setting socket broadcast (\"%s\").", strerror(errno));
+    error("error setting socket broadcast flag (\"%s\").", strerror(errno));
     return FALSE;
   }
 #endif /* SO_BROADCAST */

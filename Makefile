@@ -57,7 +57,7 @@ $(OBJ_DIR)/modules/icmp.o \
 $(OBJ_DIR)/common.o \
 $(OBJ_DIR)/cksum.o \
 $(OBJ_DIR)/cidr.o \
-$(OBJ_DIR)/t50.o \
+$(OBJ_DIR)/main.o \
 $(OBJ_DIR)/resolv.o \
 $(OBJ_DIR)/sock.o \
 $(OBJ_DIR)/usage.o \

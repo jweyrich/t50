@@ -36,15 +36,18 @@ uint16_t cksum(void *data, size_t length)
 
   sum = 0;
 
+  /* Accumulate all 16 bit words on buffer. */
   while (length > 1)
   {
     sum += *p++;
     length -= 2;
   }
 
+  /* Is there a single byte remaining? */
   if (length)
     sum += *(unsigned char *)p;
 
+  /* Accumulate 16 bits carry-outs.*/
   while (sum >> 16)
     sum = (sum & 0xffff) + (sum >> 16);
 

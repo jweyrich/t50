@@ -514,7 +514,7 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-static int check_if_option(char *s)
+static inline int  check_if_option(char *s)
 {
   return *s == '-';
 }
@@ -537,7 +537,7 @@ static void set_default_protocol(struct config_options *__restrict__ co)
 
 /* Scans the option table trying to find the option.
    NOTE: "option" points to a string beginning with '-', always! */
-static struct options_table_s *find_option(char *option)
+static struct options_table_s * _NOINLINE find_option(char *option)
 {
   struct options_table_s *ptbl;
 
@@ -608,8 +608,9 @@ static void check_options_rules(struct config_options *__restrict__ co)
     /* Need to scan only beggining with --encapsulated option.
        Use the fact that the options are sequentially organized. */
     struct options_table_s *ptbl;
-    
+
     if ((ptbl = find_option("--encapsulated")) != NULL)
+
       /* ptbl->id is an option id on options table entry. */
       while (ptbl->id != 0)
       {
@@ -1753,10 +1754,7 @@ static int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *a
   }
 
   /* Allocate enough space for temporary string. */
-  t = strdup(addr);
-
-  if (t  == NULL)
-    perror("Cannot allocate temporary string");
+  if ((t = strdup(addr)) == NULL) error("Cannot allocate temporary string: " __FILE__ ":%d", __LINE__);
 
   /* Convert IP octects matches. */
   len = MATCH_LENGTH(rm[1]);
@@ -1962,6 +1960,7 @@ static int check_for_valid_options(int option, int *list)
 
   return 0;
 }
+
 
 
 
