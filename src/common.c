@@ -36,7 +36,7 @@ static size_t number_of_modules = 0;
  * @return unsigned int pseudo-random number.
  */
 static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-uint32_t _NOINLINE RANDOM(void) { return _seed = 0x5DEECE66DUL * _seed + 11UL; } /* Same parameters as in glibc! */
+uint32_t _NOINLINE RANDOM(void) { return _seed = 0x41c64e6dUL * _seed + 12345UL; } /* Same parameters as in glibc! */
 
 /**
  * Gets an random seed from /dev/random.
