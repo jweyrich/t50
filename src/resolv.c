@@ -28,7 +28,7 @@
  * no IPv4 address can be found.
  *
  * @param name The name, as in "www.target.com"...
- * @return IPv4 address found, or 0 if not found.
+ * @return IPv4 address found (in network order), or 0 if not found.
  */
 in_addr_t resolv(char *name)
 {

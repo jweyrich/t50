@@ -28,10 +28,10 @@ static struct cidr cidr = {0, 0};
  * This will setup cidr structure with values in host order. 
  *
  * @param bits Number of "valid" bits on netmask.
- * @param address IP address from command line.
+ * @param address IP address from command line (in network order).
  * @return Pointer to cidr structure.
  */
-struct cidr *config_cidr(uint32_t bits, in_addr_t address)
+struct cidr *config_cidr(const struct config_options * const __restrict__ co)
 {
   /* FIXME: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
 
@@ -63,7 +63,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
    */
 
   /* FIXME: Maybe this is an unecessary test. */
-  if (bits < CIDR_MAXIMUM)
+  if (co->bits < CIDR_MAXIMUM)
   {
     uint32_t netmask;
 
@@ -85,7 +85,7 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
     //
     // hostid == 0 means: use the address as is!
     //
-    cidr.hostid = (1U << (32 - bits)) - 2U;
+    cidr.hostid = (1U << (32 - co->bits)) - 2U;
 
     /* XXX Sanitizing the maximum host identifier's IP addresses.
      * XXX Should never reaches here!!! */
@@ -98,13 +98,13 @@ struct cidr *config_cidr(uint32_t bits, in_addr_t address)
       return NULL;
     }
 
-    netmask = ~(~0U >> bits);
-    cidr.__1st_addr = (ntohl(address) & netmask) + 1; // avoid bit 0 = 0 (loopback).
+    netmask = ~(~0U >> co->bits);
+    cidr.__1st_addr = (ntohl(co->ip.daddr) & netmask) + 1; // avoid bit 0 = 0 (loopback).
   }
   else
   {
     cidr.hostid = 0;    // means "no random address".
-    cidr.__1st_addr = ntohl(address);
+    cidr.__1st_addr = ntohl(co->ip.daddr);
   }
 
   return &cidr;

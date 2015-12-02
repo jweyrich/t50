@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 #endif  /* __HAVE_TURBO__ */
 
   /* Calculates CIDR for destination address. */
-  if ((cidr_ptr = config_cidr(co->bits, co->ip.daddr)) == NULL)
+  if ((cidr_ptr = config_cidr(co)) == NULL)
     return EXIT_FAILURE;
 
   /* Show launch info only for parent process. */

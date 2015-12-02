@@ -77,7 +77,7 @@ extern void SRANDOM(void);
 extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 
 /* Common routines used by code */
-extern struct cidr *config_cidr(uint32_t, in_addr_t);
+extern struct cidr *config_cidr(const struct config_options * const __restrict__);
 extern uint16_t     cksum(void *, size_t);  /* Checksum calc. */
 extern in_addr_t    resolv(char *);         /* Resolve name to ip address. */
 extern int          create_socket(void);    /* Creates the sending socket */
