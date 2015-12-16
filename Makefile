@@ -109,7 +109,7 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O3 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG -D__HAVE_TURBO__
+  CFLAGS += -O2 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG -D__HAVE_TURBO__
 
 	# Get architecture
   ARCH = $(shell arch)
