@@ -2,18 +2,19 @@
 # if DEBUG is defined on make call (ex: make DEBUG=1), then compile with
 # __HAVE_DEBUG__ defined, asserts and debug information.
 #
-# Delete __HAVE_TURBO__ definition, below, if you don't need it.
+# Define HAVE_TURBO if you want T50 to use 2 processes.
+# Define EXPERIMENTAL if you want new features not yet tested.
 #
 # The final executable will be created at release/ sub-directory.
 #
 
+HAVE_TURBO = 1
+EXPERIMENTAL = 1
+#DEBUG = 1
+
 .PHONY: all doxygen distclean clean install uninstall
 
 INSTALLPROG = /usr/bin/install
-
-# Define this variable if you really want to use RDRAND instruction, if present.
-# This can make T50 to be SLOW... But the RNG is accurate...
-#USE_RDRAND=1
 
 #
 # T50 directories structure:
@@ -96,6 +97,9 @@ $(SRC_DIR)/include/modules.h
 #EXTRA_WARNINGS=-Wsign-conversion -Wcast-align -Wformat=2 -Wformat-security -fno-common -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wstrict-overflow -Wtrampolines
 
 CFLAGS = -I$(INCLUDE_DIR) -std=gnu99 -Wall -Wextra $(EXTRA_WARNINGS) 
+ifdef EXPERIMENTAL
+  CFLAGS += -D_EXPERIMENTAL_
+endif
 LDFLAGS = 
 
 #
@@ -109,7 +113,10 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O2 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG -D__HAVE_TURBO__
+  CFLAGS += -O2 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG
+  ifdef HAVE_TURBO
+    CFLAGS += -D__HAVE_TURBO__
+  endif
 
 	# Get architecture
   ARCH = $(shell arch)
