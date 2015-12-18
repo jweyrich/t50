@@ -35,8 +35,29 @@ static size_t number_of_modules = 0;
  *
  * @return unsigned int pseudo-random number.
  */
-static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-uint32_t _NOINLINE RANDOM(void) { return _seed = 0x41c64e6dUL * _seed + 12345UL; } /* Same parameters as in glibc! */
+#ifdef _EXPERIMENTAL_
+  /* xorshift128+ */
+
+  /* Arbitrary seeds. */
+  static uint64_t _seed[2] = { 0x748bd5a53132bUL, 
+                               0x41c6e6d32143a1c7UL };
+   
+  uint32_t _NOINLINE RANDOM(void)
+  {
+    uint64_t s0 = _seed[1];
+    uint64_t s1 = _seed[0];
+    _seed[0] = s0;
+
+    s1 ^= s1 << 23; 
+    _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
+   
+    return (_seed[1] + s0) >> 32;
+  }
+#else
+  /* Linear Congruential Pseudo Random Number Generator. */
+  static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
+  uint32_t _NOINLINE RANDOM(void) { return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32; } /* Same parameters as in glibc! */
+#endif
 
 /**
  * Gets an random seed from /dev/random.
@@ -51,7 +72,13 @@ void SRANDOM(void)
   if ((_fd = open("/dev/random", O_RDONLY)) == -1)
     fatal_error("Cannot open /dev/random to get initial random seed.");
 
-  r = read(_fd, &_seed, sizeof(uint64_t));
+  r = read(_fd, &_seed, 
+#ifdef _EXPERIMENTAL_
+        2*sizeof(uint64_t)
+#else
+        sizeof(uint64_t)
+#endif
+      );
 
   close(_fd);
 
