@@ -59,8 +59,6 @@ int main(int argc, char *argv[])
   if (!create_socket())
     return EXIT_FAILURE;
 
-  SRANDOM();
-
   /* Calculates CIDR for destination address. */
   if ((cidr_ptr = config_cidr(co)) == NULL)
     return EXIT_FAILURE;
@@ -116,6 +114,10 @@ int main(int argc, char *argv[])
            tm->tm_min,
            tm->tm_sec);
   }
+
+  /* NOTE: Changed the random seed init to here to make
+           sure both processes have it's own! */
+  SRANDOM();
 
   /* Preallocate packet buffer. */
   alloc_packet(INITIAL_PACKET_SIZE);
