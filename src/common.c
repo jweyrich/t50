@@ -94,7 +94,7 @@ void SRANDOM(void)
  * @param foo IPv4 netmask (or 0 if randomized).
  * @return Netmask (randomized or otherwise).
  */
-uint32_t _NOINLINE NETMASK_RND(uint32_t foo) 
+uint32_t NETMASK_RND(uint32_t foo) 
 {
   if (foo == INADDR_ANY)
   {
