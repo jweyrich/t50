@@ -42,20 +42,20 @@ typedef struct
 } T50_tmp_addr_t;
 
 /* Local prototypes. */
-static int                    check_if_option(char *);
-static void                   check_options_rules(struct config_options *__restrict__);
-static struct options_table_s *find_option(char *);
-static void                   set_config_option(struct config_options *__restrict__, char *, int, char *);
-static unsigned int           toULong(char *, char *);
-static unsigned int           toULongCheckRange(char *, char *, unsigned int, unsigned int);
-static void                   check_list_separators(char *, char *);
-static void                   set_destination_addresses(char *, struct config_options *__restrict__);
-static void                   list_protocols(void);
-static void                   set_default_protocol(struct config_options *__restrict__);
-static int                    get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
-static int                    get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
-static int                    check_threshold(const struct config_options *const __restrict__);
-static int                    check_for_valid_options(int, int *);
+static int                                check_if_option(char *);
+static void                               check_options_rules(struct config_options *__restrict__);
+static struct options_table_s * _NOINLINE find_option(char *);
+static void                               set_config_option(struct config_options *__restrict__, char *, int, char *);
+static unsigned int             _NOINLINE toULong(char *, char *);
+static unsigned int             _NOINLINE toULongCheckRange(char *, char *, unsigned int, unsigned int);
+static void                     _NOINLINE check_list_separators(char *, char *);
+static void                               set_destination_addresses(char *, struct config_options *__restrict__);
+static void                               list_protocols(void);
+static void                               set_default_protocol(struct config_options *__restrict__);
+static int                                get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
+static int                      _NOINLINE get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
+static int                                check_threshold(const struct config_options *const __restrict__);
+static int                                check_for_valid_options(int, int *);
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
@@ -534,7 +534,7 @@ static void set_default_protocol(struct config_options *__restrict__ co)
 
 /* Scans the option table trying to find the option.
    NOTE: "option" points to a string beginning with '-', always! */
-static struct options_table_s * _NOINLINE find_option(char *option)
+static struct options_table_s *find_option(char *option)
 {
   struct options_table_s *ptbl;
 
@@ -1703,7 +1703,7 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-static _NOINLINE unsigned int toULong(char *optname, char *value)
+static unsigned int toULong(char *optname, char *value)
 {
   unsigned long n;
 
@@ -1723,7 +1723,7 @@ static _NOINLINE unsigned int toULong(char *optname, char *value)
 /* Tries to convert string to unsigned int, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-static _NOINLINE unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+static unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
 {
   unsigned int n;
 
@@ -1894,7 +1894,7 @@ static int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *a
   NOTE: Since this funcion is defined and used in this module, it's marked with
         the attribute "noinline". Because it's big!
 */
-static _NOINLINE int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
+static int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";
