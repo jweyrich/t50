@@ -514,10 +514,7 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-static inline int  check_if_option(char *s)
-{
-  return *s == '-';
-}
+static inline int  check_if_option(char *s) { return *s == '-'; }
 
 /* NOTE: Ugly hack, but necessary! */
 static void set_default_protocol(struct config_options *__restrict__ co)
@@ -746,16 +743,20 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->gre.daddr = resolv(arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
+  // Source port.
   case OPTION_SOURCE:
     check_list_separators(optname, arg);
     co->source = toULongCheckRange(optname, arg, 0, 65535);
     break;
-
+  // Destination port
   case OPTION_DESTINATION:
     check_list_separators(optname, arg);
     co->dest   = toULongCheckRange(optname, arg, 0, 65535);
     break;
-
   case OPTION_IP_SOURCE:
     check_list_separators(optname, arg);
     co->ip.saddr = resolv(arg);
@@ -777,6 +778,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->ip.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_IP_PROTOCOL:
     check_list_separators(optname, arg);
     get_ip_protocol(co, arg);
@@ -790,6 +795,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->icmp.code = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_ICMP_GATEWAY:
     check_list_separators(optname, arg);
     co->icmp.gateway = resolv(arg);
@@ -811,6 +820,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->igmp.code = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_IGMP_GROUP:
     check_list_separators(optname, arg);
     co->igmp.group = resolv(arg);
@@ -836,19 +849,21 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->igmp.sources = toULongCheckRange(optname, arg, 0, 65535);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_IGMP_GREC_MULTICAST:
     check_list_separators(optname, arg);
     co->igmp.grec_mca = resolv(arg);
     break;
 
   case OPTION_IGMP_ADDRESS:
-
     /* '--igmp-address' can contain a list. */
     for (counter = 0, tmp_ptr = strtok(arg, ",");
          tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
          counter++, tmp_ptr = strtok(NULL, ","))
       co->igmp.address[counter] = resolv(tmp_ptr);
-
     co->igmp.sources = counter;
     break;
 
@@ -995,6 +1010,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rip.family = toULong(optname, arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RIP_ADDRESS:
     check_list_separators(optname, arg);
     co->rip.address = resolv(arg);
@@ -1016,6 +1035,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rip.netmask = resolv(arg);
     break;  /* Is this correct? */
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RIP_NEXTHOP:
     check_list_separators(optname, arg);
     co->rip.next_hop = resolv(arg);
@@ -1093,11 +1116,19 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_SESSION_ADDRESS:
     check_list_separators(optname, arg);
     co->rsvp.session_addr = resolv(arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_SESSION_PROTOCOL:
     check_list_separators(optname, arg);
     co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
@@ -1107,11 +1138,14 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_SESSION_PORT:
     check_list_separators(optname, arg);
     co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535);
     break;
-
   case OPTION_RSVP_HOP_ADDRESS:
     check_list_separators(optname, arg);
     co->rsvp.hop_addr = resolv(arg);
@@ -1125,6 +1159,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rsvp.time_refresh = toULong(optname, arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_ERROR_ADDRESS:
     check_list_separators(optname, arg);
     co->rsvp.error_addr = resolv(arg);
@@ -1147,13 +1185,11 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     break;
 
   case OPTION_RSVP_SCOPE_ADDRESS:
-
     /* '--rsvp-address' can have a list of addresses separated by ','. */
     for (counter = 0, tmp_ptr = strtok(arg, ",");
          tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
          counter++, tmp_ptr = strtok(NULL, ","))
       co->rsvp.address[counter] = resolv(tmp_ptr);
-
     co->rsvp.scope = counter;
     break;
 
@@ -1161,11 +1197,14 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rsvp.style_opt = toULong(optname, arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_SENDER_ADDRESS:
     check_list_separators(optname, arg);
     co->rsvp.sender_addr = resolv(arg);
     break;
-
   case OPTION_RSVP_SENDER_PORT:
     check_list_separators(optname, arg);
     co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535);
@@ -1248,6 +1287,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_RSVP_CONFIRM_ADDR:
     check_list_separators(optname, arg);
     co->rsvp.confirm_addr = resolv(arg);
@@ -1346,6 +1389,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->eigrp.ver_minor = b;
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_EIGRP_NEXTHOP:
     check_list_separators(optname, arg);
     co->eigrp.next_hop = resolv(arg);
@@ -1409,6 +1456,10 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
     co->eigrp.ext_flags = toULong(optname, arg);
     break;
 
+  /*
+   * FIXME: The code below expects to deal with lists, but only the first one
+   *        is used...
+   */
   case OPTION_EIGRP_ADDRESS:
     check_list_separators(optname, arg);
     co->eigrp.address = resolv(arg);
