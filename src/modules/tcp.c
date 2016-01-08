@@ -259,8 +259,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_CC_NEXT))
   {
-    *buffer.byte_ptr++ = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
-    *buffer.byte_ptr++ = TCPOLEN_CC;
+    *buffer.byte_ptr++  = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
+    *buffer.byte_ptr++  = TCPOLEN_CC;
     *buffer.dword_ptr++ = htonl(co->tcp.cc_new ?
                                 __RND(co->tcp.cc_new) :
                                 __RND(co->tcp.cc_echo));
@@ -342,8 +342,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
   {
-    *buffer.byte_ptr++ = TCPOPT_SACK_EDGE;
-    *buffer.byte_ptr++ = TCPOLEN_SACK_EDGE(1);
+    *buffer.byte_ptr++  = TCPOPT_SACK_EDGE;
+    *buffer.byte_ptr++  = TCPOLEN_SACK_EDGE(1);
     *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_left));
     *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_right));
   }
@@ -518,7 +518,3 @@ static size_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth
 
   return size;
 }
-
-
-
-

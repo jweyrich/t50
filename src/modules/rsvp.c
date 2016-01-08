@@ -289,17 +289,17 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
     /* Identifying the RSVP TSPEC and building it. */
     switch (co->rsvp.tspec)
     {
-    case TSPEC_TRAFFIC_SERVICE:
-    case TSPEC_GUARANTEED_SERVICE:
-      *buffer.byte_ptr++ = TSPECT_TOKEN_BUCKET_SERVICE;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons((TSPEC_SERVICES(co->rsvp.tspec) -
-                                  TSPEC_MESSAGE_HEADER) / 4);
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_r));
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_b));
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_p));
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_m));
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_M));
+      case TSPEC_TRAFFIC_SERVICE:
+      case TSPEC_GUARANTEED_SERVICE:
+        *buffer.byte_ptr++ = TSPECT_TOKEN_BUCKET_SERVICE;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons((TSPEC_SERVICES(co->rsvp.tspec) -
+                                    TSPEC_MESSAGE_HEADER) / 4);
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_r));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_b));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_p));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_m));
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.tspec_M));
     }
 
     /*
@@ -397,81 +397,81 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
     /* Identifying the ADSPEC and building it. */
     switch (co->rsvp.adspec)
     {
-    case ADSPEC_GUARANTEED_SERVICE:
-    case ADSPEC_CONTROLLED_SERVICE:
-      /*
-       * The Use of RSVP with IETF Integrated Services (RFC 2210)
-       *
-       * 3.3.3. Guaranteed Service ADSPEC data fragment
-       *
-       *      31            24 23           16 15            8 7             0
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 1   |     2 (a)     |x|  reserved   |             N-1 (b)           |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 2   |    133 (c)    |     0 (d)     |             1 (e)             |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 3   |   End-to-end composed value for C [Ctot] (32-bit integer)     |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 4   |     134 (f)   |       (g)     |             1 (h)             |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 5   |   End-to-end composed value for D [Dtot] (32-bit integer)     |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 6   |     135 (i)   |       (j)     |             1 (k)             |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 7   | Since-last-reshaping point composed C [Csum] (32-bit integer) |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 8   |     136 (l)   |       (m)     |             1 (n)             |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 9   | Since-last-reshaping point composed D [Dsum] (32-bit integer) |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * 10  | Service-specific general parameter headers/values, if present |
-       *  .  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       *  .
-       * N   |                                                               |
-       *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       */
-      *buffer.byte_ptr++ = ADSPEC_GUARANTEED_SERVICE;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons((ADSPEC_GUARANTEED_LENGTH - ADSPEC_MESSAGE_HEADER) / 4);
-      *buffer.byte_ptr++ = 133;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Ctot));
-      *buffer.byte_ptr++ = 134;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dtot));
-      *buffer.byte_ptr++ = 135;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Csum));
-      *buffer.byte_ptr++ = 136;
-      *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
-      *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dsum));
-
-      /* Going to the next ADSPEC, if it needs to do sco-> */
-      if (co->rsvp.adspec == ADSPEC_CONTROLLED_SERVICE)
-      {
+      case ADSPEC_GUARANTEED_SERVICE:
+      case ADSPEC_CONTROLLED_SERVICE:
         /*
          * The Use of RSVP with IETF Integrated Services (RFC 2210)
          *
-         * 3.3.4. Controlled-Load Service ADSPEC data fragment
+         * 3.3.3. Guaranteed Service ADSPEC data fragment
          *
          *      31            24 23           16 15            8 7             0
          *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * 1   |     5 (a)     |x|  (b)        |            N-1 (c)            |
+         * 1   |     2 (a)     |x|  reserved   |             N-1 (b)           |
          *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * 2   | Service-specific general parameter headers/values, if present |
+         * 2   |    133 (c)    |     0 (d)     |             1 (e)             |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 3   |   End-to-end composed value for C [Ctot] (32-bit integer)     |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 4   |     134 (f)   |       (g)     |             1 (h)             |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 5   |   End-to-end composed value for D [Dtot] (32-bit integer)     |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 6   |     135 (i)   |       (j)     |             1 (k)             |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 7   | Since-last-reshaping point composed C [Csum] (32-bit integer) |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 8   |     136 (l)   |       (m)     |             1 (n)             |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 9   | Since-last-reshaping point composed D [Dsum] (32-bit integer) |
+         *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * 10  | Service-specific general parameter headers/values, if present |
          *  .  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          *  .
          * N   |                                                               |
          *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        *buffer.byte_ptr++ = ADSPEC_CONTROLLED_SERVICE;
+        *buffer.byte_ptr++ = ADSPEC_GUARANTEED_SERVICE;
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-        *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
-      }
+        *buffer.word_ptr++ = htons((ADSPEC_GUARANTEED_LENGTH - ADSPEC_MESSAGE_HEADER) / 4);
+        *buffer.byte_ptr++ = 133;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Ctot));
+        *buffer.byte_ptr++ = 134;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dtot));
+        *buffer.byte_ptr++ = 135;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Csum));
+        *buffer.byte_ptr++ = 136;
+        *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+        *buffer.word_ptr++ = htons(ADSPEC_SERVDATA_HEADER / 4);
+        *buffer.dword_ptr++ = htonl(__RND(co->rsvp.adspec_Dsum));
+
+        /* Going to the next ADSPEC, if it needs to do sco-> */
+        if (co->rsvp.adspec == ADSPEC_CONTROLLED_SERVICE)
+        {
+          /*
+           * The Use of RSVP with IETF Integrated Services (RFC 2210)
+           *
+           * 3.3.4. Controlled-Load Service ADSPEC data fragment
+           *
+           *      31            24 23           16 15            8 7             0
+           *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * 1   |     5 (a)     |x|  (b)        |            N-1 (c)            |
+           *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * 2   | Service-specific general parameter headers/values, if present |
+           *  .  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           *  .
+           * N   |                                                               |
+           *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          *buffer.byte_ptr++ = ADSPEC_CONTROLLED_SERVICE;
+          *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
+          *buffer.word_ptr++ = htons(ADSPEC_CONTROLLED_LENGTH - ADSPEC_MESSAGE_HEADER);
+        }
     }
   }
 
@@ -691,5 +691,3 @@ static size_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const ui
 
   return size;
 }
-
-

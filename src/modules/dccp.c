@@ -117,7 +117,8 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
    *                  (CsCov-1)*4 bytes of the packet's application data.
    */
   dccp->dccph_cscov    = co->dccp.cscov ?
-                         (co->dccp.cscov - 1) * 4 : (co->bogus_csum ? (uint8_t)(RANDOM() & 0xf) : co->dccp.cscov);
+                          (co->dccp.cscov - 1) * 4 : 
+                          (co->bogus_csum ? (uint8_t)(RANDOM() & 0xf) : co->dccp.cscov);
 
   /*
    * Datagram Congestion Control Protocol (DCCP) (RFC 4340)
@@ -178,58 +179,57 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
   /* Identifying the DCCP Type and building it. */
   switch (co->dccp.type)
   {
-  case DCCP_PKT_REQUEST:
-    /* DCCP Request Header structure making a pointer to Checksum. */
-    dccp_req = buffer_ptr;
-    dccp_req->dccph_req_service = htonl(__RND(co->dccp.service));
+    case DCCP_PKT_REQUEST:
+      /* DCCP Request Header structure making a pointer to Checksum. */
+      dccp_req = buffer_ptr;
+      dccp_req->dccph_req_service = htonl(__RND(co->dccp.service));
 
-    buffer_ptr = dccp_req + 1;
-    break;
+      buffer_ptr = dccp_req + 1;
+      break;
 
-  case DCCP_PKT_RESPONSE:
-    /* DCCP Response Header structure making a pointer to Checksum. */
-    dccp_res = buffer_ptr;
-    dccp_res->dccph_resp_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
-    dccp_res->dccph_resp_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
-    dccp_res->dccph_resp_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
-    dccp_res->dccph_resp_service               = htonl(__RND(co->dccp.service));
+    case DCCP_PKT_RESPONSE:
+      /* DCCP Response Header structure making a pointer to Checksum. */
+      dccp_res = buffer_ptr;
+      dccp_res->dccph_resp_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
+      dccp_res->dccph_resp_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
+      dccp_res->dccph_resp_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
+      dccp_res->dccph_resp_service               = htonl(__RND(co->dccp.service));
 
-    buffer_ptr = dccp_res + 1;
+      buffer_ptr = dccp_res + 1;
+    case DCCP_PKT_DATA:
+      break;
 
-  case DCCP_PKT_DATA:
-    break;
+    case DCCP_PKT_DATAACK:
+    case DCCP_PKT_ACK:
+    case DCCP_PKT_SYNC:
+    case DCCP_PKT_SYNCACK:
+    case DCCP_PKT_CLOSE:
+    case DCCP_PKT_CLOSEREQ:
+      /* DCCP Acknowledgment Header structure making a pointer to Checksum. */
+      dccp_ack = buffer_ptr;
+      dccp_ack->dccph_reserved1   = FIELD_MUST_BE_ZERO;
+      dccp_ack->dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
 
-  case DCCP_PKT_DATAACK:
-  case DCCP_PKT_ACK:
-  case DCCP_PKT_SYNC:
-  case DCCP_PKT_SYNCACK:
-  case DCCP_PKT_CLOSE:
-  case DCCP_PKT_CLOSEREQ:
-    /* DCCP Acknowledgment Header structure making a pointer to Checksum. */
-    dccp_ack = buffer_ptr;
-    dccp_ack->dccph_reserved1   = FIELD_MUST_BE_ZERO;
-    dccp_ack->dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
+      /* Until DCCP Options implementation. */
+      if (co->dccp.type == DCCP_PKT_DATAACK ||
+          co->dccp.type == DCCP_PKT_ACK)
+        dccp_ack->dccph_ack_nr_low  = htonl(0x00000001);
+      else
+        dccp_ack->dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
 
-    /* Until DCCP Options implementation. */
-    if (co->dccp.type == DCCP_PKT_DATAACK ||
-        co->dccp.type == DCCP_PKT_ACK)
-      dccp_ack->dccph_ack_nr_low  = htonl(0x00000001);
-    else
-      dccp_ack->dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
+      buffer_ptr = dccp_ack + 1;
+      break;
 
-    buffer_ptr = dccp_ack + 1;
-    break;
+    default:
+      /* DCCP Reset Header structure making a pointer to Checksum. */
+      dccp_rst = buffer_ptr;
+      dccp_rst->dccph_reset_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
+      dccp_rst->dccph_reset_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
+      dccp_rst->dccph_reset_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
+      dccp_rst->dccph_reset_code                  = __RND(co->dccp.rst_code);
 
-  default:
-    /* DCCP Reset Header structure making a pointer to Checksum. */
-    dccp_rst = buffer_ptr;
-    dccp_rst->dccph_reset_ack.dccph_reserved1   = FIELD_MUST_BE_ZERO;
-    dccp_rst->dccph_reset_ack.dccph_ack_nr_high = htons(__RND(co->dccp.acknowledge_01));
-    dccp_rst->dccph_reset_ack.dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
-    dccp_rst->dccph_reset_code                  = __RND(co->dccp.rst_code);
-
-    buffer_ptr = dccp_rst + 1;
-    break;
+      buffer_ptr = dccp_rst + 1;
+      break;
   }
 
   /* PSEUDO Header structure??? */
