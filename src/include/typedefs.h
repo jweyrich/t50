@@ -42,12 +42,12 @@ typedef void (*module_func_ptr_t)(const struct config_options *const __restrict_
  */
 typedef union
 {
-  void    *ptr;
-  uint8_t *byte_ptr;
-  uint16_t *word_ptr;
-  uint32_t *dword_ptr;
+  void      *ptr;
+  uint8_t   *byte_ptr;
+  uint16_t  *word_ptr;
+  uint32_t  *dword_ptr;
   in_addr_t *inaddr_ptr;
-  uint64_t *qword_ptr;
+  uint64_t  *qword_ptr;
 } memptr_t;
 
 /**

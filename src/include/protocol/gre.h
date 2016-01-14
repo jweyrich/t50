@@ -74,28 +74,28 @@
 struct gre_hdr
 {
 #if defined(__LITTLE_ENDIAN_BITFIELD)
-  uint16_t  recur: 3,               /* recursion control           */
-            s: 1,                   /* strict source route         */
-            S: 1,                   /* sequence number present     */
-            K: 1,                   /* key present                 */
-            R: 1,                   /* routing present             */
-            C: 1,                   /* checksum present            */
-            version: 3,             /* version                     */
-            flags: 5;               /* flags                       */
+  uint16_t  recur:   3,   /* recursion control       */
+            s:       1,   /* strict source route     */
+            S:       1,   /* sequence number present */
+            K:       1,   /* key present             */
+            R:       1,   /* routing present         */
+            C:       1,   /* checksum present        */
+            version: 3,   /* version                 */
+            flags:   5;   /* flags                   */
 #elif defined(__BIG_ENDIAN_BITFIELD)
-  uint16_t  C: 1,                   /* checksum present            */
-            R: 1,                   /* routing present             */
-            K: 1,                   /* key present                 */
-            S: 1,                   /* sequence number present     */
-            s: 1,                   /* strict source route         */
-            recur: 3,               /* recursion control           */
-            flags: 5,               /* flags                       */
-            version: 3;             /* version                     */
+  uint16_t  C:       1,   /* checksum present        */
+            R:       1,   /* routing present         */
+            K:       1,   /* key present             */
+            S:       1,   /* sequence number present */
+            s:       1,   /* strict source route     */
+            recur:   3,   /* recursion control       */
+            flags:   5,   /* flags                   */
+            version: 3;   /* version                 */
 #else
 #  error  "Adjust your <asm/byteorder.h> defines"
 #endif
-  uint16_t proto;                  /* protocol                    */
-  uint8_t  __optional[0];          /* optional                    */
+  uint16_t proto;         /* protocol */
+  uint8_t  __optional[0]; /* optional */
 };
 
 /**
@@ -119,8 +119,8 @@ struct gre_hdr
  */
 struct gre_sum_hdr
 {
-  uint16_t check;                  /* checksum                    */
-  uint16_t offset;                 /* offset                      */
+  uint16_t check;   /* checksum */
+  uint16_t offset;  /* offset   */
 };
 
 /**
@@ -136,7 +136,7 @@ struct gre_sum_hdr
  */
 struct gre_key_hdr
 {
-  uint32_t key;                    /* key                         */
+  uint32_t key;   /* key */
 };
 
 /**
@@ -153,11 +153,11 @@ struct gre_key_hdr
  */
 struct gre_seq_hdr
 {
-  uint32_t sequence;          /* sequence number             */
+  uint32_t sequence; /* sequence number */
 };
 
 size_t gre_opt_len(const struct config_options *const __restrict__);
 struct iphdr *gre_encapsulation(void *, const struct config_options *const __restrict__, uint32_t);
-void gre_checksum(void *, const struct config_options *, size_t);
+void   gre_checksum(void *, const struct config_options *, size_t);
 
 #endif  /* __GRE_H */

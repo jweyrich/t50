@@ -53,5 +53,3 @@ uint16_t cksum(void *data, size_t length)
 
   return ~sum;
 }
-
-

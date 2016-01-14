@@ -153,17 +153,10 @@ void alloc_packet(size_t new_packet_size)
 /* Function prototype moved to modules.h. */
 size_t get_number_of_registered_modules(void)
 {
-  if (number_of_modules == 0)
-  {
-    modules_table_t *ptbl;
+  modules_table_t *ptbl;
 
-    ptbl = mod_table;
-    while (ptbl->func != NULL)
-    {
-      ptbl++;
-      number_of_modules++;
-    }
-  }
+  if (number_of_modules == 0)
+    for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
 
   return number_of_modules;
 }
@@ -172,14 +165,9 @@ int *get_module_valid_options_list(int protocol)
 {
   modules_table_t *ptbl;
 
-  ptbl = mod_table;
-  while (ptbl->func != NULL)
-  {
+  for (ptbl = mod_table; ptbl->func; ptbl++)
     if (ptbl->protocol_id == protocol)
       return ptbl->valid_options;
-
-    ptbl++;
-  }
 
   return NULL;
 }

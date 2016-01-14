@@ -73,7 +73,7 @@ extern void     alloc_packet(size_t);
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
 extern uint32_t RANDOM(void);
-extern void SRANDOM(void);
+extern void     SRANDOM(void);
 extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 
 /* Common routines used by code */
@@ -84,12 +84,12 @@ extern int          create_socket(void);    /* Creates the sending socket */
 extern void         close_socket(void);     /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern int          send_packet(const void *const,
-                                size_t,
-                                const struct config_options *const __restrict__);
+extern int  send_packet(const void *const,
+                        size_t,
+                        const struct config_options *const __restrict__);
 
-extern void         show_version(void); /* Prints version info. */
-extern void         usage(void);        /* Prints usage message */
+extern void show_version(void); /* Prints version info. */
+extern void usage(void);        /* Prints usage message */
 
 extern void error(char *, ...);
 extern void fatal_error(char *, ...) __attribute__((noreturn));

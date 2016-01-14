@@ -53,8 +53,7 @@ in_addr_t resolv(char *name)
     error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
   }
 
-  res = res0;
-  while (res)
+  for (res = res0; res; res = res->ai_next)
   {
     if (res->ai_family == AF_INET)
     {
@@ -69,9 +68,6 @@ in_addr_t resolv(char *name)
         if (!addr)
           addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
       }
-
-    // Next node!
-    res = res->ai_next;
   }
 
   // Free the linked list.

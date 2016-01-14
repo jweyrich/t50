@@ -60,8 +60,8 @@ typedef struct
  */
 extern modules_table_t mod_table[];
 
-extern size_t get_number_of_registered_modules(void);
-extern int *get_module_valid_options_list(int);
+extern size_t  get_number_of_registered_modules(void);
+extern int    *get_module_valid_options_list(int);
 
 /* Modules functions prototypes. */
 extern void icmp  (const struct config_options *const __restrict__, size_t *size);

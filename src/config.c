@@ -1754,14 +1754,8 @@ static void list_protocols(void)
 
   puts("List of supported protocols (--protocol):");
 
-  i = 1;
-  ptbl = mod_table;
-
-  while (ptbl->func != NULL)
-  {
+  for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t%2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
-    ptbl++;
-  }
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */

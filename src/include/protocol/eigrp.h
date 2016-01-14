@@ -20,12 +20,10 @@
 #ifndef EIGRP_H
 #define EIGRP_H
 
-#define IPPROTO_EIGRP 88
-#define EIGRPVERSION 2
+#define IPPROTO_EIGRP   88
+#define EIGRPVERSION    2
 #define EIGRP_FLAG_INIT 0x00000001
 #define EIGRP_FLAG_COND 0x00000002
-
-#include <common.h>
 
 /* EIGRP Message Opcode */
 #define EIGRP_OPCODE_UPDATE   1
@@ -100,8 +98,8 @@
  */
 struct eigrp_hdr
 {
-  uint16_t version: 8,             /* version                     */
-           opcode: 8;              /* opcode                      */
+  uint8_t  version,                /* version                     */
+           opcode;                 /* opcode                      */
   uint16_t check;                  /* checksum                    */
   uint32_t flags;                  /* flags                       */
   uint32_t sequence;               /* sequence number             */

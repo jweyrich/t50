@@ -139,15 +139,15 @@
  */
 struct ospf_hdr
 {
-  uint16_t version: 8,             /* version                     */
-           type: 8;                /* type                        */
-  uint16_t length;                 /* length                      */
-  in_addr_t rid;                   /* router ID                   */
-  in_addr_t aid;                   /* area ID                     */
-  uint16_t check;                  /* checksum                    */
-  uint16_t autype;                 /* authentication type         */
-  uint8_t  __ospf_auth[0];         /* authentication header       */
-  uint8_t  __ospf_type_hdr[0];     /* type header                 */
+  uint8_t  version,            /* version               */
+           type;               /* type                  */
+  uint16_t length;             /* length                */
+  in_addr_t rid;               /* router ID             */
+  in_addr_t aid;               /* area ID               */
+  uint16_t check;              /* checksum              */
+  uint16_t autype;             /* authentication type   */
+  uint8_t  __ospf_auth[0];     /* authentication header */
+  uint8_t  __ospf_type_hdr[0]; /* type header           */
 };
 
 /**
@@ -175,10 +175,10 @@ struct ospf_hdr
  */
 struct ospf_auth_hdr
 {
-  uint16_t reserved;               /* reserved must be zero       */
-  uint16_t key_id: 8,              /* authentication key ID       */
-           length: 8;              /* authentication length       */
-  uint32_t sequence;               /* authentication sequence #   */
+  uint16_t reserved; /* reserved must be zero       */
+  uint8_t  key_id,   /* authentication key ID       */
+           length;   /* authentication length       */
+  uint32_t sequence; /* authentication sequence #   */
 };
 
 /**
