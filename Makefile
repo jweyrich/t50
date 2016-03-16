@@ -113,7 +113,7 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O2 -mtune=native -flto -fomit-frame-pointer -ffast-math -DNDEBUG
+  CFLAGS += -O2 -DNDEBUG
   ifdef HAVE_TURBO
     CFLAGS += -D__HAVE_TURBO__
   endif
@@ -124,7 +124,7 @@ else
     CFLAGS += -msse -mfpmath=sse
   endif
 
-  LDFLAGS += -s -O3 -fuse-linker-plugin -flto
+  LDFLAGS += -s 
 
   # FIX: BMI2 isn't very useful for us, but MOVBE is!
   ifeq ($(shell grep movbe /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)

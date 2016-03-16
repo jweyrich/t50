@@ -6,6 +6,9 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.5 - March 16th, 2016
+ - A nasty bug detected by kl0nEz (shell crash!) was corrected.
+
 T50 5.5 - December 18th, 2015
  + Added experimental xorshift128+ pseudo random number generator routine.
 

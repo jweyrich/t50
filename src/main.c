@@ -144,6 +144,7 @@ int main(int argc, char *argv[])
 
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
+
     ptbl->func(co, &size);
 
 #ifdef __HAVE_DEBUG__
@@ -172,25 +173,12 @@ int main(int argc, char *argv[])
       co->threshold--;
   }
 
+
   /* Show termination message only for parent process. */
   if (!IS_CHILD_PID(pid))
   {
     time_t lt;
     struct tm *tm;
-
-#ifdef  __HAVE_TURBO__
-    int status;
-
-    /* Wait 5 seconds for child process, then closes the program anyway. */
-    alarm(5);
-
-    /* This could block, until SIGALARM interrupts! */
-    if (wait(&status) == -1)
-      kill(pid, SIGKILL);   /* If wait() was interrupted, then kills ungracefully the child process! */ 
-
-    /* Resets the alarm */
-    alarm(0);
-#endif
 
     /* FIX: To graciously end the program, only the parent process can close the socket.
        NOTE: I realize that closing descriptors are reference counted.
@@ -224,12 +212,7 @@ static void signal_handler(int signal)
      NOTE: I realize that the act of closing descriptors are reference counted.
            Keept the logic just in case! */
 
-  /* Ignore the SIGALRM. Used only to timeout the wait() function! */
-  if (signal == SIGALRM)
-    return;
-
 #ifdef __HAVE_TURBO__
-
   if (!IS_CHILD_PID(pid))
   {
     /* Ungracefully kills the child process! */
@@ -255,34 +238,22 @@ static void initialize(const struct config_options *co)
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_INTERRUPT; /* FIX: These signals MUST interrupt
-                                 a system call! */
+  sa.sa_flags = SA_RESTART;
 
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal').
      This is necessary to close the socket when terminating the parent process. */
   sa.sa_handler = signal_handler;
 
   sigaction(SIGHUP,  &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is SIGPIPE handler really necessary? */
+  //sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is SIGPIPE handler really necessary? */
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
-  sigaction(SIGTRAP, &sa, NULL);
+  //sigaction(SIGTRAP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
-  sigaction(SIGTSTP, &sa, NULL);
-  sigaction(SIGABRT, &sa, NULL);
-
-#ifdef  __HAVE_TURBO__
-  /* FIX: Is it wise to simply terminate the main process
-          if the child terminates?
-
-          Maybe it is wiser if we implement some kind of
-          timeout when waiting for the child to terminate. */
-  sigaction(SIGALRM, &sa, NULL);
-#endif
+  //sigaction(SIGTSTP, &sa, NULL);
 
   /* We don't need SIGCHLD */
-  sa.sa_handler = SIG_IGN;
-  sigaction(SIGCHLD, &sa, NULL);
+  signal(SIGCHLD, SIG_IGN);
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */
