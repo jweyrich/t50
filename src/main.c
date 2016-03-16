@@ -25,6 +25,7 @@
 #endif
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
+static int child_is_dead = 0; /* Used to kill child process if necessary. */
 
 static void             initialize(const struct config_options *);
 static modules_table_t *selectProtocol(const struct config_options * const, int *);
@@ -180,9 +181,17 @@ int main(int argc, char *argv[])
     time_t lt;
     struct tm *tm;
 
-    /* FIX: To graciously end the program, only the parent process can close the socket.
-       NOTE: I realize that closing descriptors are reference counted.
-             Kept the logic just in case! */
+    if (!child_is_dead)
+    {
+      alarm(5);
+      if (waitpid(pid, NULL, 0) == -1)
+        child_is_dead = 1;
+      alarm(0);
+    }
+
+    if (!child_is_dead)
+      kill(pid, SIGKILL);
+
     close_socket();
 
     /* Getting the local time. */
@@ -211,17 +220,21 @@ static void signal_handler(int signal)
           child process can be catastrophic to the parent.
      NOTE: I realize that the act of closing descriptors are reference counted.
            Keept the logic just in case! */
-
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
   {
+    if (signal == SIGCHLD)
+      child_is_dead = 1;
+
     /* Ungracefully kills the child process! */
-    kill(pid, SIGKILL);
+    if (!child_is_dead)
+      kill(pid, SIGKILL);
 #endif
+
     close_socket();
+
 #ifdef __HAVE_TURBO__
   }
-
 #endif
 
   /* The shell documentation (bash) specifies that a process
@@ -232,13 +245,13 @@ static void signal_handler(int signal)
 static void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
-  struct sigaction sa;
+  static struct sigaction sa;
 
   /* --- Initialize signal handlers --- */
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART;
+  //sa.sa_flags = SA_RESTART;
 
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal').
      This is necessary to close the socket when terminating the parent process. */
@@ -252,8 +265,8 @@ static void initialize(const struct config_options *co)
   sigaction(SIGTERM, &sa, NULL);
   //sigaction(SIGTSTP, &sa, NULL);
 
-  /* We don't need SIGCHLD */
-  signal(SIGCHLD, SIG_IGN);
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGCHLD, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */
