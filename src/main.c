@@ -228,7 +228,7 @@ static void signal_handler(int signal)
     switch (signal)
     {
       case SIGALRM: 
-        break;
+        return;
       case SIGCHLD:
         child_is_dead = 1;
       default:
