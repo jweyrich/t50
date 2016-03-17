@@ -174,23 +174,25 @@ int main(int argc, char *argv[])
       co->threshold--;
   }
 
-
   /* Show termination message only for parent process. */
   if (!IS_CHILD_PID(pid))
   {
     time_t lt;
     struct tm *tm;
 
-    if (!child_is_dead)
+    if (pid != -1)
     {
-      alarm(5);
-      if (waitpid(pid, NULL, 0) == -1)
-        child_is_dead = 1;
-      alarm(0);
-    }
+      if (!child_is_dead)
+      {
+        alarm(5);
+        if (waitpid(pid, NULL, 0) == -1)
+          child_is_dead = 1;
+        alarm(0);
+      }
 
-    if (!child_is_dead)
-      kill(pid, SIGKILL);
+      if (!child_is_dead)
+        kill(pid, SIGKILL);
+    }
 
     close_socket();
 
@@ -227,11 +229,12 @@ static void signal_handler(int signal)
       child_is_dead = 1;
 
     /* Ungracefully kills the child process! */
-    if (!child_is_dead)
-    {
-      kill(pid, SIGKILL);
-      child_is_dead = 1;
-    }
+    if (pid != -1)
+      if (!child_is_dead)
+      {
+        kill(pid, SIGKILL);
+        child_is_dead = 1;
+      }
 #endif
 
     close_socket();
@@ -254,22 +257,19 @@ static void initialize(const struct config_options *co)
 
   /* Using sig*() functions for compability. */
   sigemptyset(&sa.sa_mask);
-  //sa.sa_flags = SA_RESTART;
 
   /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal').
      This is necessary to close the socket when terminating the parent process. */
   sa.sa_handler = signal_handler;
 
   sigaction(SIGHUP,  &sa, NULL);
-  //sigaction(SIGPIPE, &sa, NULL);    /* FIXME: Is SIGPIPE handler really necessary? */
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
-  //sigaction(SIGTRAP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
-  //sigaction(SIGTSTP, &sa, NULL);
+  sigaction(SIGCHLD, &sa, NULL);
 
   sa.sa_handler = SIG_IGN;
-  sigaction(SIGCHLD, &sa, NULL);
+  sigaction(SIGALRM, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */
