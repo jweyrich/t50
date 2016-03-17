@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
       if (!child_is_dead)
       {
         alarm(5);
-        if (waitpid(pid, NULL, 0) == -1)
+        if (wait(NULL) > 0)
           child_is_dead = 1;
         alarm(0);
       }
@@ -225,21 +225,23 @@ static void signal_handler(int signal)
 #ifdef __HAVE_TURBO__
   if (!IS_CHILD_PID(pid))
   {
-    if (signal == SIGCHLD)
-      child_is_dead = 1;
-
-    /* Ungracefully kills the child process! */
-    if (pid != -1)
-      if (!child_is_dead)
-      {
-        kill(pid, SIGKILL);
+    switch (signal)
+    {
+      case SIGALRM: 
+        break;
+      case SIGCHLD:
         child_is_dead = 1;
-      }
-#endif
+      default:
+        /* Ungracefully kills the child process! */
+        if (pid != -1)
+          if (!child_is_dead)
+          {
+            kill(pid, SIGKILL);
+            child_is_dead = 1;
+          }
+    }
 
     close_socket();
-
-#ifdef __HAVE_TURBO__
   }
 #endif
 
@@ -251,24 +253,14 @@ static void signal_handler(int signal)
 static void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
-  static struct sigaction sa;
+  static struct sigaction sa = { .sa_handler = signal_handler };
 
   /* --- Initialize signal handlers --- */
-
-  /* Using sig*() functions for compability. */
-  sigemptyset(&sa.sa_mask);
-
-  /* Trap all "interrupt" signals, except SIGKILL, SIGSTOP and SIGSEGV (uncatchable, accordingly to 'man 7 signal').
-     This is necessary to close the socket when terminating the parent process. */
-  sa.sa_handler = signal_handler;
-
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
-
-  sa.sa_handler = SIG_IGN;
   sigaction(SIGALRM, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
