@@ -228,7 +228,10 @@ static void signal_handler(int signal)
 
     /* Ungracefully kills the child process! */
     if (!child_is_dead)
+    {
       kill(pid, SIGKILL);
+      child_is_dead = 1;
+    }
 #endif
 
     close_socket();
