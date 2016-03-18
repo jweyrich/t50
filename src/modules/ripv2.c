@@ -65,7 +65,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
                              rip_hdr_len(co->rip.auth));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
+  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
   udp->source = udp->dest = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) +
                       rip_hdr_len(co->rip.auth));
@@ -157,7 +157,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
   if (co->rip.auth)
   {
     *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here! */
-    *buffer.word_ptr++ = htons(0x0003);
+    *buffer.word_ptr++ = htons(3);
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = co->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
@@ -220,7 +220,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
     size_t size;
 
     *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here. */
-    *buffer.word_ptr++ = htons(0x0001);
+    *buffer.word_ptr++ = htons(1);
 
     /*
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.

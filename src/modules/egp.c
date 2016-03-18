@@ -64,7 +64,7 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = (struct egp_hdr *)((void *)(ip + 1) + greoptlen);
+  egp           = (struct egp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   egp->version  = EGPVERSION;
   egp->type     = co->egp.type;
   egp->code     = co->egp.code;
@@ -80,7 +80,7 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* Computing the checksum. */
   egp->check    = co->bogus_csum ? RANDOM() :
-                  cksum(egp, (void *)(egp_acq + 1) - (void *)egp);
+                  cksum(egp, (unsigned char *)(egp_acq + 1) - (unsigned char *)egp);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

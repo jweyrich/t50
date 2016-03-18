@@ -66,7 +66,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
                     objects_length);
 
   /* RSVP Header structure making a pointer to IP Header structure. */
-  rsvp           = (struct rsvp_common_hdr *)((void *)(ip + 1) + greoptlen);
+  rsvp           = (struct rsvp_common_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   rsvp->flags    = __RND(co->rsvp.flags);
   rsvp->version  = RSVPVERSION;
   rsvp->type     = co->rsvp.type;
@@ -587,7 +587,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* RSVP objects size claculation. */
-static size_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec)
+size_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec)
 {
   size_t size;
 

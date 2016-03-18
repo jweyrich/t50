@@ -64,7 +64,7 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
                              rip_hdr_len(0));
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
+  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
   udp->source = udp->dest = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
@@ -103,16 +103,16 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
   *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
 
   /* PSEUDO Header structure making a pointer to Checksum. */
-  pseudo           = buffer.ptr;
+  pseudo = buffer.ptr;
   if (co->encapsulated)
   {
-    pseudo->saddr    = gre_ip->saddr;
-    pseudo->daddr    = gre_ip->daddr;
+    pseudo->saddr = gre_ip->saddr;
+    pseudo->daddr = gre_ip->daddr;
   }
   else
   {
-    pseudo->saddr    = ip->saddr;
-    pseudo->daddr    = ip->daddr;
+    pseudo->saddr = ip->saddr;
+    pseudo->daddr = ip->daddr;
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;

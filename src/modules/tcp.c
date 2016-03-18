@@ -87,7 +87,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
                 __FUNCTION__, tcpopt);
 
     /* TCP Header structure making a pointer to IP Header structure. */
-    tcp          = (struct tcphdr *)((void *)(ip + 1) + greoptlen);
+    tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + greoptlen);
     tcp->source  = htons(IPPORT_RND(co->source));
     tcp->dest    = htons(IPPORT_RND(co->dest));
     tcp->res1    = TCP_RESERVED_BITS;
@@ -426,6 +426,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   for (; tcpolen & 3; tcpolen++)
     *buffer.byte_ptr++ = co->tcp.nop;
 
+  /* Needed here 'cause we'll need to initialize pseudo->len. */
   length = sizeof(struct tcphdr) + tcpolen;
 
   /* Fill PSEUDO Header structure. */
@@ -453,7 +454,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* TCP options size calculation. */
-static size_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
+size_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
 {
   size_t size;
 

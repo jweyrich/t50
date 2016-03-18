@@ -172,7 +172,6 @@ int *get_module_valid_options_list(int protocol)
   return NULL;
 }
 
-
 static void _NOINLINE verror(char *fmt, va_list args)
 {
   char *str;

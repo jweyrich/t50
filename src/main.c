@@ -27,10 +27,10 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static int child_is_dead = 0; /* Used to kill child process if necessary. */
 
-static void             initialize(const struct config_options *);
-static modules_table_t *selectProtocol(const struct config_options * const, int *);
-static const char *     get_ordinal_suffix(unsigned);
-static const char *     get_month(unsigned);
+static void              _NOINLINE initialize(const struct config_options *);
+static modules_table_t * _NOINLINE selectProtocol(const struct config_options * const, int *);
+static const char *      _NOINLINE get_ordinal_suffix(unsigned);
+static const char *      _NOINLINE get_month(unsigned);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -254,7 +254,7 @@ static void signal_handler(int signal)
   exit(128 + signal);
 }
 
-static void initialize(const struct config_options *co)
+void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
   static struct sigaction sa = { .sa_handler = signal_handler };
@@ -270,6 +270,7 @@ static void initialize(const struct config_options *co)
 
   /* --- Initialize signal handlers --- */
   sigaction(SIGHUP,  &sa, NULL);
+  sigaction(SIGPIPE, &sa, NULL);  // FIX: Broken pipe signal returns to the code! 
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
@@ -299,7 +300,7 @@ static void initialize(const struct config_options *co)
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
-static const char * _NOINLINE get_ordinal_suffix(unsigned n)
+const char *get_ordinal_suffix(unsigned n)
 {
   static const char *suffixes[] = { "st", "nd", "rd", "th" };
 
@@ -317,7 +318,7 @@ static const char * _NOINLINE get_ordinal_suffix(unsigned n)
 
 /* Auxiliary function to return the [constant] string for a month.
    NOTE: 'n' must be between 0 and 11. */
-static const char * _NOINLINE get_month(unsigned n)
+const char *get_month(unsigned n)
 {
   /* Months */
   static const char *const months[] =
@@ -333,7 +334,7 @@ static const char * _NOINLINE get_month(unsigned n)
 }
 
 /* Selects the initial protocol based on the configuration. */
-static modules_table_t *selectProtocol(const struct config_options *const co, int *proto)
+modules_table_t *selectProtocol(const struct config_options *const co, int *proto)
 {
   modules_table_t *ptbl;
 

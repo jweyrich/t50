@@ -514,10 +514,10 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-static inline int  check_if_option(char *s) { return *s == '-'; }
+inline int  check_if_option(char *s) { return *s == '-'; }
 
 /* NOTE: Ugly hack, but necessary! */
-static void set_default_protocol(struct config_options *__restrict__ co)
+void set_default_protocol(struct config_options *__restrict__ co)
 {
   modules_table_t *ptbl;
   int i;
@@ -534,7 +534,7 @@ static void set_default_protocol(struct config_options *__restrict__ co)
 
 /* Scans the option table trying to find the option.
    NOTE: "option" points to a string beginning with '-', always! */
-static struct options_table_s *find_option(char *option)
+struct options_table_s *find_option(char *option)
 {
   struct options_table_s *ptbl;
 
@@ -561,7 +561,7 @@ static struct options_table_s *find_option(char *option)
 }
 
 /* Check rules for options, after we get them all. */
-static void check_options_rules(struct config_options *__restrict__ co)
+void check_options_rules(struct config_options *__restrict__ co)
 {
   struct options_table_s *ptbl;
 
@@ -620,7 +620,7 @@ static void check_options_rules(struct config_options *__restrict__ co)
 }
 
 /* Get the IP PROTOCOL. */
-static void get_ip_protocol(struct config_options *co, char *arg)
+void get_ip_protocol(struct config_options *co, char *arg)
 {
   /* T50 protocol is a special case! Not in modules table! */
   if (!strcasecmp(arg, "T50"))
@@ -655,7 +655,7 @@ static void get_ip_protocol(struct config_options *co, char *arg)
   }
 }
 
-static void set_destination_addresses(char *arg, struct config_options *__restrict__ co)
+void set_destination_addresses(char *arg, struct config_options *__restrict__ co)
 {
   char *p;
   T50_tmp_addr_t addr;
@@ -682,7 +682,7 @@ static void set_destination_addresses(char *arg, struct config_options *__restri
 }
 
 /* Setup an option. */
-static void set_config_option(struct config_options *__restrict__ co, char *optname, int optid, char *arg)
+void set_config_option(struct config_options *__restrict__ co, char *optname, int optid, char *arg)
 {
   size_t counter;
   char *tmp_ptr;
@@ -1703,7 +1703,7 @@ static void set_config_option(struct config_options *__restrict__ co, char *optn
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-static unsigned int toULong(char *optname, char *value)
+unsigned int toULong(char *optname, char *value)
 {
   unsigned long n;
 
@@ -1723,7 +1723,7 @@ static unsigned int toULong(char *optname, char *value)
 /* Tries to convert string to unsigned int, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-static unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
 {
   unsigned int n;
 
@@ -1738,7 +1738,7 @@ static unsigned int toULongCheckRange(char *optname, char *value, unsigned int m
 }
 
 /* Check if there are any separators on string. */
-static void check_list_separators(char *optname, char *arg)
+void check_list_separators(char *optname, char *arg)
 {
   assert(arg != NULL);
 
@@ -1747,7 +1747,7 @@ static void check_list_separators(char *optname, char *arg)
 }
 
 /* List procotolos on modules table */
-static void list_protocols(void)
+void list_protocols(void)
 {
   modules_table_t *ptbl;
   int i;
@@ -1776,7 +1776,7 @@ static void list_protocols(void)
     *((char *)(d) + (len)) = '\0'; \
   }
 
-static int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
+int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
 {
   regex_t re;
   regmatch_t rm[6];
@@ -1888,7 +1888,7 @@ static int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *a
   NOTE: Since this funcion is defined and used in this module, it's marked with
         the attribute "noinline". Because it's big!
 */
-static int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
+int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";
@@ -1962,7 +1962,7 @@ static int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsi
 
 /* Checks if threshold is valid. */
 /* NOTE: Moved here 'cause it's used just here. */
-static int check_threshold(const struct config_options *const __restrict__ co)
+int check_threshold(const struct config_options *const __restrict__ co)
 {
   threshold_t minThreshold;
 
@@ -1987,7 +1987,7 @@ static int check_threshold(const struct config_options *const __restrict__ co)
 
 // Cheks if an option is on a list of valid options.
 // The lists of valid options are contained on the modules table!
-static int check_for_valid_options(int option, int *list)
+int check_for_valid_options(int option, int *list)
 {
   assert(option > 0);
 

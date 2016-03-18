@@ -81,7 +81,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
                     ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
-  ospf          = (struct ospf_hdr *)((void *)(ip + 1) + greoptlen);
+  ospf          = (struct ospf_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   ospf->version = OSPFVERSION;
   ospf->type    = co->ospf.type;
 
@@ -686,7 +686,7 @@ build_ospf_lsa:
 }
 
 /* OSPF header size calculation. */
-static size_t ospf_hdr_len(const unsigned int type, const int neighbor, const int lsa_type, const int dd_include_lsa)
+size_t ospf_hdr_len(const unsigned int type, const int neighbor, const int lsa_type, const int dd_include_lsa)
 {
   size_t size;
 

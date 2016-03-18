@@ -81,7 +81,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
    *
    * EIGRP Header structure.
    */
-  eigrp              = (struct eigrp_hdr *)((void *)(ip + 1) + greoptlen);
+  eigrp              = (struct eigrp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __RND(co->eigrp.opcode);
   eigrp->flags       = htonl(__RND(co->eigrp.flags));
@@ -441,8 +441,10 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* EIGRP header size calculation */
-static size_t eigrp_hdr_len(const uint16_t opcode,
-                            const uint16_t type, const uint8_t prefix, const int auth)
+size_t eigrp_hdr_len(const uint16_t opcode,
+                     const uint16_t type, 
+                     const uint8_t prefix, 
+                     const int auth)
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */

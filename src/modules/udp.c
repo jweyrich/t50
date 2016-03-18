@@ -57,7 +57,7 @@ void udp(const struct config_options *const __restrict__ co, size_t *size)
                              sizeof(struct udphdr));
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((void *)(ip + 1) + greoptlen);
+  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
   udp->source = htons(IPPORT_RND(co->source));
   udp->dest   = htons(IPPORT_RND(co->dest));
   udp->len    = htons(sizeof(struct udphdr));

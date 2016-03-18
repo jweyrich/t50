@@ -65,7 +65,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
   if (co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT)
   {
     /* IGMPv3 Report Header structure making a pointer to Packet. */
-    igmpv3_report           = (struct igmpv3_report *)((void *)(ip + 1) + greoptlen);
+    igmpv3_report           = (struct igmpv3_report *)((unsigned char *)(ip + 1) + greoptlen);
     igmpv3_report->type     = co->igmp.type;
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
@@ -94,7 +94,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
   else
   {
     /* IGMPv3 Query Header structure making a pointer to Packet. */
-    igmpv3_query           = (struct igmpv3_query *)((void *)(ip + 1) + greoptlen);
+    igmpv3_query           = (struct igmpv3_query *)((unsigned char *)(ip + 1) + greoptlen);
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
     igmpv3_query->group    = htonl(INADDR_RND(co->igmp.group));

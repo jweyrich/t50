@@ -80,7 +80,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
                              dccp_length);
 
   /* DCCP Header structure making a pointer to Packet. */
-  dccp                 = (struct dccp_hdr *)((void *)(ip + 1) + greoptlen);
+  dccp                 = (struct dccp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   dccp->dccph_sport    = htons(IPPORT_RND(co->source));
   dccp->dccph_dport    = htons(IPPORT_RND(co->dest));
 
@@ -213,7 +213,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
       /* Until DCCP Options implementation. */
       if (co->dccp.type == DCCP_PKT_DATAACK ||
           co->dccp.type == DCCP_PKT_ACK)
-        dccp_ack->dccph_ack_nr_low  = htonl(0x00000001);
+        dccp_ack->dccph_ack_nr_low  = htonl(1);
       else
         dccp_ack->dccph_ack_nr_low  = htonl(__RND(co->dccp.acknowledge_02));
 
@@ -244,13 +244,13 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
     pseudo->saddr = ip->saddr;
     pseudo->daddr = ip->daddr;
   }
-  pseudo->zero  = 0;
+  pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(buffer_ptr - (void *)dccp);
+  pseudo->len      = htons((short)(buffer_ptr - (void *)dccp));
 
   /* Computing the checksum. */
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         cksum(dccp, (void *)(pseudo + 1) - (void *)dccp);
+                         cksum(dccp, (unsigned char *)(pseudo + 1) - (unsigned char *)dccp);
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);
