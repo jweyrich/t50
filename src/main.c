@@ -254,6 +254,13 @@ static void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
   static struct sigaction sa = { .sa_handler = signal_handler };
+  static sigset_t sigset;
+
+  /* Blocks SIGTSTP avoiding ^Z behavior, and SIGTRAP. */
+  sigemptyset(&sigset);
+  sigaddset(&sigset, SIGTSTP);
+  sigaddset(&sigset, SIGTRAP);
+  sigprocmask(SIG_BLOCK, &sigset, NULL); 
 
   /* --- Initialize signal handlers --- */
   sigaction(SIGHUP,  &sa, NULL);
@@ -261,6 +268,7 @@ static void initialize(const struct config_options *co)
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGALRM, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
