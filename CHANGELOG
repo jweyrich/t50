@@ -7,6 +7,8 @@ Legend:
 ! Known issue / missing feature
 
 T50 5.5 - March 16th, 2016
+ * SIGTSTP and SIGTRAP are now blocked.
+ - Some nasty bugs based on kl0nEz discovery fixed.
  - A nasty bug detected by kl0nEz (shell crash!) was corrected.
 
 T50 5.5 - December 18th, 2015

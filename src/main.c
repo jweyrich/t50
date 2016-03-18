@@ -259,7 +259,9 @@ static void initialize(const struct config_options *co)
   /* Blocks SIGTSTP avoiding ^Z behavior, and SIGTRAP. */
   sigemptyset(&sigset);
   sigaddset(&sigset, SIGTSTP);
+#ifndef __HAVE_DEBUG__
   sigaddset(&sigset, SIGTRAP);
+#endif
   sigprocmask(SIG_BLOCK, &sigset, NULL); 
 
   /* --- Initialize signal handlers --- */
