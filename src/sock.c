@@ -131,7 +131,12 @@ void close_socket(void)
 {
   /* Close only if the descriptor is valid. */
   if (fd != -1)
+  {
     close(fd);
+
+    /* Added to avoid multiple socket closing. */
+    fd = -1;
+  }
 }
 
 /**

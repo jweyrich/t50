@@ -184,7 +184,11 @@ int main(int argc, char *argv[])
     {
       if (!child_is_dead)
       {
+        /* Wait 5 seconds for the child to end... */
         alarm(5);
+#ifdef __HAVE_DEBUG__
+        printf("\nWaiting for child process to end...\n");
+#endif        
         if (wait(NULL) > 0)
           child_is_dead = 1;
         alarm(0);
