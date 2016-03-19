@@ -200,15 +200,19 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 {
   int r;
 
+  /* Tries to send the packet until it's signal interrupted. */
   do { 
     r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
   } while (r == -1 && errno == EINTR);
 
+  /* If it wasn't interrupted, tries to send the packet again. */
   while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
   {
+    /* Tries to wait until it's safe to send the packet again. */
     if ((r = wait_for_io(fd)) <= 0)
       break;
 
+    /* ... and tries to send again. */
     do {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
     } while (r == -1 && errno == EINTR);

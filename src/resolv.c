@@ -53,6 +53,7 @@ in_addr_t resolv(char *name)
     error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
   }
 
+  /* scan all the list. */
   for (res = res0; res; res = res->ai_next)
   {
     if (res->ai_family == AF_INET)

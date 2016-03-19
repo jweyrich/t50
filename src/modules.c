@@ -20,7 +20,7 @@
 
 #include <common.h>
 
-// Valid options tables for specific protocols.
+// --- Valid options tables for specific protocols ---
 VALID_OPTIONS_TABLE(tcp, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, OPTION_DESTINATION, \
   OPTION_IP_TOS, OPTION_IP_ID, OPTION_IP_OFFSET, OPTION_IP_TTL, OPTION_IP_PROTOCOL, OPTION_IP_SOURCE, \
   OPTION_GRE_SEQUENCE_PRESENT, OPTION_GRE_KEY_PRESENT, OPTION_GRE_CHECKSUM_PRESENT, OPTION_GRE_KEY, \
@@ -124,7 +124,7 @@ VALID_OPTIONS_TABLE(ospf, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, 
   OPTION_OSPF_VERTEX_ID, OPTION_OSPF_LLS_OPTION_LR, OPTION_OSPF_LLS_OPTION_RS, OPTION_OSPF_AUTHENTICATION, \
   OPTION_OSPF_AUTH_KEY_ID, OPTION_OSPF_AUTH_SEQUENCE);
 
-/* NOTE: A simple way to define the protocols table!
+/* A simple way to define the protocols table!
 
   To add a procotol, insert the proper header file on common.h (ex: protocol/xpto.h),
   change the Makefile, add a MODULE_ENTRY, modify config.c and usage.c and compile. That's it! */
@@ -144,4 +144,3 @@ BEGIN_MODULES_TABLE
   MODULE_ENTRY(IPPROTO_EIGRP, "EIGRP",  "Enhanced Interior Gateway Routing Protocol", eigrp)
   MODULE_ENTRY(IPPROTO_OSPF,  "OSPF",   "Open Shortest Path First",                   ospf)
 END_MODULES_TABLE
-

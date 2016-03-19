@@ -47,6 +47,7 @@ struct iphdr *ip_header(void *buffer,
 
   ip = buffer;
   ip->version  = IPVERSION;
+  /* IP Header length in dwords. */
   ip->ihl      = sizeof(struct iphdr) / 4;
 
   /* FIXME: MAYBE TOS is filled by kernel through the SO_PRIORITY option and this is completly useless. */
