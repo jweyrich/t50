@@ -56,13 +56,14 @@ static size_t number_of_modules = 0;
 #else
   /* Linear Congruential Pseudo Random Number Generator. */
   static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-  uint32_t _NOINLINE RANDOM(void) { return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32; } /* Same parameters as in glibc! */
+  uint32_t _NOINLINE RANDOM(void) 
+  { return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32; } /* Same parameters as in glibc! */
 #endif
 
 /**
  * Gets an random seed from /dev/random.
  *
- * Since this routine is used only once there is no problem using "/device/random".
+ * Since this routine is used only once there is no problem using "/dev/random".
  */
 void SRANDOM(void)
 {
@@ -130,6 +131,7 @@ void alloc_packet(size_t new_packet_size)
   /* TEST: Because 0 will free the buffer!!! */
   assert(new_packet_size != 0);
 
+  /* Realloc only ig the new packet size is greater than the old. */
   if (new_packet_size > current_packet_size)
   {
     /* Tries to reallocate memory. */
@@ -155,6 +157,8 @@ size_t get_number_of_registered_modules(void)
 {
   modules_table_t *ptbl;
 
+  /* This garantees that the count will be done
+     one time only. */
   if (number_of_modules == 0)
     for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
 
@@ -169,9 +173,11 @@ int *get_module_valid_options_list(int protocol)
     if (ptbl->protocol_id == protocol)
       return ptbl->valid_options;
 
+  /* Returns NULL if not found. */
   return NULL;
 }
 
+/* --- Using vfprintf for flexibility. */
 static void _NOINLINE verror(char *fmt, va_list args)
 {
   char *str;
@@ -212,5 +218,6 @@ void _NOINLINE fatal_error(char *fmt, ...)
     verror(fmt,args);
   va_end(args);
 
+  /* As expected. exit if a failure. */
   exit(EXIT_FAILURE);
 }

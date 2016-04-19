@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   /* General initializations. */
   initialize(co);
 
-  /* Create_socket() handles its own errors before returning. */
+  /* create_socket() handles its own errors before returning. */
   if (!create_socket())
     return EXIT_FAILURE;
 
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
 
 #ifdef  __HAVE_TURBO__
+  /* Creates the forked process if turbo is turned on. */
   if (co->turbo)
   {
     /* if it's necessary to fork a new process... */
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
   }
 
   /* NOTE: Changed the random seed init to here to make
-           sure both processes have it's own! */
+           sure both processes have their own! */
   SRANDOM();
 
   /* Preallocate packet buffer. */
@@ -154,6 +155,7 @@ int main(int argc, char *argv[])
     /* Calls the 'module' function and sends the packet. */
     co->ip.protocol = ptbl->protocol_id;
 
+    /* Build the packet! */
     ptbl->func(co, &size);
 
 #ifdef __HAVE_DEBUG__
@@ -206,9 +208,9 @@ int main(int argc, char *argv[])
         kill(pid, SIGKILL);
     }
 
+    /* Finally we close the raw socket. */
     close_socket();
 
-    /* Getting the local time. */
     lt = time(NULL);
     tm = localtime(&lt);
 
@@ -222,6 +224,7 @@ int main(int argc, char *argv[])
            tm->tm_sec);
   }
 
+  /* Everything went well. Exit. */
   return 0;
 }
 #pragma GCC diagnostic pop
@@ -263,6 +266,7 @@ void initialize(const struct config_options *co)
   sigprocmask(SIG_BLOCK, &sigset, NULL); 
 
   /* --- Initialize signal handlers --- */
+  /* All these signals are handled by our handle. */
   sigaction(SIGHUP,  &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);  // FIX: Broken pipe signal returns to the code! 
   sigaction(SIGINT,  &sa, NULL);
@@ -277,6 +281,7 @@ void initialize(const struct config_options *co)
   fflush(stdout);
   setvbuf(stdout, NULL, _IONBF, 0);
 
+  /* --- Show some messages. */
   if (co->flood)
     puts("Entering flood mode...");
   else
@@ -311,7 +316,8 @@ const char *get_ordinal_suffix(unsigned n)
 }
 
 /* Auxiliary function to return the [constant] string for a month.
-   NOTE: 'n' must be between 0 and 11. */
+   NOTE: 'n' must be between 0 and 11. 
+   NOTE: This routine is here just 'cause we need months in english. */
 const char *get_month(unsigned n)
 {
   /* Months */

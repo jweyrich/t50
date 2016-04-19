@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <regex.h>
 
+/* Structure used to contain the command line options info. */
 struct options_table_s
 {
   int id;             /* This is the value returned by find_option(). */
@@ -78,7 +79,7 @@ static struct config_options co =
   },
 
   /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1)                                 */
-  .icmp = { .type = ICMP_ECHO },     /* default type                           */
+  .icmp = { .type = ICMP_ECHO },      /* default type                           */
 
   /* XXX IGMP HEADER OPTIONS (IPPROTO_IGMP = 2)                                 */
   .igmp = {
@@ -159,18 +160,18 @@ static struct config_options co =
 };
 
 
-/* Examplo de tabela de opções. */
+/* The actual command line options table. */
 static struct options_table_s options[] =
 {
   { OPTION_VERSION,               'v',  "version",          0 },
   { OPTION_HELP,                  'h',  "help",             0 },
   { OPTION_LIST_PROTOCOLS,        'l',  "list-protocols",   0 },
 #ifdef __HAVE_TURBO__
-  { OPTION_TURBO,                 0,    "turbo",            0 },
+  { OPTION_TURBO,                   0,  "turbo",            0 },
 #endif
-  { OPTION_THRESHOLD,             0,    "threshold",        1 },
-  { OPTION_FLOOD,                 0,    "flood",            0 },
-  { OPTION_ENCAPSULATED,          0,    "encapsulated",     0 },
+  { OPTION_THRESHOLD,               0,  "threshold",        1 },
+  { OPTION_FLOOD,                   0,  "flood",            0 },
+  { OPTION_ENCAPSULATED,            0,  "encapsulated",     0 },
   { OPTION_BOGUSCSUM,             'B',  "bogus-csum",       0 },
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
@@ -188,10 +189,10 @@ static struct options_table_s options[] =
 
   /* XXX IP HEADER OPTIONS (IPPROTO_IP = 0) */
   { OPTION_IP_SOURCE,             's',  "saddr",            1 },
-  { OPTION_IP_TOS,                0,    "tos",              1 },
-  { OPTION_IP_ID,                 0,    "id",               1 },
-  { OPTION_IP_OFFSET,             0,    "frag-offset",      1 },
-  { OPTION_IP_TTL,                0,    "ttl",              1 },
+  { OPTION_IP_TOS,                  0,  "tos",              1 },
+  { OPTION_IP_ID,                   0,  "id",               1 },
+  { OPTION_IP_OFFSET,               0,  "frag-offset",      1 },
+  { OPTION_IP_TTL,                  0,  "ttl",              1 },
   { OPTION_IP_PROTOCOL,           'p',  "protocol",         1 },
 
   /* XXX ICMP HEADER OPTIONS (IPPROTO_ICMP = 1) */
@@ -214,9 +215,9 @@ static struct options_table_s options[] =
   { OPTION_IGMP_ADDRESS,          0, "igmp-address",        1 },
 
   /* XXX TCP HEADER OPTIONS (IPPROTO_TCP = 6)                                        */
-  { OPTION_TCP_ACK,                0,    "acknowledge",     1 },
-  { OPTION_TCP_SEQUENCE,           0,    "sequence",        1 },
-  { OPTION_TCP_OFFSET,             0,    "data-offset",     1 },
+  { OPTION_TCP_ACK,                  0,  "acknowledge",     1 },
+  { OPTION_TCP_SEQUENCE,             0,  "sequence",        1 },
+  { OPTION_TCP_OFFSET,               0,  "data-offset",     1 },
   { OPTION_TCP_FIN,                'F',  "fin",             0 },
   { OPTION_TCP_SYN,                'S',  "syn",             0 },
   { OPTION_TCP_RST,                'R',  "rst",             0 },
@@ -226,194 +227,195 @@ static struct options_table_s options[] =
   { OPTION_TCP_ECE,                'E',  "ece",             0 },
   { OPTION_TCP_CWR,                'C',  "cwr",             0 },
   { OPTION_TCP_WINDOW,             'W',  "window",          1 },
-  { OPTION_TCP_URGENT_POINTER,     0,    "urg-pointer",     1 },
-  { OPTION_TCP_MSS,                0,    "mss",             1 },
-  { OPTION_TCP_WSOPT,              0,    "wscale",          1 },
-  { OPTION_TCP_TSOPT,              0,    "tstamp",          1 },
-  { OPTION_TCP_SACK_OK,            0,    "sack-ok",         0 },
-  { OPTION_TCP_CC,                 0,    "cc",              1 },
-  { OPTION_TCP_CC_NEW,             0,    "ccnew",           1 },
-  { OPTION_TCP_CC_ECHO,            0,    "ccecho",          1 },
-  { OPTION_TCP_SACK_EDGE,          0,    "sack",            1 },
-  { OPTION_TCP_MD5_SIGNATURE,      0,    "md5-signature",   0 },
-  { OPTION_TCP_AUTHENTICATION,     0,    "authentication",  0 },
-  { OPTION_TCP_AUTH_KEY_ID,        0,    "auth-key-id",     1 },
-  { OPTION_TCP_AUTH_NEXT_KEY,      0,    "auth-next-key",   1 },
-  { OPTION_TCP_NOP,                0,    "nop",             0 },
+  { OPTION_TCP_URGENT_POINTER,       0,  "urg-pointer",     1 },
+  { OPTION_TCP_MSS,                  0,  "mss",             1 },
+  { OPTION_TCP_WSOPT,                0,  "wscale",          1 },
+  { OPTION_TCP_TSOPT,                0,  "tstamp",          1 },
+  { OPTION_TCP_SACK_OK,              0,  "sack-ok",         0 },
+  { OPTION_TCP_CC,                   0,  "cc",              1 },
+  { OPTION_TCP_CC_NEW,               0,  "ccnew",           1 },
+  { OPTION_TCP_CC_ECHO,              0,  "ccecho",          1 },
+  { OPTION_TCP_SACK_EDGE,            0,  "sack",            1 },
+  { OPTION_TCP_MD5_SIGNATURE,        0,  "md5-signature",   0 },
+  { OPTION_TCP_AUTHENTICATION,       0,  "authentication",  0 },
+  { OPTION_TCP_AUTH_KEY_ID,          0,  "auth-key-id",     1 },
+  { OPTION_TCP_AUTH_NEXT_KEY,        0,  "auth-next-key",   1 },
+  { OPTION_TCP_NOP,                  0,  "nop",             0 },
 
   /* XXX EGP HEADER OPTIONS (IPPROTO_EGP = 8) */
-  { OPTION_EGP_TYPE,               0, "egp-type",           1 },
-  { OPTION_EGP_CODE,               0, "egp-code",           1 },
-  { OPTION_EGP_STATUS,             0, "egp-status",         1 },
-  { OPTION_EGP_AS,                 0, "egp-as",             1 },
-  { OPTION_EGP_SEQUENCE,           0, "egp-sequence",       1 },
-  { OPTION_EGP_HELLO,              0, "egp-hello",          1 },
-  { OPTION_EGP_POLL,               0, "egp-poll",           1 },
+  { OPTION_EGP_TYPE,                 0,  "egp-type",        1 },
+  { OPTION_EGP_CODE,                 0,  "egp-code",        1 },
+  { OPTION_EGP_STATUS,               0,  "egp-status",      1 },
+  { OPTION_EGP_AS,                   0,  "egp-as",          1 },
+  { OPTION_EGP_SEQUENCE,             0,  "egp-sequence",    1 },
+  { OPTION_EGP_HELLO,                0,  "egp-hello",       1 },
+  { OPTION_EGP_POLL,                 0,  "egp-poll",        1 },
 
   /* XXX RIP HEADER OPTIONS (IPPROTO_UDP = 17) */
-  { OPTION_RIP_COMMAND,            0, "rip-command",        1 },
-  { OPTION_RIP_FAMILY,             0, "rip-family",         1 },
-  { OPTION_RIP_ADDRESS,            0, "rip-address",        1 },
-  { OPTION_RIP_METRIC,             0, "rip-metric",         1 },
-  { OPTION_RIP_DOMAIN,             0, "rip-domain",         1 },
-  { OPTION_RIP_TAG,                0, "rip-tag",            1 },
-  { OPTION_RIP_NETMASK,            0, "rip-netmask",        1 },
-  { OPTION_RIP_NEXTHOP,            0, "rip-next-hop",       1 },
-  { OPTION_RIP_AUTHENTICATION,     0, "rip-authentication", 0 },
-  { OPTION_RIP_AUTH_KEY_ID,        0, "rip-auth-key-id",    1 },
-  { OPTION_RIP_AUTH_SEQUENCE,      0, "rip-auth-sequence",  1 },
+  { OPTION_RIP_COMMAND,              0,  "rip-command",        1 },
+  { OPTION_RIP_FAMILY,               0,  "rip-family",         1 },
+  { OPTION_RIP_ADDRESS,              0,  "rip-address",        1 },
+  { OPTION_RIP_METRIC,               0,  "rip-metric",         1 },
+  { OPTION_RIP_DOMAIN,               0,  "rip-domain",         1 },
+  { OPTION_RIP_TAG,                  0,  "rip-tag",            1 },
+  { OPTION_RIP_NETMASK,              0,  "rip-netmask",        1 },
+  { OPTION_RIP_NEXTHOP,              0,  "rip-next-hop",       1 },
+  { OPTION_RIP_AUTHENTICATION,       0,  "rip-authentication", 0 },
+  { OPTION_RIP_AUTH_KEY_ID,          0,  "rip-auth-key-id",    1 },
+  { OPTION_RIP_AUTH_SEQUENCE,        0,  "rip-auth-sequence",  1 },
 
   /* XXX DCCP HEADER OPTIONS (IPPROTO_DCCP = 33) */
-  { OPTION_DCCP_OFFSET,            0, "dccp-data-offset",   1 },
-  { OPTION_DCCP_CSCOV,             0, "dccp-cscov",         1 },
-  { OPTION_DCCP_CCVAL,             0, "dccp-ccval",         1 },
-  { OPTION_DCCP_TYPE,              0, "dccp-type",          1 },
-  { OPTION_DCCP_EXTEND,            0, "dccp-extended",      0 },
-  { OPTION_DCCP_SEQUENCE_01,       0, "dccp-sequence-1",    1 },
-  { OPTION_DCCP_SEQUENCE_02,       0, "dccp-sequence-2",    1 },
-  { OPTION_DCCP_SEQUENCE_03,       0, "dccp-sequence-3",    1 },
-  { OPTION_DCCP_SERVICE,           0, "dccp-service",       1 },
-  { OPTION_DCCP_ACKNOWLEDGE_01,    0, "dccp-acknowledge-1", 1 },
-  { OPTION_DCCP_ACKNOWLEDGE_02,    0, "dccp-acknowledge-2", 1 },
-  { OPTION_DCCP_RESET_CODE,        0, "dccp-reset-code",    1 },
+  { OPTION_DCCP_OFFSET,              0,  "dccp-data-offset",   1 },
+  { OPTION_DCCP_CSCOV,               0,  "dccp-cscov",         1 },
+  { OPTION_DCCP_CCVAL,               0,  "dccp-ccval",         1 },
+  { OPTION_DCCP_TYPE,                0,  "dccp-type",          1 },
+  { OPTION_DCCP_EXTEND,              0,  "dccp-extended",      0 },
+  { OPTION_DCCP_SEQUENCE_01,         0,  "dccp-sequence-1",    1 },
+  { OPTION_DCCP_SEQUENCE_02,         0,  "dccp-sequence-2",    1 },
+  { OPTION_DCCP_SEQUENCE_03,         0,  "dccp-sequence-3",    1 },
+  { OPTION_DCCP_SERVICE,             0,  "dccp-service",       1 },
+  { OPTION_DCCP_ACKNOWLEDGE_01,      0,  "dccp-acknowledge-1", 1 },
+  { OPTION_DCCP_ACKNOWLEDGE_02,      0,  "dccp-acknowledge-2", 1 },
+  { OPTION_DCCP_RESET_CODE,          0,  "dccp-reset-code",    1 },
 
   /* XXX RSVP HEADER OPTIONS (IPPROTO_RSVP = 46) */
-  { OPTION_RSVP_FLAGS,             0, "rsvp-flags",         1 },
-  { OPTION_RSVP_TYPE,              0, "rsvp-type",          1 },
-  { OPTION_RSVP_TTL,               0, "rsvp-ttl",           1 },
-  { OPTION_RSVP_SESSION_ADDRESS,   0, "rsvp-session-addr",  1 },
-  { OPTION_RSVP_SESSION_PROTOCOL,  0, "rsvp-session-proto", 1 },
-  { OPTION_RSVP_SESSION_FLAGS,     0, "rsvp-session-flags", 1 },
-  { OPTION_RSVP_SESSION_PORT,      0, "rsvp-session-port",  1 },
-  { OPTION_RSVP_HOP_ADDRESS,       0, "rsvp-hop-addr",      1 },
-  { OPTION_RSVP_HOP_IFACE,         0, "rsvp-hop-iface",     1 },
-  { OPTION_RSVP_TIME_REFRESH,      0, "rsvp-time-refresh",  1 },
-  { OPTION_RSVP_ERROR_ADDRESS,     0, "rsvp-error-addr",    1 },
-  { OPTION_RSVP_ERROR_FLAGS,       0, "rsvp-error-flags",   1 },
-  { OPTION_RSVP_ERROR_CODE,        0, "rsvp-error-code",    1 },
-  { OPTION_RSVP_ERROR_VALUE,       0, "rsvp-error-value",   1 },
-  { OPTION_RSVP_SCOPE,             0, "rsvp-scope",         1 },
-  { OPTION_RSVP_SCOPE_ADDRESS,     0, "rsvp-address",       1 },
-  { OPTION_RSVP_STYLE_OPTION,      0, "rsvp-style-option",  1 },
-  { OPTION_RSVP_SENDER_ADDRESS,    0, "rsvp-sender-addr",   1 },
-  { OPTION_RSVP_SENDER_PORT,       0, "rsvp-sender-port",   1 },
-  { OPTION_RSVP_TSPEC_TRAFFIC,     0, "rsvp-tspec-traffic", 0 },
-  { OPTION_RSVP_TSPEC_GUARANTEED,  0, "rsvp-tspec-guaranteed", 0 },
-  { OPTION_RSVP_TSPEC_TOKEN_R,     0, "rsvp-tspec-r",       1 },
-  { OPTION_RSVP_TSPEC_TOKEN_B,     0, "rsvp-tspec-b",       1 },
-  { OPTION_RSVP_TSPEC_DATA_P,      0, "rsvp-tspec-p",       1 },
-  { OPTION_RSVP_TSPEC_MINIMUM,     0, "rsvp-tspec-m",       1 },
-  { OPTION_RSVP_TSPEC_MAXIMUM,     0, "rsvp-tspec-M",       1 },
-  { OPTION_RSVP_ADSPEC_ISHOP,      0, "rsvp-adspec-ishop",  1 },
-  { OPTION_RSVP_ADSPEC_PATH,       0, "rsvp-adspec-path",   1 },
-  { OPTION_RSVP_ADSPEC_MINIMUM,    0, "rsvp-adspec-m",      1 },
-  { OPTION_RSVP_ADSPEC_MTU,        0, "rsvp-adspec-mtu",    1 },
-  { OPTION_RSVP_ADSPEC_GUARANTEED, 0, "rsvp-adspec-guaranteed", 0 },
-  { OPTION_RSVP_ADSPEC_CTOT,       0, "rsvp-adspec-Ctot",   1 },
-  { OPTION_RSVP_ADSPEC_DTOT,       0, "rsvp-adspec-Dtot",   1 },
-  { OPTION_RSVP_ADSPEC_CSUM,       0, "rsvp-adspec-Csum",   1 },
-  { OPTION_RSVP_ADSPEC_DSUM,       0, "rsvp-adspec-Dsum",   1 },
-  { OPTION_RSVP_ADSPEC_CONTROLLED, 0, "rsvp-adspec-controlled", 0 },
-  { OPTION_RSVP_CONFIRM_ADDR,      0, "rsvp-confirm-addr",  1 },
+  { OPTION_RSVP_FLAGS,               0,  "rsvp-flags",             1 },
+  { OPTION_RSVP_TYPE,                0,  "rsvp-type",              1 },
+  { OPTION_RSVP_TTL,                 0,  "rsvp-ttl",               1 },
+  { OPTION_RSVP_SESSION_ADDRESS,     0,  "rsvp-session-addr",      1 },
+  { OPTION_RSVP_SESSION_PROTOCOL,    0,  "rsvp-session-proto",     1 },
+  { OPTION_RSVP_SESSION_FLAGS,       0,  "rsvp-session-flags",     1 },
+  { OPTION_RSVP_SESSION_PORT,        0,  "rsvp-session-port",      1 },
+  { OPTION_RSVP_HOP_ADDRESS,         0,  "rsvp-hop-addr",          1 },
+  { OPTION_RSVP_HOP_IFACE,           0,  "rsvp-hop-iface",         1 },
+  { OPTION_RSVP_TIME_REFRESH,        0,  "rsvp-time-refresh",      1 },
+  { OPTION_RSVP_ERROR_ADDRESS,       0,  "rsvp-error-addr",        1 },
+  { OPTION_RSVP_ERROR_FLAGS,         0,  "rsvp-error-flags",       1 },
+  { OPTION_RSVP_ERROR_CODE,          0,  "rsvp-error-code",        1 },
+  { OPTION_RSVP_ERROR_VALUE,         0,  "rsvp-error-value",       1 },
+  { OPTION_RSVP_SCOPE,               0,  "rsvp-scope",             1 },
+  { OPTION_RSVP_SCOPE_ADDRESS,       0,  "rsvp-address",           1 },
+  { OPTION_RSVP_STYLE_OPTION,        0,  "rsvp-style-option",      1 },
+  { OPTION_RSVP_SENDER_ADDRESS,      0,  "rsvp-sender-addr",       1 },
+  { OPTION_RSVP_SENDER_PORT,         0,  "rsvp-sender-port",       1 },
+  { OPTION_RSVP_TSPEC_TRAFFIC,       0,  "rsvp-tspec-traffic",     0 },
+  { OPTION_RSVP_TSPEC_GUARANTEED,    0,  "rsvp-tspec-guaranteed",  0 },
+  { OPTION_RSVP_TSPEC_TOKEN_R,       0,  "rsvp-tspec-r",           1 },
+  { OPTION_RSVP_TSPEC_TOKEN_B,       0,  "rsvp-tspec-b",           1 },
+  { OPTION_RSVP_TSPEC_DATA_P,        0,  "rsvp-tspec-p",           1 },
+  { OPTION_RSVP_TSPEC_MINIMUM,       0,  "rsvp-tspec-m",           1 },
+  { OPTION_RSVP_TSPEC_MAXIMUM,       0,  "rsvp-tspec-M",           1 },
+  { OPTION_RSVP_ADSPEC_ISHOP,        0,  "rsvp-adspec-ishop",      1 },
+  { OPTION_RSVP_ADSPEC_PATH,         0,  "rsvp-adspec-path",       1 },
+  { OPTION_RSVP_ADSPEC_MINIMUM,      0,  "rsvp-adspec-m",          1 },
+  { OPTION_RSVP_ADSPEC_MTU,          0,  "rsvp-adspec-mtu",        1 },
+  { OPTION_RSVP_ADSPEC_GUARANTEED,   0,  "rsvp-adspec-guaranteed", 0 },
+  { OPTION_RSVP_ADSPEC_CTOT,         0,  "rsvp-adspec-Ctot",       1 },
+  { OPTION_RSVP_ADSPEC_DTOT,         0,  "rsvp-adspec-Dtot",       1 },
+  { OPTION_RSVP_ADSPEC_CSUM,         0,  "rsvp-adspec-Csum",       1 },
+  { OPTION_RSVP_ADSPEC_DSUM,         0,  "rsvp-adspec-Dsum",       1 },
+  { OPTION_RSVP_ADSPEC_CONTROLLED,   0,  "rsvp-adspec-controlled", 0 },
+  { OPTION_RSVP_CONFIRM_ADDR,        0,  "rsvp-confirm-addr",      1 },
 
   /*O_ESP = 50) XXX IPSEC HEADER OPTIONS (IPPROTO_AH = 51 & IPPROT*/
-  { OPTION_IPSEC_AH_LENGTH,        0, "ipsec-ah-length",    1 },
-  { OPTION_IPSEC_AH_SPI,           0, "ipsec-ah-spi",       1 },
-  { OPTION_IPSEC_AH_SEQUENCE,      0, "ipsec-ah-sequence",  1 },
-  { OPTION_IPSEC_ESP_SPI,          0, "ipsec-esp-spi",      1 },
-  { OPTION_IPSEC_ESP_SEQUENCE,     0, "ipsec-esp-sequence", 1 },
+  { OPTION_IPSEC_AH_LENGTH,          0,  "ipsec-ah-length",    1 },
+  { OPTION_IPSEC_AH_SPI,             0,  "ipsec-ah-spi",       1 },
+  { OPTION_IPSEC_AH_SEQUENCE,        0,  "ipsec-ah-sequence",  1 },
+  { OPTION_IPSEC_ESP_SPI,            0,  "ipsec-esp-spi",      1 },
+  { OPTION_IPSEC_ESP_SEQUENCE,       0,  "ipsec-esp-sequence", 1 },
 
   /* XXX EIGRP HEADER OPTIONS (IPPROTO_EIGRP = 88) */
-  { OPTION_EIGRP_OPCODE,           0, "eigrp-opcode",       1 },
-  { OPTION_EIGRP_FLAGS,            0, "eigrp-flags",        1 },
-  { OPTION_EIGRP_SEQUENCE,         0, "eigrp-sequence",     1 },
-  { OPTION_EIGRP_ACKNOWLEDGE,      0, "eigrp-acknowledge",  1 },
-  { OPTION_EIGRP_AS,               0, "eigrp-as",           1 },
-  { OPTION_EIGRP_TYPE,             0, "eigrp-type",         1 },
-  { OPTION_EIGRP_LENGTH,           0, "eigrp-length",       1 },
-  { OPTION_EIGRP_K1,               0, "eigrp-k1",           1 },
-  { OPTION_EIGRP_K2,               0, "eigrp-k2",           1 },
-  { OPTION_EIGRP_K3,               0, "eigrp-k3",           1 },
-  { OPTION_EIGRP_K4,               0, "eigrp-k4",           1 },
-  { OPTION_EIGRP_K5,               0, "eigrp-k5",           1 },
-  { OPTION_EIGRP_HOLD,             0, "eigrp-hold",         1 },
-  { OPTION_EIGRP_IOS_VERSION,      0, "eigrp-ios-ver",      1 },
-  { OPTION_EIGRP_PROTO_VERSION,    0, "eigrp-rel-ver",      1 },
-  { OPTION_EIGRP_NEXTHOP,          0, "eigrp-next-hop",     1 },
-  { OPTION_EIGRP_DELAY,            0, "eigrp-delay",        1 },
-  { OPTION_EIGRP_BANDWIDTH,        0, "eigrp-bandwidth",    1 },
-  { OPTION_EIGRP_MTU,              0, "eigrp-mtu",          1 },
-  { OPTION_EIGRP_HOP_COUNT,        0, "eigrp-hop-count",    1 },
-  { OPTION_EIGRP_LOAD,             0, "eigrp-load",         1 },
-  { OPTION_EIGRP_RELIABILITY,      0, "eigrp-reliability",  1 },
-  { OPTION_EIGRP_DESINATION,       0, "eigrp-daddr",        1 },
-  { OPTION_EIGRP_SOURCE_ROUTER,    0, "eigrp-src-router",   1 },
-  { OPTION_EIGRP_SOURCE_AS,        0, "eigrp-src-as",       1 },
-  { OPTION_EIGRP_TAG,              0, "eigrp-tag",          1 },
-  { OPTION_EIGRP_METRIC,           0, "eigrp-proto-metric", 1 },
-  { OPTION_EIGRP_ID,               0, "eigrp-proto-id",     1 },
-  { OPTION_EIGRP_EXTERNAL_FLAGS,   0, "eigrp-ext-flags",    1 },
-  { OPTION_EIGRP_ADDRESS,          0, "eigrp-address",      1 },
-  { OPTION_EIGRP_MULTICAST,        0, "eigrp-multicast",    1 },
-  { OPTION_EIGRP_AUTHENTICATION,   0, "eigrp-authentication", 0 },
-  { OPTION_EIGRP_AUTH_KEY_ID,      0, "eigrp-auth-key-id",  1 },
+  { OPTION_EIGRP_OPCODE,             0,  "eigrp-opcode",         1 },
+  { OPTION_EIGRP_FLAGS,              0,  "eigrp-flags",          1 },
+  { OPTION_EIGRP_SEQUENCE,           0,  "eigrp-sequence",       1 },
+  { OPTION_EIGRP_ACKNOWLEDGE,        0,  "eigrp-acknowledge",    1 },
+  { OPTION_EIGRP_AS,                 0,  "eigrp-as",             1 },
+  { OPTION_EIGRP_TYPE,               0,  "eigrp-type",           1 },
+  { OPTION_EIGRP_LENGTH,             0,  "eigrp-length",         1 },
+  { OPTION_EIGRP_K1,                 0,  "eigrp-k1",             1 },
+  { OPTION_EIGRP_K2,                 0,  "eigrp-k2",             1 },
+  { OPTION_EIGRP_K3,                 0,  "eigrp-k3",             1 },
+  { OPTION_EIGRP_K4,                 0,  "eigrp-k4",             1 },
+  { OPTION_EIGRP_K5,                 0,  "eigrp-k5",             1 },
+  { OPTION_EIGRP_HOLD,               0,  "eigrp-hold",           1 },
+  { OPTION_EIGRP_IOS_VERSION,        0,  "eigrp-ios-ver",        1 },
+  { OPTION_EIGRP_PROTO_VERSION,      0,  "eigrp-rel-ver",        1 },
+  { OPTION_EIGRP_NEXTHOP,            0,  "eigrp-next-hop",       1 },
+  { OPTION_EIGRP_DELAY,              0,  "eigrp-delay",          1 },
+  { OPTION_EIGRP_BANDWIDTH,          0,  "eigrp-bandwidth",      1 },
+  { OPTION_EIGRP_MTU,                0,  "eigrp-mtu",            1 },
+  { OPTION_EIGRP_HOP_COUNT,          0,  "eigrp-hop-count",      1 },
+  { OPTION_EIGRP_LOAD,               0,  "eigrp-load",           1 },
+  { OPTION_EIGRP_RELIABILITY,        0,  "eigrp-reliability",    1 },
+  { OPTION_EIGRP_DESINATION,         0,  "eigrp-daddr",          1 },
+  { OPTION_EIGRP_SOURCE_ROUTER,      0,  "eigrp-src-router",     1 },
+  { OPTION_EIGRP_SOURCE_AS,          0,  "eigrp-src-as",         1 },
+  { OPTION_EIGRP_TAG,                0,  "eigrp-tag",            1 },
+  { OPTION_EIGRP_METRIC,             0,  "eigrp-proto-metric",   1 },
+  { OPTION_EIGRP_ID,                 0,  "eigrp-proto-id",       1 },
+  { OPTION_EIGRP_EXTERNAL_FLAGS,     0,  "eigrp-ext-flags",      1 },
+  { OPTION_EIGRP_ADDRESS,            0,  "eigrp-address",        1 },
+  { OPTION_EIGRP_MULTICAST,          0,  "eigrp-multicast",      1 },
+  { OPTION_EIGRP_AUTHENTICATION,     0,  "eigrp-authentication", 0 },
+  { OPTION_EIGRP_AUTH_KEY_ID,        0,  "eigrp-auth-key-id",    1 },
 
   /* XXX OSPF HEADER OPTIONS (IPPROTO_OSPF = 89) */
-  { OPTION_OSPF_TYPE,              0,  "ospf-type",         1 },
-  { OPTION_OSPF_LENGTH,            0,  "ospf-length",       1 },
-  { OPTION_OSPF_ROUTER_ID,         0,  "ospf-router-id",    1 },
-  { OPTION_OSPF_AREA_ID,           0,  "ospf-area-id",      1 },
-  { OPTION_OSPF_MT,                0,  "ospf-option-MT",    0 },
-  { OPTION_OSPF_E,                 '2', "ospf-option-E",     0 },
-  { OPTION_OSPF_MC,                '3', "ospf-option-MC",    0 },
-  { OPTION_OSPF_NP,                '4', "ospf-option-NP",    0 },
-  { OPTION_OSPF_L,                 '5', "ospf-option-L",     0 },
-  { OPTION_OSPF_DC,                '6', "ospf-option-DC",    0 },
-  { OPTION_OSPF_O,                 '7', "ospf-option-O",     0 },
-  { OPTION_OSPF_DN,                '8', "ospf-option-DN",    0 },
-  { OPTION_OSPF_NETMASK,           0, "ospf-netmask",       1 },
-  { OPTION_OSPF_HELLO_INTERVAL,    0, "ospf-hello-interval", 1 },
-  { OPTION_OSPF_HELLO_PRIORITY,    0, "ospf-hello-priority", 1 },
-  { OPTION_OSPF_HELLO_DEAD,        0, "ospf-hello-dead",    1 },
-  { OPTION_OSPF_HELLO_DESIGN,      0, "ospf-hello-design",  1 },
-  { OPTION_OSPF_HELLO_BACKUP,      0, "ospf-hello-backup",  1 },
-  { OPTION_OSPF_HELLO_NEIGHBOR,    0, "ospf-neighbor",      1 },
-  { OPTION_OSPF_HELLO_ADDRESS,     0, "ospf-address",       1 },
-  { OPTION_OSPF_DD_MTU,            0, "ospf-dd-mtu",        1 },
-  { OPTION_OSPF_DD_MASTER_SLAVE,   0, "ospf-dd-dbdesc-MS",  0 },
-  { OPTION_OSPF_DD_MORE,           0, "ospf-dd-dbdesc-M",   0 },
-  { OPTION_OSPF_DD_INIT,           0, "ospf-dd-dbdesc-I",   0 },
-  { OPTION_OSPF_DD_OOBRESYNC,      0, "ospf-dd-dbdesc-R",   0 },
-  { OPTION_OSPF_DD_SEQUENCE,       0, "ospf-dd-sequence",   1 },
-  { OPTION_OSPF_DD_INCLUDE_LSA,    0, "ospf-dd-include-lsa", 0 },
-  { OPTION_OSPF_LSA_AGE,           0, "ospf-lsa-age",       1 },
-  { OPTION_OSPF_LSA_DO_NOT_AGE,    0, "ospf-lsa-do-not-age", 0 },
-  { OPTION_OSPF_LSA_TYPE,          0, "ospf-lsa-type",      1 },
-  { OPTION_OSPF_LSA_LSID,          0, "ospf-lsa-id",        1 },
-  { OPTION_OSPF_LSA_ROUTER,        0, "ospf-lsa-router",    1 },
-  { OPTION_OSPF_LSA_SEQUENCE,      0, "ospf-lsa-sequence",  1 },
-  { OPTION_OSPF_LSA_METRIC,        0, "ospf-lsa-metric",    1 },
-  { OPTION_OSPF_LSA_FLAG_BORDER,   0, "ospf-lsa-flag-B",    0 },
-  { OPTION_OSPF_LSA_FLAG_EXTERNAL, 0, "ospf-lsa-flag-E",    0 },
-  { OPTION_OSPF_LSA_FLAG_VIRTUAL,  0, "ospf-lsa-flag-V",    0 },
-  { OPTION_OSPF_LSA_FLAG_WILD,     0, "ospf-lsa-flag-W",    0 },
-  { OPTION_OSPF_LSA_FLAG_NSSA_TR,  0, "ospf-lsa-flag-NT",   0 },
-  { OPTION_OSPF_LSA_LINK_ID,       0, "ospf-lsa-link-id",   1 },
-  { OPTION_OSPF_LSA_LINK_DATA,     0, "ospf-lsa-link-data", 1 },
-  { OPTION_OSPF_LSA_LINK_TYPE,     0, "ospf-lsa-link-type", 1 },
-  { OPTION_OSPF_LSA_ATTACHED,      0, "ospf-lsa-attached",  1 },
-  { OPTION_OSPF_LSA_LARGER,        0, "ospf-lsa-larger",    0 },
-  { OPTION_OSPF_LSA_FORWARD,       0, "ospf-lsa-forward",   1 },
-  { OPTION_OSPF_LSA_EXTERNAL,      0, "ospf-lsa-external",  1 },
-  { OPTION_OSPF_VERTEX_ROUTER,     0, "ospf-vertex-router", 0 },
-  { OPTION_OSPF_VERTEX_NETWORK,    0, "ospf-vertex-network", 0 },
-  { OPTION_OSPF_VERTEX_ID,         0, "ospf-vertex-id",     1 },
-  { OPTION_OSPF_LLS_OPTION_LR,     0, "ospf-lls-extended-LR", 0 },
-  { OPTION_OSPF_LLS_OPTION_RS,     0, "ospf-lls-extended-RS", 0 },
-  { OPTION_OSPF_AUTHENTICATION,    0, "ospf-authentication", 0 },
-  { OPTION_OSPF_AUTH_KEY_ID,       0, "ospf-auth-key-id",   1 },
-  { OPTION_OSPF_AUTH_SEQUENCE,     0, "ospf-auth-sequence", 1 },
+  { OPTION_OSPF_TYPE,                0,  "ospf-type",            1 },
+  { OPTION_OSPF_LENGTH,              0,  "ospf-length",          1 },
+  { OPTION_OSPF_ROUTER_ID,           0,  "ospf-router-id",       1 },
+  { OPTION_OSPF_AREA_ID,             0,  "ospf-area-id",         1 },
+  { OPTION_OSPF_MT,                  0,  "ospf-option-MT",       0 },
+  { OPTION_OSPF_E,                 '2',  "ospf-option-E",        0 },
+  { OPTION_OSPF_MC,                '3',  "ospf-option-MC",       0 },
+  { OPTION_OSPF_NP,                '4',  "ospf-option-NP",       0 },
+  { OPTION_OSPF_L,                 '5',  "ospf-option-L",        0 },
+  { OPTION_OSPF_DC,                '6',  "ospf-option-DC",       0 },
+  { OPTION_OSPF_O,                 '7',  "ospf-option-O",        0 },
+  { OPTION_OSPF_DN,                '8',  "ospf-option-DN",       0 },
+  { OPTION_OSPF_NETMASK,             0,  "ospf-netmask",         1 },
+  { OPTION_OSPF_HELLO_INTERVAL,      0,  "ospf-hello-interval",  1 },
+  { OPTION_OSPF_HELLO_PRIORITY,      0,  "ospf-hello-priority",  1 },
+  { OPTION_OSPF_HELLO_DEAD,          0,  "ospf-hello-dead",      1 },
+  { OPTION_OSPF_HELLO_DESIGN,        0,  "ospf-hello-design",    1 },
+  { OPTION_OSPF_HELLO_BACKUP,        0,  "ospf-hello-backup",    1 },
+  { OPTION_OSPF_HELLO_NEIGHBOR,      0,  "ospf-neighbor",        1 },
+  { OPTION_OSPF_HELLO_ADDRESS,       0,  "ospf-address",         1 },
+  { OPTION_OSPF_DD_MTU,              0,  "ospf-dd-mtu",          1 },
+  { OPTION_OSPF_DD_MASTER_SLAVE,     0,  "ospf-dd-dbdesc-MS",    0 },
+  { OPTION_OSPF_DD_MORE,             0,  "ospf-dd-dbdesc-M",     0 },
+  { OPTION_OSPF_DD_INIT,             0,  "ospf-dd-dbdesc-I",     0 },
+  { OPTION_OSPF_DD_OOBRESYNC,        0,  "ospf-dd-dbdesc-R",     0 },
+  { OPTION_OSPF_DD_SEQUENCE,         0,  "ospf-dd-sequence",     1 },
+  { OPTION_OSPF_DD_INCLUDE_LSA,      0,  "ospf-dd-include-lsa",  0 },
+  { OPTION_OSPF_LSA_AGE,             0,  "ospf-lsa-age",         1 },
+  { OPTION_OSPF_LSA_DO_NOT_AGE,      0,  "ospf-lsa-do-not-age",  0 },
+  { OPTION_OSPF_LSA_TYPE,            0,  "ospf-lsa-type",        1 },
+  { OPTION_OSPF_LSA_LSID,            0,  "ospf-lsa-id",          1 },
+  { OPTION_OSPF_LSA_ROUTER,          0,  "ospf-lsa-router",      1 },
+  { OPTION_OSPF_LSA_SEQUENCE,        0,  "ospf-lsa-sequence",    1 },
+  { OPTION_OSPF_LSA_METRIC,          0,  "ospf-lsa-metric",      1 },
+  { OPTION_OSPF_LSA_FLAG_BORDER,     0,  "ospf-lsa-flag-B",      0 },
+  { OPTION_OSPF_LSA_FLAG_EXTERNAL,   0,  "ospf-lsa-flag-E",      0 },
+  { OPTION_OSPF_LSA_FLAG_VIRTUAL,    0,  "ospf-lsa-flag-V",      0 },
+  { OPTION_OSPF_LSA_FLAG_WILD,       0,  "ospf-lsa-flag-W",      0 },
+  { OPTION_OSPF_LSA_FLAG_NSSA_TR,    0,  "ospf-lsa-flag-NT",     0 },
+  { OPTION_OSPF_LSA_LINK_ID,         0,  "ospf-lsa-link-id",     1 },
+  { OPTION_OSPF_LSA_LINK_DATA,       0,  "ospf-lsa-link-data",   1 },
+  { OPTION_OSPF_LSA_LINK_TYPE,       0,  "ospf-lsa-link-type",   1 },
+  { OPTION_OSPF_LSA_ATTACHED,        0,  "ospf-lsa-attached",    1 },
+  { OPTION_OSPF_LSA_LARGER,          0,  "ospf-lsa-larger",      0 },
+  { OPTION_OSPF_LSA_FORWARD,         0,  "ospf-lsa-forward",     1 },
+  { OPTION_OSPF_LSA_EXTERNAL,        0,  "ospf-lsa-external",    1 },
+  { OPTION_OSPF_VERTEX_ROUTER,       0,  "ospf-vertex-router",   0 },
+  { OPTION_OSPF_VERTEX_NETWORK,      0,  "ospf-vertex-network",  0 },
+  { OPTION_OSPF_VERTEX_ID,           0,  "ospf-vertex-id",       1 },
+  { OPTION_OSPF_LLS_OPTION_LR,       0,  "ospf-lls-extended-LR", 0 },
+  { OPTION_OSPF_LLS_OPTION_RS,       0,  "ospf-lls-extended-RS", 0 },
+  { OPTION_OSPF_AUTHENTICATION,      0,  "ospf-authentication",  0 },
+  { OPTION_OSPF_AUTH_KEY_ID,         0,  "ospf-auth-key-id",     1 },
+  { OPTION_OSPF_AUTH_SEQUENCE,       0,  "ospf-auth-sequence",   1 },
 
+  /* Last item must be all zeroes. */
   { 0, 0, NULL, 0 }
 };
 
@@ -430,6 +432,7 @@ struct config_options *parse_command_line(char **argv)
   /* Ugly hack! */
   set_default_protocol(&co);
 
+  /* Check each argument starting from the next one. */
   for (argv++; *argv; argv++)
   {
     opt = *argv;
@@ -439,12 +442,13 @@ struct config_options *parse_command_line(char **argv)
       if ((ptbl = find_option(opt)) == NULL)
         fatal_error("Unrecognized option '%s'.", opt);
 
-      /* Estou assumindo que cada opção só pode ser informada uma vez! */
+      /* This will assume each option should be used only once. */
       if (ptbl->in_use_)
         fatal_error("Option '%s' already given.", opt);
 
       ptbl->in_use_ = 1;
 
+      /* Is the option need an argument, get the next string. */
       next_str = *(argv + 1);
 
       if (!ptbl->has_arg)
@@ -453,13 +457,17 @@ struct config_options *parse_command_line(char **argv)
           fatal_error("Option '%s' has no arguments.", opt);
       }
       else
-        if (next_str)
+        /* Increare the argment pointer only if we didn't reach
+           the end of the list. */
+        if (next_str) 
           argv++;
 
       set_config_option(&co, opt, ptbl->id, next_str);
     }
     else
     {
+      /* NOTE: This is not an option, so it must be an IP address. */
+
       /* Check if already got an address. */
       if (dest_addr)
         fatal_error("Target address given twice. Aborting...");
@@ -469,6 +477,8 @@ struct config_options *parse_command_line(char **argv)
       set_destination_addresses(dest_addr, &co);
     }
 
+    /* How many options we got so far?
+       Needed below. */
     num_options++;
   }
 
@@ -508,6 +518,7 @@ struct config_options *parse_command_line(char **argv)
       exit(EXIT_FAILURE);
     }
 
+  /* We got all the options. Now, check its rules! */
   check_options_rules(&co);
 
   return &co;
@@ -516,7 +527,10 @@ struct config_options *parse_command_line(char **argv)
 /* Check if the argument is an option. */
 inline int  check_if_option(char *s) { return *s == '-'; }
 
-/* NOTE: Ugly hack, but necessary! */
+/* NOTE: Ugly hack, but necessary!
+         The default protocol is TCP, but we weren't able
+         to adjust on config_options structure previously.
+         Do it now. */
 void set_default_protocol(struct config_options *__restrict__ co)
 {
   modules_table_t *ptbl;
@@ -570,13 +584,11 @@ void check_options_rules(struct config_options *__restrict__ co)
     fatal_error("Target address needed.");
 
 #ifdef __HAVE_TURBO__
-
   if (co->turbo && !co->flood)
     fatal_error("Turbo mode only available when flooding.");
-
 #endif
 
-  ptbl = find_option("threshold");
+  ptbl = find_option("--threshold");
 
   /* --flood and --threshold are mutually exclusive! */
   if (co->flood && (ptbl && ptbl->in_use_))
@@ -607,7 +619,6 @@ void check_options_rules(struct config_options *__restrict__ co)
     struct options_table_s *ptbl;
 
     if ((ptbl = find_option("--encapsulated")) != NULL)
-
       /* ptbl->id is an option id on options table entry. */
       while (ptbl->id != 0)
       {
@@ -623,6 +634,8 @@ void check_options_rules(struct config_options *__restrict__ co)
 void get_ip_protocol(struct config_options *co, char *arg)
 {
   /* T50 protocol is a special case! Not in modules table! */
+  /* NOTE: it doesn't matter if protocol names are upper
+           or lower case. */
   if (!strcasecmp(arg, "T50"))
   {
     co->ip.protocol = IPPROTO_T50;
@@ -639,6 +652,8 @@ void get_ip_protocol(struct config_options *co, char *arg)
 
     while (ptbl->acronym)
     {
+      /* NOTE: it doesn't matter if protocol names are upper
+               or lower case. */
       if (!strcasecmp(ptbl->acronym, arg))
       {
         co->ip.protoname = i;
@@ -1776,6 +1791,7 @@ void list_protocols(void)
     *((char *)(d) + (len)) = '\0'; \
   }
 
+/* Ok... this is nice and UGLY. */
 int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
 {
   regex_t re;
@@ -1868,7 +1884,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
 
   /* Prepare CIDR structure */
   addr_ptr->cidr = matches[4];
-  addr_ptr->addr = ( matches[3]        |
+  addr_ptr->addr = ( matches[3]         |
                      (matches[2] << 8)  |
                      (matches[1] << 16) |
                      (matches[0] << 24)) &
@@ -1888,7 +1904,12 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
   NOTE: Since this funcion is defined and used in this module, it's marked with
         the attribute "noinline". Because it's big!
 */
-int get_dual_values(char *arg, unsigned long *px, unsigned long *py, unsigned long max, int optional, char separator, char *optname)
+int get_dual_values(char *arg, 
+                    unsigned long *px, unsigned long *py, 
+                    unsigned long max, 
+                    int optional, 
+                    char separator, 
+                    char *optname)
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";
@@ -2005,9 +2026,3 @@ int check_for_valid_options(int option, int *list)
 
   return 0;
 }
-
-
-
-
-
-

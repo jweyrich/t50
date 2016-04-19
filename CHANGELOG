@@ -6,6 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.5 - March 19th, 2016
+ * Minor fixes
+ * Added comments to the code (for developers)
+
 T50 5.5 - March 16th, 2016
  * SIGTSTP and SIGTRAP are now blocked.
  - Some nasty bugs based on kl0nEz discovery fixed.
