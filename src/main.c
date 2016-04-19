@@ -76,7 +76,11 @@ int main(int argc, char *argv[])
       threshold_t new_threshold;
 
       if ((pid = fork()) == -1)
-        fatal_error("Error creating child process (\"%s\").\nExiting...", strerror(errno));
+        #ifdef __HAVE_DEBUG__
+        fatal_error("Error creating child process: \"%s\".\nExiting..", strerror(errno));
+        #else
+        fatal_error("Error creating child process");
+        #endif
 
       /* Divide the process iterations in main loop between processes. 
          Since we have only 2 processes, max, i'll divide by 2. */
@@ -94,7 +98,11 @@ int main(int argc, char *argv[])
 
   /* Setting the priority to both parent and child process to highly favorable scheduling value. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
-    fatal_error("Error setting process priority (\"%s\"). Exiting...", strerror(errno));
+    #ifdef __HAVE_DEBUG__
+    fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
+    #else
+    fatal_error("Error setting process priority");
+    #endif
 
   /* Show launch info only for parent process. */
   if (!IS_CHILD_PID(pid))
@@ -158,10 +166,10 @@ int main(int argc, char *argv[])
     /* Try to send the packet. */
     if (!send_packet(packet, size, co))
 #ifdef __HAVE_DEBUG__
-      error("Packet for protocol %s (%zd bytes long) not sent.", ptbl->acronym, size);
+      error("Packet for protocol %s (%zd bytes long) not sent", ptbl->acronym, size);
       /* continue trying to send other packets on debug mode! */
 #else
-      fatal_error("Unspecified error sending a packet.");
+      fatal_error("Unspecified error sending a packet");
 #endif
 
     /* If protocol if 'T50', then get the next true protocol. */
@@ -180,14 +188,14 @@ int main(int argc, char *argv[])
     time_t lt;
     struct tm *tm;
 
-    if (pid != -1)
+    if (pid > 0)
     {
       if (!child_is_dead)
       {
         /* Wait 5 seconds for the child to end... */
-        alarm(5);
+        alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
-        printf("\nWaiting for child process to end...\n");
+        fprintf(stderr, "\nWaiting for child process to end...\n");
 #endif        
         if (wait(NULL) > 0)
           child_is_dead = 1;
@@ -221,35 +229,20 @@ int main(int argc, char *argv[])
 /* This function handles interruptions. */
 static void signal_handler(int signal)
 {
-  /* Make sure the socket descriptor is closed.
-     FIX: But only if this is the parent process. Closing the cloned descriptor on the
-          child process can be catastrophic to the parent.
-     NOTE: I realize that the act of closing descriptors are reference counted.
-           Keept the logic just in case! */
-#ifdef __HAVE_TURBO__
-  if (!IS_CHILD_PID(pid))
+  /* NOTE: SIGALRM and SIGCHLD will happen only in parent process! */
+  if (signal == SIGALRM)
+    return;
+
+  /* Child process terminated? */
+  if (signal == SIGCHLD)
   {
-    switch (signal)
-    {
-      case SIGALRM: 
-        return;
-      case SIGCHLD:
-        child_is_dead = 1;
-      default:
-        /* Ungracefully kills the child process! */
-        if (pid != -1)
-          if (!child_is_dead)
-          {
-            kill(pid, SIGKILL);
-            child_is_dead = 1;
-          }
-    }
-
-    close_socket();
+    child_is_dead = 1;
+    return;
   }
-#endif
 
-  /* The shell documentation (bash) specifies that a process
+  close_socket();
+
+  /* The shell documentation (bash) specifies that a process,
      when exits because a signal, must return 128+signal#. */
   exit(128 + signal);
 }
@@ -257,7 +250,8 @@ static void signal_handler(int signal)
 void initialize(const struct config_options *co)
 {
   /* NOTE: See 'man 2 signal' */
-  static struct sigaction sa = { .sa_handler = signal_handler };
+  /* NOTE: Make sure signals are 'reliable'. */
+  static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
   static sigset_t sigset;
 
   /* Blocks SIGTSTP avoiding ^Z behavior, and SIGTRAP. */
@@ -274,8 +268,8 @@ void initialize(const struct config_options *co)
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
+  //sigaction(SIGABRT, &sa, NULL); // SIGABRT should not be captured.
   sigaction(SIGCHLD, &sa, NULL);
-  sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGALRM, &sa, NULL);
 
   /* --- To simplify things, make sure stdout is unbuffered
