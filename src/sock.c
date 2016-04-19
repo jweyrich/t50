@@ -50,20 +50,32 @@ int create_socket(void)
            but on linux will cause an error. */
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
+    #ifdef __HAVE_DEBUG__
+    error("Error opening raw socket: \"%s\"", strerror(errno));
+    #else
     error("Error opening raw socket");
+    #endif
     return FALSE;
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
+    #ifdef __HAVE_DEBUG__
+    error("Error getting socket flags: \"%s\"", strerror(errno));
+    #else
     error("Error getting socket flags");
+    #endif
     return FALSE;
   }
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
+    #ifdef __HAVE_DEBUG__
+    error("Error setting socket to non-blocking mode: \"%s\"", strerror(errno));
+    #else
     error("Error setting socket to non-blocking mode");
+    #endif
     return FALSE;
   }
 
@@ -72,7 +84,11 @@ int create_socket(void)
            still makes the kernel calculates the checksum and total_length. */
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
+    #ifdef __HAVE_DEBUG__
+    error("Error setting socket options: \"%s\"", strerror(errno));
+    #else
     error("Error setting socket options");
+    #endif
     return FALSE;
   }
 
@@ -83,7 +99,11 @@ int create_socket(void)
 
   if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
+    #ifdef __HAVE_DEBUG__
+    error("Error getting socket buffer: \"%s\"", strerror(errno));
+    #else
     error("Error getting socket buffer");
+    #endif
     return FALSE;
   }
 
@@ -98,7 +118,11 @@ int create_socket(void)
       if (errno == ENOBUFS)
         break;
 
+      #ifdef __HAVE_DEBUG__
+      error("Error setting socket buffer: \"%s\"", strerror(errno));
+      #else
       error("Error setting socket buffer");
+      #endif
       return FALSE;
     }
   }
@@ -107,7 +131,11 @@ int create_socket(void)
 #ifdef SO_BROADCAST
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
-    error("error setting socket broadcast flag (\"%s\").", strerror(errno));
+    #ifdef __HAVE_DEBUG__
+    error("error setting socket broadcast flag: \"%s\"", strerror(errno));
+    #else
+    error("error setting socket broadcast flag");
+    #endif
     return FALSE;
   }
 #endif /* SO_BROADCAST */
@@ -116,7 +144,11 @@ int create_socket(void)
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
-    error("error setting socket priority (\"%s\").", strerror(errno));
+    #ifdef __HAVE_DEBUG__
+    error("error setting socket priority: \"%s\"", strerror(errno));
+    #else
+    error("error setting socket priority");
+    #endif
     return FALSE;
   }
 #endif /* SO_PRIORITY */
@@ -130,7 +162,7 @@ int create_socket(void)
 void close_socket(void)
 {
   /* Close only if the descriptor is valid. */
-  if (fd != -1)
+  if (fd > 0)
   {
     close(fd);
 
@@ -178,6 +210,9 @@ int send_packet(const void *const buffer,
   return TRUE;
 }
 
+/*** I realize that EINTR probably never happens, since the signals
+     are marked as SA_RESTART, but I want to be sure! */
+
 /* NOTE: Code inspired on Apache httpd source. */
 static int wait_for_io(int fd)
 {
@@ -187,8 +222,7 @@ static int wait_for_io(int fd)
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
 
-  do
-  {
+  do {
     r = poll(&pfd, 1, TIMEOUT);
   } while (r == -1 && errno == EINTR);
 
@@ -206,13 +240,16 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 
   while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
   {
-    if ((r = wait_for_io(fd)) <= 0)
-      break;
+    do {
+      if ((r = wait_for_io(fd)) == -1)
+        goto socket_send_exit;
+    } while (!r);
 
     do {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
     } while (r == -1 && errno == EINTR);
   }
 
+socket_send_exit:
   return r;
 }

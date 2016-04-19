@@ -31,6 +31,11 @@
 #define ON    1
 #define OFF   0
 
+/**
+ * Amount of time, in seconds, to wait for child process termination.
+ */
+#define WAIT_FOR_CHILD_TIMEOUT  5
+
 /** 
  * Initial packet buffer preallocation size (2 kB).
  *
