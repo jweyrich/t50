@@ -25,7 +25,7 @@
 #endif
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
-static int child_is_dead = 0; /* Used to kill child process if necessary. */
+static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
 
 static void              _NOINLINE initialize(const struct config_options *);
 static modules_table_t * _NOINLINE selectProtocol(const struct config_options * const, int *);
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
          Since we have only 2 processes, max, i'll divide by 2. */
       new_threshold = co->threshold / 2;
 
-      /* FIX: Ooops! Parent process get the extra packet, if threshold is odd. */
+      /* Don't let parent process get the extra packet if threshold is odd. */
       if (!IS_CHILD_PID(pid))
         new_threshold += (co->threshold & 1);
 
@@ -99,11 +99,11 @@ int main(int argc, char *argv[])
 
   /* Setting the priority to both parent and child process to highly favorable scheduling value. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
-    #ifdef __HAVE_DEBUG__
+  #ifdef __HAVE_DEBUG__
     fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
-    #else
+  #else
     fatal_error("Error setting process priority");
-    #endif
+  #endif
 
   /* Show launch info only for parent process. */
   if (!IS_CHILD_PID(pid))
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\a\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -161,14 +161,14 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_DEBUG__
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
-      fprintf(stderr, "[DEBUG] Protocol %s packet size (%zd bytes) exceed max. Ethernet packet data length!\n",
+      fprintf(stderr, "[DEBUG] Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
               ptbl->acronym, size);
 #endif
 
     /* Try to send the packet. */
-    if (!send_packet(packet, size, co))
+    if (unlikely(!send_packet(packet, size, co)))
 #ifdef __HAVE_DEBUG__
-      error("Packet for protocol %s (%zd bytes long) not sent", ptbl->acronym, size);
+      error("Packet for protocol %s (%zu bytes long) not sent", ptbl->acronym, size);
       /* continue trying to send other packets on debug mode! */
 #else
       fatal_error("Unspecified error sending a packet");
@@ -197,15 +197,12 @@ int main(int argc, char *argv[])
         /* Wait 5 seconds for the child to end... */
         alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
-        fprintf(stderr, "\nWaiting for child process to end...\n");
+        fputs("\nWaiting for child process to end...\n", stderr);
 #endif        
         if (wait(NULL) > 0)
           child_is_dead = 1;
         alarm(0);
       }
-
-      if (!child_is_dead)
-        kill(pid, SIGKILL);
     }
 
     /* Finally we close the raw socket. */
@@ -214,7 +211,7 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %.02d:%.02d:%.02d\n",
+    printf("\a\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -234,7 +231,11 @@ static void signal_handler(int signal)
 {
   /* NOTE: SIGALRM and SIGCHLD will happen only in parent process! */
   if (signal == SIGALRM)
+  {
+    if (!IS_CHILD_PID(pid))
+      kill(pid, SIGKILL);
     return;
+  }
 
   /* Child process terminated? */
   if (signal == SIGCHLD)
@@ -252,12 +253,10 @@ static void signal_handler(int signal)
 
 void initialize(const struct config_options *co)
 {
-  /* NOTE: See 'man 2 signal' */
-  /* NOTE: Make sure signals are 'reliable'. */
   static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
   static sigset_t sigset;
 
-  /* Blocks SIGTSTP avoiding ^Z behavior, and SIGTRAP. */
+  /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigemptyset(&sigset);
   sigaddset(&sigset, SIGTSTP);
 #ifndef __HAVE_DEBUG__
@@ -267,12 +266,8 @@ void initialize(const struct config_options *co)
 
   /* --- Initialize signal handlers --- */
   /* All these signals are handled by our handle. */
-  sigaction(SIGHUP,  &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);  // FIX: Broken pipe signal returns to the code! 
+  sigaction(SIGPIPE, &sa, NULL); 
   sigaction(SIGINT,  &sa, NULL);
-  sigaction(SIGQUIT, &sa, NULL);
-  sigaction(SIGTERM, &sa, NULL);
-  //sigaction(SIGABRT, &sa, NULL); // SIGABRT should not be captured.
   sigaction(SIGCHLD, &sa, NULL);
   sigaction(SIGALRM, &sa, NULL);
 
@@ -328,7 +323,7 @@ const char *get_month(unsigned n)
   };
 
   if (n > 11)
-    return "";
+    return "???";
 
   return months[n];
 }
