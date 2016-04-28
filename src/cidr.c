@@ -20,7 +20,7 @@
 
 #include <common.h>
 
-static struct cidr cidr = {0, 0};
+static struct cidr cidr = {0};
 
 /**
  * CIDR configuration tiny C algorithm.

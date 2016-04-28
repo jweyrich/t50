@@ -190,7 +190,7 @@ size_t gre_opt_len(const struct config_options *const __restrict__ co)
      * First thing is to accumulate GRE Header size.
      * And the extra IP header size.
      */
-    size += sizeof(struct gre_hdr) + sizeof(struct iphdr);
+    size = sizeof(struct gre_hdr) + sizeof(struct iphdr);
 
     /*
      * Checking whether add OPTIONAL header size.
