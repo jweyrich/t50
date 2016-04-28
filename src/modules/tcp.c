@@ -82,7 +82,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    * Of this, 20 bytes are taken up by non-options fields of the TCP header,  which
    * leaves 40 bytes (TCP header * 2) for options.
    */
-  if (tcpopt > (sizeof(struct tcphdr) * 2))
+  if (unlikely(tcpopt > (sizeof(struct tcphdr) * 2)))
     fatal_error("%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
                 __FUNCTION__, tcpopt);
 

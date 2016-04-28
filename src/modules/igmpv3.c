@@ -70,7 +70,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
     igmpv3_report->ngrec    = htons(1);
-    igmpv3_report->csum     = 0;
+    igmpv3_report->csum     = FIELD_MUST_BE_ZERO;
 
     /* IGMPv3 Group Record Header structure making a pointer to Checksum. */
     igmpv3_grec                = (struct igmpv3_grec *)(igmpv3_report + 1);

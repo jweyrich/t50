@@ -109,7 +109,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
 
   /* Identifiyingt whether to use Authentication or not. */
   ospf_auth->reserved = FIELD_MUST_BE_ZERO;
-
   if (co->ospf.auth)
   {
     /*
@@ -126,7 +125,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     ospf->autype        = htons(AUTH_TYPE_HMACMD5);
-    //ospf_auth->reserved = FIELD_MUST_BE_ZERO;
     ospf_auth->key_id   = __RND(co->ospf.key_id);
     ospf_auth->length   = auth_hmac_md5_len(co->ospf.auth);
     ospf_auth->sequence = htonl(__RND(co->ospf.sequence));
@@ -147,7 +145,6 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     ospf->autype        = AUTH_TYPE_HMACNUL;
-    //ospf_auth->reserved = FIELD_MUST_BE_ZERO;
     ospf_auth->key_id   = FIELD_MUST_BE_ZERO;
     ospf_auth->length   = FIELD_MUST_BE_ZERO;
     ospf_auth->sequence = FIELD_MUST_BE_ZERO;

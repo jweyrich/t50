@@ -47,7 +47,6 @@ struct iphdr *ip_header(void *buffer,
 
   ip = buffer;
   ip->version  = IPVERSION;
-  /* IP Header length in dwords. */
   ip->ihl      = sizeof(struct iphdr) / 4;
 
   /* FIXME: MAYBE TOS is filled by kernel through the SO_PRIORITY option and this is completly useless. */
@@ -62,12 +61,13 @@ struct iphdr *ip_header(void *buffer,
   ip->ttl      = co->ip.ttl;
   ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
   ip->saddr    = htonl(INADDR_RND(co->ip.saddr));
-  ip->daddr    = co->ip.daddr;    // Already BIG ENDIAN?
+  ip->daddr    = co->ip.daddr;    // Is this already BIG ENDIAN?
   ip->check    = 0;               // NOTE: it will be calculated by the kernel!
-                                  // FIXME: In case this code will be ported to other OSses,
-                                  //        we should calculate the checksum ourselves AFTER
-                                  //        the entire package is ready.
-                                  //        This can be done on main() main loop, before calling send_packet().
+
+  // FIXME: In case this code will be ported to other OSses,
+  //        we should calculate the checksum ourselves AFTER
+  //        the entire package is ready.
+  //        This can be done in main()'s main loop, before calling send_packet().
 
   return ip;
 }

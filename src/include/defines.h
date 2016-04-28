@@ -74,6 +74,13 @@
 
 /** Used to test if "pid" from fork() is from a child process. */
 /* NOTE: fork returns always 0 for the child process. */
-#define IS_CHILD_PID(p) ((p) == 0)
+#define IS_CHILD_PID(p) (!(p))
+
+#ifndef unlikely 
+#define unlikely(c) __builtin_expect(!!(c), 0)
+#endif
+#ifndef likely
+#define likely(c) __builtin_expect(!!(c), 1)
+#endif
 
 #endif

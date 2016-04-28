@@ -20,6 +20,8 @@
 #ifndef __MODULES_INCLUDED__
 #define __MODULES_INCLUDED__
 
+#include <stddef.h>
+
 #include <typedefs.h>
 #include <config.h>
 

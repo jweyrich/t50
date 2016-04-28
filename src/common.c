@@ -101,7 +101,6 @@ uint32_t NETMASK_RND(uint32_t foo)
   {
     uint32_t t = RANDOM() >> 27; /* Upper 5 bits are more random! */
 
-    /* FIX: This is faster than getting a reminder! */
     if (t > 22)
       t = -(23 - t);
     
@@ -109,7 +108,6 @@ uint32_t NETMASK_RND(uint32_t foo)
     foo = ~(~0U >> (t + 8));
   }
 
-  /* NOTE: htonl or ntohl? Invert the bytes anyway! */
   return __builtin_bswap32(foo);
 }
 
@@ -184,7 +182,7 @@ static void _NOINLINE verror(char *fmt, va_list args)
 
   if ((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1)
   {
-    fprintf(stderr, PACKAGE ": Unknown error (not enough memory?).\n");
+    fputs(PACKAGE ": Unknown error (not enough memory?).\n", stderr);
     exit(EXIT_FAILURE);
   }
 

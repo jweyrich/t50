@@ -20,6 +20,9 @@
 #ifndef __TYPEDEFS_INCLUDED__
 #define __TYPEDEFS_INCLUDED__
 
+#include <stdint.h>
+#include <stddef.h>
+
 struct config_options;    /* Just a reference. */
 
 /* Data types */
