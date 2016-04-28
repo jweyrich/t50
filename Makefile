@@ -9,7 +9,7 @@
 #
 
 HAVE_TURBO = 1
-EXPERIMENTAL = 1
+#EXPERIMENTAL = 1
 #DEBUG = 1
 
 .PHONY: all doxygen distclean clean install uninstall
