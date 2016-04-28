@@ -1,4 +1,5 @@
 /** @file rip_help.c */
+/* vim: set ts=2 et sw=2 : */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
