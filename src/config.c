@@ -20,6 +20,7 @@
 */
 
 #include <common.h>
+#include <string.h>
 #include <setjmp.h>
 #include <limits.h>
 #include <regex.h>
@@ -45,6 +46,7 @@ typedef struct
 
 /* Local prototypes. */
 static int                                check_if_option(char *);
+static int                                check_if_nul_option(char *);
 static void                               check_options_rules(struct config_options *__restrict__);
 static struct options_table_s * _NOINLINE find_option(char *);
 static void                               set_config_option(struct config_options *__restrict__, char *, int, char *);
@@ -429,6 +431,7 @@ struct config_options *parse_command_line(char **argv)
   struct options_table_s *ptbl;
   int num_options = 0;
   char *opt, *next_str, *dest_addr = NULL;
+  jmp_buf jb;
 
   /* Ugly hack! */
   set_default_protocol(&co);
@@ -443,25 +446,35 @@ struct config_options *parse_command_line(char **argv)
       if ((ptbl = find_option(opt)) == NULL)
         fatal_error("Unrecognized option '%s'.", opt);
 
+      /* Skip --. */
+      if (check_if_nul_option(opt))
+        continue;
+
       /* This will assume each option should be used only once. */
       if (ptbl->in_use_)
         fatal_error("Option '%s' already given.", opt);
 
       ptbl->in_use_ = 1;
 
-      /* Is the option need an argument, get the next string. */
-      next_str = *(argv + 1);
+      if (setjmp(jb))
+        fatal_error("Option '%s' has no arguments.", opt);
 
-      if (!ptbl->has_arg)
+      /* Is the option need an argument, get the next string. */
+      if (!!(next_str = *(argv + 1)))
       {
-        if (next_str != NULL && !check_if_option(next_str))
-          fatal_error("Option '%s' has no arguments.", opt);
-      }
-      else
-        /* Increare the argment pointer only if we didn't reach
-           the end of the list. */
-        if (next_str) 
+        if (ptbl->has_arg)
+        {
+          if (check_if_nul_option(next_str)) // -- is NOT allowed!
+            longjmp(jb, 1);
           argv++;
+        }
+        else
+        {
+          if (!check_if_nul_option(next_str)) // -- is allowed!
+            if (!check_if_option(next_str))   // no values allowed!
+              longjmp(jb, 1); 
+        }
+      }
 
       set_config_option(&co, opt, ptbl->id, next_str);
     }
@@ -478,10 +491,10 @@ struct config_options *parse_command_line(char **argv)
       set_destination_addresses(dest_addr, &co);
     }
 
-    /* How many options we got so far?
-       Needed below. */
+    /* How many options we got so far? */
     num_options++;
-  }
+
+  } /* end of command line scan. */
 
   /* if '-h' (or '--help') option is given... */
   if ((ptbl = find_option("-h")) != NULL)
@@ -519,14 +532,15 @@ struct config_options *parse_command_line(char **argv)
       exit(EXIT_FAILURE);
     }
 
-  /* We got all the options. Now, check its rules! */
+  /* We got all the options. Now, check their rules! */
   check_options_rules(&co);
 
   return &co;
 }
 
 /* Check if the argument is an option. */
-inline int  check_if_option(char *s) { return *s == '-'; }
+int  check_if_option(char *s) { return *s == '-'; }
+int  check_if_nul_option(char *s) { return !strcmp(s, "--"); }
 
 /* NOTE: Ugly hack, but necessary!
          The default protocol is TCP, but we weren't able
@@ -598,11 +612,11 @@ void check_options_rules(struct config_options *__restrict__ co)
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
       TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
-    fatal_error("TCP options SACK-Permitted and SACK Edges are not allowed");
+    fatal_error("TCP options SACK-Permitted and SACK Edges are not allowed.");
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
   if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
-    fatal_error("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed");
+    fatal_error("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed.");
 
   /* FIX: Checks only if flooding isn't used! */
   if (!co->flood)
@@ -1766,12 +1780,12 @@ void check_list_separators(char *optname, char *arg)
 void list_protocols(void)
 {
   modules_table_t *ptbl;
-  int i;
+  unsigned int i;
 
   puts("List of supported protocols (--protocol):");
 
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
-    printf("\t%2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
+    printf("\t% 2u - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
@@ -2017,13 +2031,13 @@ int check_for_valid_options(int option, int *list)
   if (list != NULL)
   {
     if (list[0] < 0)
-      return 1;
+      return TRUE;
 
     // Scan the valid options list and cheks if 'option' is in it.
     for (; *list; list++)
       if (option == *list)
-        return 1;
+        return TRUE;
   }
 
-  return 0;
+  return FALSE;
 }
