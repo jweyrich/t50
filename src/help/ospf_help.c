@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file ospf_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector

@@ -1,3 +1,4 @@
+# vim: set ts=2 noet sw=2 :
 #
 # if DEBUG is defined on make call (ex: make DEBUG=1), then compile with
 # __HAVE_DEBUG__ defined, asserts and debug information.
