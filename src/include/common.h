@@ -73,7 +73,7 @@ extern void     *packet;
 extern void     alloc_packet(size_t);
 
 /* NOTE: Since this is not a macro, it's here insted of defines.h. */
-extern uint32_t RANDOM(void);
+_NOINLINE extern uint32_t RANDOM(void);
 extern void     SRANDOM(void);
 extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 
@@ -92,7 +92,7 @@ extern int  send_packet(const void *const,
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
 
-extern void error(char *, ...);
-extern void fatal_error(char *, ...) __attribute__((noreturn));
+_NOINLINE extern void error(char *, ...);
+_NOINLINE extern void fatal_error(char *, ...) __attribute__((noreturn));
 
 #endif /* __COMMON_H */

@@ -46,16 +46,16 @@ typedef struct
 /* Local prototypes. */
 static int                                check_if_option(char *);
 static void                               check_options_rules(struct config_options *__restrict__);
-static struct options_table_s * _NOINLINE find_option(char *);
+_NOINLINE static struct options_table_s * find_option(char *);
 static void                               set_config_option(struct config_options *__restrict__, char *, int, char *);
-static unsigned int             _NOINLINE toULong(char *, char *);
-static unsigned int             _NOINLINE toULongCheckRange(char *, char *, unsigned int, unsigned int);
-static void                     _NOINLINE check_list_separators(char *, char *);
+_NOINLINE static unsigned int             toULong(char *, char *);
+_NOINLINE static unsigned int             toULongCheckRange(char *, char *, unsigned int, unsigned int);
+_NOINLINE static void                     check_list_separators(char *, char *);
 static void                               set_destination_addresses(char *, struct config_options *__restrict__);
 static void                               list_protocols(void);
 static void                               set_default_protocol(struct config_options *__restrict__);
 static int                                get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
-static int                      _NOINLINE get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
+_NOINLINE static int                      get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
 static int                                check_threshold(const struct config_options *const __restrict__);
 static int                                check_for_valid_options(int, int *);
 
