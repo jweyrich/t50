@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file common.h */
 /* vim: set ts=2 et sw=2 : */
 /*
@@ -43,7 +44,7 @@ static size_t number_of_modules = 0;
   static uint64_t _seed[2] = { 0x748bd5a53132bUL, 
                                0x41c6e6d32143a1c7UL };
    
-  uint32_t _NOINLINE RANDOM(void)
+  uint32_t RANDOM(void)
   {
     uint64_t s0 = _seed[1];
     uint64_t s1 = _seed[0];
@@ -57,7 +58,7 @@ static size_t number_of_modules = 0;
 #else
   /* Linear Congruential Pseudo Random Number Generator. */
   static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-  uint32_t _NOINLINE RANDOM(void) 
+  uint32_t RANDOM(void) 
   { return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32; } /* Same parameters as in glibc! */
 #endif
 
@@ -177,7 +178,7 @@ int *get_module_valid_options_list(int protocol)
 }
 
 /* --- Using vfprintf for flexibility. */
-static void _NOINLINE verror(char *fmt, va_list args)
+static void verror(char *fmt, va_list args)
 {
   char *str;
 
@@ -194,7 +195,7 @@ static void _NOINLINE verror(char *fmt, va_list args)
 /**
  * Standard error reporting routine. Non fatal version.
  */
-void _NOINLINE error(char *fmt, ...)
+void error(char *fmt, ...)
 {
   va_list args;
 
@@ -208,7 +209,7 @@ void _NOINLINE error(char *fmt, ...)
  *
  * This function never returns!
  */
-void _NOINLINE fatal_error(char *fmt, ...) 
+void fatal_error(char *fmt, ...) 
 {
   va_list args;
 

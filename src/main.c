@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file main.c */
 /* vim: set ts=2 et sw=2 : */
 /*
@@ -28,10 +29,10 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
 
-static void              _NOINLINE initialize(const struct config_options *);
-static modules_table_t * _NOINLINE selectProtocol(const struct config_options * const, int *);
-static const char *      _NOINLINE get_ordinal_suffix(unsigned);
-static const char *      _NOINLINE get_month(unsigned);
+_NOINLINE static void               initialize(const struct config_options *);
+_NOINLINE static modules_table_t *  selectProtocol(const struct config_options * const, int *);
+_NOINLINE static const char *       get_ordinal_suffix(unsigned);
+_NOINLINE static const char *       get_month(unsigned);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
 
   /* Calculates CIDR for destination address. */
-  if ((cidr_ptr = config_cidr(co)) == NULL)
+  if (!(cidr_ptr = config_cidr(co)))
     return EXIT_FAILURE;
 
 #ifdef  __HAVE_TURBO__

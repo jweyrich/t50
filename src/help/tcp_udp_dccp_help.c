@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file tcp_udp_dccp_help.c */
 /* vim: set ts=2 et sw=2 : */
 /*

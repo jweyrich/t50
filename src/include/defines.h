@@ -27,10 +27,10 @@
 #define SITE    "http://github.com/fredericopissarra/t50"
 
 /* Boolean aliases. */
-#define TRUE  1
 #define FALSE 0
-#define ON    1
+#define TRUE  (!0)
 #define OFF   0
+#define ON    (!0)
 
 /**
  * Amount of time, in seconds, to wait for child process termination.

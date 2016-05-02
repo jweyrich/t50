@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # vim: ts=2 noet sw=2 :
+=======
+# vim: set ts=2 noet sw=2 :
+>>>>>>> c0fed55e152472c16b7cbd451995c08dfa833d27
 #
 # if DEBUG is defined on make call (ex: make DEBUG=1), then compile with
 # __HAVE_DEBUG__ defined, asserts and debug information.

@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file cidr.c */
 /* vim: set ts=2 et sw=2 : */
 /*
@@ -34,8 +35,6 @@ static struct cidr cidr = {0};
  */
 struct cidr *config_cidr(const struct config_options * const __restrict__ co)
 {
-  /* FIXME: Don't need to validate bits. It is already done in getIpAndCidrFromString() function @ config.c */
-
   /*
    * nbrito -- Thu Dec 23 13:06:39 BRST 2010
    * Here is a description of how to calculate,  correctly,  the number of

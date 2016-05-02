@@ -1,3 +1,4 @@
+/* vim: set ts=2 et sw=2 : */
 /** @file egp_help.c */
 /* vim: set ts=2 et sw=2 : */
 /*
