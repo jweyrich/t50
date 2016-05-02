@@ -422,23 +422,27 @@ static struct options_table_s options[] =
   /* Last item must be all zeroes. */
   { 0, 0, NULL, 0 }
 };
-
 #pragma GCC diagnostic pop
+
+_NOINLINE static void _parse_command_line_error(char *option)
+{ fatal_error("Option '%s' has no arguments.", option); }
 
 /* Substitutes getConfigOptions() function.
    NOTE: This function expects &argv[0] as the first argument. */
 struct config_options *parse_command_line(char **argv)
 {
   struct options_table_s *ptbl;
-  int num_options = 0;
-  char *opt, *next_str, *dest_addr = NULL;
-  jmp_buf jb;
+  int num_options;
+  char *opt, *next_str, *dest_addr;
+
+  num_options = 0;
+  dest_addr = NULL;
 
   /* Ugly hack! */
   set_default_protocol(&co);
 
   /* Check each argument starting from the next one. */
-  for (argv++; *argv; argv++)
+  for (num_options = 0, argv++; *argv; argv++)
   {
     opt = *argv;
 
@@ -457,23 +461,20 @@ struct config_options *parse_command_line(char **argv)
 
       ptbl->in_use_ = 1;
 
-      if (setjmp(jb))
-        fatal_error("Option '%s' has no arguments.", opt);
-
       /* Is the option need an argument, get the next string. */
       if (!!(next_str = *(argv + 1)))
       {
         if (ptbl->has_arg)
         {
           if (check_if_nul_option(next_str)) // -- is NOT allowed!
-            longjmp(jb, 1);
+            _parse_command_line_error(opt);
           argv++;
         }
         else
         {
           if (!check_if_nul_option(next_str)) // -- is allowed!
             if (!check_if_option(next_str))   // no values allowed!
-              longjmp(jb, 1); 
+              _parse_command_line_error(opt);
         }
       }
 
@@ -494,7 +495,6 @@ struct config_options *parse_command_line(char **argv)
 
     /* How many options we got so far? */
     num_options++;
-
   } /* end of command line scan. */
 
   /* if '-h' (or '--help') option is given... */
@@ -1785,8 +1785,11 @@ void list_protocols(void)
 
   puts("List of supported protocols (--protocol):");
 
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wformat"
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t% 2u - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
+  #pragma GCC diagnostic pop
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */

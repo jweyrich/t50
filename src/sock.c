@@ -201,7 +201,8 @@ int send_packet(const void *const buffer,
   assert(co != NULL);
 
   /* Use socket_send(), below. */
-  if (socket_send(fd, &sin, (void *)buffer, size) == -1)
+  /* NOTE: Assume socket_send will not fail. */
+  if (unlikely(socket_send(fd, &sin, (void *)buffer, size) == -1))
   {
     if (errno == EPERM)
       fatal_error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
@@ -224,9 +225,10 @@ static int wait_for_io(int fd)
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 #pragma GCC diagnostic pop
 
+  /* NOTE: Assume poll will not fail. */
   do {
     r = poll(&pfd, 1, TIMEOUT);
-  } while (r == -1 && errno == EINTR);
+  } while (unlikely(r == -1 && errno == EINTR));
 
   return r;
 }
@@ -237,22 +239,24 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
   int r;
 
   /* Tries to send the packet until it's signal interrupted. */
+  /* NOTE: Assume sendto will not fail. */
   do { 
     r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-  } while (r == -1 && errno == EINTR);
+  } while (unlikely(r == -1 && errno == EINTR));
 
   /* If it wasn't interrupted, tries to send the packet again. */
-  while (r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+  /* NOTE: Assume previous sendto will not fail. */
+  while (unlikely(r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)))
   {
     do {
       if ((r = wait_for_io(fd)) == -1)
         goto socket_send_exit;
-    } while (!r);
+    } while (unlikely(!r));
 
     /* ... and tries to send again. */
     do {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-    } while (r == -1 && errno == EINTR);
+    } while (unlikely(r == -1 && errno == EINTR));
   }
 
 socket_send_exit:

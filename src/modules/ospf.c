@@ -189,7 +189,8 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_backup));
 
       /* Dealing with neighbor address(es). */
-      for (counter = 0; counter < co->ospf.neighbor; counter++)
+      /* NOTE: Assume co->ospf.neighbor > 0. */
+      for (counter = 0; likely(counter < co->ospf.neighbor); counter++)
         *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
       break;
 
@@ -555,7 +556,8 @@ build_ospf_lsa:
    * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
    */
   stemp = auth_hmac_md5_len(co->ospf.auth);
-  for (counter = 0; counter < stemp; counter++)
+  /* NOTE: Assume stemp > 0. */
+  for (counter = 0; likely(counter < stemp); counter++)
     *buffer.byte_ptr++ = RANDOM();
 
   /*
@@ -643,7 +645,8 @@ build_ospf_lsa:
          * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
          */
         stemp = auth_hmac_md5_len(co->ospf.auth);
-        for (counter = 0; counter < stemp; counter++)
+        /* NOTE: Assume stemp > 0. */
+        for (counter = 0; likely(counter < stemp); counter++)
           *buffer.byte_ptr++ = RANDOM();
 
         /*

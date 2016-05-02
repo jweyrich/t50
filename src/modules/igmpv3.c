@@ -84,7 +84,8 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
     /* Dealing with source address(es). */
     buffer.ptr = igmpv3_grec + 1;
 
-    for (counter = 0; counter < co->igmp.sources; counter++)
+    /* NOTE: Assume co->igmp.sources > 0. */
+    for (counter = 0; likely(counter < co->igmp.sources); counter++)
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->igmp.address[counter]));
 
     /* Computing the checksum. */
@@ -109,7 +110,8 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
     /* Dealing with source address(es). */
     buffer.ptr = igmpv3_query + 1;
 
-    for (counter = 0; counter < co->igmp.sources; counter++)
+    /* NOTE: Assume co->igmp.sources > 0. */
+    for (counter = 0; likely(counter < co->igmp.sources); counter++)
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->igmp.address[counter]));
 
     /* Computing the checksum. */

@@ -188,7 +188,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
      *       +--------+--------+--------+--------+
      */
     if (!co->tcp.syn)
-      for (; tcpolen & 3; tcpolen++)
+      for (; tcpolen & 3; tcpolen++)  /* NOTE: Cannot assume anything about tcpolen. */
         *buffer.byte_ptr++ = TCPOPT_NOP;
 
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
@@ -382,7 +382,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
      */
     stemp = auth_hmac_md5_len(co->tcp.md5);
 
-    for (counter = 0; counter < stemp; counter++)
+    /* NOTE: Assume stemp > 0. */
+    for (counter = 0; likely(counter < stemp); counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
 
@@ -420,7 +421,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
      */
     stemp = auth_hmac_md5_len(co->tcp.auth);
 
-    for (counter = 0; counter < stemp; counter++)
+    /* NOTE: Assume stemp > 0. */
+    for (counter = 0; likely(counter < stemp); counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
 

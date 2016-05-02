@@ -548,7 +548,8 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.byte_ptr++ = 1;
 
       /* Dealing with scope address(es). */
-      for (counter = 0; counter < co->rsvp.scope ; counter++)
+      /* NOTE: Assume co->rsvp.scope > 0. */
+      for (counter = 0; likely(counter < co->rsvp.scope) ; counter++)
         *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rsvp.address[counter]));
     }
 

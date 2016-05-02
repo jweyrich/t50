@@ -132,10 +132,12 @@ void alloc_packet(size_t new_packet_size)
   assert(new_packet_size != 0);
 
   /* Realloc only ig the new packet size is greater than the old. */
-  if (new_packet_size > current_packet_size)
+  /* NOTE: Assume the condition is false the majority of time. */
+  if (unlikely(new_packet_size > current_packet_size))
   {
     /* Tries to reallocate memory. */
-    if ((p = realloc(packet, new_packet_size)) == NULL)
+    /* NOTE: Assume realloc will not fail. */
+    if (unlikely((p = realloc(packet, new_packet_size)) == NULL))
       fatal_error("Error reallocating packet buffer.");
 
     /* Only assign a new pointer if successfull */
@@ -159,7 +161,7 @@ size_t get_number_of_registered_modules(void)
 
   /* This garantees that the count will be done
      one time only. */
-  if (number_of_modules == 0)
+  if (unlikely(number_of_modules == 0))
     for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
 
   return number_of_modules;
@@ -182,7 +184,8 @@ static void verror(char *fmt, va_list args)
 {
   char *str;
 
-  if ((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1)
+  /* NOTE: Assume asprintf will not fail. */
+  if (unlikely((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1))
   {
     fputs(PACKAGE ": Unknown error (not enough memory?).\n", stderr);
     exit(EXIT_FAILURE);

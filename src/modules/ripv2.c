@@ -228,7 +228,8 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
      */
     size = auth_hmac_md5_len(co->rip.auth);
-    for (counter = 0; counter < size; counter++)
+    /* NOTE: Assume size > 0. */
+    for (counter = 0; likely(counter < size); counter++)
       *buffer.byte_ptr++ = RANDOM();
   }
 
