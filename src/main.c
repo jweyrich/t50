@@ -59,8 +59,7 @@ int main(int argc, char *argv[])
   initialize(co);
 
   /* create_socket() handles its own errors before returning. */
-  if (!create_socket())
-    return EXIT_FAILURE;
+  create_socket();
 
   /* Calculates CIDR for destination address. */
   if (!(cidr_ptr = config_cidr(co)))

@@ -58,20 +58,18 @@ in_addr_t resolv(char *name)
   /* scan all the list. */
   for (res = res0; res; res = res->ai_next)
   {
-    if (res->ai_family == AF_INET)
+    switch (res->ai_family)
     {
-      addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
-      break;
-    }
-    else
-      if (res->ai_family == AF_INET6)
-      {
-        // If an IPv6 v4mapped address was already found,
-        // ignore this one. Otherwise gets the 4 IPv4 octects.
+      case AF_INET:
+        addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+        goto end_loop;
+        
+      case AF_INET6:
         if (!addr)
           addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
-      }
+    }
   }
+end_loop:
 
   // Free the linked list.
   if (res0)

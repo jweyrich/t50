@@ -81,7 +81,7 @@ extern uint32_t NETMASK_RND(uint32_t) __attribute__((noinline));
 extern struct cidr *config_cidr(const struct config_options * const __restrict__);
 extern uint16_t     cksum(void *, size_t);  /* Checksum calc. */
 extern in_addr_t    resolv(char *);         /* Resolve name to ip address. */
-extern int          create_socket(void);    /* Creates the sending socket */
+extern void         create_socket(void);    /* Creates the sending socket */
 extern void         close_socket(void);     /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */

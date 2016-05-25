@@ -40,7 +40,7 @@ static int socket_send(int, struct sockaddr_in *, void *, size_t);
  *
  * @return TRUE (success!) or FALSE (error).
  */
-int create_socket(void)
+void create_socket(void)
 {
   socklen_t len;
   unsigned i, n = 1;
@@ -53,32 +53,29 @@ int create_socket(void)
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
     #ifdef __HAVE_DEBUG__
-    error("Error opening raw socket: \"%s\"", strerror(errno));
+    fatal_error("Error opening raw socket: \"%s\"", strerror(errno));
     #else
-    error("Error opening raw socket");
+    fatal_error("Error opening raw socket");
     #endif
-    return FALSE;
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
     #ifdef __HAVE_DEBUG__
-    error("Error getting socket flags: \"%s\"", strerror(errno));
+    fatal_error("Error getting socket flags: \"%s\"", strerror(errno));
     #else
-    error("Error getting socket flags");
+    fatal_error("Error getting socket flags");
     #endif
-    return FALSE;
   }
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
     #ifdef __HAVE_DEBUG__
-    error("Error setting socket to non-blocking mode: \"%s\"", strerror(errno));
+    fatal_error("Error setting socket to non-blocking mode: \"%s\"", strerror(errno));
     #else
-    error("Error setting socket to non-blocking mode");
+    fatal_error("Error setting socket to non-blocking mode");
     #endif
-    return FALSE;
   }
 
   /* Setting IP_HDRINCL. */
@@ -87,11 +84,10 @@ int create_socket(void)
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
     #ifdef __HAVE_DEBUG__
-    error("Error setting socket options: \"%s\"", strerror(errno));
+    fatal_error("Error setting socket options: \"%s\"", strerror(errno));
     #else
-    error("Error setting socket options");
+    fatal_error("Error setting socket options");
     #endif
-    return FALSE;
   }
 
   /* Taken from libdnet by Dug Song. */
@@ -102,11 +98,10 @@ int create_socket(void)
   if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
     #ifdef __HAVE_DEBUG__
-    error("Error getting socket buffer: \"%s\"", strerror(errno));
+    fatal_error("Error getting socket buffer: \"%s\"", strerror(errno));
     #else
-    error("Error getting socket buffer");
+    fatal_error("Error getting socket buffer");
     #endif
-    return FALSE;
   }
 
   /* Setting the maximum SO_SNDBUF in bytes.
@@ -121,11 +116,10 @@ int create_socket(void)
         break;
 
       #ifdef __HAVE_DEBUG__
-      error("Error setting socket buffer: \"%s\"", strerror(errno));
+      fatal_error("Error setting socket buffer: \"%s\"", strerror(errno));
       #else
-      error("Error setting socket buffer");
+      fatal_error("Error setting socket buffer");
       #endif
-      return FALSE;
     }
   }
 #endif /* SO_SNDBUF */
@@ -134,11 +128,10 @@ int create_socket(void)
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
     #ifdef __HAVE_DEBUG__
-    error("error setting socket broadcast flag: \"%s\"", strerror(errno));
+    fatal_error("error setting socket broadcast flag: \"%s\"", strerror(errno));
     #else
-    error("error setting socket broadcast flag");
+    fatal_error("error setting socket broadcast flag");
     #endif
-    return FALSE;
   }
 #endif /* SO_BROADCAST */
 
@@ -147,15 +140,12 @@ int create_socket(void)
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
     #ifdef __HAVE_DEBUG__
-    error("error setting socket priority: \"%s\"", strerror(errno));
+    fatal_error("error setting socket priority: \"%s\"", strerror(errno));
     #else
-    error("error setting socket priority");
+    fatal_error("error setting socket priority");
     #endif
-    return FALSE;
   }
 #endif /* SO_PRIORITY */
-
-  return TRUE;
 }
 
 /**
@@ -185,16 +175,12 @@ int send_packet(const void *const buffer,
                 size_t size,
                 const struct config_options *const __restrict__ co)
 {
-  // Explicitly disabled warning 'cause this initialization is correct!
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-braces"
   struct sockaddr_in sin =
   {
     .sin_family = AF_INET,
     .sin_port = htons(IPPORT_RND(co->dest)),
-    .sin_addr = co->ip.daddr    /* Already in network byte order! */
+    .sin_addr.s_addr = co->ip.daddr    /* Already in network byte order! */
   };
-#pragma GCC diagnostic pop
 
   assert(buffer != NULL);
   assert(size > 0);
@@ -220,10 +206,7 @@ int send_packet(const void *const buffer,
 static int wait_for_io(int fd)
 {
   int r;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-braces"
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
-#pragma GCC diagnostic pop
 
   /* NOTE: Assume poll will not fail. */
   do {

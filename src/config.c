@@ -621,7 +621,7 @@ void check_options_rules(struct config_options *__restrict__ co)
 
   /* FIX: Checks only if flooding isn't used! */
   if (!co->flood)
-    if (!check_threshold(co))
+    if (check_threshold(co))
       exit(EXIT_FAILURE);
 
   /* NOTE: Insert other rules here! */
@@ -638,7 +638,7 @@ void check_options_rules(struct config_options *__restrict__ co)
       /* ptbl->id is an option id on options table entry. */
       while (ptbl->id != 0)
       {
-        if (!check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
+        if (check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
           fatal_error("One or more options are not available to chosen protocol.");
 
         ptbl++;
@@ -946,9 +946,10 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_TCP_TSOPT:
     /* This option can contain 2 values separated by ':' (second is optional). */
+    /* FIXME: Is it separated by ':' or '.'? */
     co->tcp.options |= TCP_OPTION_TSOPT;
 
-    if (!get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
+    if (get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
       exit(EXIT_FAILURE);
 
     co->tcp.tsval = a;
@@ -978,7 +979,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     /* NOTE: This option expects 2 values, separated by ':'. */
     co->tcp.options |= TCP_OPTION_SACK_EDGE;
 
-    if (!get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
+    if (get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
       exit(EXIT_FAILURE);
 
     co->tcp.sack_left = a;
@@ -1405,7 +1406,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_EIGRP_IOS_VERSION:
-    if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+    if (get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
       exit(EXIT_FAILURE);
 
     co->eigrp.ios_major = a;
@@ -1413,7 +1414,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_EIGRP_PROTO_VERSION:
-    if (!get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
+    if (get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
       exit(EXIT_FAILURE);
 
     co->eigrp.ver_major = a;
@@ -1774,21 +1775,21 @@ void check_list_separators(char *optname, char *arg)
   assert(arg != NULL);
 
   if (strpbrk(arg, ",;:"))
-    fatal_error("Option '%s' do not accept a list.\n", optname);
+    fatal_error("Option '%s' does not accept a list.\n", optname);
 }
 
 /* List procotolos on modules table */
 void list_protocols(void)
 {
   modules_table_t *ptbl;
-  unsigned int i;
+  int i;
 
   puts("List of supported protocols (--protocol):");
 
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wformat"
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
-    printf("\t% 2u - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
+    printf("\t% 2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
   #pragma GCC diagnostic pop
 }
 
@@ -1920,8 +1921,8 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
    Also, check for invalid separators: ',', ';'. If '.' is the separator, ':'
    and vice-versa.
 
-  NOTE: Since this funcion is defined and used in this module, it's marked with
-        the attribute "noinline". Because it's big!
+   NOTE: Since this funcion is defined and used in this module, it's marked with
+         the attribute "noinline". Because it's big!
 */
 int get_dual_values(char *arg, 
                     unsigned long *px, unsigned long *py, 
@@ -1941,7 +1942,7 @@ int get_dual_values(char *arg,
   if (setjmp(jb))
   {
     error("'%s' should be formated as 'n%s'.", optname, optional ? "[.n]" : ".n");
-    return 0;
+    return -1;
   }
 
   nseps[0] = ((sep[0] = separator) == '.') ? ':' : '.';
@@ -1961,7 +1962,7 @@ int get_dual_values(char *arg,
   if (setjmp(jb))
   {
     error("'%s' arguments are out of range or invalid.", optname);
-    return 0;
+    return -1;
   }
 
   /* Try to convert the first value. */
@@ -1993,11 +1994,11 @@ int get_dual_values(char *arg,
   if (*px > max || *py > max)
   {
     error("One or both arguments of '%s' option are out of range.", optname);
-    return 0;
+    return -1;
   }
 
   /* Everything ok! */
-  return 1;
+  return 0;
 }
 
 /* Checks if threshold is valid. */
@@ -2019,10 +2020,10 @@ int check_threshold(const struct config_options *const __restrict__ co)
   {
     error("Protool %s cannot have threshold smaller than %d.",
           mod_table[co->ip.protoname].acronym, minThreshold);
-    return FALSE;
+    return -1;
   }
 
-  return TRUE;
+  return 0;
 }
 
 // Cheks if an option is on a list of valid options.
@@ -2035,13 +2036,13 @@ int check_for_valid_options(int option, int *list)
   if (list != NULL)
   {
     if (list[0] < 0)
-      return TRUE;
+      return 0;
 
     // Scan the valid options list and cheks if 'option' is in it.
     for (; *list; list++)
       if (option == *list)
-        return TRUE;
+        return 0;
   }
 
-  return FALSE;
+  return -1;
 }

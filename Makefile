@@ -115,18 +115,19 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O2 -DNDEBUG
+  CFLAGS += -O3 -DNDEBUG
   ifdef HAVE_TURBO
     CFLAGS += -D__HAVE_TURBO__
   endif
 
 	# Get architecture
-  ARCH = $(shell arch)
+  ARCH = $(shell uname -m)
   ifneq ($(ARCH),x86_64)
-    CFLAGS += -msse -mfpmath=sse
+    CFLAGS += -msse2 -mfpmath=sse
   endif
 
-  LDFLAGS += -s 
+  # Release don't need debug symbols!
+	LDFLAGS += -s 
 
   # FIX: BMI2 isn't very useful for us, but MOVBE is!
   ifeq ($(shell grep movbe /proc/cpuinfo 2>&1 > /dev/null; echo $$?), 0)
