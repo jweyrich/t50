@@ -36,13 +36,15 @@ static int socket_send(int, struct sockaddr_in *, void *, size_t);
 
 /**
  * Creates and configure a raw socket.
- *
- * @return TRUE (success!) or FALSE (error).
  */
 void create_socket(void)
 {
   socklen_t len;
-  unsigned i, n = 1;
+  unsigned i, n = 1;  /* FIXME: if I indended, someday, to port
+                                this code to Solaris, I must use
+                                char to n and set to '1'. 
+
+                                Must change setsockopt() calls as well. */
   int flag;
 
   /* Setting SOCKET RAW.
@@ -104,8 +106,8 @@ void create_socket(void)
   }
 
   /* Setting the maximum SO_SNDBUF in bytes.
-   * 128      =  1 kbits
-   * 10485760 = 80 Mbits */
+   * 128      =  1 Kib
+   * 10485760 = 80 Mib */
   for (i = n + 128; i < 10485760; i += 128)
   {
     /* Setting SO_SNDBUF. */
@@ -178,6 +180,7 @@ int send_packet(const void *const buffer,
   {
     .sin_family = AF_INET,
     .sin_port = htons(IPPORT_RND(co->dest)),
+    /* FIX: s_addr member was missing! */
     .sin_addr.s_addr = co->ip.daddr    /* Already in network byte order! */
   };
 
