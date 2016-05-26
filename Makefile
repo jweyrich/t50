@@ -115,7 +115,7 @@ ifdef DEBUG
 
 # CFLAGS +=  -DDUMP_DATA -g
 else
-  CFLAGS += -O3 -DNDEBUG
+  CFLAGS += -O3 -DNDEBUG -march=native
   ifdef HAVE_TURBO
     CFLAGS += -D__HAVE_TURBO__
   endif
