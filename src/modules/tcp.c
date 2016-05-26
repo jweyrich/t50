@@ -87,47 +87,47 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
     fatal_error("%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
                 __FUNCTION__, tcpopt);
 
-    /* TCP Header structure making a pointer to IP Header structure. */
-    tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + greoptlen);
-    tcp->source  = htons(IPPORT_RND(co->source));
-    tcp->dest    = htons(IPPORT_RND(co->dest));
-    tcp->res1    = TCP_RESERVED_BITS;
-    tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
-    tcp->fin     = (co->tcp.fin != 0);
-    tcp->syn     = (co->tcp.syn != 0);
-    tcp->seq     = co->tcp.syn ? htonl(__RND(co->tcp.sequence)) : 0;
-    tcp->rst     = (co->tcp.rst != 0);
-    tcp->psh     = (co->tcp.psh != 0);
-    tcp->ack     = (co->tcp.ack != 0);
-    tcp->ack_seq = co->tcp.ack ? htonl(__RND(co->tcp.acknowledge)) : 0;
-    tcp->urg     = (co->tcp.urg != 0);
-    tcp->urg_ptr = co->tcp.urg ? htons(__RND(co->tcp.urg_ptr)) : 0;
-    tcp->ece     = (co->tcp.ece != 0);
-    tcp->cwr     = (co->tcp.cwr != 0);
-    tcp->window  = htons(__RND(co->tcp.window));
-    tcp->check   = 0; /* Needed 'cause of cksum() call */
+  /* TCP Header structure making a pointer to IP Header structure. */
+  tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + greoptlen);
+  tcp->source  = htons(IPPORT_RND(co->source));
+  tcp->dest    = htons(IPPORT_RND(co->dest));
+  tcp->res1    = TCP_RESERVED_BITS;
+  tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
+  tcp->fin     = (co->tcp.fin != 0);
+  tcp->syn     = (co->tcp.syn != 0);
+  tcp->seq     = co->tcp.syn ? htonl(__RND(co->tcp.sequence)) : 0;
+  tcp->rst     = (co->tcp.rst != 0);
+  tcp->psh     = (co->tcp.psh != 0);
+  tcp->ack     = (co->tcp.ack != 0);
+  tcp->ack_seq = co->tcp.ack ? htonl(__RND(co->tcp.acknowledge)) : 0;
+  tcp->urg     = (co->tcp.urg != 0);
+  tcp->urg_ptr = co->tcp.urg ? htons(__RND(co->tcp.urg_ptr)) : 0;
+  tcp->ece     = (co->tcp.ece != 0);
+  tcp->cwr     = (co->tcp.cwr != 0);
+  tcp->window  = htons(__RND(co->tcp.window));
+  tcp->check   = 0; /* Needed 'cause of cksum() call */
 
-    buffer.ptr = tcp + 1;
+  buffer.ptr = tcp + 1;
 
-    /*
-     * Transmission Control Protocol (TCP) (RFC 793)
-     *
-     *    TCP Maximum Segment Size
-     *
-     *    Kind: 2
-     *
-     *    Length: 4 bytes
-     *
-     *    +--------+--------+---------+--------+
-     *    |00000010|00000100|   max seg size   |
-     *    +--------+--------+---------+--------+
-     */
-    if (TEST_BITS(co->tcp.options, TCP_OPTION_MSS))
-    {
-      *buffer.byte_ptr++ = TCPOPT_MSS;
-      *buffer.byte_ptr++ = TCPOLEN_MSS;
-      *buffer.word_ptr++ = htons(__RND(co->tcp.mss));
-    }
+  /*
+   * Transmission Control Protocol (TCP) (RFC 793)
+   *
+   *    TCP Maximum Segment Size
+   *
+   *    Kind: 2
+   *
+   *    Length: 4 bytes
+   *
+   *    +--------+--------+---------+--------+
+   *    |00000010|00000100|   max seg size   |
+   *    +--------+--------+---------+--------+
+   */
+  if (TEST_BITS(co->tcp.options, TCP_OPTION_MSS))
+  {
+    *buffer.byte_ptr++ = TCPOPT_MSS;
+    *buffer.byte_ptr++ = TCPOLEN_MSS;
+    *buffer.word_ptr++ = htons(__RND(co->tcp.mss));
+  }
 
   /*
    * TCP Extensions for High Performance (RFC 1323)
@@ -434,6 +434,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* Fill PSEUDO Header structure. */
   pseudo           = buffer.ptr;
+
   if (co->encapsulated)
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -444,6 +445,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
+
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons(length);
@@ -522,3 +524,4 @@ size_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
 
   return size;
 }
+

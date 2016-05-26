@@ -212,3 +212,4 @@ size_t gre_opt_len(const struct config_options *const __restrict__ co)
 
   return size;
 }
+
