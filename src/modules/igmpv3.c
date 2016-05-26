@@ -1,6 +1,5 @@
 /* vim: set ts=2 et sw=2 : */
 /** @file igmpv3.c */
-/* vim: set ts=2 et sw=2 : */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
