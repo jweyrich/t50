@@ -23,7 +23,7 @@
 
 /* This can be changed between releases. */
 #define PACKAGE "T50"
-#define VERSION "5.5"
+#define VERSION "5.6"
 #define SITE    "http://github.com/fredericopissarra/t50"
 
 /* Boolean aliases. */
