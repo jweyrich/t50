@@ -120,12 +120,6 @@ else
     CFLAGS += -D__HAVE_TURBO__
   endif
 
-	# Get architecture
-  ARCH = $(shell uname -m)
-  ifneq ($(ARCH),x86_64)
-    CFLAGS += -msse2 -mfpmath=sse
-  endif
-
   # Release don't need debug symbols!
 	LDFLAGS += -s 
 
