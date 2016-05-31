@@ -6,6 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.6.3 - May 30th, 2016
+ * Project now compiles and installs with GNU Build System help.
+ * Compiler option -mtune=native changed to -march=native. SSE options for i386 not necessary anymore.
+
 T50 5.5 - March 19th, 2016
  * Minor fixes
  * Added comments to the code (for developers)
