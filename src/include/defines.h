@@ -21,11 +21,6 @@
 #ifndef __DEFINES_INCLUDED__
 #define __DEFINES_INCLUDED__
 
-/* This can be changed between releases. */
-#define PACKAGE "T50"
-#define VERSION "5.6"
-#define SITE    "http://github.com/fredericopissarra/t50"
-
 /* Boolean aliases. */
 #define FALSE 0
 #define TRUE  (!0)

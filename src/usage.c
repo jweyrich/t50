@@ -52,7 +52,7 @@ void usage(void)
 
   puts("Some considerations while running this program:\n"
        " 1. There is no limitation of using as many options as possible.\n"
-       " 2. Report " PACKAGE " bugs at " SITE ".\n"
+       " 2. Report " PACKAGE " bugs at " PACKAGE_URL ".\n"
        " 3. Some header fields with default values MUST be set to \'0\' for RANDOM.\n"
        " 4. Mandatory arguments to long options are mandatory for short options too.\n"
        " 5. Be nice when using " PACKAGE ", the author DENIES its use for DoS/DDoS purposes.\n"
