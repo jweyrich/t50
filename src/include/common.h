@@ -28,7 +28,7 @@
 /* Some functions need this! */
 #define _GNU_SOURCE
 
-#include <configure.h>
+#include <configuration.h>
 #include <assert.h> /* for debugging purposes only */
 #include <time.h>
 #include <stdio.h>
