@@ -13,7 +13,6 @@ April 2nd, 2015
 March 1st, 2014
  - Improve t50 manpage documentation
  - Create some standard test scripts
- - Prepare project to use GNU build standard (use ./configure script)
  - Create DEB and RPM packaging (binary, dev and source packages. Maybe an PPA for Ununtu and repository for Debian too!)
  - Incorporate packaging on Makefile
  + Support for IPv6?
