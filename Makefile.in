@@ -79,7 +79,9 @@ subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(top_srcdir)/src/include/configuration.h.in README TODO \
-	compile install-sh missing
+	build/compile build/install-sh build/missing \
+	$(top_srcdir)/build/compile $(top_srcdir)/build/install-sh \
+	$(top_srcdir)/build/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
