@@ -1,11 +1,11 @@
 sbin_PROGRAMS = t50
-t50_SOURCES = modules.c \
+t50_SOURCES = main.c \
 config.c \
 sock.c \
 cidr.c \
 cksum.c \
 common.c \
-main.c \
+modules.c \
 usage.c \
 resolv.c \
 help/igmp_help.c \
@@ -49,4 +49,4 @@ include/protocol/ospf.h \
 include/typedefs.h \
 include/help.h \
 include/defines.h \
-include/modules.h
+include/modules.h 
