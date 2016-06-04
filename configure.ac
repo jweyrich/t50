@@ -19,7 +19,7 @@ AC_PROG_INSTALL
 
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
-  [CFLAGS="-O0 -g"],
+  [CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
   [CFLAGS="-O3 -march=native"; if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi])
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h])

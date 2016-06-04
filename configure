@@ -4075,7 +4075,7 @@ fi
 
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug; CFLAGS="-O0 -g"
+  enableval=$enable_debug; CFLAGS="-O0 -g -D__HAVE_DEBUG__"
 else
   CFLAGS="-O3 -march=native"; if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
 fi
