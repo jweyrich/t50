@@ -61,7 +61,6 @@ struct cidr *config_cidr(const struct config_options * const __restrict__ co)
    *     for the CIDR.
    */
 
-  /* FIXME: Maybe this is an unecessary test. */
   if (co->bits < CIDR_MAXIMUM)
   {
     uint32_t netmask;
