@@ -25,25 +25,6 @@
 #include <limits.h>
 #include <regex.h>
 
-/* Structure used to contain the command line options info. */
-struct options_table_s
-{
-  int id;             /* This is the value returned by find_option(). */
-  char short_opt;     /* Single char short option (ou '\0' if none). */
-  char *long_opt;     /* String for long option name (or NULL is none.) */
-  int has_arg;        /* If option must have an argument, this is 1. */
-
-  /* "private" part. */
-  int  in_use_;        /* Boolean used to check if option was already used. */
-};
-
-/* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
-typedef struct
-{
-  unsigned addr;
-  unsigned cidr;
-} T50_tmp_addr_t;
-
 /* Local prototypes. */
 static int                                check_if_option(char *);
 static int                                check_if_nul_option(char *);
@@ -161,7 +142,6 @@ static struct config_options co =
 
   /* NOTE: Add configuration structured values for new protocols here! */
 };
-
 
 /* The actual command line options table. */
 static struct options_table_s options[] =
@@ -705,7 +685,7 @@ void set_destination_addresses(char *arg, struct config_options *__restrict__ co
 
     /* Get cidr if any. */
     if ((p = strtok(NULL, "/")) != NULL)
-      co->bits = atoi(p);
+      co->bits = atoi(p); /* NOTE: Range will be checked later. */
     else
       co->bits = 32;
   }
@@ -721,7 +701,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
   switch (optid)
   {
 #ifdef __HAVE_TURBO__
-
   case OPTION_TURBO:
     co->turbo = TRUE;
     break;
@@ -1816,7 +1795,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
   regex_t re;
   regmatch_t rm[6];
   unsigned matches[5];
-  int i, len;
+  unsigned int i, len;
   char *t;
   int bits;
 

@@ -579,6 +579,25 @@ struct config_options
   /* NOTE: Add structures configuration for new protocols here! */
 };
 
+/* Structure used to contain the command line options info. */
+struct options_table_s
+{
+  int id;             /* This is the value returned by find_option(). */
+  char short_opt;     /* Single char short option (ou '\0' if none). */
+  char *long_opt;     /* String for long option name (or NULL is none.) */
+  int has_arg;        /* If option must have an argument, this is 1. */
+
+  /* "private" part. */
+  int  in_use_;        /* Boolean used to check if option was already used. */
+};
+
+/* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
+typedef struct
+{
+  unsigned addr;
+  unsigned cidr;
+} T50_tmp_addr_t;
+
 extern struct config_options *parse_command_line(char **);
 
 #endif /* CONFIG_H */
