@@ -17,11 +17,10 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_PROG_CC_C99
 AC_PROG_INSTALL
 
-# Only release builds
-CFLAGS="-O3 -march=native"
-if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then
-  CFLAGS="$CFLAGS -mmovbe"
-fi
+AC_ARG_ENABLE([debug],
+  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
+  [CFLAGS="-O0 -g"],
+  [CFLAGS="-O3 -march=native"; if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi])
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h])
 
