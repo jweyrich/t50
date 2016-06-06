@@ -4073,6 +4073,7 @@ fi
 
 
 
+# For now, this system will compile ok only on Intel/AMD x86 platforms.
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; CFLAGS="-O0 -g"
