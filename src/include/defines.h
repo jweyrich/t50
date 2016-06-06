@@ -72,6 +72,10 @@
 /* NOTE: fork returns always 0 for the child process. */
 #define IS_CHILD_PID(p) (!(p))
 
+/* NOTE: This is, actually, platform independent. These builtin functions
+         only tells the compiler to privilege one form of conditional jump
+         over another, depending how likely or ulikely the criteria is true
+         or false!. No actual hardware hints are emitted. */
 #ifndef unlikely 
 #define unlikely(c) __builtin_expect(!!(c), 0)
 #endif

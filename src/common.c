@@ -109,7 +109,7 @@ uint32_t NETMASK_RND(uint32_t foo)
     foo = ~(~0U >> (t + 8));
   }
 
-  return __builtin_bswap32(foo);
+  return htonl(foo);
 }
 
 /**
