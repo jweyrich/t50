@@ -40,7 +40,7 @@ static void                               set_default_protocol(struct config_opt
 static int                                get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
 _NOINLINE static int                      get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
 static int                                check_threshold(const struct config_options *const __restrict__);
-static int                                check_for_valid_options(int, int *);
+static int                                check_for_valid_option(int, int *);
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
@@ -611,17 +611,22 @@ void check_options_rules(struct config_options *__restrict__ co)
   {
     /* Need to scan only beggining with --encapsulated option.
        Use the fact that the options are sequentially organized. */
-    struct options_table_s *ptbl;
+    struct options_table_s *popt_tbl;
+    int *valid_list;
 
-    if ((ptbl = find_option("--encapsulated")) != NULL)
-      /* ptbl->id is an option id on options table entry. */
-      while (ptbl->id != 0)
+    if ((popt_tbl = find_option("--encapsulated")) != NULL)
+    {
+      valid_list = get_module_valid_options_list(co->ip.protocol);
+
+      /* popt_tbl->id is an option id on options table entry. */
+      while (popt_tbl->id != 0)
       {
-        if (check_for_valid_options(ptbl->id, get_module_valid_options_list(co->ip.protocol)))
+        if (popt_tbl->in_use_ && !check_for_valid_option(popt_tbl->id, valid_list))
           fatal_error("One or more options are not available to chosen protocol.");
 
-        ptbl++;
+        popt_tbl++;
       }
+    }
   }
 }
 
@@ -2006,21 +2011,18 @@ int check_threshold(const struct config_options *const __restrict__ co)
 
 // Cheks if an option is on a list of valid options.
 // The lists of valid options are contained on the modules table!
-int check_for_valid_options(int option, int *list)
+int check_for_valid_option(int opt, int *list)
 {
-  assert(option > 0);
+  assert(opt > 0);
 
   // If the first item is negative, all options are valid!
   if (list != NULL)
   {
-    if (list[0] < 0)
-      return 0;
-
     // Scan the valid options list and cheks if 'option' is in it.
     for (; *list; list++)
-      if (option == *list)
-        return 0;
+      if (opt == *list)
+        return 1;
   }
 
-  return -1;
+  return 0;
 }
