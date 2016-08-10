@@ -1924,7 +1924,7 @@ int get_dual_values(char *arg,
   /* Error handling... */
   if (setjmp(jb))
   {
-    error("'%s' should be formated as 'n%s'.", optname, optional ? "[.n]" : ".n");
+    error("'%s' should be formatted as 'n%s'.", optname, optional ? "[.n]" : ".n");
     return -1;
   }
 

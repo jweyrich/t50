@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
   /* User must have root privileges to run T50, unless --help or --version options are found on command line. */
   if (getuid())
-    fatal_error("User must have root priviledge to run.");
+    fatal_error("User must have root privilege to run.");
 
   /* General initializations. */
   initialize(co);
