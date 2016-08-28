@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [5])
+define([VERSION_FIX],   [6])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 
 AC_INIT([t50],[VERSION_NUMBER],[],[],[https://github.com/fredericopissarra/t50.git])
