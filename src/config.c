@@ -457,6 +457,10 @@ struct config_options *parse_command_line(char **argv)
         }
       }
 
+      // FIX: 28-Aug-2016
+      if (ptbl->has_arg && !next_str)
+        fatal_error("option '%s' must have an argument.", opt);
+
       set_config_option(&co, opt, ptbl->id, next_str);
     }
     else
