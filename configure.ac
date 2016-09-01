@@ -26,8 +26,8 @@ AC_ARG_ENABLE([debug],
   [CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
   [CFLAGS="-O3 -DNDEBUG";
 		case "${host_cpu}" in
-		 i?386|x86_64) 	CFLAGS="$CFLAGS -march=native"; 
-										if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
+		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native"; 
+				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
 			 ;;
 		esac])
 
