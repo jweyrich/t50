@@ -6,6 +6,13 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.6.7 - September 1st, 2016
+ * Checks for Linux on configure script
+ * Uses compiler processor's optimizations options only for x86-64 and i?86.
+
+T50 5.6.6 - August, 2016
+ - Fixed a bug on command line parser.
+
 T50 5.6.3 - May 30th, 2016
  * Project now compiles and installs with GNU Build System help.
  * Compiler option -mtune=native changed to -march=native. SSE options for i386 not necessary anymore.
