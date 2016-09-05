@@ -16,11 +16,6 @@ AC_CONFIG_HEADERS([src/include/configuration.h])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CANONICAL_HOST
 
-# For now, this system will compile ok only on Linux.
-if test "${host_os}" != "linux-gnu"; then
-	AC_MSG_ERROR([T50 will compile only on Linux systems.])
-fi
-
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
   [CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
