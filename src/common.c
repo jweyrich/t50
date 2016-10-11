@@ -129,7 +129,7 @@ void alloc_packet(size_t new_packet_size)
   void *p;
 
   /* Buffer cannot be empty! */
-  if (!new_acket_size)
+  if (!new_packet_size)
     fatal_error("Cannot allocate an empty packet buffer!");
 
   /* Realloc only ig the new packet size is greater than the old. */

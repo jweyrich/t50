@@ -45,7 +45,6 @@ in_addr_t resolv(char *name)
 
   assert(name != NULL);
 
-  /* FIX: The "service" is not important here! */
   if ((err = getaddrinfo(name, NULL, &hints, &res0)) != 0)
   {
     if (res0)

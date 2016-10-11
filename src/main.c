@@ -83,8 +83,7 @@ int main(int argc, char *argv[])
         fatal_error("Error creating child process");
         #endif
 
-      /* Divide the process iterations in main loop between processes. 
-         Since we have only 2 processes, max, i'll divide by 2. */
+      /* Divide the process iterations in main loop between both processes. */
       new_threshold = co->threshold / 2;
 
       /* Don't let parent process get the extra packet if threshold is odd. */
@@ -97,7 +96,7 @@ int main(int argc, char *argv[])
   }
 #endif  /* __HAVE_TURBO__ */
 
-  /* Setting the priority to both parent and child process to highly favorable scheduling value. */
+  /* Setting the priority to both parent and child process. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
   #ifdef __HAVE_DEBUG__
     fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
@@ -125,37 +124,30 @@ int main(int argc, char *argv[])
            tm->tm_sec);
   }
 
-  /* NOTE: Changed the random seed init to here to make
-           sure both processes have their own! */
   SRANDOM();
 
   /* Preallocate packet buffer. */
   alloc_packet(INITIAL_PACKET_SIZE);
 
   /* Selects the initial protocol to use. */
-  /* NOTE: Minor hack: back here from the last branch to avoid page fault using ptbl pointer. */
-  ptbl = selectProtocol(co, &proto);  /* No problems here. ptbl will never be NULL. */
+  ptbl = selectProtocol(co, &proto);
 
-  /* MAIN LOOP: Executed if flooding or if threshold is given. */
+  /* MAIN LOOP */
   while (co->flood || co->threshold)
   {
     /* Holds the actual packet size after module function call. */
     size_t size;
 
     /* Set the destination IP address to RANDOM IP address. */
-    /* NOTE: The previous code did not account for 'hostid == 0'! */
     co->ip.daddr = cidr_ptr->__1st_addr;
-
     if (cidr_ptr->hostid)
       co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */ 
 
-    /* We need the address in network order now. */
+    /* We need the address in network order. */
     co->ip.daddr = htonl(co->ip.daddr);
 
-    /* Calls the 'module' function and sends the packet. */
+    /* Calls the 'module' function to build the packet. */
     co->ip.protocol = ptbl->protocol_id;
-
-    /* Build the packet! */
     ptbl->func(co, &size);
 
 #ifdef __HAVE_DEBUG__
@@ -179,7 +171,7 @@ int main(int argc, char *argv[])
       if ((++ptbl)->func == NULL)
         ptbl = mod_table;
 
-    /* FIX: Just to make sure we do not decrement the threshold value if isn't necessary! */
+    /* Decrement the threshold only if necessary! */
     if (!co->flood)
       co->threshold--;
   }

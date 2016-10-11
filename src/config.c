@@ -47,10 +47,6 @@ static int                                check_for_valid_option(int, int *);
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 /* Default command line interface options. */
-/* NOTE: Using GCC structure initialization extension to
-         make sure that all fields are initialized correctly. */
-/* NOTE: As C standandard goes, any field not explicitly initialized
-         will be filled with zero. */
 static struct config_options co =
 {
   /* XXX COMMON OPTIONS                                                         */
@@ -669,8 +665,7 @@ void get_ip_protocol(struct config_options *co, char *arg)
       ptbl++;
     }
 
-    fprintf(stderr, "Unknown protocol '%s'.\n", arg);
-    exit(EXIT_FAILURE);
+    fatal_error("Unknown protocol %s.", arg);
   }
 }
 

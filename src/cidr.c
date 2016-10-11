@@ -97,7 +97,7 @@ struct cidr *config_cidr(const struct config_options * const __restrict__ co)
     }
 
     netmask = ~(~0U >> co->bits);
-    cidr.__1st_addr = (ntohl(co->ip.daddr) & netmask) + 1; // avoid bit 0 = 0 (loopback).
+    cidr.__1st_addr = (ntohl(co->ip.daddr) & netmask) + 1; // avoid bit 0 = 0.
   }
   else
   {
