@@ -74,6 +74,7 @@ void SRANDOM(void)
   if ((_fd = open("/dev/random", O_RDONLY)) == -1)
     fatal_error("Cannot open /dev/random to get initial random seed.");
 
+  /* NOTE: initializes this code "global" _seed var. */
   r = read(_fd, &_seed, 
 #ifdef _EXPERIMENTAL_
         2*sizeof(uint64_t)
@@ -127,8 +128,9 @@ void alloc_packet(size_t new_packet_size)
 {
   void *p;
 
-  /* TEST: Because 0 will free the buffer!!! */
-  assert(new_packet_size != 0);
+  /* Buffer cannot be empty! */
+  if (!new_acket_size)
+    fatal_error("Cannot allocate an empty packet buffer!");
 
   /* Realloc only ig the new packet size is greater than the old. */
   /* NOTE: Assume the condition is false the majority of time. */
@@ -158,8 +160,6 @@ size_t get_number_of_registered_modules(void)
 {
   modules_table_t *ptbl;
 
-  /* This garantees that the count will be done
-     one time only. */
   if (unlikely(number_of_modules == 0))
     for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
 
