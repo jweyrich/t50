@@ -2951,8 +2951,8 @@ if test "${enable_debug+set}" = set; then :
 else
   CFLAGS="-O3 -DNDEBUG";
 		case "${host_cpu}" in
-		 i?386|x86_64) 	CFLAGS="$CFLAGS -march=native";
-										if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
+		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native";
+				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
 			 ;;
 		esac
 fi
