@@ -38,7 +38,7 @@
 #include <protocol/tcp_options.h>
 /* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
-/** 
+/**
  * Modules entry structure.
  *
  * Used for modules definitions. And table iterators.

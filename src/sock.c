@@ -42,7 +42,7 @@ void create_socket(void)
   socklen_t len;
   unsigned i, n = 1;  /* FIXME: if I indended, someday, to port
                                 this code to Solaris, I must use
-                                char to n and set to '1'. 
+                                char to n and set to '1'.
 
                                 Must change setsockopt() calls as well. */
   int flag;
@@ -53,30 +53,30 @@ void create_socket(void)
            but on linux will cause an error. */
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error opening raw socket: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("Error opening raw socket");
-    #endif
+#endif
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error getting socket flags: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("Error getting socket flags");
-    #endif
+#endif
   }
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error setting socket to non-blocking mode: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("Error setting socket to non-blocking mode");
-    #endif
+#endif
   }
 
   /* Setting IP_HDRINCL. */
@@ -84,11 +84,11 @@ void create_socket(void)
            still makes the kernel calculates the checksum and total_length. */
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error setting socket options: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("Error setting socket options");
-    #endif
+#endif
   }
 
   /* Taken from libdnet by Dug Song. */
@@ -98,11 +98,11 @@ void create_socket(void)
 
   if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error getting socket buffer: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("Error getting socket buffer");
-    #endif
+#endif
   }
 
   /* Setting the maximum SO_SNDBUF in bytes.
@@ -116,11 +116,11 @@ void create_socket(void)
       if (errno == ENOBUFS)
         break;
 
-      #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
       fatal_error("Error setting socket buffer: \"%s\"", strerror(errno));
-      #else
+#else
       fatal_error("Error setting socket buffer");
-      #endif
+#endif
     }
   }
 #endif /* SO_SNDBUF */
@@ -128,11 +128,11 @@ void create_socket(void)
 #ifdef SO_BROADCAST
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("error setting socket broadcast flag: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("error setting socket broadcast flag");
-    #endif
+#endif
   }
 #endif /* SO_BROADCAST */
 
@@ -140,11 +140,11 @@ void create_socket(void)
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
-    #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("error setting socket priority: \"%s\"", strerror(errno));
-    #else
+#else
     fatal_error("error setting socket priority");
-    #endif
+#endif
   }
 #endif /* SO_PRIORITY */
 }
@@ -211,9 +211,11 @@ static int wait_for_io(int fd)
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
 
   /* NOTE: Assume poll will not fail. */
-  do {
+  do
+  {
     r = poll(&pfd, 1, TIMEOUT);
-  } while (unlikely(r == -1 && errno == EINTR));
+  }
+  while (unlikely(r == -1 && errno == EINTR));
 
   return r;
 }
@@ -225,23 +227,29 @@ static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t s
 
   /* Tries to send the packet until it's signal interrupted. */
   /* NOTE: Assume sendto will not fail. */
-  do { 
+  do
+  {
     r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-  } while (unlikely(r == -1 && errno == EINTR));
+  }
+  while (unlikely(r == -1 && errno == EINTR));
 
   /* If it wasn't interrupted, tries to send the packet again. */
   /* NOTE: Assume previous sendto will not fail. */
   while (unlikely(r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)))
   {
-    do {
+    do
+    {
       if ((r = wait_for_io(fd)) == -1)
         goto socket_send_exit;
-    } while (unlikely(!r));
+    }
+    while (unlikely(!r));
 
     /* ... and tries to send again. */
-    do {
+    do
+    {
       r = sendto(fd, buffer, size, MSG_NOSIGNAL, saddr, sizeof(struct sockaddr_in));
-    } while (unlikely(r == -1 && errno == EINTR));
+    }
+    while (unlikely(r == -1 && errno == EINTR));
   }
 
 socket_send_exit:

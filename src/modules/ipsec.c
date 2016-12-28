@@ -32,7 +32,7 @@
 void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 {
   /* IPSec AH Integrity Check Value (ICV). */
-  #define IP_AH_ICV (sizeof(uint32_t) * 3)
+#define IP_AH_ICV (sizeof(uint32_t) * 3)
 
   size_t greoptlen,   /* GRE options size. */
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */

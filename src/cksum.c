@@ -22,7 +22,7 @@
 #include <common.h>
 
 /**
- * Calculates checksum. 
+ * Calculates checksum.
  *
  * RFC 1071 compliant checksum routine.
  *

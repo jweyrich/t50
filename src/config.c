@@ -400,7 +400,9 @@ static struct options_table_s options[] =
 #pragma GCC diagnostic pop
 
 _NOINLINE static void _parse_command_line_error(char *option)
-{ fatal_error("Option '%s' has no arguments.", option); }
+{
+  fatal_error("Option '%s' has no arguments.", option);
+}
 
 /* Substitutes getConfigOptions() function.
    NOTE: This function expects &argv[0] as the first argument. */
@@ -519,8 +521,14 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-int  check_if_option(char *s) { return *s == '-'; }
-int  check_if_nul_option(char *s) { return !strcmp(s, "--"); }
+int  check_if_option(char *s)
+{
+  return *s == '-';
+}
+int  check_if_nul_option(char *s)
+{
+  return !strcmp(s, "--");
+}
 
 /* NOTE: Ugly hack, but necessary!
          The default protocol is TCP, but we weren't able
@@ -1768,11 +1776,11 @@ void list_protocols(void)
 
   puts("List of supported protocols (--protocol):");
 
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat"
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t% 2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
-  #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
@@ -1906,11 +1914,11 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
    NOTE: Since this funcion is defined and used in this module, it's marked with
          the attribute "noinline". Because it's big!
 */
-int get_dual_values(char *arg, 
-                    unsigned long *px, unsigned long *py, 
-                    unsigned long max, 
-                    int optional, 
-                    char separator, 
+int get_dual_values(char *arg,
+                    unsigned long *px, unsigned long *py,
+                    unsigned long max,
+                    int optional,
+                    char separator,
                     char *optname)
 {
   /* 'static' because we don't need to allocate these every time! */

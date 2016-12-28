@@ -26,7 +26,7 @@ static struct cidr cidr = {0};
 /**
  * CIDR configuration tiny C algorithm.
  *
- * This will setup cidr structure with values in host order. 
+ * This will setup cidr structure with values in host order.
  *
  * @param bits Number of "valid" bits on netmask.
  * @param address IP address from command line (in network order).

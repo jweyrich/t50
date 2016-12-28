@@ -37,28 +37,31 @@ static size_t number_of_modules = 0;
  * @return unsigned int pseudo-random number.
  */
 #ifdef _EXPERIMENTAL_
-  /* xorshift128+ */
+/* xorshift128+ */
 
-  /* Arbitrary seeds. */
-  static uint64_t _seed[2] = { 0x748bd5a53132bUL, 
-                               0x41c6e6d32143a1c7UL };
-   
-  uint32_t RANDOM(void)
-  {
-    uint64_t s0 = _seed[1];
-    uint64_t s1 = _seed[0];
-    _seed[0] = s0;
+/* Arbitrary seeds. */
+static uint64_t _seed[2] = { 0x748bd5a53132bUL,
+                             0x41c6e6d32143a1c7UL
+                           };
 
-    s1 ^= s1 << 23; 
-    _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
-   
-    return (_seed[1] + s0) >> 32;
-  }
+uint32_t RANDOM(void)
+{
+  uint64_t s0 = _seed[1];
+  uint64_t s1 = _seed[0];
+  _seed[0] = s0;
+
+  s1 ^= s1 << 23;
+  _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
+
+  return (_seed[1] + s0) >> 32;
+}
 #else
-  /* Linear Congruential Pseudo Random Number Generator. */
-  static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-  uint32_t RANDOM(void) 
-  { return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32; } /* Same parameters as in glibc! */
+/* Linear Congruential Pseudo Random Number Generator. */
+static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
+uint32_t RANDOM(void)
+{
+  return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32;  /* Same parameters as in glibc! */
+}
 #endif
 
 /**
@@ -75,13 +78,13 @@ void SRANDOM(void)
     fatal_error("Cannot open /dev/random to get initial random seed.");
 
   /* NOTE: initializes this code "global" _seed var. */
-  r = read(_fd, &_seed, 
+  r = read(_fd, &_seed,
 #ifdef _EXPERIMENTAL_
-        2*sizeof(uint64_t)
+           2*sizeof(uint64_t)
 #else
-        sizeof(uint64_t)
+           sizeof(uint64_t)
 #endif
-      );
+          );
 
   close(_fd);
 
@@ -89,15 +92,15 @@ void SRANDOM(void)
     fatal_error("Cannot read initial seed from /dev/random.");
 }
 
-/** 
+/**
  * Returns the Randomized netmask if foo is 0 or the parameter, otherwise.
  *
- * This routine shouldn't be inlined due to its compliexity. 
+ * This routine shouldn't be inlined due to its compliexity.
  *
  * @param foo IPv4 netmask (or 0 if randomized).
  * @return Netmask (randomized or otherwise).
  */
-uint32_t NETMASK_RND(uint32_t foo) 
+uint32_t NETMASK_RND(uint32_t foo)
 {
   if (foo == INADDR_ANY)
   {
@@ -105,7 +108,7 @@ uint32_t NETMASK_RND(uint32_t foo)
 
     if (t > 22)
       t = -(23 - t);
-    
+
     /* Rotate between 8 and 30 bits only! */
     foo = ~(~0U >> (t + 8));
   }
@@ -120,7 +123,7 @@ uint32_t NETMASK_RND(uint32_t foo)
  * the technique below.
  *
  * The function will reallocate memory only if the buffer isn't big enough to acomodate
- * new_packet_size bytes. 
+ * new_packet_size bytes.
  *
  * @param size Size of the new 'global' packet buffer.
  */
@@ -202,7 +205,7 @@ void error(char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
-    verror(fmt, args);
+  verror(fmt, args);
   va_end(args);
 }
 
@@ -211,13 +214,13 @@ void error(char *fmt, ...)
  *
  * This function never returns!
  */
-void fatal_error(char *fmt, ...) 
+void fatal_error(char *fmt, ...)
 {
   va_list args;
 
   fputs("\a\n", stderr);  /* BEEP! */
   va_start(args, fmt);
-    verror(fmt,args);
+  verror(fmt,args);
   va_end(args);
 
   /* As expected. exit if a failure. */

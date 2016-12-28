@@ -32,11 +32,11 @@
  */
 #define WAIT_FOR_CHILD_TIMEOUT  5
 
-/** 
+/**
  * Initial packet buffer preallocation size (2 kB).
  *
- * This size should be sufficient for all packets. 
- * MTU usually is 1500 bytes long, over ethernet! 
+ * This size should be sufficient for all packets.
+ * MTU usually is 1500 bytes long, over ethernet!
  */
 #define INITIAL_PACKET_SIZE 2048
 
@@ -76,7 +76,7 @@
          only tells the compiler to privilege one form of conditional jump
          over another, depending how likely or ulikely the criteria is true
          or false!. No actual hardware hints are emitted. */
-#ifndef unlikely 
+#ifndef unlikely
 #define unlikely(c) __builtin_expect(!!(c), 0)
 #endif
 #ifndef likely
