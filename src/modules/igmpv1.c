@@ -21,10 +21,10 @@
 
 #include <common.h>
 
-/** 
+/**
  * IGMPv1 packet header configuration.
  *
- * This function configures and sends the IGMPv1 packet header. 
+ * This function configures and sends the IGMPv1 packet header.
  *
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).

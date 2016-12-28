@@ -1,5 +1,5 @@
 /* vim: set ts=2 et sw=2 : */
-/** @file resolv.c */ 
+/** @file resolv.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -37,7 +37,7 @@ in_addr_t resolv(char *name)
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
   /* Hints getaddrinfo() to return only IPv4 compatible addresses. */
   struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_flags = AI_ALL | AI_V4MAPPED },
-         *res, *res0 = NULL;
+  *res, *res0 = NULL;
 #pragma GCC diagnostic pop
 
   in_addr_t addr = 0;
@@ -58,13 +58,13 @@ in_addr_t resolv(char *name)
   {
     switch (res->ai_family)
     {
-      case AF_INET:
-        addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
-        goto end_loop;
-        
-      case AF_INET6:
-        if (!addr)
-          addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
+    case AF_INET:
+      addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+      goto end_loop;
+
+    case AF_INET6:
+      if (!addr)
+        addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
     }
   }
 end_loop:

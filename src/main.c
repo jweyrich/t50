@@ -37,7 +37,7 @@ _NOINLINE static const char *       get_month(unsigned);
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /**
- * Main function launches all T50 modules 
+ * Main function launches all T50 modules
  */
 int main(int argc, char *argv[])
 {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   modules_table_t       *ptbl;
   int                   proto; /* Used on main loop. */
 
-  /* Parse_command_line returns ONLY if there are no errors. 
+  /* Parse_command_line returns ONLY if there are no errors.
      This must be called before testing user privileges. */
   co = parse_command_line(argv);
 
@@ -69,19 +69,19 @@ int main(int argc, char *argv[])
   if (co->turbo)
   {
     /* if it's necessary to fork a new process... */
-    if ((co->ip.protocol == IPPROTO_T50 && 
+    if ((co->ip.protocol == IPPROTO_T50 &&
          co->threshold > (threshold_t)get_number_of_registered_modules()) ||
-        (co->ip.protocol != IPPROTO_T50 && 
+        (co->ip.protocol != IPPROTO_T50 &&
          co->threshold > 1))
     {
       threshold_t new_threshold;
 
       if ((pid = fork()) == -1)
-        #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
         fatal_error("Error creating child process: \"%s\".\nExiting..", strerror(errno));
-        #else
+#else
         fatal_error("Error creating child process");
-        #endif
+#endif
 
       /* Divide the process iterations in main loop between both processes. */
       new_threshold = co->threshold / 2;
@@ -98,11 +98,11 @@ int main(int argc, char *argv[])
 
   /* Setting the priority to both parent and child process. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
-  #ifdef __HAVE_DEBUG__
+#ifdef __HAVE_DEBUG__
     fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
-  #else
+#else
     fatal_error("Error setting process priority");
-  #endif
+#endif
 
   /* Show launch info only for parent process. */
   if (!IS_CHILD_PID(pid))
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     /* Set the destination IP address to RANDOM IP address. */
     co->ip.daddr = cidr_ptr->__1st_addr;
     if (cidr_ptr->hostid)
-      co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */ 
+      co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */
 
     /* We need the address in network order. */
     co->ip.daddr = htonl(co->ip.daddr);
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     if (unlikely(!send_packet(packet, size, co)))
 #ifdef __HAVE_DEBUG__
       error("Packet for protocol %s (%zu bytes long) not sent", ptbl->acronym, size);
-      /* continue trying to send other packets on debug mode! */
+    /* continue trying to send other packets on debug mode! */
 #else
       fatal_error("Unspecified error sending a packet");
 #endif
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
         alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
         fputs("\nWaiting for child process to end...\n", stderr);
-#endif        
+#endif
         if (wait(NULL) > 0)
           child_is_dead = 1;
         alarm(0);
@@ -254,11 +254,11 @@ void initialize(const struct config_options *co)
 #ifndef __HAVE_DEBUG__
   sigaddset(&sigset, SIGTRAP);
 #endif
-  sigprocmask(SIG_BLOCK, &sigset, NULL); 
+  sigprocmask(SIG_BLOCK, &sigset, NULL);
 
   /* --- Initialize signal handlers --- */
   /* All these signals are handled by our handle. */
-  sigaction(SIGPIPE, &sa, NULL); 
+  sigaction(SIGPIPE, &sa, NULL);
   sigaction(SIGINT,  &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
   sigaction(SIGALRM, &sa, NULL);
@@ -294,16 +294,19 @@ const char *get_ordinal_suffix(unsigned n)
   if ((n < 11) || (n > 13))
     switch (n % 10)
     {
-    case 1: return suffixes[0];
-    case 2: return suffixes[1];
-    case 3: return suffixes[2];
+    case 1:
+      return suffixes[0];
+    case 2:
+      return suffixes[1];
+    case 3:
+      return suffixes[2];
     }
 
   return suffixes[3];
 }
 
 /* Auxiliary function to return the [constant] string for a month.
-   NOTE: 'n' must be between 0 and 11. 
+   NOTE: 'n' must be between 0 and 11.
    NOTE: This routine is here just 'cause we need months in english. */
 const char *get_month(unsigned n)
 {
