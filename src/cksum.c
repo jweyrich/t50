@@ -34,11 +34,11 @@ uint16_t cksum(void *data, size_t length)
 {
   uint32_t sum;
   uint16_t *p = data;
-  size_t rem;
+  _Bool rem;
 
   sum = 0;
-  rem = length & 1;
-  length /= 2;
+  rem = length & 1; // if there is a remaining byte this will be true.
+  length /= 2;      // lenth contains # of words.
 
   /* Accumulate all 16 bit words on buffer. */
   while (length--)

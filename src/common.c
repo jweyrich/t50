@@ -105,9 +105,11 @@ uint32_t NETMASK_RND(uint32_t foo)
   if (foo == INADDR_ANY)
   {
     uint32_t t = RANDOM() >> 27; /* Upper 5 bits are more random! */
+    /* Here t is something between 0 and 31. */ 
 
     if (t > 22)
-      t = -(23 - t);
+      t -= 23;
+    /* Here t is something between 0 and 22 */ 
 
     /* Rotate between 8 and 30 bits only! */
     foo = ~(~0U >> (t + 8));
