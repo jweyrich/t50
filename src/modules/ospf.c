@@ -21,7 +21,7 @@
 
 #include <common.h>
 
-static size_t ospf_hdr_len(const unsigned int, const int, const int, const int);
+static size_t ospf_hdr_len(const unsigned int, const int, const int, const _Bool);
 
 /**
  * OSPF packet header configuration.
@@ -57,7 +57,10 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
   greoptlen = gre_opt_len(co);
   ospf_options = __RND(co->ospf.options);
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
-  ospf_length = ospf_hdr_len(co->ospf.type, co->ospf.neighbor, co->ospf.lsa_type, co->ospf.dd_include_lsa);
+  ospf_length = ospf_hdr_len(co->ospf.type, 
+                             co->ospf.neighbor, 
+                             co->ospf.lsa_type, 
+                             co->ospf.dd_include_lsa);
 
   *size = sizeof(struct iphdr)             +
           sizeof(struct ospf_hdr)          +
@@ -679,7 +682,10 @@ build_ospf_lsa:
 }
 
 /* OSPF header size calculation. */
-size_t ospf_hdr_len(const unsigned int type, const int neighbor, const int lsa_type, const int dd_include_lsa)
+size_t ospf_hdr_len(const unsigned int type, 
+                    const int neighbor, 
+                    const int lsa_type, 
+                    const _Bool dd_include_lsa)
 {
   size_t size;
 
@@ -696,8 +702,8 @@ size_t ospf_hdr_len(const unsigned int type, const int neighbor, const int lsa_t
    * of neighbor address and the number of neighbor address(es).
    */
   case OSPF_TYPE_HELLO:
-    size += OSPF_TLEN_HELLO;
-    size += OSPF_TLEN_NEIGHBOR(neighbor);
+    size += OSPF_TLEN_HELLO +
+            OSPF_TLEN_NEIGHBOR(neighbor);
     break;
 
   /*

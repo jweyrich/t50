@@ -39,8 +39,8 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
 
   memptr_t buffer;
 
-  struct iphdr *ip;
-  struct iphdr *gre_ip;
+  struct iphdr  *ip;
+  struct iphdr  *gre_ip;
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
@@ -157,7 +157,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
    */
   if (co->rip.auth)
   {
-    *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here! */
+    *buffer.word_ptr++ = 0xffff;
     *buffer.word_ptr++ = htons(3);
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = co->rip.key_id;
@@ -220,7 +220,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
   {
     size_t size;
 
-    *buffer.word_ptr++ = 0xffff;    /* FIX: Don't need htons() call here. */
+    *buffer.word_ptr++ = 0xffff;
     *buffer.word_ptr++ = htons(1);
 
     /*

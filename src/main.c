@@ -221,7 +221,7 @@ static void signal_handler(int signal)
   /* NOTE: SIGALRM and SIGCHLD will happen only in parent process! */
   if (signal == SIGALRM)
   {
-    if (!IS_CHILD_PID(pid))
+    if (!IS_CHILD_PID(pid))   // to be sure...
       kill(pid, SIGKILL);
     return;
   }

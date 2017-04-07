@@ -33,9 +33,9 @@ struct iphdr *gre_encapsulation(void *buffer,
                                 const struct config_options *const __restrict__ co,
                                 uint32_t total_len)
 {
-  struct iphdr       *ip, *gre_ip;
-  struct gre_hdr     *gre;
-  void               *ptr;
+  struct iphdr   *ip, *gre_ip;
+  struct gre_hdr *gre;
+  void           *ptr;
 
   assert(buffer != NULL);
   assert(co != NULL);
@@ -151,7 +151,7 @@ void gre_checksum(void *buffer,
                   const struct config_options *__restrict__ co,
                   size_t packet_size)
 {
-  struct gre_hdr *gre;
+  struct gre_hdr     *gre;
   struct gre_sum_hdr *gre_sum;
 
   assert(buffer != NULL);

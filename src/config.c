@@ -521,14 +521,8 @@ struct config_options *parse_command_line(char **argv)
 }
 
 /* Check if the argument is an option. */
-int  check_if_option(char *s)
-{
-  return *s == '-';
-}
-int  check_if_nul_option(char *s)
-{
-  return !strcmp(s, "--");
-}
+int  check_if_option(char *s) { return *s == '-'; }
+int  check_if_nul_option(char *s) { return !strcmp(s, "--"); }
 
 /* NOTE: Ugly hack, but necessary!
          The default protocol is TCP, but we weren't able
@@ -699,7 +693,7 @@ void set_destination_addresses(char *arg, struct config_options *__restrict__ co
     if ((p = strtok(NULL, "/")) != NULL)
       co->bits = atoi(p); /* NOTE: Range will be checked later. */
     else
-      co->bits = 32;
+      co->bits = CIDR_MAXIMUM;
   }
 }
 
@@ -1832,7 +1826,7 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   COPY_SUBSTRING(t, addr + rm[1].rm_so, len);
   matches[0] = atoi(t);
 
-  bits = 32;  /* default is 32 bits netmask. */
+  bits = CIDR_MAXIMUM;  /* default is 32 bits netmask. */
 
   for (i = 2; i <= 4; i++)
   {
@@ -1932,7 +1926,7 @@ int get_dual_values(char *arg,
   if (setjmp(jb))
   {
     error("'%s' should be formatted as 'n%s'.", optname, optional ? "[.n]" : ".n");
-    return -1;
+    return !0;
   }
 
   nseps[0] = ((sep[0] = separator) == '.') ? ':' : '.';
@@ -1952,7 +1946,7 @@ int get_dual_values(char *arg,
   if (setjmp(jb))
   {
     error("'%s' arguments are out of range or invalid.", optname);
-    return -1;
+    return !0;
   }
 
   /* Try to convert the first value. */
@@ -1984,7 +1978,7 @@ int get_dual_values(char *arg,
   if (*px > max || *py > max)
   {
     error("One or both arguments of '%s' option are out of range.", optname);
-    return -1;
+    return !0;
   }
 
   /* Everything ok! */
@@ -1998,11 +1992,9 @@ int check_threshold(const struct config_options *const __restrict__ co)
   threshold_t minThreshold;
 
   if (co->ip.protocol == IPPROTO_T50)
-  {
     /* When sending multiple packets using T50 "protocol", the threshold
        must be greater than the number of protocols! */
     minThreshold = (threshold_t)get_number_of_registered_modules();
-  }
   else
     minThreshold = 1;
 
@@ -2010,7 +2002,7 @@ int check_threshold(const struct config_options *const __restrict__ co)
   {
     error("Protool %s cannot have threshold smaller than %d.",
           mod_table[co->ip.protoname].acronym, minThreshold);
-    return -1;
+    return !0;
   }
 
   return 0;
@@ -2028,7 +2020,7 @@ int check_for_valid_option(int opt, int *list)
     // Scan the valid options list and cheks if 'option' is in it.
     for (; *list; list++)
       if (opt == *list)
-        return 1;
+        return !0;
   }
 
   return 0;

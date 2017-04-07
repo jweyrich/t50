@@ -60,6 +60,7 @@ uint32_t RANDOM(void)
 static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
 uint32_t RANDOM(void)
 {
+  // Note _seed is a 64 bit unsigned integer!
   return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32;  /* Same parameters as in glibc! */
 }
 #endif
@@ -112,7 +113,7 @@ uint32_t NETMASK_RND(uint32_t foo)
       t -= 23;
     /* Here t is something between 0 and 22 */ 
 
-    /* Rotate between 8 and 30 bits only! */
+    /* We need someting between 8 and 30 bits only! */
     foo = ~(~0U >> (t + 8));
   }
 
@@ -144,7 +145,7 @@ void alloc_packet(size_t new_packet_size)
   {
     /* Tries to reallocate memory. */
     /* NOTE: Assume realloc will not fail. */
-    if (unlikely((p = realloc(packet, new_packet_size)) == NULL))
+    if ((p = realloc(packet, new_packet_size)) == NULL)
       fatal_error("Error reallocating packet buffer.");
 
     /* Only assign a new pointer if successfull */
@@ -189,8 +190,7 @@ static void verror(char *fmt, va_list args)
 {
   char *str;
 
-  /* NOTE: Assume asprintf will not fail. */
-  if (unlikely((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1))
+  if ((asprintf(&str, PACKAGE ": %s\n", fmt)) == -1)
   {
     fputs(PACKAGE ": Unknown error (not enough memory?).\n", stderr);
     exit(EXIT_FAILURE);
