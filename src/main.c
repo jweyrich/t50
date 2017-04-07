@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
   struct cidr           *cidr_ptr;
   modules_table_t       *ptbl;
   int                   proto; /* Used on main loop. */
+  time_t                lt;
+  struct tm             *tm;
 
   /* Parse_command_line returns ONLY if there are no errors.
      This must be called before testing user privileges. */
@@ -107,9 +109,6 @@ int main(int argc, char *argv[])
   /* Show launch info only for parent process. */
   if (!IS_CHILD_PID(pid))
   {
-    time_t lt;
-    struct tm *tm;
-
     /* Getting the local time. */
     lt = time(NULL);
     tm = localtime(&lt);
@@ -179,9 +178,6 @@ int main(int argc, char *argv[])
   /* Show termination message only for parent process. */
   if (!IS_CHILD_PID(pid))
   {
-    time_t lt;
-    struct tm *tm;
-
     // NOTE: Notice that for a single process pid will be -1! */
     if (pid > 0)
     {

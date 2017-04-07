@@ -170,9 +170,9 @@ void close_socket(void)
  * @param buffer Pointer to the packet buffer.
  * @param size Size of the buffer.
  * @param co Pointer to configurations for T50.
- * @return TRUE (success) or FALSE (error).
+ * @return true (success) or false (error).
  */
-int send_packet(const void *const buffer,
+_Bool send_packet(const void *const buffer,
                 size_t size,
                 const struct config_options *const __restrict__ co)
 {
@@ -195,10 +195,10 @@ int send_packet(const void *const buffer,
     if (errno == EPERM)
       fatal_error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
 
-    return FALSE;
+    return false;
   }
 
-  return TRUE;
+  return true;
 }
 
 /*** I realize that EINTR probably never happens, since the signals

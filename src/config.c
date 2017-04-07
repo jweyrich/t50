@@ -37,7 +37,7 @@ _NOINLINE static void                     check_list_separators(char *, char *);
 static void                               set_destination_addresses(char *, struct config_options *__restrict__);
 static void                               list_protocols(void);
 static void                               set_default_protocol(struct config_options *__restrict__);
-static int                                get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
+static _Bool                              get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
 _NOINLINE static int                      get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
 static int                                check_threshold(const struct config_options *const __restrict__);
 static int                                check_for_valid_option(int, int *);
@@ -714,7 +714,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
   {
 #ifdef __HAVE_TURBO__
   case OPTION_TURBO:
-    co->turbo = TRUE;
+    co->turbo = true;
     break;
 #endif
 
@@ -723,27 +723,27 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_FLOOD:
-    co->flood = TRUE;
+    co->flood = true;
     break;
 
   case OPTION_ENCAPSULATED:
-    co->encapsulated = TRUE;
+    co->encapsulated = true;
     break;
 
   case OPTION_BOGUSCSUM:
-    co->bogus_csum = TRUE;
+    co->bogus_csum = true;
     break;
 
   case OPTION_GRE_SEQUENCE_PRESENT:
-    co->gre.S = TRUE;
+    co->gre.S = true;
     break;
 
   case OPTION_GRE_KEY_PRESENT:
-    co->gre.K = TRUE;
+    co->gre.K = true;
     break;
 
   case OPTION_GRE_CHECKSUM_PRESENT:
-    co->gre.C = TRUE;
+    co->gre.C = true;
     break;
 
   case OPTION_GRE_KEY:
@@ -855,7 +855,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_IGMP_SUPPRESS:
-    co->igmp.suppress = TRUE;
+    co->igmp.suppress = true;
     break;
 
   case OPTION_IGMP_QQIC:
@@ -889,35 +889,35 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_TCP_FIN:
-    co->tcp.fin = TRUE;
+    co->tcp.fin = true;
     break;
 
   case OPTION_TCP_SYN:
-    co->tcp.syn = TRUE;
+    co->tcp.syn = true;
     break;
 
   case OPTION_TCP_RST:
-    co->tcp.rst = TRUE;
+    co->tcp.rst = true;
     break;
 
   case OPTION_TCP_PSH:
-    co->tcp.psh = TRUE;
+    co->tcp.psh = true;
     break;
 
   case OPTION_TCP_ACK:
-    co->tcp.ack = TRUE;
+    co->tcp.ack = true;
     break;
 
   case OPTION_TCP_URG:
-    co->tcp.urg = TRUE;
+    co->tcp.urg = true;
     break;
 
   case OPTION_TCP_ECE:
-    co->tcp.ece = TRUE;
+    co->tcp.ece = true;
     break;
 
   case OPTION_TCP_CWR:
-    co->tcp.cwr = TRUE;
+    co->tcp.cwr = true;
     break;
 
   case OPTION_TCP_WINDOW:
@@ -977,11 +977,11 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_TCP_MD5_SIGNATURE:
-    co->tcp.md5 = !(co->tcp.auth = FALSE);
+    co->tcp.md5 = !(co->tcp.auth = false);
     break;
 
   case OPTION_TCP_AUTHENTICATION:
-    co->tcp.auth = !(co->tcp.md5 = FALSE);
+    co->tcp.auth = !(co->tcp.md5 = false);
     break;
 
   case OPTION_TCP_AUTH_KEY_ID:
@@ -1067,7 +1067,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_RIP_AUTHENTICATION:
-    co->rip.auth = TRUE;
+    co->rip.auth = true;
     break;
 
   case OPTION_RIP_AUTH_KEY_ID:
@@ -1095,7 +1095,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_DCCP_EXTEND:
-    co->dccp.ext = TRUE;
+    co->dccp.ext = true;
     break;
 
   case OPTION_DCCP_SEQUENCE_01:
@@ -1492,7 +1492,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_EIGRP_AUTHENTICATION:
-    co->eigrp.auth = TRUE;
+    co->eigrp.auth = true;
     break;
 
   case OPTION_EIGRP_AUTH_KEY_ID:
@@ -1512,7 +1512,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_OSPF_AREA_ID:
-    co->ospf.AID = TRUE;
+    co->ospf.AID = true;
     co->ospf.aid = resolv(arg);
     break;
 
@@ -1610,7 +1610,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_OSPF_DD_INCLUDE_LSA:
-    co->ospf.dd_include_lsa = TRUE;
+    co->ospf.dd_include_lsa = true;
     break;
 
   case OPTION_OSPF_LSA_AGE:
@@ -1618,7 +1618,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_OSPF_LSA_DO_NOT_AGE:
-    co->ospf.lsa_dage = TRUE;
+    co->ospf.lsa_dage = true;
     break;
 
   case OPTION_OSPF_LSA_TYPE:
@@ -1678,7 +1678,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_OSPF_LSA_LARGER:
-    co->ospf.lsa_larger = TRUE;
+    co->ospf.lsa_larger = true;
     break;
 
   case OPTION_OSPF_LSA_FORWARD:
@@ -1710,7 +1710,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
 
   case OPTION_OSPF_AUTHENTICATION:
-    co->ospf.auth = TRUE;
+    co->ospf.auth = true;
     break;
 
   case OPTION_OSPF_AUTH_KEY_ID:
@@ -1802,7 +1802,7 @@ void list_protocols(void)
   }
 
 /* Ok... this is nice and UGLY. */
-int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
+_Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
 {
   regex_t re;
   regmatch_t rm[6];
@@ -1815,13 +1815,13 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
 
   /* Try to compile the regular expression. */
   if (regcomp(&re, IP_REGEX, REG_EXTENDED))
-    return FALSE;
+    return false;
 
   /* Try to execute regex against the addr string. */
   if (regexec(&re, addr, 6, rm, 0))
   {
     regfree(&re);
-    return FALSE;
+    return false;
   }
 
   /* Allocate enough space for temporary string. */
@@ -1861,7 +1861,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
       /* if cidr is actually '0', then it is an error! */
       free(t);
       regfree(&re);
-      return FALSE;
+      return false;
     }
   }
   else
@@ -1878,7 +1878,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
     if (matches[i] > 255)
     {
       regfree(&re);
-      return FALSE;
+      return false;
     }
 
   /* NOTE: Check 'bits' here! */
@@ -1887,7 +1887,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
   {
     error("CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM);
     regfree(&re);
-    return FALSE;
+    return false;
   }
 
   regfree(&re);
@@ -1900,7 +1900,7 @@ int get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr
                      (matches[0] << 24)) &
                    (0xffffffffUL << (32 - addr_ptr->cidr));
 
-  return TRUE;
+  return true;
 }
 
 /* Convert strings like "10.3" to it's components.

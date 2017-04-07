@@ -21,12 +21,6 @@
 #ifndef __DEFINES_INCLUDED__
 #define __DEFINES_INCLUDED__
 
-/* Boolean aliases. */
-#define FALSE 0
-#define TRUE  (!0)
-#define OFF   0
-#define ON    (!0)
-
 /**
  * Amount of time, in seconds, to wait for child process termination.
  */
@@ -57,7 +51,6 @@
 
 /* T50 DEFINITIONS. */
 #define IPPROTO_T50        69
-#define FIELD_MUST_BE_NULL NULL
 #define FIELD_MUST_BE_ZERO 0
 
 /** Macro used to test bitmasks */

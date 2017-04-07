@@ -107,6 +107,7 @@ uint32_t NETMASK_RND(uint32_t foo)
     uint32_t t = RANDOM() >> 27; /* Upper 5 bits are more random! */
     /* Here t is something between 0 and 31. */ 
 
+    /* NOTE: This is faster than 't %= 23'. */
     if (t > 22)
       t -= 23;
     /* Here t is something between 0 and 22 */ 

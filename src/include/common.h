@@ -32,6 +32,7 @@
 #include <assert.h> /* for debugging purposes only */
 #include <time.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <netdb.h>
@@ -86,9 +87,9 @@ extern void         create_socket(void);    /* Creates the sending socket */
 extern void         close_socket(void);     /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */
-extern int  send_packet(const void *const,
-                        size_t,
-                        const struct config_options *const __restrict__);
+extern _Bool send_packet(const void *const,
+                         size_t,
+                         const struct config_options *const __restrict__);
 
 extern void show_version(void); /* Prints version info. */
 extern void usage(void);        /* Prints usage message */
