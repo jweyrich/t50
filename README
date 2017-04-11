@@ -97,3 +97,12 @@ The main differentiator of the T50 is that it is able to send  all protocols,
 sequentially,  using one single SOCKET,   besides it is capable to be used to
 modify network routes,  letting IT Security Professionals performing advanced
 "Penetration Test".
+
+HOW TO INSTALL
+==============
+
+Use the default GNU Build System:
+
+  $ ./configure
+  $ make
+  $ sudo make install
