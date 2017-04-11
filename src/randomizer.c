@@ -37,27 +37,28 @@
 /* xorshift128+ */
 
 /* Arbitrary seeds. */
-static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
+  static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
 
-uint32_t RANDOM(void)
-{
-  uint64_t s0 = _seed[1];
-  uint64_t s1 = _seed[0];
-  _seed[0] = s0;
+  uint32_t RANDOM(void)
+  {
+    uint64_t s0 = _seed[1];
+    uint64_t s1 = _seed[0];
+    _seed[0] = s0;
 
-  s1 ^= s1 << 23;
-  _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
+    s1 ^= s1 << 23;
+    _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
 
-  return (_seed[1] + s0) >> 32;
-}
+    return (_seed[1] + s0) >> 32;
+  }
 #else
 /* Linear Congruential Pseudo Random Number Generator. */
-static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-uint32_t RANDOM(void)
-{
-  // Note _seed is a 64 bit unsigned integer!
-  return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32;  /* Same parameters as in glibc! */
-}
+  static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
+
+  uint32_t RANDOM(void)
+  {
+    // Note _seed is a 64 bit unsigned integer!
+    return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32;  /* Same parameters as in glibc! */
+  }
 #endif
 
 /**
@@ -76,7 +77,7 @@ void SRANDOM(void)
   /* NOTE: initializes this code "global" _seed var. */
   r = read(_fd, &_seed,
 #ifdef _EXPERIMENTAL_
-           2*sizeof(uint64_t)
+           2*sizeof(uint64_t)   // xorshift128 has a 128bit seed!
 #else
            sizeof(uint64_t)
 #endif

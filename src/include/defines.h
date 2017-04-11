@@ -38,7 +38,7 @@
 
 #define MAXIMUM_IP_ADDRESSES  ((1U << 24) - 1)
 
-/* #define INADDR_ANY 0 */ /* NOTE: Already defined @ linux/in.h */
+/* #define INADDR_ANY 0 */ // NOTE: Already defined in multiple headers (linux/in.h & netinet/in.h).
 #define IPPORT_ANY 0
 
 /* Global common protocol definitions used by code */
