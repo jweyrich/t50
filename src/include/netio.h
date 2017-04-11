@@ -1,9 +1,8 @@
 /* vim: set ts=2 et sw=2 : */
-/** @file ipsec_help.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2014 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,16 +18,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>#include <modules.h>
+#ifndef __NETIO_H__
+#define __NETIO_H__
 
-/** IPSec options help. */
-void ipsec_help(void)
-{
-  puts("IPSEC Options:\n"
-       "    --ipsec-ah-length NUM     IPSec AH header length           (default NONE)\n"
-       "    --ipsec-ah-spi NUM        IPSec AH SPI                     (default RANDOM)\n"
-       "    --ipsec-ah-sequence NUM   IPSec AH sequence #              (default RANDOM)\n"
-       "    --ipsec-esp-spi NUM       IPSec ESP SPI                    (default RANDOM)\n"
-       "    --ipsec-esp-sequence NUM  IPSec ESP sequence #             (default RANDOM)\n");
-}
+#include <stddef.h>
+#include <netinet/in.h>
+#include <typedefs.h>
+#include <config.h>
 
+typedef int socket_t;
+
+/* Common routines used by code */
+in_addr_t    resolv(char *);         /* Resolve name to ip address. */
+void         create_socket(void);    /* Creates the sending socket */
+void         close_socket(void);     /* Close the previously created socket */
+
+/* Send the actual packet from buffer, with size bytes, using config options. */
+_Bool send_packet(const void *const,
+                  size_t,
+                  const struct config_options *const __restrict__);
+
+#endif

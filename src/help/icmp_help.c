@@ -19,7 +19,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <stdio.h>
+#include <linux/icmp.h>
+#include <modules.h>
 
 /** ICMP options help. */
 void icmp_help(void)

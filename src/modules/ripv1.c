@@ -21,7 +21,15 @@
 
 #define RIPVERSION 1
 
-#include <common.h>
+#include <assert.h>
+#include <linux/ip.h>
+#include <linux/udp.h>
+#include <defines.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 /**
  * RIPv1 packet header configuration.

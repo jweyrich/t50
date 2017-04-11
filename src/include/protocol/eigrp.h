@@ -18,8 +18,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef EIGRP_H
-#define EIGRP_H
+#ifndef __EIGRP_H__
+#define __EIGRP_H__
+
+#include <stdint.h>
 
 #define IPPROTO_EIGRP   88
 #define EIGRPVERSION    2

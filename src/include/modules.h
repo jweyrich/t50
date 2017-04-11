@@ -22,7 +22,7 @@
 #define __MODULES_INCLUDED__
 
 #include <stddef.h>
-
+#include <netinet/in.h>
 #include <typedefs.h>
 #include <config.h>
 
@@ -37,6 +37,44 @@
 #include <protocol/eigrp.h>
 #include <protocol/tcp_options.h>
 /* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
+
+/**
+ * User Datagram Protocol (RFC 768) Pseudo Header structure.
+ *
+ * Checksum is the 16-bit one's complement of the one's complement sum of a
+ * pseudo header of information from the IP header, the UDP header, and the
+ * data,  padded  with zero octets  at the end (if  necessary)  to  make  a
+ * multiple of two octets.
+ *
+ * The pseudo  header  conceptually prefixed to the UDP header contains the
+ * source  address,  the destination  address,  the protocol,  and the  UDP
+ * length.   This information gives protection against misrouted datagrams.
+ * This checksum procedure is the same as is used in TCP.
+ *
+ *      0      7 8     15 16    23 24    31
+ *     +--------+--------+--------+--------+
+ *     |          source address           |
+ *     +--------+--------+--------+--------+
+ *     |        destination address        |
+ *     +--------+--------+--------+--------+
+ *     |  zero  |protocol|   UDP length    |
+ *     +--------+--------+--------+--------+
+ *
+ * If the computed  checksum  is zero,  it is transmitted  as all ones (the
+ * equivalent  in one's complement  arithmetic).   An all zero  transmitted
+ * checksum  value means that the transmitter  generated  no checksum  (for
+ * debugging or for higher level protocols that don't care).
+ */
+struct psdhdr
+{
+  in_addr_t saddr;      /* source address      */
+  in_addr_t daddr;      /* destination address */
+  uint8_t   zero;       /* must be zero        */
+  uint8_t   protocol;   /* protocol            */
+  uint16_t  len;        /* header length       */
+};
+
+typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, size_t *);
 
 /**
  * Modules entry structure.
@@ -63,23 +101,23 @@ typedef struct
  */
 extern modules_table_t mod_table[];
 
-extern size_t  get_number_of_registered_modules(void);
-extern int    *get_module_valid_options_list(int);
+size_t  get_number_of_registered_modules(void);
+int    *get_module_valid_options_list(int);
 
 /* Modules functions prototypes. */
-extern void icmp  (const struct config_options *const __restrict__, size_t *size);
-extern void igmpv1(const struct config_options *const __restrict__, size_t *size);
-extern void igmpv3(const struct config_options *const __restrict__, size_t *size);
-extern void tcp   (const struct config_options *const __restrict__, size_t *size);
-extern void egp   (const struct config_options *const __restrict__, size_t *size);
-extern void udp   (const struct config_options *const __restrict__, size_t *size);
-extern void ripv1 (const struct config_options *const __restrict__, size_t *size);
-extern void ripv2 (const struct config_options *const __restrict__, size_t *size);
-extern void dccp  (const struct config_options *const __restrict__, size_t *size);
-extern void rsvp  (const struct config_options *const __restrict__, size_t *size);
-extern void ipsec (const struct config_options *const __restrict__, size_t *size);
-extern void eigrp (const struct config_options *const __restrict__, size_t *size);
-extern void ospf  (const struct config_options *const __restrict__, size_t *size);
+void icmp  (const struct config_options *const __restrict__, size_t *);
+void igmpv1(const struct config_options *const __restrict__, size_t *);
+void igmpv3(const struct config_options *const __restrict__, size_t *);
+void tcp   (const struct config_options *const __restrict__, size_t *);
+void egp   (const struct config_options *const __restrict__, size_t *);
+void udp   (const struct config_options *const __restrict__, size_t *);
+void ripv1 (const struct config_options *const __restrict__, size_t *);
+void ripv2 (const struct config_options *const __restrict__, size_t *);
+void dccp  (const struct config_options *const __restrict__, size_t *);
+void rsvp  (const struct config_options *const __restrict__, size_t *);
+void ipsec (const struct config_options *const __restrict__, size_t *);
+void eigrp (const struct config_options *const __restrict__, size_t *);
+void ospf  (const struct config_options *const __restrict__, size_t *);
 /* --- add yours here */
 
 #endif

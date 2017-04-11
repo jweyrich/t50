@@ -19,7 +19,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <assert.h>
+#include <linux/ip.h>
+#include <defines.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 static size_t ospf_hdr_len(const unsigned int, const int, const int, const _Bool);
 

@@ -18,10 +18,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __TCP_OPTIONS_H
-#define __TCP_OPTIONS_H 1
+#ifndef __TCP_OPTIONS_H__
+#define __TCP_OPTIONS_H__
 
-#include <common.h>
+#include <stdint.h>
 
 #define TCPOPT_EOL        0
 #define TCPOPT_NOP        1

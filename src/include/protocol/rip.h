@@ -18,10 +18,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __RIP_H
-#define __RIP_H 1
-
-#include <common.h>
+#ifndef __RIP_H__
+#define __RIP_H__
 
 #define IPPORT_RIP             520
 #define RIP_HEADER_LENGTH      4

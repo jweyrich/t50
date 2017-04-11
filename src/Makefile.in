@@ -102,23 +102,23 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(sbin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_t50_OBJECTS = main.$(OBJEXT) config.$(OBJEXT) sock.$(OBJEXT) \
-	cidr.$(OBJEXT) cksum.$(OBJEXT) common.$(OBJEXT) \
-	modules.$(OBJEXT) usage.$(OBJEXT) resolv.$(OBJEXT) \
-	help/igmp_help.$(OBJEXT) help/rsvp_help.$(OBJEXT) \
-	help/rip_help.$(OBJEXT) help/egp_help.$(OBJEXT) \
-	help/ipsec_help.$(OBJEXT) help/icmp_help.$(OBJEXT) \
-	help/tcp_udp_dccp_help.$(OBJEXT) help/ip_help.$(OBJEXT) \
-	help/ospf_help.$(OBJEXT) help/eigrp_help.$(OBJEXT) \
-	help/gre_help.$(OBJEXT) help/general_help.$(OBJEXT) \
+am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) netio.$(OBJEXT) \
+	usage.$(OBJEXT) modules/ipsec.$(OBJEXT) modules/udp.$(OBJEXT) \
+	modules/icmp.$(OBJEXT) modules/dccp.$(OBJEXT) \
+	modules/igmpv3.$(OBJEXT) modules/eigrp.$(OBJEXT) \
 	modules/ripv1.$(OBJEXT) modules/gre.$(OBJEXT) \
-	modules/dccp.$(OBJEXT) modules/ip.$(OBJEXT) \
-	modules/ripv2.$(OBJEXT) modules/ospf.$(OBJEXT) \
-	modules/egp.$(OBJEXT) modules/udp.$(OBJEXT) \
-	modules/ipsec.$(OBJEXT) modules/eigrp.$(OBJEXT) \
-	modules/rsvp.$(OBJEXT) modules/igmpv1.$(OBJEXT) \
-	modules/icmp.$(OBJEXT) modules/tcp.$(OBJEXT) \
-	modules/igmpv3.$(OBJEXT)
+	modules/tcp.$(OBJEXT) modules/egp.$(OBJEXT) \
+	modules/ip.$(OBJEXT) modules/rsvp.$(OBJEXT) \
+	modules/ospf.$(OBJEXT) modules/igmpv1.$(OBJEXT) \
+	modules/ripv2.$(OBJEXT) help/igmp_help.$(OBJEXT) \
+	help/gre_help.$(OBJEXT) help/ip_help.$(OBJEXT) \
+	help/rip_help.$(OBJEXT) help/ospf_help.$(OBJEXT) \
+	help/general_help.$(OBJEXT) help/tcp_udp_dccp_help.$(OBJEXT) \
+	help/eigrp_help.$(OBJEXT) help/rsvp_help.$(OBJEXT) \
+	help/ipsec_help.$(OBJEXT) help/icmp_help.$(OBJEXT) \
+	help/egp_help.$(OBJEXT) memalloc.$(OBJEXT) main.$(OBJEXT) \
+	modules.$(OBJEXT) errors.$(OBJEXT) cidr.$(OBJEXT) \
+	cksum.$(OBJEXT)
 t50_OBJECTS = $(am_t50_OBJECTS)
 t50_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -273,57 +273,64 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-t50_SOURCES = main.c \
-config.c \
-sock.c \
-cidr.c \
-cksum.c \
-common.c \
-modules.c \
-usage.c \
-resolv.c \
-help/igmp_help.c \
-help/rsvp_help.c \
-help/rip_help.c \
-help/egp_help.c \
-help/ipsec_help.c \
-help/icmp_help.c \
-help/tcp_udp_dccp_help.c \
-help/ip_help.c \
-help/ospf_help.c \
-help/eigrp_help.c \
-help/gre_help.c \
-help/general_help.c \
-modules/ripv1.c \
-modules/gre.c \
-modules/dccp.c \
-modules/ip.c \
-modules/ripv2.c \
-modules/ospf.c \
-modules/egp.c \
-modules/udp.c \
-modules/ipsec.c \
-modules/eigrp.c \
-modules/rsvp.c \
-modules/igmpv1.c \
-modules/icmp.c \
-modules/tcp.c \
-modules/igmpv3.c \
+t50_SOURCES = include/help.h \
+include/memalloc.h \
+include/configuration.h \
+include/cksum.h \
+include/errors.h \
+include/randomizer.h \
+include/defines.h \
 include/config.h \
-include/common.h \
-include/protocol/eigrp.h \
-include/protocol/gre.h \
-include/protocol/egp.h \
-include/protocol/ip.h \
-include/protocol/igmp.h \
+include/modules.h \
+include/netio.h \
 include/protocol/tcp_options.h \
+include/protocol/igmp.h \
 include/protocol/rsvp.h \
+include/protocol/egp.h \
+include/protocol/eigrp.h \
 include/protocol/rip.h \
 include/protocol/ospf.h \
+include/protocol/gre.h \
+include/protocol/ip.h \
+include/cidr.h \
 include/typedefs.h \
-include/help.h \
-include/defines.h \
-include/modules.h 
+config.c \
+randomizer.c \
+netio.c \
+usage.c \
+modules/ipsec.c \
+modules/udp.c \
+modules/icmp.c \
+modules/dccp.c \
+modules/igmpv3.c \
+modules/eigrp.c \
+modules/ripv1.c \
+modules/gre.c \
+modules/tcp.c \
+modules/egp.c \
+modules/ip.c \
+modules/rsvp.c \
+modules/ospf.c \
+modules/igmpv1.c \
+modules/ripv2.c \
+help/igmp_help.c \
+help/gre_help.c \
+help/ip_help.c \
+help/rip_help.c \
+help/ospf_help.c \
+help/general_help.c \
+help/tcp_udp_dccp_help.c \
+help/eigrp_help.c \
+help/rsvp_help.c \
+help/ipsec_help.c \
+help/icmp_help.c \
+help/egp_help.c \
+memalloc.c \
+main.c \
+modules.c \
+errors.c \
+cidr.c \
+cksum.c 
 
 all: all-am
 
@@ -400,6 +407,42 @@ uninstall-sbinPROGRAMS:
 
 clean-sbinPROGRAMS:
 	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
+modules/$(am__dirstamp):
+	@$(MKDIR_P) modules
+	@: > modules/$(am__dirstamp)
+modules/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) modules/$(DEPDIR)
+	@: > modules/$(DEPDIR)/$(am__dirstamp)
+modules/ipsec.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/udp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/icmp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/dccp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/igmpv3.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/eigrp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/ripv1.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/gre.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/tcp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/egp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/ip.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/rsvp.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/ospf.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/igmpv1.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
+modules/ripv2.$(OBJEXT): modules/$(am__dirstamp) \
+	modules/$(DEPDIR)/$(am__dirstamp)
 help/$(am__dirstamp):
 	@$(MKDIR_P) help
 	@: > help/$(am__dirstamp)
@@ -408,64 +451,28 @@ help/$(DEPDIR)/$(am__dirstamp):
 	@: > help/$(DEPDIR)/$(am__dirstamp)
 help/igmp_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
-help/rsvp_help.$(OBJEXT): help/$(am__dirstamp) \
+help/gre_help.$(OBJEXT): help/$(am__dirstamp) \
+	help/$(DEPDIR)/$(am__dirstamp)
+help/ip_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
 help/rip_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
-help/egp_help.$(OBJEXT): help/$(am__dirstamp) \
+help/ospf_help.$(OBJEXT): help/$(am__dirstamp) \
+	help/$(DEPDIR)/$(am__dirstamp)
+help/general_help.$(OBJEXT): help/$(am__dirstamp) \
+	help/$(DEPDIR)/$(am__dirstamp)
+help/tcp_udp_dccp_help.$(OBJEXT): help/$(am__dirstamp) \
+	help/$(DEPDIR)/$(am__dirstamp)
+help/eigrp_help.$(OBJEXT): help/$(am__dirstamp) \
+	help/$(DEPDIR)/$(am__dirstamp)
+help/rsvp_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
 help/ipsec_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
 help/icmp_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
-help/tcp_udp_dccp_help.$(OBJEXT): help/$(am__dirstamp) \
+help/egp_help.$(OBJEXT): help/$(am__dirstamp) \
 	help/$(DEPDIR)/$(am__dirstamp)
-help/ip_help.$(OBJEXT): help/$(am__dirstamp) \
-	help/$(DEPDIR)/$(am__dirstamp)
-help/ospf_help.$(OBJEXT): help/$(am__dirstamp) \
-	help/$(DEPDIR)/$(am__dirstamp)
-help/eigrp_help.$(OBJEXT): help/$(am__dirstamp) \
-	help/$(DEPDIR)/$(am__dirstamp)
-help/gre_help.$(OBJEXT): help/$(am__dirstamp) \
-	help/$(DEPDIR)/$(am__dirstamp)
-help/general_help.$(OBJEXT): help/$(am__dirstamp) \
-	help/$(DEPDIR)/$(am__dirstamp)
-modules/$(am__dirstamp):
-	@$(MKDIR_P) modules
-	@: > modules/$(am__dirstamp)
-modules/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) modules/$(DEPDIR)
-	@: > modules/$(DEPDIR)/$(am__dirstamp)
-modules/ripv1.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/gre.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/dccp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/ip.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/ripv2.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/ospf.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/egp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/udp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/ipsec.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/eigrp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/rsvp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/igmpv1.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/icmp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/tcp.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
-modules/igmpv3.$(OBJEXT): modules/$(am__dirstamp) \
-	modules/$(DEPDIR)/$(am__dirstamp)
 
 t50$(EXEEXT): $(t50_OBJECTS) $(t50_DEPENDENCIES) $(EXTRA_t50_DEPENDENCIES) 
 	@rm -f t50$(EXEEXT)
@@ -481,12 +488,13 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cidr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cksum.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errors.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memalloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modules.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resolv.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/randomizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@help/$(DEPDIR)/egp_help.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@help/$(DEPDIR)/eigrp_help.Po@am__quote@

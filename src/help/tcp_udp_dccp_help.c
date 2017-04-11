@@ -19,7 +19,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <stdio.h>
+#include <linux/dccp.h>
+#include <linux/tcp.h>
+#include <modules.h>
 
 /** UDP and DCCP options help. */
 void tcp_udp_dccp_help(void)

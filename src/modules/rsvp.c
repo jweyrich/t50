@@ -18,7 +18,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <common.h>
+
+#include <assert.h>
+#include <linux/ip.h>
+#include <defines.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
 

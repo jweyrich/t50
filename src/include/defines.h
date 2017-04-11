@@ -21,6 +21,8 @@
 #ifndef __DEFINES_INCLUDED__
 #define __DEFINES_INCLUDED__
 
+#define _NOINLINE __attribute__((noinline))
+
 /**
  * Amount of time, in seconds, to wait for child process termination.
  */
@@ -33,9 +35,6 @@
  * MTU usually is 1500 bytes long, over ethernet!
  */
 #define INITIAL_PACKET_SIZE 2048
-
-#define CIDR_MINIMUM 8
-#define CIDR_MAXIMUM 32 // fix #7
 
 #define MAXIMUM_IP_ADDRESSES  ((1U << 24) - 1)
 
@@ -55,11 +54,6 @@
 
 /** Macro used to test bitmasks */
 #define TEST_BITS(x,bits) ((x) & (bits))
-
-/* Randomizer macros and function */
-#define __RND(foo)      (((foo) == 0) ? RANDOM() : (foo))
-#define INADDR_RND(foo) __RND((foo))
-#define IPPORT_RND(foo) __RND((foo))
 
 /** Used to test if "pid" from fork() is from a child process. */
 /* NOTE: fork returns always 0 for the child process. */

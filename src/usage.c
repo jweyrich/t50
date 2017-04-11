@@ -19,7 +19,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <configuration.h>
+#include <help.h>
 
 void show_version(void)
 {

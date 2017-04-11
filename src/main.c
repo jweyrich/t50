@@ -19,11 +19,27 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <netinet/in.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
 #ifdef __HAVE_DEBUG__
 #include <linux/if_ether.h>
 #endif
+#include <configuration.h>
+#include <defines.h>
+#include <typedefs.h>
+#include <config.h>
+#include <netio.h>
+#include <errors.h>
+#include <cidr.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */

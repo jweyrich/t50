@@ -19,7 +19,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <stddef.h>
+#include <netinet/in.h>
+#include <defines.h>
+#include <typedefs.h>
+#include <modules.h>
 
 // --- Valid options tables for specific protocols ---
 VALID_OPTIONS_TABLE(tcp, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, OPTION_DESTINATION, \
@@ -145,3 +149,38 @@ MODULE_ENTRY(IPPROTO_AH,    "IPSEC",  "Internet Security Protocl (AH/ESP)",     
 MODULE_ENTRY(IPPROTO_EIGRP, "EIGRP",  "Enhanced Interior Gateway Routing Protocol", eigrp)
 MODULE_ENTRY(IPPROTO_OSPF,  "OSPF",   "Open Shortest Path First",                   ospf)
 END_MODULES_TABLE
+
+/* Holds the number of modules. Use get_number_of_registered_modules() funcion to get it. */
+static size_t number_of_modules = 0;
+
+/**
+ * Get the number of registered modules on modules.c.
+ *
+ * Scan the list of modules (ONCE!), returning the number of itens found on
+ * modules list.
+ *
+ * @return The number of registered modules.
+ */
+/* Function prototype moved to modules.h. */
+size_t get_number_of_registered_modules(void)
+{
+  modules_table_t *ptbl;
+
+  if (unlikely(number_of_modules == 0))
+    for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
+
+  return number_of_modules;
+}
+
+int *get_module_valid_options_list(int protocol)
+{
+  modules_table_t *ptbl;
+
+  for (ptbl = mod_table; ptbl->func; ptbl++)
+    if (ptbl->protocol_id == protocol)
+      return ptbl->valid_options;
+
+  /* Returns NULL if not found. */
+  return NULL;
+}
+

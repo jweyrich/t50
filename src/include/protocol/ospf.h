@@ -18,10 +18,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __OSPF_H
-#define __OSPF_H 1
+#ifndef __OSPF_H__
+#define __OSPF_H__
 
-#include <common.h>
+#include <netinet/in.h>
+#include <typedefs.h>
 
 #define IPPROTO_OSPF           89
 #define OSPFVERSION            2

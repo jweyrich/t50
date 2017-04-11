@@ -1,5 +1,5 @@
 /* vim: set ts=2 et sw=2 : */
-/** @file cidr.c */
+/** @file cksum.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,7 +19,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <cksum.h>
 
 /**
  * Calculates checksum.

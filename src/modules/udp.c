@@ -19,7 +19,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <assert.h>
+#include <linux/udp.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 /**
  * UDP packet header configuration.

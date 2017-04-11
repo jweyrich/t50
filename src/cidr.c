@@ -19,7 +19,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <arpa/inet.h>    // ntohl().
+#include <cidr.h>
+#include <config.h>
+#include <defines.h>
+#include <errors.h>
 
 static struct cidr cidr = {0};
 

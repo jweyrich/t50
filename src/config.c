@@ -1,5 +1,5 @@
 /* vim: set ts=2 et sw=2 : */
-/** @file common.c */
+/** @file config.c */
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
@@ -19,11 +19,31 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <string.h>
 #include <setjmp.h>
 #include <limits.h>
 #include <regex.h>
+#include <errno.h>
+#include <assert.h>
+#include <linux/icmp.h>
+#include <linux/igmp.h>
+#include <linux/dccp.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <configuration.h>
+#include <typedefs.h>
+#include <defines.h>
+#include <config.h>
+#include <netio.h>
+#include <errors.h>
+#include <cidr.h>
+#include <help.h>
+#include <modules.h>
 
 /* Local prototypes. */
 static int                                check_if_option(char *);

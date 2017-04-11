@@ -24,18 +24,21 @@
 /* Add usage function interface here.
    Add usage function definition for protocol at src/help/ directory.
    Change Makefile and src/usage.c. */
-extern void general_help(void);
-extern void gre_help(void);
-extern void tcp_udp_dccp_help(void);
-extern void tcp_help(void);
-extern void ip_help(void);
-extern void icmp_help(void);
-extern void egp_help(void);
-extern void rip_help(void);
-extern void dccp_help(void);
-extern void rsvp_help(void);
-extern void ipsec_help(void);
-extern void eigrp_help(void);
-extern void ospf_help(void);
+void general_help(void);
+void gre_help(void);
+void tcp_udp_dccp_help(void);
+void tcp_help(void);
+void ip_help(void);
+void icmp_help(void);
+void egp_help(void);
+void rip_help(void);
+void dccp_help(void);
+void rsvp_help(void);
+void ipsec_help(void);
+void eigrp_help(void);
+void ospf_help(void);
+
+void show_version(void); /* Prints version info. */
+void usage(void);        /* Prints usage message */
 
 #endif

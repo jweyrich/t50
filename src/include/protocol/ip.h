@@ -21,7 +21,9 @@
 #ifndef __IP_INC__
 #define __IP_INC__
 
-#include <common.h>
+#include <linux/ip.h>
+
+struct config_options;  /* Defined in config.h. */
 
 struct iphdr *ip_header(void *, size_t, const struct config_options *__restrict__);
 

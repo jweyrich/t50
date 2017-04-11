@@ -22,7 +22,9 @@
 #define CONFIG_H
 
 #include <stdint.h>
+#include <netinet/in.h>
 #include <typedefs.h>
+#include <configuration.h>
 
 /* Command line interface options which do not have short options */
 /* NOTE: All options are greater or equal than 128 to avoid ASCII character
@@ -284,14 +286,6 @@ enum
   OPTION_OSPF_AUTHENTICATION,
   OPTION_OSPF_AUTH_KEY_ID,
   OPTION_OSPF_AUTH_SEQUENCE
-};
-
-/** @struct cidr
-    T50 cidr structure. */
-struct cidr
-{
-  uint32_t  hostid;                 /* hosts identifiers           */
-  in_addr_t __1st_addr;             /* first IP address            */
 };
 
 /** T50 Configuration structure. */
@@ -598,6 +592,6 @@ typedef struct
   unsigned cidr;
 } T50_tmp_addr_t;
 
-extern struct config_options *parse_command_line(char **);
+struct config_options *parse_command_line(char **);
 
 #endif /* CONFIG_H */

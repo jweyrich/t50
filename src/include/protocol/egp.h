@@ -18,12 +18,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __EGP_H
-#define __EGP_H
+#ifndef __EGP_H__
+#define __EGP_H__
 
 #define EGPVERSION 2
 
-#include <common.h>
+#include <stdint.h>
 
 /* EGP Message Types */
 #define EGP_NEIGHBOR_UPDATE_RESP  1
@@ -146,8 +146,8 @@ struct egp_hdr
  */
 struct egp_acq_hdr
 {
-  __be16    hello;                  /* hello interval              */
-  __be16    poll;                   /* poll interval               */
+  uint16_t  hello;                  /* hello interval              */
+  uint16_t  poll;                   /* poll interval               */
 };
 
 #endif  /* __EGP_H */

@@ -23,16 +23,13 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <netinet/in.h>
 
-struct config_options;    /* Just a reference. */
+struct config_options;    /* Defined in config.h. */
 
 /* Data types */
-typedef uint32_t in_addr_t;
-typedef int socket_t;
 typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
                                   this type can be changed to int64_t. */
-
-typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, size_t *);
 
 /**
  * Union used to ease buffer pointer manipulation.
@@ -53,41 +50,5 @@ typedef union
   in_addr_t *inaddr_ptr;
   uint64_t  *qword_ptr;
 } memptr_t;
-
-/**
- * User Datagram Protocol (RFC 768) Pseudo Header structure.
- *
- * Checksum is the 16-bit one's complement of the one's complement sum of a
- * pseudo header of information from the IP header, the UDP header, and the
- * data,  padded  with zero octets  at the end (if  necessary)  to  make  a
- * multiple of two octets.
- *
- * The pseudo  header  conceptually prefixed to the UDP header contains the
- * source  address,  the destination  address,  the protocol,  and the  UDP
- * length.   This information gives protection against misrouted datagrams.
- * This checksum procedure is the same as is used in TCP.
- *
- *      0      7 8     15 16    23 24    31
- *     +--------+--------+--------+--------+
- *     |          source address           |
- *     +--------+--------+--------+--------+
- *     |        destination address        |
- *     +--------+--------+--------+--------+
- *     |  zero  |protocol|   UDP length    |
- *     +--------+--------+--------+--------+
- *
- * If the computed  checksum  is zero,  it is transmitted  as all ones (the
- * equivalent  in one's complement  arithmetic).   An all zero  transmitted
- * checksum  value means that the transmitter  generated  no checksum  (for
- * debugging or for higher level protocols that don't care).
- */
-struct psdhdr
-{
-  in_addr_t saddr;      /* source address      */
-  in_addr_t daddr;      /* destination address */
-  uint8_t   zero;       /* must be zero        */
-  uint8_t   protocol;   /* protocol            */
-  uint16_t  len;        /* header length       */
-};
 
 #endif

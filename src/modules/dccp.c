@@ -19,7 +19,15 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <assert.h>
+#include <linux/ip.h>
+#include <linux/dccp.h>
+#include <defines.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 /**
  * DCCP packet header configuration.

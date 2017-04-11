@@ -19,7 +19,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <assert.h>
+#include <linux/ip.h>
+#include <netinet/in.h>
+#include <config.h>
+#include <cksum.h>
+#include <modules.h>
+#include <randomizer.h>
 
 /* Defined here 'cause we need them just here.
    And since we are using linux/ip.h header, they are not

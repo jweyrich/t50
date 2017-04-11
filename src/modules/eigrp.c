@@ -19,7 +19,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <common.h>
+#include <assert.h>
+#include <netinet/in.h>
+#include <defines.h>
+#include <config.h>
+#include <cksum.h>
+#include <memalloc.h>
+#include <modules.h>
+#include <randomizer.h>
 
 static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const int);
 

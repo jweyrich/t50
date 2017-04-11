@@ -18,10 +18,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __IGMP_H
-#define __IGMP_H 1
-
-#include <common.h>
+#ifndef __IGMP_H__
+#define __IGMP_H__
 
 /** IGMP Header DEFINITIONS. */
 #define IGMPV3_TLEN_NSRCS(foo) ((foo) * sizeof(in_addr_t))

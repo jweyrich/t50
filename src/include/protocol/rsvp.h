@@ -18,10 +18,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __RSVP_H
-#define __RSVP_H 1
+#ifndef __RSVP_H__
+#define __RSVP_H__
 
-#include <common.h>
+#include <stdint.h>
 
 #define RSVPVERSION 1
 
