@@ -102,8 +102,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(sbin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) netio.$(OBJEXT) \
-	usage.$(OBJEXT) modules/ipsec.$(OBJEXT) modules/udp.$(OBJEXT) \
+am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) usage.$(OBJEXT) \
+	modules/ipsec.$(OBJEXT) modules/udp.$(OBJEXT) \
 	modules/icmp.$(OBJEXT) modules/dccp.$(OBJEXT) \
 	modules/igmpv3.$(OBJEXT) modules/eigrp.$(OBJEXT) \
 	modules/ripv1.$(OBJEXT) modules/gre.$(OBJEXT) \
@@ -116,9 +116,9 @@ am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) netio.$(OBJEXT) \
 	help/general_help.$(OBJEXT) help/tcp_udp_dccp_help.$(OBJEXT) \
 	help/eigrp_help.$(OBJEXT) help/rsvp_help.$(OBJEXT) \
 	help/ipsec_help.$(OBJEXT) help/icmp_help.$(OBJEXT) \
-	help/egp_help.$(OBJEXT) memalloc.$(OBJEXT) main.$(OBJEXT) \
-	modules.$(OBJEXT) errors.$(OBJEXT) cidr.$(OBJEXT) \
-	cksum.$(OBJEXT)
+	help/egp_help.$(OBJEXT) main.$(OBJEXT) modules.$(OBJEXT) \
+	errors.$(OBJEXT) cidr.$(OBJEXT) netio.$(OBJEXT) \
+	cksum.$(OBJEXT) memalloc.$(OBJEXT)
 t50_OBJECTS = $(am_t50_OBJECTS)
 t50_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -274,15 +274,13 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 t50_SOURCES = include/help.h \
-include/memalloc.h \
-include/configuration.h \
 include/cksum.h \
+include/memalloc.h \
 include/errors.h \
 include/randomizer.h \
 include/defines.h \
 include/config.h \
 include/modules.h \
-include/netio.h \
 include/protocol/tcp_options.h \
 include/protocol/igmp.h \
 include/protocol/rsvp.h \
@@ -292,11 +290,11 @@ include/protocol/rip.h \
 include/protocol/ospf.h \
 include/protocol/gre.h \
 include/protocol/ip.h \
+include/netio.h \
 include/cidr.h \
 include/typedefs.h \
 config.c \
 randomizer.c \
-netio.c \
 usage.c \
 modules/ipsec.c \
 modules/udp.c \
@@ -325,12 +323,13 @@ help/rsvp_help.c \
 help/ipsec_help.c \
 help/icmp_help.c \
 help/egp_help.c \
-memalloc.c \
 main.c \
 modules.c \
 errors.c \
 cidr.c \
-cksum.c 
+netio.c \
+cksum.c \
+memalloc.c
 
 all: all-am
 

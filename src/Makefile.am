@@ -1,14 +1,12 @@
 sbin_PROGRAMS = t50
 t50_SOURCES = include/help.h \
-include/memalloc.h \
-include/configuration.h \
 include/cksum.h \
+include/memalloc.h \
 include/errors.h \
 include/randomizer.h \
 include/defines.h \
 include/config.h \
 include/modules.h \
-include/netio.h \
 include/protocol/tcp_options.h \
 include/protocol/igmp.h \
 include/protocol/rsvp.h \
@@ -18,11 +16,11 @@ include/protocol/rip.h \
 include/protocol/ospf.h \
 include/protocol/gre.h \
 include/protocol/ip.h \
+include/netio.h \
 include/cidr.h \
 include/typedefs.h \
 config.c \
 randomizer.c \
-netio.c \
 usage.c \
 modules/ipsec.c \
 modules/udp.c \
@@ -51,9 +49,10 @@ help/rsvp_help.c \
 help/ipsec_help.c \
 help/icmp_help.c \
 help/egp_help.c \
-memalloc.c \
 main.c \
 modules.c \
 errors.c \
 cidr.c \
-cksum.c 
+netio.c \
+cksum.c \
+memalloc.c
