@@ -20,6 +20,7 @@
 */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <t50_defines.h>
@@ -236,7 +237,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
      * incarnation of the connection.  Its  SEG.CC  value  is  the TCB.CCsend
      *  value from the sender's TCB.
      */
-    tcp->syn     = 1;
+    tcp->syn     = true;
     tcp->seq     = htonl(__RND(co->tcp.sequence));
   }
 
@@ -275,7 +276,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
                                 __RND(co->tcp.cc_new) :
                                 __RND(co->tcp.cc_echo));
 
-    tcp->syn = 1;
+    tcp->syn = true;
     tcp->seq = htonl(__RND(co->tcp.sequence));
 
     /*
@@ -301,7 +302,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
        * contained a CC or CC.NEW option.  Its SEG.CC value is the SEG.CC value
        * from the initial SYN.
        */
-      tcp->ack     = 1;
+      tcp->ack     = true;
       tcp->ack_seq = htonl(__RND(co->tcp.acknowledge));
     }
   }

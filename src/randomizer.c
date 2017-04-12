@@ -19,12 +19,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
- * This is the same as rand(), but fixes the problem the upper bit.
- * RAND_MAX is 31 bits long, not 32! And this value is plataform dependent!
- *
- * @return unsigned int pseudo-random number.
- */
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -34,11 +28,11 @@
 #include <t50_randomizer.h>
 
 #ifdef _EXPERIMENTAL_
-/* xorshift128+ */
 
-/* Arbitrary seeds. */
+  /* Arbitrary seeds. */
   static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
 
+  /* xorshift128+ */
   uint32_t RANDOM(void)
   {
     uint64_t s0 = _seed[1];
@@ -51,9 +45,15 @@
     return (_seed[1] + s0) >> 32;
   }
 #else
-/* Linear Congruential Pseudo Random Number Generator. */
   static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
 
+  /** Linear Congruential Pseudo Random Number Generator.
+   *
+   *  This is the same as rand(), but fixes the problem the upper bit.
+   *  RAND_MAX is 31 bits long, not 32! And this value is plataform dependent!
+   *
+   *  @return uint32_t pseudo-random number.
+   */
   uint32_t RANDOM(void)
   {
     // Note _seed is a 64 bit unsigned integer!

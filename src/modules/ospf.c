@@ -28,7 +28,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static size_t ospf_hdr_len(const unsigned int, const int, const int, const _Bool);
+static size_t ospf_hdr_len(const uint32_t, const int, const int, const _Bool);
 
 /**
  * OSPF packet header configuration.
@@ -689,7 +689,7 @@ build_ospf_lsa:
 }
 
 /* OSPF header size calculation. */
-size_t ospf_hdr_len(const unsigned int type, 
+size_t ospf_hdr_len(const uint32_t type, 
                     const int neighbor, 
                     const int lsa_type, 
                     const _Bool dd_include_lsa)

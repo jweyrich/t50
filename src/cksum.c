@@ -34,7 +34,7 @@ uint16_t cksum(void *data, size_t length)
 {
   uint32_t sum;
   uint16_t *p = data;
-  _Bool rem;
+  int rem;
 
   sum = 0;
   rem = length & 1; // if there is a remaining byte this will be true.

@@ -51,8 +51,8 @@ static int                                check_if_nul_option(char *);
 static void                               check_options_rules(struct config_options *__restrict__);
 _NOINLINE static struct options_table_s * find_option(char *);
 static void                               set_config_option(struct config_options *__restrict__, char *, int, char *);
-_NOINLINE static unsigned int             toULong(char *, char *);
-_NOINLINE static unsigned int             toULongCheckRange(char *, char *, unsigned int, unsigned int);
+_NOINLINE static uint32_t                 toULong(char *, char *);
+_NOINLINE static uint32_t                 toULongCheckRange(char *, char *, uint32_t, uint32_t);
 _NOINLINE static void                     check_list_separators(char *, char *);
 static void                               set_destination_addresses(char *, struct config_options *__restrict__);
 static void                               list_protocols(void);
@@ -1739,7 +1739,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-unsigned int toULong(char *optname, char *value)
+uint32_t toULong(char *optname, char *value)
 {
   unsigned long n;
 
@@ -1753,15 +1753,15 @@ unsigned int toULong(char *optname, char *value)
   if (errno || n > UINT_MAX)
     fatal_error("Invalid numeric value for option '%s'.", optname);
 
-  return (unsigned int)n;
+  return (uint32_t)n;
 }
 
-/* Tries to convert string to unsigned int, checking range.
+/* Tries to convert string to uint32_t, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-unsigned int toULongCheckRange(char *optname, char *value, unsigned int min, unsigned int max)
+uint32_t toULongCheckRange(char *optname, char *value, uint32_t min, uint32_t max)
 {
-  unsigned int n;
+  uint32_t n;
 
   assert(min < max);
 
@@ -1821,7 +1821,7 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   regex_t re;
   regmatch_t rm[6];
   unsigned matches[5];
-  unsigned int i, len;
+  size_t i, len;
   char *t;
   int bits;
 

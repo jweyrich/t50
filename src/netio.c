@@ -52,7 +52,7 @@ static int socket_send(int, struct sockaddr_in *, void *, size_t);
 void create_socket(void)
 {
   socklen_t len;
-  unsigned i, n = 1;  /* FIXME: if I indended, someday, to port
+  uint32_t i, n = 1;  /* FIXME: if I indended, someday, to port
                                 this code to Solaris, I must use
                                 char to n and set to '1'.
 
@@ -123,7 +123,7 @@ void create_socket(void)
   for (i = n + 128; i < 10485760; i += 128)
   {
     /* Setting SO_SNDBUF. */
-    if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(unsigned int)) == -1 )
+    if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(uint32_t)) == -1 )
     {
       if (errno == ENOBUFS)
         break;
