@@ -30,8 +30,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <errors.h>
-#include <randomizer.h>
+#include <t50_errors.h>
+#include <t50_randomizer.h>
 
 #ifdef _EXPERIMENTAL_
 /* xorshift128+ */

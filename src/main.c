@@ -31,15 +31,15 @@
 #include <linux/if_ether.h>
 #endif
 #include <configuration.h>
-#include <defines.h>
-#include <typedefs.h>
-#include <config.h>
-#include <netio.h>
-#include <errors.h>
-#include <cidr.h>
-#include <memalloc.h>
-#include <modules.h>
-#include <randomizer.h>
+#include <t50_defines.h>
+#include <t50_typedefs.h>
+#include <t50_config.h>
+#include <t50_netio.h>
+#include <t50_errors.h>
+#include <t50_cidr.h>
+#include <t50_memalloc.h>
+#include <t50_modules.h>
+#include <t50_randomizer.h>
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */

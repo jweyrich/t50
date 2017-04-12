@@ -19,7 +19,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>#include <modules.h>
+#include <stdio.h>
+#include <t50_modules.h>
 
 /** EGP help */
 void egp_help(void)

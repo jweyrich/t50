@@ -19,7 +19,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cksum.h>
+#include <t50_cksum.h>
 
 /**
  * Calculates checksum.

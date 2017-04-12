@@ -1,24 +1,24 @@
 sbin_PROGRAMS = t50
-t50_SOURCES = include/help.h \
-include/cksum.h \
-include/memalloc.h \
-include/errors.h \
-include/randomizer.h \
-include/defines.h \
-include/config.h \
-include/modules.h \
-include/protocol/tcp_options.h \
-include/protocol/igmp.h \
-include/protocol/rsvp.h \
-include/protocol/egp.h \
-include/protocol/eigrp.h \
-include/protocol/rip.h \
-include/protocol/ospf.h \
-include/protocol/gre.h \
-include/protocol/ip.h \
-include/netio.h \
-include/cidr.h \
-include/typedefs.h \
+t50_SOURCES = include/t50_help.h \
+include/t50_cksum.h \
+include/t50_memalloc.h \
+include/t50_errors.h \
+include/t50_randomizer.h \
+include/t50_defines.h \
+include/t50_config.h \
+include/t50_modules.h \
+include/protocol/t50_tcp_options.h \
+include/protocol/t50_igmp.h \
+include/protocol/t50_rsvp.h \
+include/protocol/t50_egp.h \
+include/protocol/t50_eigrp.h \
+include/protocol/t50_rip.h \
+include/protocol/t50_ospf.h \
+include/protocol/t50_gre.h \
+include/protocol/t50_ip.h \
+include/t50_netio.h \
+include/t50_cidr.h \
+include/t50_typedefs.h \
 config.c \
 randomizer.c \
 usage.c \

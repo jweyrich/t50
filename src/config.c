@@ -36,14 +36,14 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <configuration.h>
-#include <typedefs.h>
-#include <defines.h>
-#include <config.h>
-#include <netio.h>
-#include <errors.h>
-#include <cidr.h>
-#include <help.h>
-#include <modules.h>
+#include <t50_typedefs.h>
+#include <t50_defines.h>
+#include <t50_config.h>
+#include <t50_netio.h>
+#include <t50_errors.h>
+#include <t50_cidr.h>
+#include <t50_help.h>
+#include <t50_modules.h>
 
 /* Local prototypes. */
 static int                                check_if_option(char *);

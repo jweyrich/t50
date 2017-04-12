@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <linux/igmp.h>
-#include <modules.h>
+#include <t50_modules.h>
 
 /** IGMP options help. */
 void igmp_help(void)

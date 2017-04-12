@@ -29,10 +29,10 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <netio.h>
-#include <errors.h>
-#include <defines.h>
-#include <randomizer.h>
+#include <t50_defines.h>
+#include <t50_errors.h>
+#include <t50_netio.h>
+#include <t50_randomizer.h>
 
 /* Maximum number of tries to send the packet. */
 #define MAX_SENDTO_RETRYS  10

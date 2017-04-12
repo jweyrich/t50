@@ -23,11 +23,11 @@
 #include <linux/ip.h>
 #include <linux/if_ether.h>
 #include <netinet/in.h>
-#include <defines.h>
-#include <config.h>
-#include <cksum.h>
-#include <modules.h>
-#include <randomizer.h>
+#include <t50_defines.h>
+#include <t50_config.h>
+#include <t50_cksum.h>
+#include <t50_modules.h>
+#include <t50_randomizer.h>
 
 /**
  * GRE encapsulation routine.

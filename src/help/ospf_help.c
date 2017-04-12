@@ -20,7 +20,7 @@
 */
 
 #include <stdio.h>
-#include <modules.h>
+#include <t50_modules.h>
 
 /** OSPF options help. */
 void ospf_help(void)

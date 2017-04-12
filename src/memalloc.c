@@ -19,8 +19,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdlib.h>
-#include <errors.h>
-#include <defines.h>
+#include <t50_defines.h>
+#include <t50_errors.h>
 
 /* Actual packet buffer. Allocated dynamically. */
 void  *packet = NULL;

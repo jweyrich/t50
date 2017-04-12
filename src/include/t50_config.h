@@ -23,8 +23,8 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
-#include <typedefs.h>
 #include <configuration.h>
+#include <t50_typedefs.h>
 
 /* Command line interface options which do not have short options */
 /* NOTE: All options are greater or equal than 128 to avoid ASCII character

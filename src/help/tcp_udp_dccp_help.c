@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <linux/dccp.h>
 #include <linux/tcp.h>
-#include <modules.h>
+#include <t50_modules.h>
 
 /** UDP and DCCP options help. */
 void tcp_udp_dccp_help(void)

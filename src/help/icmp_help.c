@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <linux/icmp.h>
-#include <modules.h>
+#include <t50_modules.h>
 
 /** ICMP options help. */
 void icmp_help(void)

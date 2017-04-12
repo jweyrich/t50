@@ -20,10 +20,10 @@
 */
 
 #include <arpa/inet.h>    // ntohl().
-#include <cidr.h>
-#include <config.h>
-#include <defines.h>
-#include <errors.h>
+#include <t50_config.h>
+#include <t50_defines.h>
+#include <t50_cidr.h>
+#include <t50_errors.h>
 
 static struct cidr cidr = {0};
 

@@ -21,9 +21,9 @@
 
 #include <stddef.h>
 #include <netinet/in.h>
-#include <defines.h>
-#include <typedefs.h>
-#include <modules.h>
+#include <t50_defines.h>
+#include <t50_typedefs.h>
+#include <t50_modules.h>
 
 // --- Valid options tables for specific protocols ---
 VALID_OPTIONS_TABLE(tcp, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, OPTION_DESTINATION, \

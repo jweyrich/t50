@@ -25,8 +25,6 @@
 #include <stddef.h>
 #include <netinet/in.h>
 
-struct config_options;    /* Defined in config.h. */
-
 /* Data types */
 typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
                                   this type can be changed to int64_t. */

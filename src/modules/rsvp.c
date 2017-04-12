@@ -21,12 +21,12 @@
 
 #include <assert.h>
 #include <linux/ip.h>
-#include <defines.h>
-#include <config.h>
-#include <cksum.h>
-#include <memalloc.h>
-#include <modules.h>
-#include <randomizer.h>
+#include <t50_defines.h>
+#include <t50_config.h>
+#include <t50_cksum.h>
+#include <t50_memalloc.h>
+#include <t50_modules.h>
+#include <t50_randomizer.h>
 
 static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
 

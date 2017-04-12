@@ -23,19 +23,19 @@
 
 #include <stddef.h>
 #include <netinet/in.h>
-#include <typedefs.h>
-#include <config.h>
+#include <t50_typedefs.h>
+#include <t50_config.h>
 
 /* Purpose-built protocol libraries to be used by T50 modules */
-#include <protocol/ip.h>
-#include <protocol/egp.h>
-#include <protocol/gre.h>
-#include <protocol/rip.h>
-#include <protocol/igmp.h>
-#include <protocol/ospf.h>
-#include <protocol/rsvp.h>
-#include <protocol/eigrp.h>
-#include <protocol/tcp_options.h>
+#include <protocol/t50_ip.h>
+#include <protocol/t50_egp.h>
+#include <protocol/t50_gre.h>
+#include <protocol/t50_rip.h>
+#include <protocol/t50_igmp.h>
+#include <protocol/t50_ospf.h>
+#include <protocol/t50_rsvp.h>
+#include <protocol/t50_eigrp.h>
+#include <protocol/t50_tcp_options.h>
 /* NOTE: Insert your new protocol header here and change the modules table @ modules.c. */
 
 /**

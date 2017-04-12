@@ -22,11 +22,11 @@
 #include <assert.h>
 #include <linux/ip.h>
 #include <linux/icmp.h>
-#include <config.h>
-#include <cksum.h>
-#include <memalloc.h>
-#include <modules.h>
-#include <randomizer.h>
+#include <t50_config.h>
+#include <t50_cksum.h>
+#include <t50_memalloc.h>
+#include <t50_modules.h>
+#include <t50_randomizer.h>
 
 /**
  * ICMP packet header configuration.

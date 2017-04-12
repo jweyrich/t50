@@ -22,7 +22,7 @@
 #define __OSPF_H__
 
 #include <netinet/in.h>
-#include <typedefs.h>
+#include <t50_typedefs.h>
 
 #define IPPROTO_OSPF           89
 #define OSPFVERSION            2

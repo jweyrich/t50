@@ -18,24 +18,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __NETIO_H__
-#define __NETIO_H__
+#ifndef __CIDR_H__
+#define __CIDR_H__
 
-#include <stddef.h>
+#include <stdint.h>
 #include <netinet/in.h>
-#include <typedefs.h>
-#include <config.h>
+#include <t50_typedefs.h>
 
-typedef int socket_t;
+#define CIDR_MINIMUM 8
+#define CIDR_MAXIMUM 32 // fix #7
 
-/* Common routines used by code */
-in_addr_t    resolv(char *);         /* Resolve name to ip address. */
-void         create_socket(void);    /* Creates the sending socket */
-void         close_socket(void);     /* Close the previously created socket */
+/** @struct cidr
+    T50 cidr structure. */
+struct cidr
+{
+  uint32_t  hostid;                 /* hosts identifiers           */
+  in_addr_t __1st_addr;             /* first IP address            */
+};
 
-/* Send the actual packet from buffer, with size bytes, using config options. */
-_Bool send_packet(const void *const,
-                  size_t,
-                  const struct config_options *const __restrict__);
+struct cidr *config_cidr(const struct config_options * const __restrict__);
 
 #endif

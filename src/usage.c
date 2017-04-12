@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <configuration.h>
-#include <help.h>
+#include <t50_help.h>
 
 void show_version(void)
 {
