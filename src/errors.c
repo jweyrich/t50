@@ -27,6 +27,25 @@
 #include <stdlib.h>
 #include <configuration.h>
 
+#ifdef __HAVE_DEBUG__
+#include <time.h>
+#include <string.h>
+
+#define LOG_FILE "/var/log/t50_debug.log"
+
+static void log_datetime(FILE *f)
+{
+  char s[28];
+  time_t t;
+  struct tm tm;
+
+  t = time(NULL);
+  gmtime_r(&t, &tm);
+  strftime(s, sizeof(s) - 1, "%m/%d/%Y %H:%M:%S UTC", &tm);
+  fprintf(f, "%s - ", s);
+}
+#endif
+
 /* --- Using vfprintf for flexibility. */
 static void verror(char *fmt, va_list args)
 {
@@ -39,6 +58,20 @@ static void verror(char *fmt, va_list args)
   }
 
   vfprintf(stderr, str, args);
+
+#ifdef __HAVE_DEBUG__
+  {
+    FILE *f;
+
+    if (f = fopen(LOG_FILE, "at"))
+    {
+      log_datetime(f);
+      vfprintf(f, str, args);
+      fclose(f);
+    }
+  }
+#endif
+
   free(str);
 }
 

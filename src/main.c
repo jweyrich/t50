@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <time.h>
 #include <netinet/in.h>
 #include <sys/time.h>
@@ -157,8 +159,6 @@ int main(int argc, char *argv[])
     co->ip.daddr = cidr_ptr->__1st_addr;
     if (cidr_ptr->hostid)
       co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */
-
-    /* We need the address in network order. */
     co->ip.daddr = htonl(co->ip.daddr);
 
     /* Calls the 'module' function to build the packet. */
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
       if ((++ptbl)->func == NULL)
         ptbl = mod_table;
 
-    /* Decrement the threshold only if necessary! */
+    /* Decrement the threshold only if not flooding! */
     if (!co->flood)
       co->threshold--;
   }

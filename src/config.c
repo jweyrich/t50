@@ -1839,7 +1839,8 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   }
 
   /* Allocate enough space for temporary string. */
-  if ((t = strdup(addr)) == NULL) error("Cannot allocate temporary string: " __FILE__ ":%d", __LINE__);
+  if ((t = strdup(addr)) == NULL) 
+    error("Cannot allocate temporary string: " __FILE__ ":%d", __LINE__);
 
   /* Convert IP octects matches. */
   len = MATCH_LENGTH(rm[1]);
