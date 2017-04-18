@@ -21,7 +21,7 @@
 #ifndef __ERRORS_H__
 #define __ERRORS_H__
 
-void error(char *fmt, ...);
-void fatal_error(char *fmt, ...);
+void error(const char * const fmt, ...);
+void fatal_error(const char * const fmt, ...);
 
 #endif

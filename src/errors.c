@@ -47,7 +47,7 @@ static void log_datetime(FILE *f)
 #endif
 
 /* --- Using vfprintf for flexibility. */
-static void verror(char *fmt, va_list args)
+static void verror(const char * const fmt, va_list args)
 {
   char *str;
 
@@ -78,7 +78,7 @@ static void verror(char *fmt, va_list args)
 /**
  * Standard error reporting routine. Non fatal version.
  */
-void error(char *fmt, ...)
+void error(const char * const fmt, ...)
 {
   va_list args;
 
@@ -92,7 +92,7 @@ void error(char *fmt, ...)
  *
  * This function never returns!
  */
-void fatal_error(char *fmt, ...)
+void fatal_error(const char * const fmt, ...)
 {
   va_list args;
 

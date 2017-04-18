@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string.h>
@@ -35,6 +36,7 @@
 #include <linux/dccp.h>
 #include <netinet/in.h>
 #include <netdb.h>
+
 #include <configuration.h>
 #include <t50_typedefs.h>
 #include <t50_defines.h>
@@ -153,7 +155,7 @@ static struct config_options co =
     .lsa_age = 360,                  /* default LSA age                        */
     .lsa_type = LSA_TYPE_ROUTER,     /* default LSA header type                */
     .lsa_link_type = LINK_TYPE_PTP,  /* default Router-LSA link type           */
-    .key_id = 1                       /* default authentication key ID          */
+    .key_id = 1                      /* default authentication key ID          */
   }
 
   /* NOTE: Add configuration structured values for new protocols here! */
@@ -419,11 +421,6 @@ static struct options_table_s options[] =
 };
 #pragma GCC diagnostic pop
 
-_NOINLINE static void _parse_command_line_error(char *option)
-{
-  fatal_error("Option '%s' has no arguments.", option);
-}
-
 /* Substitutes getConfigOptions() function.
    NOTE: This function expects &argv[0] as the first argument. */
 struct config_options *parse_command_line(char **argv)
@@ -461,17 +458,20 @@ struct config_options *parse_command_line(char **argv)
       /* Is the option need an argument, get the next string. */
       if (!!(next_str = *(argv + 1)))
       {
+        static const char ferrfmt[] =
+          "Option '%s' has no arguments.";
+
         if (ptbl->has_arg)
         {
           if (check_if_nul_option(next_str)) // -- is NOT allowed!
-            _parse_command_line_error(opt);
+            fatal_error(ferrfmt, opt);
           argv++;
         }
         else
         {
           if (!check_if_nul_option(next_str)) // -- is allowed!
             if (!check_if_option(next_str))   // no values allowed!
-              _parse_command_line_error(opt);
+              fatal_error(ferrfmt, opt);
         }
       }
 
@@ -778,25 +778,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     co->gre.daddr = resolv(arg);
     break;
 
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  // Source port.
-  case OPTION_SOURCE:
-    check_list_separators(optname, arg);
-    co->source = toULongCheckRange(optname, arg, 0, 65535);
-    break;
-  // Destination port
-  case OPTION_DESTINATION:
-    check_list_separators(optname, arg);
-    co->dest   = toULongCheckRange(optname, arg, 0, 65535);
-    break;
-  case OPTION_IP_SOURCE:
-    check_list_separators(optname, arg);
-    co->ip.saddr = resolv(arg);
-    break;
-
   case OPTION_IP_TOS:
     co->ip.tos = toULong(optname, arg);
     break;
@@ -813,30 +794,12 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     co->ip.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_IP_PROTOCOL:
-    check_list_separators(optname, arg);
-    get_ip_protocol(co, arg);
-    break;
-
   case OPTION_ICMP_TYPE:
     co->icmp.type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_ICMP_CODE:
     co->icmp.code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_ICMP_GATEWAY:
-    check_list_separators(optname, arg);
-    co->icmp.gateway = resolv(arg);
     break;
 
   case OPTION_ICMP_ID:
@@ -853,15 +816,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_IGMP_CODE:
     co->igmp.code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_IGMP_GROUP:
-    check_list_separators(optname, arg);
-    co->igmp.group = resolv(arg);
     break;
 
   case OPTION_IGMP_QRV:
@@ -882,15 +836,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_IGMP_SOURCES:
     co->igmp.sources = toULongCheckRange(optname, arg, 0, 65535);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_IGMP_GREC_MULTICAST:
-    check_list_separators(optname, arg);
-    co->igmp.grec_mca = resolv(arg);
     break;
 
   case OPTION_IGMP_ADDRESS:
@@ -982,10 +927,8 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
   case OPTION_TCP_SACK_EDGE:
     /* NOTE: This option expects 2 values, separated by ':'. */
     co->tcp.options |= TCP_OPTION_SACK_EDGE;
-
     if (get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
       exit(EXIT_FAILURE);
-
     co->tcp.sack_left = a;
     co->tcp.sack_right = b;
     break;
@@ -1046,15 +989,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     co->rip.family = toULong(optname, arg);
     break;
 
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RIP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rip.address = resolv(arg);
-    break;
-
   case OPTION_RIP_METRIC:
     co->rip.metric = toULong(optname, arg);
     break;
@@ -1069,16 +1003,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_RIP_NETMASK:
     co->rip.netmask = resolv(arg);
-    break;  /* Is this correct? */
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RIP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->rip.next_hop = resolv(arg);
-    break;
+    break;  /* FIXME: Is this correct? */
 
   case OPTION_RIP_AUTHENTICATION:
     co->rip.auth = true;
@@ -1152,39 +1077,8 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_SESSION_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.session_addr = resolv(arg);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_SESSION_PROTOCOL:
-    check_list_separators(optname, arg);
-    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
   case OPTION_RSVP_SESSION_FLAGS:
     co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_SESSION_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535);
-    break;
-  case OPTION_RSVP_HOP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.hop_addr = resolv(arg);
     break;
 
   case OPTION_RSVP_HOP_IFACE:
@@ -1193,15 +1087,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_RSVP_TIME_REFRESH:
     co->rsvp.time_refresh = toULong(optname, arg);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_ERROR_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.error_addr = resolv(arg);
     break;
 
   case OPTION_RSVP_ERROR_FLAGS:
@@ -1231,19 +1116,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_RSVP_STYLE_OPTION:
     co->rsvp.style_opt = toULong(optname, arg);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_SENDER_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_addr = resolv(arg);
-    break;
-  case OPTION_RSVP_SENDER_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535);
     break;
 
   case OPTION_RSVP_TSPEC_TRAFFIC:
@@ -1321,15 +1193,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_RSVP_ADSPEC_CONTROLLED:
     co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_RSVP_CONFIRM_ADDR:
-    check_list_separators(optname, arg);
-    co->rsvp.confirm_addr = resolv(arg);
     break;
 
   case OPTION_IPSEC_AH_LENGTH:
@@ -1425,15 +1288,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     co->eigrp.ver_minor = b;
     break;
 
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_EIGRP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->eigrp.next_hop = resolv(arg);
-    break;
-
   case OPTION_EIGRP_DELAY:
     co->eigrp.delay = toULong(optname, arg);
     break;
@@ -1464,7 +1318,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
       *tmp_ptr++ = '\0';
       co->eigrp.prefix = toULong(optname, tmp_ptr);
     }
-
     co->eigrp.dest = resolv(arg);
     break;
 
@@ -1490,15 +1343,6 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_EIGRP_EXTERNAL_FLAGS:
     co->eigrp.ext_flags = toULong(optname, arg);
-    break;
-
-  /*
-   * FIXME: The code below expects to deal with lists, but only the first one
-   *        is used...
-   */
-  case OPTION_EIGRP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->eigrp.address = resolv(arg);
     break;
 
   case OPTION_EIGRP_MULTICAST:
@@ -1734,6 +1578,89 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
   case OPTION_OSPF_AUTH_SEQUENCE:
     co->ospf.sequence = toULong(optname, arg);
     break;
+
+  /*
+   * FIXME: These options expect to deal with lists, but only the first item
+   *        is used...
+   */
+  // Source port.
+  case OPTION_SOURCE:
+    check_list_separators(optname, arg);
+    co->source = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  // Destination port
+  case OPTION_DESTINATION:
+    check_list_separators(optname, arg);
+    co->dest   = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_IP_SOURCE:
+    check_list_separators(optname, arg);
+    co->ip.saddr = resolv(arg);
+    break;
+  case OPTION_IP_PROTOCOL:
+    check_list_separators(optname, arg);
+    get_ip_protocol(co, arg);
+    break;
+  case OPTION_ICMP_GATEWAY:
+    check_list_separators(optname, arg);
+    co->icmp.gateway = resolv(arg);
+    break;
+  case OPTION_IGMP_GROUP:
+    check_list_separators(optname, arg);
+    co->igmp.group = resolv(arg);
+    break;
+  case OPTION_IGMP_GREC_MULTICAST:
+    check_list_separators(optname, arg);
+    co->igmp.grec_mca = resolv(arg);
+    break;
+  case OPTION_RIP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rip.address = resolv(arg);
+    break;
+  case OPTION_RIP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->rip.next_hop = resolv(arg);
+    break;
+  case OPTION_RSVP_SESSION_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.session_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SESSION_PROTOCOL:
+    check_list_separators(optname, arg);
+    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
+    break;
+  case OPTION_RSVP_ERROR_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.error_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SESSION_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.session_port = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_RSVP_HOP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.hop_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SENDER_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_addr = resolv(arg);
+    break;
+  case OPTION_RSVP_SENDER_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535);
+    break;
+  case OPTION_RSVP_CONFIRM_ADDR:
+    check_list_separators(optname, arg);
+    co->rsvp.confirm_addr = resolv(arg);
+    break;
+  case OPTION_EIGRP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->eigrp.next_hop = resolv(arg);
+    break;
+  case OPTION_EIGRP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->eigrp.address = resolv(arg);
+    break;
   }
 }
 
@@ -1743,8 +1670,8 @@ uint32_t toULong(char *optname, char *value)
 {
   unsigned long n;
 
-  assert(optname != NULL);
-  assert(value != NULL);
+  if (!value || !*value)
+    return 0UL;
 
   /* strtoul deals ok with hexadecimal, octal and decimal values. */
   errno = 0;    // errno is set only on error, so we have to reset it here.
@@ -1763,12 +1690,17 @@ uint32_t toULongCheckRange(char *optname, char *value, uint32_t min, uint32_t ma
 {
   uint32_t n;
 
-  assert(min < max);
+  if (value && *value)
+  {    
+    if (min > max)
+      fatal_error("Min & Max values when calling toULongCheckRange(\"%s\", \"%s\", %" PRIu32 ", %" PRIu32 ").",
+        optname, value, min, max);
 
-  n = toULong(optname, value);
+    n = toULong(optname, value);
 
-  if (n < min || n > max)
-    fatal_error("Value out of range for option '%s'. Range must be between %u and %u.", optname, min, max);
+    if (n < min || n > max)
+      fatal_error("Value out of range for option '%s'. Range must be between %u and %u.", optname, min, max);
+  }
 
   return n;
 }
@@ -1790,11 +1722,8 @@ void list_protocols(void)
 
   puts("List of supported protocols (--protocol):");
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t% 2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
-#pragma GCC diagnostic pop
 }
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */

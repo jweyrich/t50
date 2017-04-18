@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [8])
+define([VERSION_FIX],   [9])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
@@ -30,7 +30,7 @@ AC_ARG_ENABLE([debug],
 AC_PROG_CC_C99
 AC_PROG_INSTALL
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
 AC_CHECK_HEADER_STDBOOL
 
 AC_TYPE_PID_T
@@ -40,11 +40,11 @@ AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 
-AC_CHECK_FUNCS([alarm regcomp socket strcasecmp strchr strdup strerror strpbrk strtoul])
-
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_REALLOC
+AC_CHECK_FUNCS([alarm regcomp socket strcasecmp strchr strdup strerror strpbrk strtoul])
+
 AC_C_INLINE
 
 AC_CONFIG_FILES([Makefile src/Makefile])

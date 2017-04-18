@@ -45,6 +45,9 @@ static socket_t fd = -1;
 
 static int wait_for_io(int);
 static int socket_send(int, struct sockaddr_in *, void *, size_t);
+#ifdef SO_SNDBUF
+static int setup_sendbuffer(socket_t *, uint32_t);
+#endif
 
 /**
  * Creates and configure a raw socket.
@@ -103,39 +106,9 @@ void create_socket(void)
 #endif
   }
 
-  /* Taken from libdnet by Dug Song. */
 #ifdef SO_SNDBUF
-  /* Getting SO_SNDBUF. */
-  len = sizeof(n);
-
-  if ( getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
-  {
-#ifdef __HAVE_DEBUG__
-    fatal_error("Error getting socket buffer: \"%s\"", strerror(errno));
-#else
-    fatal_error("Error getting socket buffer");
+  setup_sendbuffer(&fd, n);
 #endif
-  }
-
-  /* Setting the maximum SO_SNDBUF in bytes.
-   * 128      =  1 Kib
-   * 10485760 = 80 Mib */
-  for (i = n + 128; i < 10485760; i += 128)
-  {
-    /* Setting SO_SNDBUF. */
-    if ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(uint32_t)) == -1 )
-    {
-      if (errno == ENOBUFS)
-        break;
-
-#ifdef __HAVE_DEBUG__
-      fatal_error("Error setting socket buffer: \"%s\"", strerror(errno));
-#else
-      fatal_error("Error setting socket buffer");
-#endif
-    }
-  }
-#endif /* SO_SNDBUF */
 
 #ifdef SO_BROADCAST
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
@@ -212,6 +185,47 @@ _Bool send_packet(const void *const buffer,
 
   return true;
 }
+
+#ifdef SO_SNDBUF
+/* Taken from libdnet by Dug Song. */
+int setup_sendbuffer(socket_t *fd, uint32_t n)
+{
+  uint32_t i;
+  socklen_t len;
+
+  /* Getting SO_SNDBUF. */
+  len = sizeof(n);
+
+  if ( getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
+  {
+#ifdef __HAVE_DEBUG__
+    fatal_error("Error getting socket buffer: \"%s\"", strerror(errno));
+#else
+    fatal_error("Error getting socket buffer");
+#endif
+  }
+
+  /* Setting the maximum SO_SNDBUF in bytes.
+   * 128      =  1 Kib
+   * 10485760 = 80 Mib */
+  for (i = n + 128; i < 10485760; i += 128)
+  {
+    /* Setting SO_SNDBUF. */
+    errno = 0;
+    if ( setsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(i)) == -1 )
+    {
+      if (errno == ENOBUFS)
+        break;
+
+#ifdef __HAVE_DEBUG__
+      fatal_error("Error setting socket buffer: \"%s\"", strerror(errno));
+#else
+      fatal_error("Error setting socket buffer");
+#endif
+    }
+  }
+}
+#endif /* SO_SNDBUF */
 
 /*** I realize that EINTR probably never happens, since the signals
      are marked as SA_RESTART, but I want to be sure! */
