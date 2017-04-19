@@ -1,14 +1,12 @@
-.TH T50 8 "April, 18th 2017" "5.6" "T50 man page"
+.TH T50 8 2017-08-18 "5.6" "T50 man page"
 .SH NAME
 T50 - network packet injector
 .SH SYNOPSIS
-.B t50
-[OPTIONS]... [--]
+.B t50 
+[options] [\-\-]
 .IR host[/CIDR]
 .SH DESCRIPTION
 Experimental mixed packet injector tool.
-.P
-T50 must to be executed as root.
 .SH OPTIONS
 .TP
 .BI host[/CIDR]
@@ -54,6 +52,8 @@ Flood test (impliced /24 CIDR. From 192.168.0.1 to 192.168.0.254):
 .IP
 # t50 192.168.0 --flood
 .SH NOTES
+Root privilege is mandatory to run t50.
+.P
 There are lots of options. Please, use -h or --help to see them.
 .SH BUGS
 As noted before, the host[/CIDR] argument sometimes is misinterpreted as an option.
@@ -66,7 +66,10 @@ Fernando Mercês
 .br
 Frederico Lamberti Pissarra
 .SH REPORTING BUGS
-Report t50 bugs at http://github.com/fredericopissarra/t50 or at t50-dev google group via t50-dev@googlegroups.com.
+Report bugs at 
+.UR http://\:github.com/\:fredericopissarra/\:t50
+t50 GitHub Repository
+.UE \ or at t50-dev google group via t50-dev@googlegroups.com.
 .SH COPYRIGHT
 Copyright © 2014 T50 developers.
 Licensed GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
