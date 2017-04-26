@@ -2962,7 +2962,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; CFLAGS="-O0 -g -D__HAVE_DEBUG__"
 else
-  CFLAGS="-O3 -DNDEBUG -fno-stack-protector";
+  CFLAGS="-O3 -s -DNDEBUG -fno-stack-protector";
 		case "${host_cpu}" in
 		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native";
 				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi

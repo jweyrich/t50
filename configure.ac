@@ -20,7 +20,7 @@ AC_CANONICAL_HOST
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
   [CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
-  [CFLAGS="-O3 -DNDEBUG -fno-stack-protector";
+  [CFLAGS="-O3 -s -DNDEBUG -fno-stack-protector";
 		case "${host_cpu}" in
 		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native"; 
 				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
