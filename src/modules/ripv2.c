@@ -115,7 +115,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
    */
   *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
-  *buffer.word_ptr++ = htons(__RND(co->rip.domain));
+  *buffer.word_ptr++ = __RND(co->rip.domain);
 
   /* DON'T NEED THIS */
   /* length = sizeof(struct udphdr) + RIP_HEADER_LENGTH; */
@@ -170,7 +170,7 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = co->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
-    *buffer.dword_ptr++ = htonl(__RND(co->rip.sequence));
+    *buffer.dword_ptr++ = __RND(co->rip.sequence);
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
   }
@@ -204,12 +204,12 @@ void ripv2(const struct config_options *const __restrict__ co, size_t *size)
    *   |                                                               |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  *buffer.word_ptr++ = htons(__RND(co->rip.family));
-  *buffer.word_ptr++ = htons(__RND(co->rip.tag));
-  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.address));
+  *buffer.word_ptr++ = __RND(co->rip.family);
+  *buffer.word_ptr++ = __RND(co->rip.tag);
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
   *buffer.inaddr_ptr++ = NETMASK_RND(htonl(co->rip.netmask));
-  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.next_hop));
-  *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
+  *buffer.inaddr_ptr++ = __RND(co->rip.metric);
 
   /*
    * XXX Playing with:

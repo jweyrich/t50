@@ -102,7 +102,7 @@ struct iphdr *gre_encapsulation(void *buffer,
     /* GRE KEY Header structure making a pointer to IP Header structure. */
     struct gre_key_hdr *gre_key = ptr;
 
-    gre_key->key = htonl(__RND(co->gre.key));
+    gre_key->key = __RND(co->gre.key);
 
     ptr = gre_key + 1;
   }
@@ -113,7 +113,7 @@ struct iphdr *gre_encapsulation(void *buffer,
     /* GRE SEQUENCE Header structure making a pointer to IP Header structure. */
     struct gre_seq_hdr *gre_seq = ptr;
 
-    gre_seq->sequence = htonl(__RND(co->gre.sequence));
+    gre_seq->sequence = __RND(co->gre.sequence);
 
     ptr = gre_seq + 1;
   }

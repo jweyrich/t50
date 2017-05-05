@@ -99,22 +99,22 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* TCP Header structure making a pointer to IP Header structure. */
   tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + greoptlen);
-  tcp->source  = htons(IPPORT_RND(co->source));
-  tcp->dest    = htons(IPPORT_RND(co->dest));
+  tcp->source  = IPPORT_RND(co->source);
+  tcp->dest    = IPPORT_RND(co->dest);
   tcp->res1    = TCP_RESERVED_BITS;
   tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
   tcp->fin     = co->tcp.fin;
   tcp->syn     = co->tcp.syn;
-  tcp->seq     = co->tcp.syn ? htonl(__RND(co->tcp.sequence)) : 0;
+  tcp->seq     = co->tcp.syn ? __RND(co->tcp.sequence) : 0;
   tcp->rst     = co->tcp.rst;
   tcp->psh     = co->tcp.psh;
   tcp->ack     = co->tcp.ack;
-  tcp->ack_seq = co->tcp.ack ? htonl(__RND(co->tcp.acknowledge)) : 0;
+  tcp->ack_seq = co->tcp.ack ? __RND(co->tcp.acknowledge) : 0;
   tcp->urg     = co->tcp.urg;
-  tcp->urg_ptr = co->tcp.urg ? htons(__RND(co->tcp.urg_ptr)) : 0;
+  tcp->urg_ptr = co->tcp.urg ? __RND(co->tcp.urg_ptr) : 0;
   tcp->ece     = co->tcp.ece;
   tcp->cwr     = co->tcp.cwr;
-  tcp->window  = htons(__RND(co->tcp.window));
+  tcp->window  = __RND(co->tcp.window);
   tcp->check   = 0; /* Needed 'cause of cksum() call */
 
   buffer.ptr = tcp + 1;
@@ -136,7 +136,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   {
     *buffer.byte_ptr++ = TCPOPT_MSS;
     *buffer.byte_ptr++ = TCPOLEN_MSS;
-    *buffer.word_ptr++ = htons(__RND(co->tcp.mss));
+    *buffer.word_ptr++ = __RND(co->tcp.mss);
   }
 
   /*
@@ -202,8 +202,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
-    *buffer.dword_ptr++ = htonl(__RND(co->tcp.tsval));
-    *buffer.dword_ptr++ = htonl(__RND(co->tcp.tsecr));
+    *buffer.dword_ptr++ = __RND(co->tcp.tsval);
+    *buffer.dword_ptr++ = __RND(co->tcp.tsecr);
   }
 
   /*
@@ -225,7 +225,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   {
     *buffer.byte_ptr++ = TCPOPT_CC;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(__RND(co->tcp.cc));
+    *buffer.dword_ptr++ = __RND(co->tcp.cc);
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -238,7 +238,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
      *  value from the sender's TCB.
      */
     tcp->syn     = true;
-    tcp->seq     = htonl(__RND(co->tcp.sequence));
+    tcp->seq     = __RND(co->tcp.sequence);
   }
 
   /*
@@ -272,12 +272,12 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   {
     *buffer.byte_ptr++  = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++  = TCPOLEN_CC;
-    *buffer.dword_ptr++ = htonl(co->tcp.cc_new ?
-                                __RND(co->tcp.cc_new) :
-                                __RND(co->tcp.cc_echo));
+    *buffer.dword_ptr++ = co->tcp.cc_new ?
+                            __RND(co->tcp.cc_new) :
+                            __RND(co->tcp.cc_echo);
 
     tcp->syn = true;
-    tcp->seq = htonl(__RND(co->tcp.sequence));
+    tcp->seq = __RND(co->tcp.sequence);
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -303,7 +303,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
        * from the initial SYN.
        */
       tcp->ack     = true;
-      tcp->ack_seq = htonl(__RND(co->tcp.acknowledge));
+      tcp->ack_seq = __RND(co->tcp.acknowledge);
     }
   }
 
@@ -355,8 +355,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   {
     *buffer.byte_ptr++  = TCPOPT_SACK_EDGE;
     *buffer.byte_ptr++  = TCPOLEN_SACK_EDGE(1);
-    *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_left));
-    *buffer.dword_ptr++ = htonl(__RND(co->tcp.sack_right));
+    *buffer.dword_ptr++ = __RND(co->tcp.sack_left);
+    *buffer.dword_ptr++ = __RND(co->tcp.sack_right);
   }
 
   /*

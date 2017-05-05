@@ -92,11 +92,11 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
   eigrp              = (struct eigrp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
   eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __RND(co->eigrp.opcode);
-  eigrp->flags       = htonl(__RND(co->eigrp.flags));
-  eigrp->sequence    = htonl(__RND(co->eigrp.sequence));
+  eigrp->flags       = __RND(co->eigrp.flags);
+  eigrp->sequence    = __RND(co->eigrp.sequence);
   eigrp->acknowledge = co->eigrp.type == EIGRP_TYPE_SEQUENCE ?
-                       htonl(__RND(co->eigrp.acknowledge)) : 0;
-  eigrp->as          = htonl(__RND(co->eigrp.as));
+                       __RND(co->eigrp.acknowledge) : 0;
+  eigrp->as          = __RND(co->eigrp.as);
   eigrp->check       = 0;
 
   buffer.ptr = eigrp + 1;
@@ -154,7 +154,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.word_ptr++ = htons(co->eigrp.length ? co->eigrp.length : EIGRP_TLEN_AUTH);
       *buffer.word_ptr++ = htons(AUTH_TYPE_HMACMD5);
       *buffer.word_ptr++ = htons(stemp);
-      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.key_id));
+      *buffer.dword_ptr++ = __RND(co->eigrp.key_id);
 
       for (counter = 0; counter < EIGRP_PADDING_BLOCK; counter++)
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
@@ -260,7 +260,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
                                   EIGRP_TLEN_INTERNAL :
                                   EIGRP_TLEN_EXTERNAL) +
                                  EIGRP_DADDR_LENGTH(prefix));
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.next_hop));
+      *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.next_hop);
 
       /*
        * The only difference between Internal and External Routes TLVs is 20
@@ -268,10 +268,10 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
        */
       if (co->eigrp.type == EIGRP_TYPE_EXTERNAL)
       {
-        *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.src_router));
-        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.src_as));
-        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.tag));
-        *buffer.dword_ptr++ = htonl(__RND(co->eigrp.proto_metric));
+        *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.src_router);
+        *buffer.dword_ptr++ = __RND(co->eigrp.src_as);
+        *buffer.dword_ptr++ = __RND(co->eigrp.tag);
+        *buffer.dword_ptr++ = __RND(co->eigrp.proto_metric);
         *buffer.word_ptr++ = co->eigrp.opcode == EIGRP_OPCODE_UPDATE ?
                              FIELD_MUST_BE_ZERO : htons(0x0004);
         *buffer.byte_ptr++ = __RND(co->eigrp.proto_id);
@@ -280,9 +280,18 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 
       dest = INADDR_RND(co->eigrp.dest);
 
-      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.delay));
-      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.bandwidth));
-      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.mtu) << 8);   // ?
+      *buffer.dword_ptr++ = __RND(co->eigrp.delay);
+      *buffer.dword_ptr++ = __RND(co->eigrp.bandwidth);
+      {
+        uint32_t temp;
+
+        if (co->eigrp.mtu)
+          temp = co->eigrp.mtu;
+        else
+          temp = RANDOM();
+
+        *buffer.dword_ptr++ = htonl(temp << 8); // Lower bits always zero?
+      }
       *buffer.byte_ptr++ = __RND(co->eigrp.hop_count);
       *buffer.byte_ptr++ = __RND(co->eigrp.reliability);
       *buffer.byte_ptr++ = __RND(co->eigrp.load);
@@ -393,7 +402,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
           *buffer.word_ptr++ = htons(co->eigrp.length ?
                                      co->eigrp.length : EIGRP_TLEN_SEQUENCE);
           *buffer.byte_ptr++ = sizeof(co->eigrp.address);
-          *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->eigrp.address));
+          *buffer.inaddr_ptr++ = INADDR_RND(co->eigrp.address);
 
           /*
            * Enhanced Interior Gateway Routing Protocol (EIGRP)
@@ -411,7 +420,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
           *buffer.word_ptr++ = htons(EIGRP_TYPE_MULTICAST);
           *buffer.word_ptr++ = htons(co->eigrp.length ?
                                      co->eigrp.length : EIGRP_TLEN_MULTICAST);
-          *buffer.dword_ptr++ = htonl(__RND(co->eigrp.multicast));
+          *buffer.dword_ptr++ = __RND(co->eigrp.multicast);
         }
       }
     }

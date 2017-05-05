@@ -6,6 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.6.11 - May 8th, 2017
+ * __RND, IPPORT_RND and IPADDR_RND macros now will only respect endianess if
+   the returning value is not RANDOM.
+
 T50 5.6.10 - May 5th, 2017
  * Changed the Linear Congruential Pseudo Number Generator by XorShift128+.
 

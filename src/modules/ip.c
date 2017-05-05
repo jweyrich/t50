@@ -64,10 +64,10 @@ struct iphdr *ip_header(void *buffer,
   /* FIXME: Is it necessary to fill tot_len when IP_HDRINCL is used? */
   ip->tot_len  = htons(packet_size);
 
-  ip->id       = htons(__RND(co->ip.id));
+  ip->id       = __RND(co->ip.id);
   ip->ttl      = co->ip.ttl;
   ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
-  ip->saddr    = htonl(INADDR_RND(co->ip.saddr));
+  ip->saddr    = INADDR_RND(co->ip.saddr);
   ip->daddr    = co->ip.daddr;    // FIXME: Is this already BIG ENDIAN?
   ip->check    = 0;               // NOTE: it will be calculated by the kernel!
 

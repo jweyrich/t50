@@ -67,15 +67,15 @@ void icmp(const struct config_options *const __restrict__ co, size_t *size)
   icmp                   = (struct icmphdr *)((unsigned char *)(ip + 1) + greoptlen);
   icmp->type             = co->icmp.type;
   icmp->code             = co->icmp.code;
-  icmp->un.echo.id       = htons(__RND(co->icmp.id));
-  icmp->un.echo.sequence = htons(__RND(co->icmp.sequence));
+  icmp->un.echo.id       = __RND(co->icmp.id);
+  icmp->un.echo.sequence = __RND(co->icmp.sequence);
 
   if (co->icmp.type == ICMP_REDIRECT)
     switch (co->icmp.code)
     {
     case ICMP_REDIR_HOST:
     case ICMP_REDIR_NET:
-      icmp->un.gateway = htonl(INADDR_RND(co->icmp.gateway));
+      icmp->un.gateway = INADDR_RND(co->icmp.gateway);
     }
 
   icmp->checksum = 0;

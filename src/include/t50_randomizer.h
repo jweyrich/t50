@@ -4,9 +4,24 @@
 #include <stdint.h>
 
 /* Randomizer macros and function */
-#define __RND(foo)      (((foo) == 0) ? RANDOM() : (foo))
-#define INADDR_RND(foo) __RND((foo))
-#define IPPORT_RND(foo) __RND((foo))
+/* NOTE: int8_t, int16_t, int32_t are synonimous of
+         char, short and int. */
+/* This macro will use htonX functions only if v is !0. */
+/* Sometipes, v is a bitfield and NOT compatible with primitive types.
+   Because of this, the default selector is necessary! */
+/* RANDOM call results have not endianess! */
+#define __RND(v) _Generic((v),               \
+  _Bool: (!!(v) ? (v) : RANDOM()),           \
+  int8_t: (!!(v) ? (v) : RANDOM()),          \
+  int16_t: (!!(v) ? htons((v)) : RANDOM()),  \
+  int32_t: (!!(v) ? htonl((v)) : RANDOM()),  \
+  uint8_t: (!!(v) ? (v) : RANDOM()),         \
+  uint16_t: (!!(v) ? htons((v)) : RANDOM()), \
+  uint32_t: (!!(v) ? htonl((v)) : RANDOM()), \
+  default: (!!(v) ? (v) : RANDOM()))
+
+#define INADDR_RND(v) __RND((v))
+#define IPPORT_RND(v) __RND((v))
 
 uint32_t RANDOM(void);
 void     SRANDOM(void);

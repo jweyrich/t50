@@ -65,8 +65,8 @@ void udp(const struct config_options *const __restrict__ co, size_t *size)
 
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
-  udp->source = htons(IPPORT_RND(co->source));
-  udp->dest   = htons(IPPORT_RND(co->dest));
+  udp->source = IPPORT_RND(co->source);
+  udp->dest   = IPPORT_RND(co->dest);
   udp->len    = htons(sizeof(struct udphdr));
   udp->check  = 0;    /* needed 'cause of cksum(), below! */
 

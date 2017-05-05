@@ -104,12 +104,12 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
   *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.word_ptr++ = htons(__RND(co->rip.family));
+  *buffer.word_ptr++ = __RND(co->rip.family);
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->rip.address));
+  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = htonl(__RND(co->rip.metric));
+  *buffer.inaddr_ptr++ = __RND(co->rip.metric);
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo = buffer.ptr;

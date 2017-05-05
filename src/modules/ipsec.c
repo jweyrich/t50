@@ -106,8 +106,8 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
                      (sizeof(struct ip_auth_hdr) / 4) + 1;   /* FIX: The previous line was:
                                                  (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv); */
 
-  ip_auth->spi     = htonl(__RND(co->ipsec.ah_spi));
-  ip_auth->seq_no  = htonl(__RND(co->ipsec.ah_sequence));
+  ip_auth->spi     = __RND(co->ipsec.ah_spi);
+  ip_auth->seq_no  = __RND(co->ipsec.ah_sequence);
 
   buffer.ptr = ip_auth + 1;
 
@@ -117,8 +117,8 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
   ip_esp         = buffer.ptr;
-  ip_esp->spi    = htonl(__RND(co->ipsec.esp_spi));
-  ip_esp->seq_no = htonl(__RND(co->ipsec.esp_sequence));
+  ip_esp->spi    = __RND(co->ipsec.esp_spi);
+  ip_esp->seq_no = __RND(co->ipsec.esp_sequence);
 
   buffer.ptr = ip_esp + 1;
 

@@ -111,7 +111,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
                         sizeof(struct ospf_hdr)      +
                         sizeof(struct ospf_auth_hdr) +
                         ospf_length);
-  ospf->rid     = htonl(INADDR_RND(co->ospf.rid));
+  ospf->rid     = INADDR_RND(co->ospf.rid);
   ospf->aid     = htonl(co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid);
   ospf->check   = 0;
 
@@ -138,7 +138,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
     ospf->autype        = htons(AUTH_TYPE_HMACMD5);
     ospf_auth->key_id   = __RND(co->ospf.key_id);
     ospf_auth->length   = auth_hmac_md5_len(co->ospf.auth);
-    ospf_auth->sequence = htonl(__RND(co->ospf.sequence));
+    ospf_auth->sequence = __RND(co->ospf.sequence);
   }
   else
   {
@@ -190,17 +190,17 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
      *  |                              ...                              |
      */
     *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-    *buffer.word_ptr++ = htons(__RND(co->ospf.hello_interval));
+    *buffer.word_ptr++ = __RND(co->ospf.hello_interval);
     *buffer.byte_ptr++ = ospf_options;
     *buffer.byte_ptr++ = __RND(co->ospf.hello_priority);
-    *buffer.dword_ptr++ = htonl(__RND(co->ospf.hello_dead));
-    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_design));
-    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.hello_backup));
+    *buffer.dword_ptr++ = __RND(co->ospf.hello_dead);
+    *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_design);
+    *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.hello_backup);
 
     /* Dealing with neighbor address(es). */
     /* NOTE: Assume co->ospf.neighbor > 0. */
     for (counter = 0; likely(counter < co->ospf.neighbor); counter++)
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.address[counter]));
+      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.address[counter]);
     break;
 
   case OSPF_TYPE_DD:
@@ -227,10 +227,10 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
      *  |                                                               |
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    *buffer.word_ptr++ = htons(__RND(co->ospf.dd_mtu));
+    *buffer.word_ptr++ = __RND(co->ospf.dd_mtu);
     *buffer.byte_ptr++ = ospf_options;
     *buffer.byte_ptr++ = __RND(co->ospf.dd_dbdesc);
-    *buffer.dword_ptr++ = htonl(__RND(co->ospf.dd_sequence));
+    *buffer.dword_ptr++ = __RND(co->ospf.dd_sequence);
     break;
 
   case OSPF_TYPE_LSREQUEST:
@@ -250,8 +250,8 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);
-    *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_lsid));
-    *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_router));
+    *buffer.dword_ptr++ = __RND(co->ospf.lsa_lsid);
+    *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_router);
     break;
 
   case OSPF_TYPE_LSUPDATE:
@@ -303,11 +303,11 @@ build_ospf_lsupdate:
       *buffer.byte_ptr++ = __RND(co->ospf.lsa_flags);
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
       *buffer.word_ptr++ = htons(1);
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_link_id));
+      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_link_id);
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.lsa_link_data);
       *buffer.byte_ptr++ = __RND(co->ospf.lsa_link_type);
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.word_ptr++ = htons(__RND(co->ospf.lsa_metric));
+      *buffer.word_ptr++ = __RND(co->ospf.lsa_metric);
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
@@ -334,7 +334,7 @@ build_ospf_lsupdate:
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_attached));
+      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_attached);
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum  ?
@@ -363,7 +363,16 @@ build_ospf_lsupdate:
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);   // ?
+      {
+        uint32_t temp;
+
+        if (co->ospf.lsa_metric)
+          temp = co->ospf.lsa_metric;
+        else
+          temp = RANDOM();
+
+        *buffer.dword_ptr++ = htonl(temp << 8); // Lower bits of "metric" are always 0?
+      }
       buffer.ptr--; /* hack! */
 
       /* Computing the checksum. */
@@ -401,10 +410,19 @@ build_ospf_lsupdate:
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
       *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);   // ?
+      {
+        uint32_t temp;
+
+        if (co->ospf.lsa_metric)
+          temp = co->ospf.lsa_metric;
+        else
+          temp = RANDOM();
+
+        *buffer.dword_ptr++ = htonl(temp << 8);   // lower bits always zero?
+      }
       buffer.ptr--;   /* hack! */
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_forward));
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
+      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_forward);
+      *buffer.dword_ptr++ = __RND(co->ospf.lsa_external);
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
@@ -430,8 +448,8 @@ build_ospf_lsupdate:
        *  |                         Vertex ID                             |
        *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.vertex_type));
-      *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.vertex_id));
+      *buffer.dword_ptr++ = __RND(co->ospf.vertex_type);
+      *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.vertex_id);
 
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
@@ -496,7 +514,7 @@ build_ospf_lsupdate:
       /* OSPF LSA Header structure making a pointer to Checksum. */
 build_ospf_lsa:
       ospf_lsa             = buffer.ptr;
-      ospf_lsa->age        = htons(__RND(co->ospf.lsa_age));
+      ospf_lsa->age        = __RND(co->ospf.lsa_age);
 
       /* Deciding whether age or not. */
       if (co->ospf.lsa_dage)
@@ -504,9 +522,9 @@ build_ospf_lsa:
 
       ospf_lsa->type       = co->ospf.lsa_type;
       ospf_lsa->options    = ospf_options;
-      ospf_lsa->lsid       = htonl(INADDR_RND(co->ospf.lsa_lsid));
-      ospf_lsa->router     = htonl(INADDR_RND(co->ospf.lsa_router));
-      ospf_lsa->sequence   = htonl(__RND(co->ospf.lsa_sequence));
+      ospf_lsa->lsid       = INADDR_RND(co->ospf.lsa_lsid);
+      ospf_lsa->router     = INADDR_RND(co->ospf.lsa_router);
+      ospf_lsa->sequence   = __RND(co->ospf.lsa_sequence);
       ospf_lsa->check      = 0;
 
       buffer.ptr = ospf_lsa + 1;
@@ -640,7 +658,7 @@ build_ospf_lsa:
          */
         *buffer.word_ptr++ = htons(OSPF_TLV_CRYPTO);
         *buffer.word_ptr++ = htons(OSPF_LEN_CRYPTO);
-        *buffer.dword_ptr++ = htonl(__RND(co->ospf.sequence));
+        *buffer.dword_ptr++ = __RND(co->ospf.sequence);
 
         /*
          * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.

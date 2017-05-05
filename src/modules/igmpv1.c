@@ -71,7 +71,7 @@ void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
   igmpv1        = (struct igmphdr *)((unsigned char *)(ip + 1) + greoptlen);
   igmpv1->type  = co->igmp.type;
   igmpv1->code  = co->igmp.code;
-  igmpv1->group = htonl(INADDR_RND(co->igmp.group));
+  igmpv1->group = INADDR_RND(co->igmp.group);
   igmpv1->csum  = 0;  /* Needed 'cause cksum() call, below! */
 
   /* Computing the checksum. */

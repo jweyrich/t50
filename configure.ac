@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [10])
+define([VERSION_FIX],   [11])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
@@ -19,8 +19,8 @@ AC_CANONICAL_HOST
 
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
-  [CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
-  [CFLAGS="-O3 -s -DNDEBUG -fno-stack-protector";
+  [CFLAGS="-O0 -std=gnu11 -g -D__HAVE_DEBUG__"],
+  [CFLAGS="-O3 -std=gnu11 -s -DNDEBUG -fno-stack-protector";
 		case "${host_cpu}" in
 		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native"; 
 				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
