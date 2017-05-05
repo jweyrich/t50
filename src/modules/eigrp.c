@@ -282,7 +282,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 
       *buffer.dword_ptr++ = htonl(__RND(co->eigrp.delay));
       *buffer.dword_ptr++ = htonl(__RND(co->eigrp.bandwidth));
-      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.mtu) << 8);
+      *buffer.dword_ptr++ = htonl(__RND(co->eigrp.mtu) << 8);   // ?
       *buffer.byte_ptr++ = __RND(co->eigrp.hop_count);
       *buffer.byte_ptr++ = __RND(co->eigrp.reliability);
       *buffer.byte_ptr++ = __RND(co->eigrp.load);
