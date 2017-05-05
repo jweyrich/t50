@@ -577,7 +577,7 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
     *buffer.byte_ptr++ = RSVP_OBJECT_STYLE;
     *buffer.byte_ptr++ = 1;
     *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.style_opt) << 8);
+    *buffer.dword_ptr++ = htonl(__RND(co->rsvp.style_opt) << 8);  // ?
   }
 
   /* FIX: buffer.ptr alrealy points past the last byte writen on

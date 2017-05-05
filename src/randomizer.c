@@ -27,39 +27,24 @@
 #include <t50_errors.h>
 #include <t50_randomizer.h>
 
-#ifdef _EXPERIMENTAL_
+/* Arbitrary seeds. */
+static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
 
-  /* Arbitrary seeds. */
-  static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
+/* xorshift128+ 
 
-  /* xorshift128+ */
-  uint32_t RANDOM(void)
-  {
-    uint64_t s0 = _seed[1];
-    uint64_t s1 = _seed[0];
-    _seed[0] = s0;
+   We don't have to worry about the lower bits
+   been less random than the upper. */
+uint32_t RANDOM(void)
+{
+  uint64_t s0 = _seed[1];
+  uint64_t s1 = _seed[0];
+  _seed[0] = s0;
 
-    s1 ^= s1 << 23;
-    _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
+  s1 ^= s1 << 23;
+  _seed[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
 
-    return (_seed[1] + s0) >> 32;
-  }
-#else
-  static uint64_t _seed = 0xB16B00B5;  /* An arbitrary "random" initial seed. */
-
-  /** Linear Congruential Pseudo Random Number Generator.
-   *
-   *  This is the same as rand(), but fixes the problem the upper bit.
-   *  RAND_MAX is 31 bits long, not 32! And this value is plataform dependent!
-   *
-   *  @return uint32_t pseudo-random number.
-   */
-  uint32_t RANDOM(void)
-  {
-    // Note _seed is a 64 bit unsigned integer!
-    return (_seed = 0x41c64e6dUL * _seed + 12345UL) >> 32;  /* Same parameters as in glibc! */
-  }
-#endif
+  return (_seed[1] + s0);
+}
 
 /**
  * Gets an random seed from /dev/random.
@@ -75,13 +60,7 @@ void SRANDOM(void)
     fatal_error("Cannot open /dev/random to get initial random seed.");
 
   /* NOTE: initializes this code "global" _seed var. */
-  r = read(_fd, &_seed,
-#ifdef _EXPERIMENTAL_
-           2*sizeof(uint64_t)   // xorshift128 has a 128bit seed!
-#else
-           sizeof(uint64_t)
-#endif
-      );
+  r = read(_fd, &_seed, sizeof(_seed));
 
   close(_fd);
 
@@ -101,7 +80,7 @@ uint32_t NETMASK_RND(uint32_t foo)
 {
   if (foo == INADDR_ANY)
   {
-    uint32_t t = RANDOM() >> 27; /* Upper 5 bits are more random! */
+    uint32_t t = RANDOM() & 0x1f;
     /* Here t is something between 0 and 31. */ 
 
     /* NOTE: This is faster than 't %= 23'. */

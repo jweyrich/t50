@@ -363,7 +363,7 @@ build_ospf_lsupdate:
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
       *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);   // ?
       buffer.ptr--; /* hack! */
 
       /* Computing the checksum. */
@@ -401,7 +401,7 @@ build_ospf_lsupdate:
        */
       *buffer.inaddr_ptr++ = NETMASK_RND(co->ospf.netmask);
       *buffer.byte_ptr++ = (co->ospf.lsa_larger ? 0x80 : 0);
-      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);
+      *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_metric) << 8);   // ?
       buffer.ptr--;   /* hack! */
       *buffer.inaddr_ptr++ = htonl(INADDR_RND(co->ospf.lsa_forward));
       *buffer.dword_ptr++ = htonl(__RND(co->ospf.lsa_external));
