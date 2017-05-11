@@ -48,8 +48,8 @@ static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessar
 
 _NOINLINE static void               initialize(const struct config_options *);
 _NOINLINE static modules_table_t *  selectProtocol(const struct config_options * const, int *);
-_NOINLINE static const char *       get_ordinal_suffix(unsigned);
-_NOINLINE static const char *       get_month(unsigned);
+_NOINLINE static const char * const get_ordinal_suffix(unsigned);
+_NOINLINE static const char * const get_month(unsigned);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -299,32 +299,24 @@ void initialize(const struct config_options *co)
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
-const char *get_ordinal_suffix(unsigned n)
+const char * const get_ordinal_suffix(unsigned int n)
 {
-  static const char *suffixes[] = { "st", "nd", "rd", "th" };
+  static const char * const suffixes[] = { "st", "nd", "rd", "th" };
 
-  /* FIX: 11, 12 & 13 have 'th' suffix, not 'st, nd or rd'. */
-  if ((n < 11) || (n > 13))
-    switch (n % 10)
-    {
-    case 1:
-      return suffixes[0];
-    case 2:
-      return suffixes[1];
-    case 3:
-      return suffixes[2];
-    }
-
-  return suffixes[3];
+  if (n >= 11 && n <= 13) return suffixes[3];
+ 
+  // A little bit obfuscated, huh?
+  return suffixes["\003\000\001\002\003"
+                  "\003\003\003\003\003"[n % 10]];
 }
 
 /* Auxiliary function to return the [constant] string for a month.
    NOTE: 'n' must be between 0 and 11.
    NOTE: This routine is here just 'cause we need months in english. */
-const char *get_month(unsigned n)
+const char * const get_month(unsigned n)
 {
   /* Months */
-  static const char *const months[] =
+  static const char * const months[] =
   {
     "Jan", "Feb", "Mar", "Apr", "May",  "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov",  "Dec"
