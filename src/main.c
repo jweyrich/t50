@@ -301,13 +301,13 @@ void initialize(const struct config_options *co)
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
 const char * const get_ordinal_suffix(unsigned int n)
 {
-  static const char * const suffixes[] = { "st", "nd", "rd", "th" };
+  static const char * const suffixes[] = { "th", "st", "nd", "rd" };
 
-  if (n >= 11 && n <= 13) return suffixes[3];
+  if (n >= 11 && n <= 13) return suffixes[0];
  
   // A little bit obfuscated, huh?
-  return suffixes["\003\000\001\002\003"
-                  "\003\003\003\003\003"[n % 10]];
+  return suffixes["\000\001\002\003\000"
+                  "\000\000\000\000\000"[n % 10]];
 }
 
 /* Auxiliary function to return the [constant] string for a month.
