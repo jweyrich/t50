@@ -39,7 +39,7 @@ void tcp_help(void)
   printf("TCP Options:\n"
          "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
-         "    --data-offset NUM         TCP data offset                  (default %d)\n"
+         "    --data-offset NUM         TCP data offset                  (default %zu)\n"
          " -F,--fin                     TCP FIN flag                     (default OFF)\n"
          " -S,--syn                     TCP SYN flag                     (default OFF)\n"
          " -R,--rst                     TCP RST flag                     (default OFF)\n"
@@ -63,7 +63,7 @@ void tcp_help(void)
          "    --auth-key-id NUM         TCP-AO authentication key ID     (default 1)\n"
          "    --auth-next-key NUM       TCP-AO authentication next key   (default 1)\n"
          "    --nop                     TCP No-Operation                 (default EOL)\n\n",
-         (int)(sizeof(struct tcphdr) / 4));
+         (sizeof(struct tcphdr) / 4));
 }
 
 /** DCCP only options help. */

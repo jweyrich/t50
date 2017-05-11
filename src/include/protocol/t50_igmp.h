@@ -28,6 +28,7 @@
 #define igmpv3_hdr_len(foo, bar) \
   ((((foo) == IGMPV3_HOST_MEMBERSHIP_REPORT) ? \
     sizeof(struct igmpv3_report) + sizeof(struct igmpv3_grec) : \
-    sizeof(struct igmpv3_query)) + IGMPV3_TLEN_NSRCS((bar)))
+    sizeof(struct igmpv3_query)) + \
+   IGMPV3_TLEN_NSRCS((bar)))
 
 #endif  /* __IGMP_H */

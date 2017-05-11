@@ -46,7 +46,7 @@ uint16_t cksum(void *data, size_t length)
 
   /* Is there a single byte remaining? */
   if (rem)
-    sum += *(unsigned char *)p;
+    sum += *(uint8_t *)p;
 
   /* Accumulate 16 bits carry-outs.*/
   while (sum >> 16)
@@ -54,27 +54,3 @@ uint16_t cksum(void *data, size_t length)
 
   return ~sum;
 }
-/*
-  This could be implemented (x86-64) as:
-
-  cksum:
-    xor eax,eax
-    mov ecx,esi
-    shr ecx,1
-  .loop:
-    jz  .loop_end
-    mov bx,[rdi]
-    add ax,bx
-    adc ax,0
-    add rdi,2
-    dec ecx
-    jmp .loop
-  .loop_end:
-    test esi,1
-    jz  .end
-    movzx bx,byte [rdi]
-    add ax,bx
-    adc ax,0
-  .end:
-    ret    
-*/

@@ -84,7 +84,7 @@ typedef void (*module_func_ptr_t)(const struct config_options *const __restrict_
 typedef struct
 {
   int protocol_id;
-  char *acronym;
+  char *name;
   char *description;
   module_func_ptr_t func;
   int *valid_options;
@@ -92,7 +92,7 @@ typedef struct
 
 #define BEGIN_MODULES_TABLE modules_table_t mod_table[] = {
 #define END_MODULES_TABLE { 0, NULL, NULL, NULL, NULL } };
-#define MODULE_ENTRY(id,acronym,descr,func) { (id), acronym, descr, func, func ## _validopts },
+#define MODULE_ENTRY(id,name,descr,func) { (id), name, descr, func, func ## _validopts },
 
 #define VALID_OPTIONS_TABLE(func, ...) static int func ## _validopts[] = { __VA_ARGS__, 0 };
 

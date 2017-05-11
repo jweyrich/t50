@@ -32,8 +32,8 @@
     T50 cidr structure. */
 struct cidr
 {
-  uint32_t  hostid;                 /* hosts identifiers           */
-  in_addr_t __1st_addr;             /* first IP address            */
+  uint32_t  hostid;       /* hosts identifiers */
+  in_addr_t __1st_addr;   /* first IP address  */
 };
 
 struct cidr *config_cidr(const struct config_options * const __restrict__);

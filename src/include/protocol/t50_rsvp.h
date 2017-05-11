@@ -56,7 +56,7 @@
  *     |                                                       |
  *     +-------------+-------------+-------------+-------------+
  */
-#define RSVP_OBJECT_HEADER_LENGTH (sizeof(uint16_t) + (sizeof(uint8_t) * 2))
+#define RSVP_OBJECT_HEADER_LENGTH sizeof(uint32_t)
 
 /* RSVP Object Class */
 #define RSVP_OBJECT_SESSION         1

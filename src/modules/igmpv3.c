@@ -96,10 +96,10 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
-    igmpv3_report->csum     = co->bogus_csum ?
-                              RANDOM() :
-                              cksum(igmpv3_report,
-                                    buffer.ptr - (void *)igmpv3_report);
+    igmpv3_report->csum = co->bogus_csum ?
+                          RANDOM() :
+                          cksum(igmpv3_report,
+                                buffer.ptr - (void *)igmpv3_report);
   }
   else
   {
@@ -122,10 +122,10 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
-    igmpv3_query->csum     = co->bogus_csum ?
-                             RANDOM() :
-                             cksum(igmpv3_query,
-                                   buffer.ptr - (void *)igmpv3_query);
+    igmpv3_query->csum = co->bogus_csum ?
+                         RANDOM() :
+                         cksum(igmpv3_query,
+                               buffer.ptr - (void *)igmpv3_query);
   }
 
   /* GRE Encapsulation takes place. */

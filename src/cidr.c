@@ -85,7 +85,7 @@ struct cidr *config_cidr(const struct config_options * const __restrict__ co)
     // This will work as if 32 bits.
     // 31 bits: 0
     //
-    // hostid == 0 means: use the address as is!
+    // hostid == 0 means: use the address as it is!
     //
     cidr.hostid = (1U << (32 - co->bits)) - 2U;
 
@@ -105,7 +105,7 @@ struct cidr *config_cidr(const struct config_options * const __restrict__ co)
   }
   else
   {
-    cidr.hostid = 0;    // means "no random address".
+    cidr.hostid = 0;    // means "not random address".
     cidr.__1st_addr = ntohl(co->ip.daddr);
   }
 

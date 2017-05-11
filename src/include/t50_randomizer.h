@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#if !defined(__GNUC__) || (__STDC_VERSION__ < 201112)
+#error "Need GCC with C11 standard support to compile!"
+#endif
+
 /* Randomizer macros and function */
 /* NOTE: int8_t, int16_t, int32_t are synonimous of
          char, short and int. */

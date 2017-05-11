@@ -42,8 +42,8 @@
 #define IPPORT_ANY 0
 
 /* Global common protocol definitions used by code */
-#define AUTH_TYPE_HMACNUL 0x0000
-#define AUTH_TYPE_HMACMD5 0x0002
+#define AUTH_TYPE_HMACNUL 0
+#define AUTH_TYPE_HMACMD5 2
 #define AUTH_TLEN_HMACMD5 16
 
 #define auth_hmac_md5_len(foo) ((foo) ? AUTH_TLEN_HMACMD5 : 0)

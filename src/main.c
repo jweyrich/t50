@@ -48,8 +48,8 @@ static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessar
 
 _NOINLINE static void               initialize(const struct config_options *);
 _NOINLINE static modules_table_t *  selectProtocol(const struct config_options * const, int *);
-_NOINLINE static const char * const get_ordinal_suffix(unsigned);
-_NOINLINE static const char * const get_month(unsigned);
+_NOINLINE static const char * const get_ordinal_suffix(unsigned int);
+_NOINLINE static const char * const get_month(unsigned int);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
   struct config_options *co;
   struct cidr           *cidr_ptr;
   modules_table_t       *ptbl;
-  int                   proto; /* Used on main loop. */
+  int                   proto;
   time_t                lt;
   struct tm             *tm;
 
@@ -74,10 +74,7 @@ int main(int argc, char *argv[])
   if (getuid())
     fatal_error("User must have root privilege to run.");
 
-  /* General initializations. */
   initialize(co);
-
-  /* create_socket() handles its own errors before returning. */
   create_socket();
 
   /* Calculates CIDR for destination address. */
@@ -89,10 +86,8 @@ int main(int argc, char *argv[])
   if (co->turbo)
   {
     /* if it's necessary to fork a new process... */
-    if ((co->ip.protocol == IPPROTO_T50 &&
-         co->threshold > (threshold_t)get_number_of_registered_modules()) ||
-        (co->ip.protocol != IPPROTO_T50 &&
-         co->threshold > 1))
+    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)get_number_of_registered_modules()) ||
+        (co->ip.protocol != IPPROTO_T50 && co->threshold > 1))
     {
       threshold_t new_threshold;
 
@@ -141,6 +136,8 @@ int main(int argc, char *argv[])
            tm->tm_sec);
   }
 
+  // SRANDOM is here because each process has its own
+  // random seed. Notice this is called after fork().
   SRANDOM();
 
   /* Preallocate packet buffer. */
@@ -150,18 +147,22 @@ int main(int argc, char *argv[])
   ptbl = selectProtocol(co, &proto);
 
   /* MAIN LOOP */
+  // OBS: flood means non stop injection.
+  //      threshold is the number of packets to inject.
   while (co->flood || co->threshold)
   {
-    /* Holds the actual packet size after module function call. */
+    /* Will hold the actual packet size after module function call. */
     size_t size;
 
     /* Set the destination IP address to RANDOM IP address. */
     co->ip.daddr = cidr_ptr->__1st_addr;
     if (cidr_ptr->hostid)
-      co->ip.daddr += RANDOM() % cidr_ptr->hostid;  /* FIXME: Shouldn't be +1? */
+      // cidr_ptr->hostid has bit 0=0. The remainder is always less
+      // then the divisor, so we need to add 1.
+      co->ip.daddr += RANDOM() % (cidr_ptr->hostid + 1);
     co->ip.daddr = htonl(co->ip.daddr);
 
-    /* Calls the 'module' function to build the packet. */
+    /* Finally, calls the 'module' function to build the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func(co, &size);
 
@@ -169,19 +170,19 @@ int main(int argc, char *argv[])
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
       fprintf(stderr, "[DEBUG] Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
-              ptbl->acronym, size);
+              ptbl->name, size);
 #endif
 
     /* Try to send the packet. */
     if (unlikely(!send_packet(packet, size, co)))
 #ifdef __HAVE_DEBUG__
-      error("Packet for protocol %s (%zu bytes long) not sent", ptbl->acronym, size);
+      error("Packet for protocol %s (%zu bytes long) not sent", ptbl->name, size);
     /* continue trying to send other packets on debug mode! */
 #else
       fatal_error("Unspecified error sending a packet");
 #endif
 
-    /* If protocol if 'T50', then get the next true protocol. */
+    /* If protocol is 'T50', then get the next true protocol. */
     if (proto == IPPROTO_T50)
       if ((++ptbl)->func == NULL)
         ptbl = mod_table;
@@ -194,9 +195,11 @@ int main(int argc, char *argv[])
   /* Show termination message only for parent process. */
   if (!IS_CHILD_PID(pid))
   {
+#ifdef __HAVE_TURBO__
     // NOTE: Notice that for a single process pid will be -1! */
     if (pid > 0)
     {
+      // Don't do this if child process is already dead!
       if (!child_is_dead)
       {
         /* Wait 5 seconds for the child to end... */
@@ -204,13 +207,17 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_DEBUG__
         fputs("\nWaiting for child process to end...\n", stderr);
 #endif
-        if (wait(NULL) > 0)
-          child_is_dead = 1;
+
+        /* SIGALRM will kill the child process if necessary! */
+        wait(NULL);
+        child_is_dead = 1;
+
         alarm(0);
       }
     }
+#endif
 
-    /* Finally we close the raw socket. */
+    /* Finally we close the raw socket. */ 
     close_socket();
 
     lt = time(NULL);
@@ -231,25 +238,23 @@ int main(int argc, char *argv[])
 }
 #pragma GCC diagnostic pop
 
-/* This function handles interruptions. */
+/* This function handles signal interrupts. */
 static void signal_handler(int signal)
 {
   /* NOTE: SIGALRM and SIGCHLD will happen only in parent process! */
-  if (signal == SIGALRM)
+  switch (signal)
   {
-    if (!IS_CHILD_PID(pid))   // to be sure...
-      kill(pid, SIGKILL);
-    return;
+    case SIGALRM:
+      if (!IS_CHILD_PID(pid))
+        kill(pid, SIGKILL);
+      return;
+
+    case SIGCHLD:
+      child_is_dead = 1;
+      return;
   }
 
-  /* Child process terminated? */
-  if (signal == SIGCHLD)
-  {
-    child_is_dead = 1;
-    return;
-  }
-
-  close_socket();
+  close_socket();   // AS_SAFE!
 
   /* The shell documentation (bash) specifies that a process,
      when exits because a signal, must return 128+signal#. */
@@ -313,7 +318,7 @@ const char * const get_ordinal_suffix(unsigned int n)
 /* Auxiliary function to return the [constant] string for a month.
    NOTE: 'n' must be between 0 and 11.
    NOTE: This routine is here just 'cause we need months in english. */
-const char * const get_month(unsigned n)
+const char * const get_month(unsigned int n)
 {
   /* Months */
   static const char * const months[] =

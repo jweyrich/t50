@@ -24,8 +24,8 @@
 #include <netinet/in.h>
 #include <t50_typedefs.h>
 
-#define IPPROTO_OSPF           89
 #define OSPFVERSION            2
+#define IPPROTO_OSPF           89
 
 /* OSPF Message Type */
 #define OSPF_TYPE_HELLO        1
@@ -34,11 +34,11 @@
 #define OSPF_TYPE_LSUPDATE     4
 #define OSPF_TYPE_LSACK        5
 
-#define OSPF_TLEN_HELLO        20
 #define OSPF_TLEN_NEIGHBOR(foo) ((foo) * sizeof(in_addr_t))
+#define OSPF_TLEN_LSUPDATE     4
 #define OSPF_TLEN_DD           8
 #define OSPF_TLEN_LSREQUEST    12
-#define OSPF_TLEN_LSUPDATE     4
+#define OSPF_TLEN_HELLO        20
 
 /* OSPF HELLO, DD and LSA Option */
 #define OSPF_OPTION_TOS       0x01
@@ -72,11 +72,11 @@
   (sizeof(struct ospf_lsa_hdr) + \
    ((foo) * sizeof(uint32_t)))
 
-#define LSA_TLEN_ROUTER        LSA_TLEN_GENERIC(4)
+#define LSA_TLEN_MULTICAST     LSA_TLEN_GENERIC(2)
 #define LSA_TLEN_NETWORK       LSA_TLEN_GENERIC(2)
 #define LSA_TLEN_SUMMARY       LSA_TLEN_GENERIC(2)
 #define LSA_TLEN_ASBR          LSA_TLEN_GENERIC(4)
-#define LSA_TLEN_MULTICAST     LSA_TLEN_GENERIC(2)
+#define LSA_TLEN_ROUTER        LSA_TLEN_GENERIC(4)
 #define LSA_TLEN_NSSA          LSA_TLEN_ASBR
 
 /* OSPF Router-LSA Flag */
@@ -204,14 +204,14 @@ struct ospf_auth_hdr
  */
 struct ospf_lsa_hdr
 {
-  uint16_t age;                    /* LSA age                     */
-  uint8_t  options;                /* LSA options                 */
-  uint8_t  type;                   /* LSA type                    */
-  in_addr_t lsid;                   /* LSA link state ID           */
-  in_addr_t router;                 /* LSA advertising router      */
-  uint32_t sequence;               /* LSA sequence number         */
-  uint16_t check;                  /* LSA checksum                */
-  uint16_t length;                 /* LSA length                  */
+  uint16_t age;       /* LSA age                */
+  uint8_t  options;   /* LSA options            */
+  uint8_t  type;      /* LSA type               */
+  in_addr_t lsid;     /* LSA link state ID      */
+  in_addr_t router;   /* LSA advertising router */
+  uint32_t sequence;  /* LSA sequence number    */
+  uint16_t check;     /* LSA checksum           */
+  uint16_t length;    /* LSA length             */
 };
 
 /**
@@ -233,8 +233,8 @@ struct ospf_lsa_hdr
  */
 struct ospf_lls_hdr
 {
-  uint16_t check;                  /* LLS checksum                */
-  uint16_t length;                 /* LLS length                  */
+  uint16_t check;     /* LLS checksum */
+  uint16_t length;    /* LLS length   */
 };
 
 #endif  /* __OSPF_H */

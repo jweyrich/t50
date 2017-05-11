@@ -672,11 +672,11 @@ void get_ip_protocol(struct config_options *co, char *arg)
     i = 0;
     ptbl = mod_table;
 
-    while (ptbl->acronym)
+    while (ptbl->name)
     {
       /* NOTE: it doesn't matter if protocol names are upper
                or lower case. */
-      if (!strcasecmp(ptbl->acronym, arg))
+      if (!strcasecmp(ptbl->name, arg))
       {
         co->ip.protoname = i;
         co->ip.protocol = ptbl->protocol_id;
@@ -1723,8 +1723,11 @@ void list_protocols(void)
   puts("List of supported protocols (--protocol):");
 
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
-    printf("\t% 2d - %s\t(%s)\n", i++, ptbl->acronym, ptbl->description);
+    printf("\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description);
 }
+
+/*--- Ok, this piece of code was, initially, an experiment.
+      I have to review this code and get rip of this regex. --- */
 
 /* POSIX Extended Regular Expression used to match IP addresses with optional CIDR. */
 #define IP_REGEX "^([1-2]*[0-9]{1,2})" \
@@ -1744,7 +1747,7 @@ void list_protocols(void)
     *((char *)(d) + (len)) = '\0'; \
   }
 
-/* Ok... this is nice and UGLY. */
+/* Ok... this is UGLY. */
 _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
 {
   regex_t re;
@@ -1951,7 +1954,7 @@ int check_threshold(const struct config_options *const __restrict__ co)
   if (co->threshold < minThreshold)
   {
     error("Protool %s cannot have threshold smaller than %d.",
-          mod_table[co->ip.protoname].acronym, minThreshold);
+          mod_table[co->ip.protoname].name, minThreshold);
     return !0;
   }
 

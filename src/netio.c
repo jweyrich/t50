@@ -45,6 +45,7 @@ static socket_t fd = -1;
 
 static int wait_for_io(int);
 static int socket_send(int, struct sockaddr_in *, void *, size_t);
+
 #ifdef SO_SNDBUF
 static int setup_sendbuffer(socket_t *, uint32_t);
 #endif
@@ -142,7 +143,7 @@ void close_socket(void)
   /* Close only if the descriptor is valid. */
   if (fd > 0)
   {
-    close(fd);
+    close(fd);    // AS_SAFE!
 
     /* Added to avoid multiple socket closing. */
     fd = -1;

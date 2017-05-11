@@ -645,14 +645,6 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
-host_os
-host_vendor
-host_cpu
-host
-build_os
-build_vendor
-build_cpu
-build
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -723,8 +715,8 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_silent_rules
-enable_debug
 enable_dependency_tracking
+enable_debug
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1347,10 +1339,6 @@ Program names:
   --program-prefix=PREFIX            prepend PREFIX to installed program names
   --program-suffix=SUFFIX            append SUFFIX to installed program names
   --program-transform-name=PROGRAM   run sed PROGRAM on installed program names
-
-System types:
-  --build=BUILD     configure for building on BUILD [guessed]
-  --host=HOST       cross-compile to build programs to run on HOST [BUILD]
 _ACEOF
 fi
 
@@ -1366,11 +1354,11 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-silent-rules   less verbose build output (undo: "make V=1")
   --disable-silent-rules  verbose build output (undo: "make V=0")
-  --enable-debug          Enable T50 debug information
   --enable-dependency-tracking
                           do not reject slow dependency extractors
   --disable-dependency-tracking
                           speeds up one-time build
+  --enable-debug          Enable T50 debug information
 
 Some influential environment variables:
   CC          C compiler command
@@ -2305,6 +2293,7 @@ ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
+
 ac_config_headers="$ac_config_headers src/include/configuration.h"
 
 am__api_version='1.15'
@@ -2886,90 +2875,8 @@ END
   fi
 fi
 
-# Make sure we can run config.sub.
-$SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
-  as_fn_error $? "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking build system type" >&5
-$as_echo_n "checking build system type... " >&6; }
-if ${ac_cv_build+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_build_alias=$build_alias
-test "x$ac_build_alias" = x &&
-  ac_build_alias=`$SHELL "$ac_aux_dir/config.guess"`
-test "x$ac_build_alias" = x &&
-  as_fn_error $? "cannot guess build type; you must specify one" "$LINENO" 5
-ac_cv_build=`$SHELL "$ac_aux_dir/config.sub" $ac_build_alias` ||
-  as_fn_error $? "$SHELL $ac_aux_dir/config.sub $ac_build_alias failed" "$LINENO" 5
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_build" >&5
-$as_echo "$ac_cv_build" >&6; }
-case $ac_cv_build in
-*-*-*) ;;
-*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5;;
-esac
-build=$ac_cv_build
-ac_save_IFS=$IFS; IFS='-'
-set x $ac_cv_build
-shift
-build_cpu=$1
-build_vendor=$2
-shift; shift
-# Remember, the first character of IFS is used to create $*,
-# except with old shells:
-build_os=$*
-IFS=$ac_save_IFS
-case $build_os in *\ *) build_os=`echo "$build_os" | sed 's/ /-/g'`;; esac
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking host system type" >&5
-$as_echo_n "checking host system type... " >&6; }
-if ${ac_cv_host+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test "x$host_alias" = x; then
-  ac_cv_host=$ac_cv_build
-else
-  ac_cv_host=`$SHELL "$ac_aux_dir/config.sub" $host_alias` ||
-    as_fn_error $? "$SHELL $ac_aux_dir/config.sub $host_alias failed" "$LINENO" 5
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_host" >&5
-$as_echo "$ac_cv_host" >&6; }
-case $ac_cv_host in
-*-*-*) ;;
-*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5;;
-esac
-host=$ac_cv_host
-ac_save_IFS=$IFS; IFS='-'
-set x $ac_cv_host
-shift
-host_cpu=$1
-host_vendor=$2
-shift; shift
-# Remember, the first character of IFS is used to create $*,
-# except with old shells:
-host_os=$*
-IFS=$ac_save_IFS
-case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
-
-
-
-# Check whether --enable-debug was given.
-if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug; CFLAGS="-O0 -std=gnu11 -g -D__HAVE_DEBUG__"
-else
-  CFLAGS="-O3 -std=gnu11 -s -DNDEBUG -fno-stack-protector";
-		case "${host_cpu}" in
-		i?386|x86_64) 	CFLAGS="$CFLAGS -march=native";
-				if grep -q '^flags.*:.*movbe' /proc/cpuinfo; then CFLAGS="$CFLAGS -mmovbe"; fi
-			 ;;
-		esac
-fi
-
+#AC_CANONICAL_HOST
 
 DEPDIR="${am__leading_dot}deps"
 
@@ -4190,6 +4097,138 @@ fi
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for __attribute__" >&5
+$as_echo_n "checking for __attribute__... " >&6; }
+if ${ax_cv___attribute__+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <stdlib.h>
+	  static void foo(void) __attribute__ ((unused));
+	  static void
+	  foo(void) {
+	      exit(1);
+	  }
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv___attribute__=yes
+else
+  ax_cv___attribute__=no
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv___attribute__" >&5
+$as_echo "$ax_cv___attribute__" >&6; }
+  if test "$ax_cv___attribute__" = "yes"; then
+
+$as_echo "#define HAVE___ATTRIBUTE__ 1" >>confdefs.h
+
+  fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -std=gnu11" >&5
+$as_echo_n "checking whether C compiler accepts -std=gnu11... " >&6; }
+if ${ax_cv_check_cflags___std_gnu11+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -std=gnu11"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___std_gnu11=yes
+else
+  ax_cv_check_cflags___std_gnu11=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___std_gnu11" >&5
+$as_echo "$ax_cv_check_cflags___std_gnu11" >&6; }
+if test "x$ax_cv_check_cflags___std_gnu11" = xyes; then :
+  CFLAGS="-std=gnu11 "
+else
+
+	echo "GNU C11 standard not supported? Aborting..."
+	exit 1
+
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -mmovebe" >&5
+$as_echo_n "checking whether C compiler accepts -mmovebe... " >&6; }
+if ${ax_cv_check_cflags___mmovebe+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -mmovebe"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___mmovebe=yes
+else
+  ax_cv_check_cflags___mmovebe=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___mmovebe" >&5
+$as_echo "$ax_cv_check_cflags___mmovebe" >&6; }
+if test "x$ax_cv_check_cflags___mmovebe" = xyes; then :
+  CFLAGS+="-mmovbe "
+else
+
+	echo "*** No MOVBE instruction support ***"
+
+fi
+
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug; CFLAGS+="-O0 -g -D__HAVE_DEBUG__"
+else
+  CFLAGS+="-O3 -s -DNDEBUG -fno-stack-protector"
+fi
+
+
+# Define T50 compiler definitions
+
+$as_echo "#define __HAVE_TURBO__ 1" >>confdefs.h
+
+
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4764,6 +4803,20 @@ _ACEOF
 ;;
   esac
 
+ac_fn_c_find_uintX_t "$LINENO" "64" "ac_cv_c_uint64_t"
+case $ac_cv_c_uint64_t in #(
+  no|yes) ;; #(
+  *)
+
+$as_echo "#define _UINT64_T 1" >>confdefs.h
+
+
+cat >>confdefs.h <<_ACEOF
+#define uint64_t $ac_cv_c_uint64_t
+_ACEOF
+;;
+  esac
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for error_at_line" >&5
 $as_echo_n "checking for error_at_line... " >&6; }
@@ -5135,13 +5188,82 @@ _ACEOF
     ;;
 esac
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for C/C++ restrict keyword" >&5
+$as_echo_n "checking for C/C++ restrict keyword... " >&6; }
+if ${ac_cv_c_restrict+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_cv_c_restrict=no
+   # The order here caters to the fact that C++ does not require restrict.
+   for ac_kw in __restrict __restrict__ _Restrict restrict; do
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+typedef int * int_ptr;
+	int foo (int_ptr $ac_kw ip) {
+	return ip[0];
+       }
+int
+main ()
+{
+int s[1];
+	int * $ac_kw t = s;
+	t[0] = 0;
+	return foo(t)
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_c_restrict=$ac_kw
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+     test "$ac_cv_c_restrict" != no && break
+   done
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_restrict" >&5
+$as_echo "$ac_cv_c_restrict" >&6; }
+
+ case $ac_cv_c_restrict in
+   restrict) ;;
+   no) $as_echo "#define restrict /**/" >>confdefs.h
+ ;;
+   *)  cat >>confdefs.h <<_ACEOF
+#define restrict $ac_cv_c_restrict
+_ACEOF
+ ;;
+ esac
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for preprocessor stringizing operator" >&5
+$as_echo_n "checking for preprocessor stringizing operator... " >&6; }
+if ${ac_cv_c_stringize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#define x(y) #y
+
+char *s = x(teststring);
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "#teststring" >/dev/null 2>&1; then :
+  ac_cv_c_stringize=no
+else
+  ac_cv_c_stringize=yes
+fi
+rm -f conftest*
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_stringize" >&5
+$as_echo "$ac_cv_c_stringize" >&6; }
+if test $ac_cv_c_stringize = yes; then
+
+$as_echo "#define HAVE_STRINGIZE 1" >>confdefs.h
+
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
-
-
-# Define T50 compiler definitions
-
-$as_echo "#define __HAVE_TURBO__ 1" >>confdefs.h
 
 
 cat >confcache <<\_ACEOF

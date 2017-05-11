@@ -510,9 +510,11 @@ size_t eigrp_hdr_len(const uint16_t opcode,
     case EIGRP_TYPE_MULTICAST:
       size += EIGRP_TLEN_MULTICAST;
       size += EIGRP_TLEN_SEQUENCE;
+      //break;
 
     case EIGRP_TYPE_SOFTWARE:
       size += EIGRP_TLEN_SOFTWARE;
+      //break;
 
     case EIGRP_TYPE_PARAMETER:
       size += EIGRP_TLEN_PARAMETER;
@@ -522,6 +524,3 @@ size_t eigrp_hdr_len(const uint16_t opcode,
 
   return size;
 }
-
-
-

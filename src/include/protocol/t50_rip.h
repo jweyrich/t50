@@ -22,10 +22,11 @@
 #define __RIP_H__
 
 #define IPPORT_RIP             520
+
 #define RIP_HEADER_LENGTH      4
+#define RIP_TRAILER_LENGTH     4
 #define RIP_MESSAGE_LENGTH     20
 #define RIP_AUTH_LENGTH        20
-#define RIP_TRAILER_LENGTH     4
 
 /** Calculating RIP Header length */
 #define rip_hdr_len(foo) \

@@ -134,7 +134,7 @@ VALID_OPTIONS_TABLE(ospf, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, 
   To add a procotol, insert the proper header file on common.h (ex: protocol/xpto.h),
   change the Makefile, add a MODULE_ENTRY, modify config.c and usage.c and compile. That's it! */
 BEGIN_MODULES_TABLE
-/* ( proto,        acronym,  description,                                  function ) */
+/* ( proto, name, description, function ) */
 MODULE_ENTRY(IPPROTO_ICMP,  "ICMP",   "Internet Control Message Protocol",          icmp)
 MODULE_ENTRY(IPPROTO_IGMP,  "IGMPv1", "Internet Group Message Protocol v1",         igmpv1)
 MODULE_ENTRY(IPPROTO_IGMP,  "IGMPv3", "Internet Group Message Protocol v3",         igmpv3)

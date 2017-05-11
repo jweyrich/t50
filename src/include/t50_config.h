@@ -303,7 +303,7 @@ struct config_options
   /* XXX DCCP, TCP & UDP HEADER OPTIONS                            */
   uint16_t  source;                 /* general source port         */
   uint16_t  dest;                   /* general destination port    */
-  unsigned  bits;                   /* CIDR bits                   */
+  uint32_t  bits;                   /* CIDR bits                   */
 
   /* XXX IP HEADER OPTIONS  (IPPROTO_IP = 0)                       */
   struct
@@ -582,14 +582,14 @@ struct options_table_s
   int has_arg;        /* If option must have an argument, this is 1. */
 
   /* "private" part. */
-  int  in_use_;        /* Boolean used to check if option was already used. */
+  _Bool in_use_;      /* Boolean used to check if option was already used. */
 };
 
 /* structure used in getConfigOptions() and get_ip_and_cidr_from_string() */
 typedef struct
 {
-  unsigned addr;
-  unsigned cidr;
+  uint32_t addr;
+  uint32_t cidr;
 } T50_tmp_addr_t;
 
 struct config_options *parse_command_line(char **);
