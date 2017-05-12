@@ -6,6 +6,12 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.6.12 - May 12th, 2017
+ - Minor bugs solved.
+ * Made get_ordinal_suffix() smaller.
+ ! OSPF protocol code is now more "readable".
+ * Changed "hard coded" tests on configure.ac, using autoconf extensions.
+
 T50 5.6.11 - May 8th, 2017
  * __RND, IPPORT_RND and IPADDR_RND macros now will only respect endianess if
    the returning value is not RANDOM.
