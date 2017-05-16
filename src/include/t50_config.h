@@ -45,6 +45,7 @@ enum
 #endif  /* __HAVE_TURBO__ */
   OPTION_LIST_PROTOCOLS,
   OPTION_BOGUSCSUM,
+  OPTION_SHUFFLE,
 
   /* XXX DCCP, TCP & UDP HEADER OPTIONS            */
   OPTION_SOURCE,
@@ -296,6 +297,7 @@ struct config_options
   _Bool     flood;                  /* flood                       */
   _Bool     encapsulated;           /* GRE encapsulated            */
   _Bool     bogus_csum;             /* bogus packet checksum       */
+  _Bool     shuffle;                /* Shuffling option for T50 proto. */
 #ifdef  __HAVE_TURBO__
   _Bool     turbo;                  /* duplicate the attack        */
 #endif  /* __HAVE_TURBO__ */

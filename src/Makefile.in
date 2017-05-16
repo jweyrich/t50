@@ -102,8 +102,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(sbin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) usage.$(OBJEXT) \
-	modules/ipsec.$(OBJEXT) modules/udp.$(OBJEXT) \
+am_t50_OBJECTS = modules/ipsec.$(OBJEXT) modules/udp.$(OBJEXT) \
 	modules/icmp.$(OBJEXT) modules/dccp.$(OBJEXT) \
 	modules/igmpv3.$(OBJEXT) modules/eigrp.$(OBJEXT) \
 	modules/ripv1.$(OBJEXT) modules/gre.$(OBJEXT) \
@@ -116,9 +115,10 @@ am_t50_OBJECTS = config.$(OBJEXT) randomizer.$(OBJEXT) usage.$(OBJEXT) \
 	help/general_help.$(OBJEXT) help/tcp_udp_dccp_help.$(OBJEXT) \
 	help/eigrp_help.$(OBJEXT) help/rsvp_help.$(OBJEXT) \
 	help/ipsec_help.$(OBJEXT) help/icmp_help.$(OBJEXT) \
-	help/egp_help.$(OBJEXT) main.$(OBJEXT) modules.$(OBJEXT) \
+	help/egp_help.$(OBJEXT) main.$(OBJEXT) config.$(OBJEXT) \
+	randomizer.$(OBJEXT) usage.$(OBJEXT) modules.$(OBJEXT) \
 	errors.$(OBJEXT) cidr.$(OBJEXT) netio.$(OBJEXT) \
-	cksum.$(OBJEXT) memalloc.$(OBJEXT)
+	cksum.$(OBJEXT) memalloc.$(OBJEXT) shuffle.$(OBJEXT)
 t50_OBJECTS = $(am_t50_OBJECTS)
 t50_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -273,6 +273,7 @@ include/t50_randomizer.h \
 include/t50_defines.h \
 include/t50_config.h \
 include/t50_modules.h \
+include/t50_shuffle.h \
 include/protocol/t50_tcp_options.h \
 include/protocol/t50_igmp.h \
 include/protocol/t50_rsvp.h \
@@ -285,9 +286,6 @@ include/protocol/t50_ip.h \
 include/t50_netio.h \
 include/t50_cidr.h \
 include/t50_typedefs.h \
-config.c \
-randomizer.c \
-usage.c \
 modules/ipsec.c \
 modules/udp.c \
 modules/icmp.c \
@@ -316,12 +314,16 @@ help/ipsec_help.c \
 help/icmp_help.c \
 help/egp_help.c \
 main.c \
+config.c \
+randomizer.c \
+usage.c \
 modules.c \
 errors.c \
 cidr.c \
 netio.c \
 cksum.c \
-memalloc.c
+memalloc.c \
+shuffle.c
 
 all: all-am
 
@@ -486,6 +488,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modules.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/randomizer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shuffle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@help/$(DEPDIR)/egp_help.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@help/$(DEPDIR)/eigrp_help.Po@am__quote@

@@ -174,6 +174,7 @@ static struct options_table_s options[] =
   { OPTION_FLOOD,                   0,  "flood",            0 },
   { OPTION_ENCAPSULATED,            0,  "encapsulated",     0 },
   { OPTION_BOGUSCSUM,             'B',  "bogus-csum",       0 },
+  { OPTION_SHUFFLE,                 0,  "shuffle",          0 },
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
   { OPTION_GRE_SEQUENCE_PRESENT,  0,    "gre-seq-present",  0 },
@@ -442,12 +443,12 @@ struct config_options *parse_command_line(char **argv)
 
     if (check_if_option(opt))
     {
-      if ((ptbl = find_option(opt)) == NULL)
-        fatal_error("Unrecognized option '%s'.", opt);
-
       /* Skip --. */
       if (check_if_nul_option(opt))
         continue;
+
+      if ((ptbl = find_option(opt)) == NULL)
+        fatal_error("Unrecognized option '%s'.", opt);
 
       /* This will assume each option should be used only once. */
       if (ptbl->in_use_)
@@ -455,7 +456,7 @@ struct config_options *parse_command_line(char **argv)
 
       ptbl->in_use_ = 1;
 
-      /* Is the option need an argument, get the next string. */
+      /* If the option needs an argument, get the next string. */
       if (!!(next_str = *(argv + 1)))
       {
         static const char ferrfmt[] =
@@ -661,7 +662,7 @@ void get_ip_protocol(struct config_options *co, char *arg)
   if (!strcasecmp(arg, "T50"))
   {
     co->ip.protocol = IPPROTO_T50;
-    co->ip.protoname = get_number_of_registered_modules();    /* Is this correct? */
+    co->ip.protoname = number_of_modules;    /* Is this correct? */
   }
   else
   {
@@ -746,6 +747,10 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
 
   case OPTION_BOGUSCSUM:
     co->bogus_csum = true;
+    break;
+
+  case OPTION_SHUFFLE:
+    co->shuffle = true;
     break;
 
   case OPTION_GRE_SEQUENCE_PRESENT:
@@ -1947,7 +1952,7 @@ int check_threshold(const struct config_options *const __restrict__ co)
   if (co->ip.protocol == IPPROTO_T50)
     /* When sending multiple packets using T50 "protocol", the threshold
        must be greater than the number of protocols! */
-    minThreshold = (threshold_t)get_number_of_registered_modules();
+    minThreshold = number_of_modules;
   else
     minThreshold = 1;
 

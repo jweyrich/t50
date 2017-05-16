@@ -30,6 +30,7 @@ void general_help(void)
        "    --flood                   This option supersedes the \'threshold\'\n"
        "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
        " -B,--bogus-csum              Bogus checksum                   (default OFF)\n"
+       "    --shuffle                 Shuffling for T50 protocol       (default OFF)\n"
 #ifdef  __HAVE_TURBO__
        "    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */

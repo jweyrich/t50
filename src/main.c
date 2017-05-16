@@ -42,6 +42,7 @@
 #include <t50_memalloc.h>
 #include <t50_modules.h>
 #include <t50_randomizer.h>
+#include <t50_shuffle.h>
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
   if (co->turbo)
   {
     /* if it's necessary to fork a new process... */
-    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > (threshold_t)get_number_of_registered_modules()) ||
+    if ((co->ip.protocol == IPPROTO_T50 && co->threshold > number_of_modules) ||
         (co->ip.protocol != IPPROTO_T50 && co->threshold > 1))
     {
       threshold_t new_threshold;
@@ -140,11 +141,21 @@ int main(int argc, char *argv[])
   // random seed. Notice this is called after fork().
   SRANDOM();
 
+  // Indices used for IPPROTO_T50 shuffling.
+  build_indices();
+
   /* Preallocate packet buffer. */
   alloc_packet(INITIAL_PACKET_SIZE);
 
   /* Selects the initial protocol to use. */
-  ptbl = selectProtocol(co, &proto);
+  if (co->ip.protocol != IPPROTO_T50)
+    ptbl = selectProtocol(co, &proto);
+  else
+  {
+    proto = co->ip.protocol;
+    shuffle(indices, number_of_modules);
+    ptbl = &mod_table[get_index(co)];
+  }
 
   /* MAIN LOOP */
   // OBS: flood means non stop injection.
@@ -184,8 +195,7 @@ int main(int argc, char *argv[])
 
     /* If protocol is 'T50', then get the next true protocol. */
     if (proto == IPPROTO_T50)
-      if ((++ptbl)->func == NULL)
-        ptbl = mod_table;
+      ptbl = &mod_table[get_index(co)];
 
     /* Decrement the threshold only if not flooding! */
     if (!co->flood)

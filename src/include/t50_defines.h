@@ -70,4 +70,6 @@
 #define likely(c) __builtin_expect(!!(c), 1)
 #endif
 
+#define swap(a,b) { typeof((a)) t; t = (a); (a) = (b); (b) = t; }
+
 #endif

@@ -6,6 +6,15 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.6.13 - May 16th, 2017
+ + Added --shuffle option for T50 PROTOCOL, otherwise all protocols will be sent
+   in the same sequence given by --list-protocols option.
+ * SRANDOM() now uses RDRAND instruction for x86 machines, if available.
+ * Got rid of get_number_of_registered_modules() function.
+   The global var num_of_modules is available to that purpose.
+ * Man page updated.
+ - The command line bug is fixed...
+
 T50 5.6.12 - May 12th, 2017
  - Minor bugs solved.
  * Made get_ordinal_suffix() smaller.

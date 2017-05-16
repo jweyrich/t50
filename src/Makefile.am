@@ -7,6 +7,7 @@ include/t50_randomizer.h \
 include/t50_defines.h \
 include/t50_config.h \
 include/t50_modules.h \
+include/t50_shuffle.h \
 include/protocol/t50_tcp_options.h \
 include/protocol/t50_igmp.h \
 include/protocol/t50_rsvp.h \
@@ -19,9 +20,6 @@ include/protocol/t50_ip.h \
 include/t50_netio.h \
 include/t50_cidr.h \
 include/t50_typedefs.h \
-config.c \
-randomizer.c \
-usage.c \
 modules/ipsec.c \
 modules/udp.c \
 modules/icmp.c \
@@ -50,9 +48,13 @@ help/ipsec_help.c \
 help/icmp_help.c \
 help/egp_help.c \
 main.c \
+config.c \
+randomizer.c \
+usage.c \
 modules.c \
 errors.c \
 cidr.c \
 netio.c \
 cksum.c \
-memalloc.c
+memalloc.c \
+shuffle.c

@@ -1,4 +1,4 @@
-.TH T50 8 2017-08-18 "5.6" "T50 man page"
+.TH T50 8 2017-05-16 "5.6" "T50 man page"
 .SH NAME
 T50 - network packet injector
 .SH SYNOPSIS
@@ -28,6 +28,9 @@ Bogus checksum.
 .TP
 .BR \-\-turbo
 Extend performance (create child process).
+.TP
+.BR \-\-shuffle
+When used with T50 "protocol", it will shuffle the available protocolos. Otherwise they will be sent in the same order as listed with \-\-list-protocols option.
 .TP
 .BR \-s ", " \-\-saddr " ADDR"
 IP source address (default RANDOM).

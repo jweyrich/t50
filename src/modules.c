@@ -19,11 +19,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stddef.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <t50_defines.h>
 #include <t50_typedefs.h>
 #include <t50_modules.h>
+#include <t50_errors.h>
+#include <t50_shuffle.h>
 
 // --- Valid options tables for specific protocols ---
 VALID_OPTIONS_TABLE(tcp, OPTION_ENCAPSULATED, OPTION_BOGUSCSUM, OPTION_SOURCE, OPTION_DESTINATION, \
@@ -150,27 +152,13 @@ MODULE_ENTRY(IPPROTO_EIGRP, "EIGRP",  "Enhanced Interior Gateway Routing Protoco
 MODULE_ENTRY(IPPROTO_OSPF,  "OSPF",   "Open Shortest Path First",                   ospf)
 END_MODULES_TABLE
 
-/* Holds the number of modules. Use get_number_of_registered_modules() funcion to get it. */
-static size_t number_of_modules = 0;
+// Now we have the table above filled. It's safe to get it's size this way.
+#define NUM_OF_MODULES ((sizeof mod_table / sizeof mod_table[0])-1)
 
-/**
- * Get the number of registered modules on modules.c.
- *
- * Scan the list of modules (ONCE!), returning the number of itens found on
- * modules list.
- *
- * @return The number of registered modules.
- */
-/* Function prototype moved to modules.h. */
-size_t get_number_of_registered_modules(void)
-{
-  modules_table_t *ptbl;
+size_t number_of_modules = NUM_OF_MODULES;
+size_t indices[NUM_OF_MODULES];
 
-  if (unlikely(number_of_modules == 0))
-    for (ptbl = mod_table; ptbl->func; ptbl++, number_of_modules++);
-
-  return number_of_modules;
-}
+static size_t next_index = 0;
 
 int *get_module_valid_options_list(int protocol)
 {
@@ -184,3 +172,30 @@ int *get_module_valid_options_list(int protocol)
   return NULL;
 }
 
+void build_indices(void)
+{
+  size_t i;
+
+  // Without shuffling get the sequence.
+  for (i = 0; i < NUM_OF_MODULES; i++)
+    indices[i] = i;
+}
+
+size_t get_index(struct config_options *co)
+{
+  size_t n;
+
+  if (next_index >= NUM_OF_MODULES)
+  {
+    // We hit the end of the indices array.
+    // reshuffle.
+    if (co->shuffle)
+      shuffle(indices, NUM_OF_MODULES);
+
+    n = indices[next_index = 0];
+  }
+  else
+    n = indices[next_index++];
+
+  return n;
+}

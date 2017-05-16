@@ -100,9 +100,12 @@ typedef struct
  * The modules table is global through all the code.
  */
 extern modules_table_t mod_table[]; // Must be extern here!
+extern size_t number_of_modules;
+extern size_t indices[];
 
-size_t  get_number_of_registered_modules(void);
 int    *get_module_valid_options_list(int);
+void    build_indices(void);
+size_t  get_index(struct config_options *);
 
 /* Modules functions prototypes. */
 void icmp  (const struct config_options *const __restrict__, size_t *);

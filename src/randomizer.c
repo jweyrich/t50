@@ -27,8 +27,8 @@
 #include <t50_errors.h>
 #include <t50_randomizer.h>
 
-/* Arbitrary seeds. */
-static uint64_t _seed[2] = { 0x748bd5a53132bUL, 0x41c6e6d32143a1c7UL };
+/* The Random SEED will be created by SRANDOM */
+static uint64_t _seed[2];
 
 /* xorshift128+ 
 
@@ -53,19 +53,70 @@ uint32_t RANDOM(void)
  */
 void SRANDOM(void)
 {
-  int _fd;
-  int r;
+#if defined(__x86_64__) || defined(__i386__)
 
-  if ((_fd = open("/dev/random", O_RDONLY)) == -1)
-    fatal_error("Cannot open /dev/random to get initial random seed.");
+#define RDRAND_BIT (1U << 30)
 
-  /* NOTE: initializes this code "global" _seed var. */
-  r = read(_fd, &_seed, sizeof(_seed));
+  uint32_t cap;
 
-  close(_fd);
+  // Get CPUID features info.
+  __asm__ __volatile__ ("cpuid" : "=c" (cap) : "a" (1U)
+  :
+#ifdef __x86_64__
+    "rbx", "rdx"
+#else
+    "ebx", "edx"
+#endif
+  );
 
-  if (r == -1)
-    fatal_error("Cannot read initial seed from /dev/random.");
+  // if RDRAND is supported...
+  if (cap & RDRAND_BIT)
+  {
+    // NOTE: Why not use RDRAND as our RNG?
+    //       Because RDRAND is slow! I use here
+    //       only 'cause SRANDOM() is called once
+    //       per process.
+    //
+    //       XorShift128+ is way faster PRNG...
+
+#ifdef __x86_64__
+    __asm__ __volatile__ (
+      "1: rdrand %0; jnc 1b;\n"
+      "2: rdrand %1; jnc 2b;"
+      : "=q" (_seed[0]), "=q" (_seed[1])
+      : : "cc"
+    );
+#else
+    __asm__ __volatile__ (
+      "1: rdrand %0; jnc 1b;\n"
+      "2: rdrand %1; jnc 2b;\n"
+      "3: rdrand %2; jnc 3b;\n"
+      "4: rdrand %3; jnc 4b;"
+      : "=r" (*(uint32_t *)_seed), 
+        "=r" (*((uint32_t *)_seed + 1)), 
+        "=r" (*((uint32_t *)_seed + 2)), 
+        "=r" (*((uint32_t *)_seed + 3)), 
+      : : "cc"
+    );
+#endif
+  }
+  else
+#endif
+  {
+    int _fd;
+    int r;
+
+    if ((_fd = open("/dev/random", O_RDONLY)) == -1)
+      fatal_error("Cannot open /dev/random to get initial random seed.");
+
+    /* NOTE: initializes this code "global" _seed var. */
+    r = read(_fd, &_seed, sizeof(_seed));
+
+    close(_fd);
+
+    if (r == -1)
+      fatal_error("Cannot read initial seed from /dev/random.");
+  }
 }
 
 /**
