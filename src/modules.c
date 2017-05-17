@@ -155,7 +155,7 @@ END_MODULES_TABLE
 // Now we have the table above filled. It's safe to get it's size this way.
 #define NUM_OF_MODULES ((sizeof mod_table / sizeof mod_table[0])-1)
 
-size_t number_of_modules = NUM_OF_MODULES;
+const size_t number_of_modules = NUM_OF_MODULES;
 size_t indices[NUM_OF_MODULES];
 
 static size_t next_index = 0;

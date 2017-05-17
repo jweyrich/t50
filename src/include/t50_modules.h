@@ -100,7 +100,7 @@ typedef struct
  * The modules table is global through all the code.
  */
 extern modules_table_t mod_table[]; // Must be extern here!
-extern size_t number_of_modules;
+extern const size_t number_of_modules;
 extern size_t indices[];
 
 int    *get_module_valid_options_list(int);
