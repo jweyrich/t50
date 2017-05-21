@@ -4218,7 +4218,7 @@ fi
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; CFLAGS+="-O0 -g -D__HAVE_DEBUG__"
 else
-  CFLAGS+="-O3 -s -DNDEBUG -fno-stack-protector"
+  CFLAGS+="-Ofast -march=native -s -DNDEBUG -fno-stack-protector"
 fi
 
 

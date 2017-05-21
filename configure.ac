@@ -35,7 +35,7 @@ AX_CHECK_COMPILE_FLAG([-mmovebe],[CFLAGS+="-mmovbe "],[
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
   [CFLAGS+="-O0 -g -D__HAVE_DEBUG__"],
-  [CFLAGS+="-O3 -s -DNDEBUG -fno-stack-protector"])
+  [CFLAGS+="-Ofast -march=native -s -DNDEBUG -fno-stack-protector"])
 
 # Define T50 compiler definitions
 AC_DEFINE([__HAVE_TURBO__],[1],[Use fork to spawn extra process])
