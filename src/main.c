@@ -318,11 +318,15 @@ const char * const get_ordinal_suffix(unsigned int n)
 {
   static const char * const suffixes[] = { "th", "st", "nd", "rd" };
 
-  if (n >= 11 && n <= 13) return suffixes[0];
+  // 11, 12 and 13 has 'th' suffix!
+  if (n >= 11 && n <= 13) n = 0;
+  else n %= 10;
  
   // A little bit obfuscated, huh?
+  // Using a string instead of a static table of ints creates
+  // code a little bit smaller, and as fast as using ints.
   return suffixes["\000\001\002\003\000"
-                  "\000\000\000\000\000"[n % 10]];
+                  "\000\000\000\000\000"[n]];
 }
 
 /* Auxiliary function to return the [constant] string for a month.
