@@ -19,8 +19,9 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 #AC_CANONICAL_HOST
 
-AC_PROG_CC_C99
-
+AC_PROG_CC
+AC_PROG_CC_C_O
+AC_C_STRINGIZE
 AX_C___ATTRIBUTE__
 
 AX_CHECK_COMPILE_FLAG([-std=gnu11],[CFLAGS="-std=gnu11 "],[
@@ -32,6 +33,8 @@ AX_CHECK_COMPILE_FLAG([-mmovebe],[CFLAGS+="-mmovbe "],[
 	echo "*** No MOVBE instruction support ***"
 ])
 
+AC_PROG_INSTALL
+
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
   [CFLAGS+="-O0 -g -D__HAVE_DEBUG__"],
@@ -39,8 +42,6 @@ AC_ARG_ENABLE([debug],
 
 # Define T50 compiler definitions
 AC_DEFINE([__HAVE_TURBO__],[1],[Use fork to spawn extra process])
-
-AC_PROG_INSTALL
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
 AC_CHECK_HEADER_STDBOOL
