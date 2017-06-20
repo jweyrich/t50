@@ -517,8 +517,9 @@ struct config_options *parse_command_line(char **argv)
     {
       if (num_options > 1)
         error("Option '-v' (or '--version') cannot be used with other options.");
-      else
-        show_version();
+      /* --- already showing version, by default! --- */
+      //else
+      //  show_version();
 
       exit(EXIT_FAILURE);
     }
@@ -1725,7 +1726,11 @@ void list_protocols(void)
   modules_table_t *ptbl;
   int i;
 
-  puts("List of supported protocols (--protocol):");
+  puts(
+#ifdef USE_ANSI
+    "\x1b[33;1m[info]\x1b[0m "
+#endif
+    "List of supported protocols (--protocol):");
 
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description);

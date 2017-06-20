@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [13])
+define([VERSION_FIX],   [14])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
@@ -37,8 +37,12 @@ AC_PROG_INSTALL
 
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
-  [CFLAGS+="-O0 -g -D__HAVE_DEBUG__"],
-  [CFLAGS+="-Ofast -march=native -s -DNDEBUG -fno-stack-protector"])
+  [CFLAGS+=" -O0 -g -D__HAVE_DEBUG__ "],
+  [CFLAGS+=" -Ofast -march=native -s -DNDEBUG -fno-stack-protector "])
+
+AC_ARG_ENABLE([ansi],
+  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
+  [CFLAGS+=" -DUSE_ANSI "],[])
 
 # Define T50 compiler definitions
 AC_DEFINE([__HAVE_TURBO__],[1],[Use fork to spawn extra process])

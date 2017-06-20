@@ -43,6 +43,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 #include <t50_shuffle.h>
+#include <t50_help.h>
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
@@ -66,6 +67,8 @@ int main(int argc, char *argv[])
   int                   proto;
   time_t                lt;
   struct tm             *tm;
+
+  show_version();
 
   /* Parse_command_line returns ONLY if there are no errors.
      This must be called before testing user privileges. */
@@ -94,9 +97,9 @@ int main(int argc, char *argv[])
 
       if ((pid = fork()) == -1)
 #ifdef __HAVE_DEBUG__
-        fatal_error("Error creating child process: \"%s\".\nExiting..", strerror(errno));
+        fatal_error("Cannot create child process: \"%s\".\nExiting..", strerror(errno));
 #else
-        fatal_error("Error creating child process");
+        fatal_error("Cannot create child process");
 #endif
 
       /* Divide the process iterations in main loop between both processes. */
@@ -115,9 +118,9 @@ int main(int argc, char *argv[])
   /* Setting the priority to both parent and child process. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
+    fatal_error("Cannot set process priority: \"%s\".\nExiting..", strerror(errno));
 #else
-    fatal_error("Error setting process priority");
+    fatal_error("Cannot set process priority");
 #endif
 
   /* Show launch info only for parent process. */
@@ -127,7 +130,11 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
+#ifdef USE_ANSI
+    fputs("\x1b[32;1m[launch]\x1b[0m ", stdout);
+#endif
+
+    printf(PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -215,7 +222,11 @@ int main(int argc, char *argv[])
         /* Wait 5 seconds for the child to end... */
         alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
-        fputs("\nWaiting for child process to end...\n", stderr);
+        fputs(
+#ifdef USE_ANSI
+          "\x1b[33;1m[waiting]\x1b[0m "
+#endif
+          "Waiting for child process to end...\n", stderr);
 #endif
 
         /* SIGALRM will kill the child process if necessary! */
@@ -233,7 +244,11 @@ int main(int argc, char *argv[])
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
+#ifdef USE_ANSI
+    fputs("\x1b[32;1m[terminating]\x1b[0m ", stdout);
+#endif
+
+    printf(PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -298,19 +313,43 @@ void initialize(const struct config_options *co)
 
   /* --- Show some messages. */
   if (co->flood)
-    puts("Entering flood mode...");
+  {
+    fputs(
+#ifdef USE_ANSI
+      "\x1b[33;1m[info]\x1b[0m "
+#endif    
+      "Entering flood mode...", stdout);
+  }
   else
-    printf("Sending %u packets...\n", co->threshold);
+  {
+    printf(
+#ifdef USE_ANSI
+      "\x1b[33;1m[info]\x1b[0m "
+#endif
+      "Sending %u packets...\n", co->threshold);
+  }
 
 #ifdef __HAVE_TURBO__
   if (co->turbo)
-    puts("Turbo mode active...");
+    puts(
+#ifdef USE_ANSI
+      "\x1b[33;1m[info]\x1b[0m "
+#endif
+      "Turbo mode active...");
 #endif
 
   if (co->bits)
-    puts("Performing stress testing...");
+    puts(
+#ifdef USE_ANSI
+      "\x1b[33;1m[info]\x1b[0m "
+#endif
+      "Performing stress testing...");
 
-  puts("Hit Ctrl+C to stop...");
+  puts(
+#ifdef USE_ANSI
+    "\x1b[33;1m[info]\x1b[0m "
+#endif
+    "Hit Ctrl+C to stop...");
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */

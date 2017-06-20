@@ -50,6 +50,10 @@ void error(const char * const fmt, ...)
 {
   va_list args;
 
+#ifdef USE_ANSI
+  fputs("\x1b[31m[Error]\x1b[0m ", stderr);
+#endif
+
   va_start(args, fmt);
   verror(fmt, args);
   va_end(args);
@@ -64,7 +68,11 @@ void fatal_error(const char * const fmt, ...)
 {
   va_list args;
 
+#ifdef USE_ANSI
+  fputs("\x1b[31;1m[Fatal]\x1b[0m ", stderr);
+#else
   fputs("\a\n", stderr);  /* BEEP! */
+#endif
   va_start(args, fmt);
   verror(fmt,args);
   va_end(args);
