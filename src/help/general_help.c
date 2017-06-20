@@ -31,6 +31,7 @@ void general_help(void)
        "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
        " -B,--bogus-csum              Bogus checksum                   (default OFF)\n"
        "    --shuffle                 Shuffling for T50 protocol       (default OFF)\n"
+       " -q,--quiet                   Disable INFOs\n"
 #ifdef  __HAVE_TURBO__
        "    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */

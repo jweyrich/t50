@@ -35,6 +35,7 @@ enum
 
   OPTION_VERSION,
   OPTION_HELP,
+  OPTION_QUIET,
 
   /* XXX COMMON OPTIONS                            */
   OPTION_THRESHOLD,
@@ -298,6 +299,7 @@ struct config_options
   _Bool     encapsulated;           /* GRE encapsulated            */
   _Bool     bogus_csum;             /* bogus packet checksum       */
   _Bool     shuffle;                /* Shuffling option for T50 proto. */
+  _Bool     quiet;                  /* Non-verbose mode. */
 #ifdef  __HAVE_TURBO__
   _Bool     turbo;                  /* duplicate the attack        */
 #endif  /* __HAVE_TURBO__ */

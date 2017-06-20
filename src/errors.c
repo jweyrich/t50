@@ -26,6 +26,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <configuration.h>
+#include <t50_defines.h>
 
 /* --- Using vfprintf for flexibility. */
 static void verror(const char * const fmt, va_list args)
@@ -50,9 +51,7 @@ void error(const char * const fmt, ...)
 {
   va_list args;
 
-#ifdef USE_ANSI
-  fputs("\x1b[31m[Error]\x1b[0m ", stderr);
-#endif
+  fputs(ERROR " ", stderr);
 
   va_start(args, fmt);
   verror(fmt, args);
@@ -68,11 +67,7 @@ void fatal_error(const char * const fmt, ...)
 {
   va_list args;
 
-#ifdef USE_ANSI
-  fputs("\x1b[31;1m[Fatal]\x1b[0m ", stderr);
-#else
-  fputs("\a\n", stderr);  /* BEEP! */
-#endif
+  fputs(FATAL " ", stderr);
   va_start(args, fmt);
   verror(fmt,args);
   va_end(args);

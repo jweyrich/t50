@@ -96,11 +96,11 @@ int main(int argc, char *argv[])
       threshold_t new_threshold;
 
       if ((pid = fork()) == -1)
+        fatal_error("Cannot create child process"
 #ifdef __HAVE_DEBUG__
-        fatal_error("Cannot create child process: \"%s\".\nExiting..", strerror(errno));
-#else
-        fatal_error("Cannot create child process");
+                    ": \"%s\".\nExiting..", strerror(errno)
 #endif
+        );
 
       /* Divide the process iterations in main loop between both processes. */
       new_threshold = co->threshold / 2;
@@ -117,24 +117,20 @@ int main(int argc, char *argv[])
 
   /* Setting the priority to both parent and child process. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
+    fatal_error("Cannot set process priority"
 #ifdef __HAVE_DEBUG__
-    fatal_error("Cannot set process priority: \"%s\".\nExiting..", strerror(errno));
-#else
-    fatal_error("Cannot set process priority");
+                ": \"%s\".\nExiting..", strerror(errno)
 #endif
+    );
 
   /* Show launch info only for parent process. */
-  if (!IS_CHILD_PID(pid))
+  if (!IS_CHILD_PID(pid) && !co->quiet)
   {
     /* Getting the local time. */
     lt = time(NULL);
     tm = localtime(&lt);
 
-#ifdef USE_ANSI
-    fputs("\x1b[32;1m[launch]\x1b[0m ", stdout);
-#endif
-
-    printf(PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
+    printf(INFO " " PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -187,7 +183,7 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_DEBUG__
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
-      fprintf(stderr, "[DEBUG] Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
+      fprintf(stderr, DEBUG " Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
               ptbl->name, size);
 #endif
 
@@ -222,11 +218,7 @@ int main(int argc, char *argv[])
         /* Wait 5 seconds for the child to end... */
         alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
-        fputs(
-#ifdef USE_ANSI
-          "\x1b[33;1m[waiting]\x1b[0m "
-#endif
-          "Waiting for child process to end...\n", stderr);
+        fputs(INFO " Waiting for child process to end...\n", stderr);
 #endif
 
         /* SIGALRM will kill the child process if necessary! */
@@ -241,21 +233,20 @@ int main(int argc, char *argv[])
     /* Finally we close the raw socket. */ 
     close_socket();
 
-    lt = time(NULL);
-    tm = localtime(&lt);
+    if (!co->quiet)
+    {
+      lt = time(NULL);
+      tm = localtime(&lt);
 
-#ifdef USE_ANSI
-    fputs("\x1b[32;1m[terminating]\x1b[0m ", stdout);
-#endif
-
-    printf(PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
-           get_month(tm->tm_mon),
-           tm->tm_mday,
-           get_ordinal_suffix(tm->tm_mday),
-           (tm->tm_year + 1900),
-           tm->tm_hour,
-           tm->tm_min,
-           tm->tm_sec);
+      printf(INFO " " PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
+             get_month(tm->tm_mon),
+             tm->tm_mday,
+             get_ordinal_suffix(tm->tm_mday),
+             (tm->tm_year + 1900),
+             tm->tm_hour,
+             tm->tm_min,
+             tm->tm_sec);
+    }
   }
 
   /* Everything went well. Exit. */
@@ -312,44 +303,23 @@ void initialize(const struct config_options *co)
   setvbuf(stdout, NULL, _IONBF, 0);
 
   /* --- Show some messages. */
-  if (co->flood)
+  if (!co->quiet)
   {
-    fputs(
-#ifdef USE_ANSI
-      "\x1b[33;1m[info]\x1b[0m "
-#endif    
-      "Entering flood mode...", stdout);
-  }
-  else
-  {
-    printf(
-#ifdef USE_ANSI
-      "\x1b[33;1m[info]\x1b[0m "
-#endif
-      "Sending %u packets...\n", co->threshold);
-  }
+    if (co->flood)
+      fputs(INFO " Entering flood mode...", stdout);
+    else
+      printf(INFO " Sending %u packets...\n", co->threshold);
 
 #ifdef __HAVE_TURBO__
-  if (co->turbo)
-    puts(
-#ifdef USE_ANSI
-      "\x1b[33;1m[info]\x1b[0m "
-#endif
-      "Turbo mode active...");
+    if (co->turbo)
+      puts(INFO " Turbo mode active...");
 #endif
 
-  if (co->bits)
-    puts(
-#ifdef USE_ANSI
-      "\x1b[33;1m[info]\x1b[0m "
-#endif
-      "Performing stress testing...");
+    if (co->bits)
+      puts(INFO " Performing stress testing...");
 
-  puts(
-#ifdef USE_ANSI
-    "\x1b[33;1m[info]\x1b[0m "
-#endif
-    "Hit Ctrl+C to stop...");
+    puts(INFO " Hit Ctrl+C to stop...");
+  }
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
