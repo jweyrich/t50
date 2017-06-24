@@ -24,7 +24,7 @@ AC_PROG_CC_C_O
 AC_C_STRINGIZE
 AX_C___ATTRIBUTE__
 
-AX_CHECK_COMPILE_FLAG([-std=gnu11],[CFLAGS="-std=gnu11 "],[
+AX_CHECK_COMPILE_FLAG([-std=gnu11],[AM_CFLAGS="-std=gnu11"],[
 	echo "GNU C11 standard not supported? Aborting..."
 	exit 1
 ])
@@ -64,5 +64,7 @@ AC_C_RESTRICT
 AC_C_STRINGIZE
 
 AC_CONFIG_FILES([Makefile src/Makefile])
+
+AC_SUBST([AM_CFLAGS])
 
 AC_OUTPUT
