@@ -19,6 +19,19 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 #AC_CANONICAL_HOST
 
+# define default CFLAGS
+AC_ARG_ENABLE([debug],
+  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
+  [DEFAULT_CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
+  [DEFAULT_CFLAGS="-Ofast -march=native -s -DNDEBUG -fno-stack-protector"])
+
+AC_ARG_ENABLE([ansi],
+  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
+  [DEFAULT_CFLAGS+=" -DUSE_ANSI"],[])
+
+# overwrite CFLAGS only if they are not yet defined
+: ${CFLAGS="$DEFAULT_CFLAGS"}
+
 AC_PROG_CC
 AC_PROG_CC_C_O
 AC_C_STRINGIZE
@@ -30,15 +43,6 @@ AX_CHECK_COMPILE_FLAG([-std=gnu11],[AM_CFLAGS="-std=gnu11"],[
 ])
 
 AC_PROG_INSTALL
-
-AC_ARG_ENABLE([debug],
-  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
-  [CFLAGS+=" -O0 -g -D__HAVE_DEBUG__ "],
-  [CFLAGS+=" -Ofast -march=native -s -DNDEBUG -fno-stack-protector "])
-
-AC_ARG_ENABLE([ansi],
-  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
-  [CFLAGS+=" -DUSE_ANSI "],[])
 
 # Define T50 compiler definitions
 AC_DEFINE([__HAVE_TURBO__],[1],[Use fork to spawn extra process])
