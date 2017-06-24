@@ -29,10 +29,6 @@ AX_CHECK_COMPILE_FLAG([-std=gnu11],[CFLAGS="-std=gnu11 "],[
 	exit 1
 ])
 
-AX_CHECK_COMPILE_FLAG([-mmovebe],[CFLAGS+="-mmovbe "],[
-	echo "*** No MOVBE instruction support ***"
-])
-
 AC_PROG_INSTALL
 
 AC_ARG_ENABLE([debug],
