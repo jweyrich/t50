@@ -95,7 +95,7 @@ void SRANDOM(void)
       : "=r" (*(uint32_t *)_seed), 
         "=r" (*((uint32_t *)_seed + 1)), 
         "=r" (*((uint32_t *)_seed + 2)), 
-        "=r" (*((uint32_t *)_seed + 3)), 
+        "=r" (*((uint32_t *)_seed + 3))
       : : "cc"
     );
 #endif
