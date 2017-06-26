@@ -29,15 +29,16 @@ void show_version(void)
   puts("T50 Experimental Mixed Packet Injector Tool " VERSION "\n"
        "Originally created by Nelson Brito <nbrito@sekure.org>\n"
        "Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>\n"
-       "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>");
+       "Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>\n");
 }
 
 /* Help and usage message */
 void usage(void)
 {
-  show_version();
+  /* --- already showing version, by default! --- */
+  //show_version();
 
-  puts("\nUsage: t50 <host[/cidr]> [options]");
+  puts("Usage: t50 <host[/cidr]> [options]");
 
   general_help();
   gre_help();

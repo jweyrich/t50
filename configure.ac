@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [13])
+define([VERSION_FIX],   [14])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
@@ -19,28 +19,33 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 #AC_CANONICAL_HOST
 
-AC_PROG_CC_C99
+# define default CFLAGS
+AC_ARG_ENABLE([debug],
+  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
+  [DEFAULT_CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
+  [DEFAULT_CFLAGS="-O2 -march=native -s -DNDEBUG -fno-stack-protector"])
 
+AC_ARG_ENABLE([ansi],
+  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
+  [DEFAULT_CFLAGS+=" -DUSE_ANSI"],[])
+
+# overwrite CFLAGS only if they are not yet defined
+: ${CFLAGS="$DEFAULT_CFLAGS"}
+
+AC_PROG_CC
+AC_PROG_CC_C_O
+AC_C_STRINGIZE
 AX_C___ATTRIBUTE__
 
-AX_CHECK_COMPILE_FLAG([-std=gnu11],[CFLAGS="-std=gnu11 "],[
+AX_CHECK_COMPILE_FLAG([-std=gnu11],[AM_CFLAGS="-std=gnu11"],[
 	echo "GNU C11 standard not supported? Aborting..."
 	exit 1
 ])
 
-AX_CHECK_COMPILE_FLAG([-mmovebe],[CFLAGS+="-mmovbe "],[
-	echo "*** No MOVBE instruction support ***"
-])
-
-AC_ARG_ENABLE([debug],
-  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
-  [CFLAGS+="-O0 -g -D__HAVE_DEBUG__"],
-  [CFLAGS+="-O3 -s -DNDEBUG -fno-stack-protector"])
+AC_PROG_INSTALL
 
 # Define T50 compiler definitions
 AC_DEFINE([__HAVE_TURBO__],[1],[Use fork to spawn extra process])
-
-AC_PROG_INSTALL
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
 AC_CHECK_HEADER_STDBOOL
@@ -63,5 +68,7 @@ AC_C_RESTRICT
 AC_C_STRINGIZE
 
 AC_CONFIG_FILES([Makefile src/Makefile])
+
+AC_SUBST([AM_CFLAGS])
 
 AC_OUTPUT

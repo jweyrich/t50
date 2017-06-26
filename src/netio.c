@@ -71,9 +71,9 @@ void create_socket(void)
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error opening raw socket: \"%s\"", strerror(errno));
+    fatal_error("Cannot open raw socket: \"%s\"", strerror(errno));
 #else
-    fatal_error("Error opening raw socket");
+    fatal_error("Cannot open raw socket");
 #endif
   }
 
@@ -81,18 +81,18 @@ void create_socket(void)
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error getting socket flags: \"%s\"", strerror(errno));
+    fatal_error("Cannot get socket flags: \"%s\"", strerror(errno));
 #else
-    fatal_error("Error getting socket flags");
+    fatal_error("Cannot get socket flags");
 #endif
   }
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error setting socket to non-blocking mode: \"%s\"", strerror(errno));
+    fatal_error("Cannot set socket to non-blocking mode: \"%s\"", strerror(errno));
 #else
-    fatal_error("Error setting socket to non-blocking mode");
+    fatal_error("Cannot set socket to non-blocking mode");
 #endif
   }
 
@@ -102,9 +102,9 @@ void create_socket(void)
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error setting socket options: \"%s\"", strerror(errno));
+    fatal_error("Cannot set socket options: \"%s\"", strerror(errno));
 #else
-    fatal_error("Error setting socket options");
+    fatal_error("Cannot set socket options");
 #endif
   }
 
@@ -116,9 +116,9 @@ void create_socket(void)
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("error setting socket broadcast flag: \"%s\"", strerror(errno));
+    fatal_error("Cannot set socket broadcast flag: \"%s\"", strerror(errno));
 #else
-    fatal_error("error setting socket broadcast flag");
+    fatal_error("Cannot set socket broadcast flag");
 #endif
   }
 #endif /* SO_BROADCAST */
@@ -128,9 +128,9 @@ void create_socket(void)
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("error setting socket priority: \"%s\"", strerror(errno));
+    fatal_error("Cannot set socket priority: \"%s\"", strerror(errno));
 #else
-    fatal_error("error setting socket priority");
+    fatal_error("Cannot set socket priority");
 #endif
   }
 #endif /* SO_PRIORITY */
@@ -180,7 +180,7 @@ _Bool send_packet(const void *const buffer,
   if (unlikely(socket_send(fd, &sin, (void *)buffer, size) == -1))
   {
     if (errno == EPERM)
-      fatal_error("Error sending packet (Permission!). Please check your firewall rules (iptables?).");
+      fatal_error("Cannot send packet (Permission!?). Please check your firewall rules (iptables?).");
 
     return false;
   }
@@ -201,9 +201,9 @@ int setup_sendbuffer(socket_t *fd, uint32_t n)
   if ( getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error getting socket buffer: \"%s\"", strerror(errno));
+    fatal_error("Cannot get socket buffer: \"%s\"", strerror(errno));
 #else
-    fatal_error("Error getting socket buffer");
+    fatal_error("Cannot get socket buffer");
 #endif
   }
 
@@ -220,9 +220,9 @@ int setup_sendbuffer(socket_t *fd, uint32_t n)
         break;
 
 #ifdef __HAVE_DEBUG__
-      fatal_error("Error setting socket buffer: \"%s\"", strerror(errno));
+      fatal_error("Cannot set socket buffer: \"%s\"", strerror(errno));
 #else
-      fatal_error("Error setting socket buffer");
+      fatal_error("Cannot set socket buffer");
 #endif
     }
   }

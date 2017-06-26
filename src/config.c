@@ -175,6 +175,7 @@ static struct options_table_s options[] =
   { OPTION_ENCAPSULATED,            0,  "encapsulated",     0 },
   { OPTION_BOGUSCSUM,             'B',  "bogus-csum",       0 },
   { OPTION_SHUFFLE,                 0,  "shuffle",          0 },
+  { OPTION_QUIET,                 'q',  "quiet",            0 },
 
   /* XXX GRE HEADER OPTIONS (IPPROTO_GRE = 47) */
   { OPTION_GRE_SEQUENCE_PRESENT,  0,    "gre-seq-present",  0 },
@@ -517,8 +518,9 @@ struct config_options *parse_command_line(char **argv)
     {
       if (num_options > 1)
         error("Option '-v' (or '--version') cannot be used with other options.");
-      else
-        show_version();
+      /* --- already showing version, by default! --- */
+      //else
+      //  show_version();
 
       exit(EXIT_FAILURE);
     }
@@ -533,6 +535,18 @@ struct config_options *parse_command_line(char **argv)
         list_protocols();
 
       exit(EXIT_FAILURE);
+    }
+
+  if ((ptbl = find_option("-q")) != NULL)
+    if (ptbl->in_use_)
+    {
+      if (num_options > 1)
+      {
+        error("Option '-q' (or '--quiet') cannot be used with other options.");
+        exit(EXIT_FAILURE);
+      }
+      else
+        co.quiet = 1;
     }
 
   /* We got all the options. Now, check their rules! */
@@ -1725,7 +1739,7 @@ void list_protocols(void)
   modules_table_t *ptbl;
   int i;
 
-  puts("List of supported protocols (--protocol):");
+  puts(INFO " List of supported protocols (--protocol):");
 
   for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
     printf("\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description);

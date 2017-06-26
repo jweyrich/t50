@@ -23,9 +23,12 @@
 #include <t50_shuffle.h>
 #include <t50_randomizer.h>
 
-void shuffle(size_t *p, size_t size)
+// NOTE: It is safe to use uint32_t instead of uint32_t 'cause
+//       the index buffer will never be greater than the number
+//       of available protocols.
+void shuffle(uint32_t *p, uint32_t size)
 {
-  size_t i, j;
+  uint32_t i, j;
 
   for (i = 0; i < (size - 2); i++)
   {

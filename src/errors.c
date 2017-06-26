@@ -26,6 +26,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <configuration.h>
+#include <t50_defines.h>
 
 /* --- Using vfprintf for flexibility. */
 static void verror(const char * const fmt, va_list args)
@@ -50,6 +51,8 @@ void error(const char * const fmt, ...)
 {
   va_list args;
 
+  fputs(ERROR " ", stderr);
+
   va_start(args, fmt);
   verror(fmt, args);
   va_end(args);
@@ -64,7 +67,7 @@ void fatal_error(const char * const fmt, ...)
 {
   va_list args;
 
-  fputs("\a\n", stderr);  /* BEEP! */
+  fputs(FATAL " ", stderr);
   va_start(args, fmt);
   verror(fmt,args);
   va_end(args);

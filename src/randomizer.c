@@ -60,12 +60,11 @@ void SRANDOM(void)
   uint32_t cap;
 
   // Get CPUID features info.
-  __asm__ __volatile__ ("cpuid" : "=c" (cap) : "a" (1U)
-  :
-#ifdef __x86_64__
-    "rbx", "rdx"
-#else
+  __asm__ __volatile__ ("cpuid" : "=c" (cap) : "a" (1U) : 
+#ifdef __i386__
     "ebx", "edx"
+#else
+    "rbx", "rdx"
 #endif
   );
 
@@ -81,8 +80,10 @@ void SRANDOM(void)
 
 #ifdef __x86_64__
     __asm__ __volatile__ (
-      "1: rdrand %0; jnc 1b;\n"
-      "2: rdrand %1; jnc 2b;"
+      "1: rdrand %0\n"
+      "   jnc 1b;\n"
+      "2: rdrand %1\n"
+      "   jnc 2b"
       : "=q" (_seed[0]), "=q" (_seed[1])
       : : "cc"
     );

@@ -155,10 +155,10 @@ END_MODULES_TABLE
 // Now we have the table above filled. It's safe to get it's size this way.
 #define NUM_OF_MODULES ((sizeof mod_table / sizeof mod_table[0])-1)
 
-size_t number_of_modules = NUM_OF_MODULES;
-size_t indices[NUM_OF_MODULES];
+const uint32_t number_of_modules = NUM_OF_MODULES;
+uint32_t indices[NUM_OF_MODULES];
 
-static size_t next_index = 0;
+static uint32_t next_index = 0;
 
 int *get_module_valid_options_list(int protocol)
 {
@@ -181,9 +181,9 @@ void build_indices(void)
     indices[i] = i;
 }
 
-size_t get_index(struct config_options *co)
+uint32_t get_index(struct config_options *co)
 {
-  size_t n;
+  uint32_t n;
 
   if (next_index >= NUM_OF_MODULES)
   {

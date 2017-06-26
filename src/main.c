@@ -43,6 +43,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 #include <t50_shuffle.h>
+#include <t50_help.h>
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
@@ -66,6 +67,8 @@ int main(int argc, char *argv[])
   int                   proto;
   time_t                lt;
   struct tm             *tm;
+
+  show_version();
 
   /* Parse_command_line returns ONLY if there are no errors.
      This must be called before testing user privileges. */
@@ -93,11 +96,11 @@ int main(int argc, char *argv[])
       threshold_t new_threshold;
 
       if ((pid = fork()) == -1)
+        fatal_error("Cannot create child process"
 #ifdef __HAVE_DEBUG__
-        fatal_error("Error creating child process: \"%s\".\nExiting..", strerror(errno));
-#else
-        fatal_error("Error creating child process");
+                    ": \"%s\".\nExiting..", strerror(errno)
 #endif
+        );
 
       /* Divide the process iterations in main loop between both processes. */
       new_threshold = co->threshold / 2;
@@ -114,20 +117,20 @@ int main(int argc, char *argv[])
 
   /* Setting the priority to both parent and child process. */
   if (setpriority(PRIO_PROCESS, PRIO_PROCESS, -15)  == -1)
+    fatal_error("Cannot set process priority"
 #ifdef __HAVE_DEBUG__
-    fatal_error("Error setting process priority: \"%s\".\nExiting..", strerror(errno));
-#else
-    fatal_error("Error setting process priority");
+                ": \"%s\".\nExiting..", strerror(errno)
 #endif
+    );
 
   /* Show launch info only for parent process. */
-  if (!IS_CHILD_PID(pid))
+  if (!IS_CHILD_PID(pid) && !co->quiet)
   {
     /* Getting the local time. */
     lt = time(NULL);
     tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
+    printf(INFO " " PACKAGE " " VERSION " successfully launched at %s %2d%s %d %02d:%02d:%02d\n",
            get_month(tm->tm_mon),
            tm->tm_mday,
            get_ordinal_suffix(tm->tm_mday),
@@ -180,7 +183,7 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_DEBUG__
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
-      fprintf(stderr, "[DEBUG] Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
+      fprintf(stderr, DEBUG " Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
               ptbl->name, size);
 #endif
 
@@ -215,7 +218,7 @@ int main(int argc, char *argv[])
         /* Wait 5 seconds for the child to end... */
         alarm(WAIT_FOR_CHILD_TIMEOUT);
 #ifdef __HAVE_DEBUG__
-        fputs("\nWaiting for child process to end...\n", stderr);
+        fputs(INFO " Waiting for child process to end...\n", stderr);
 #endif
 
         /* SIGALRM will kill the child process if necessary! */
@@ -230,17 +233,20 @@ int main(int argc, char *argv[])
     /* Finally we close the raw socket. */ 
     close_socket();
 
-    lt = time(NULL);
-    tm = localtime(&lt);
+    if (!co->quiet)
+    {
+      lt = time(NULL);
+      tm = localtime(&lt);
 
-    printf("\a\n" PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
-           get_month(tm->tm_mon),
-           tm->tm_mday,
-           get_ordinal_suffix(tm->tm_mday),
-           (tm->tm_year + 1900),
-           tm->tm_hour,
-           tm->tm_min,
-           tm->tm_sec);
+      printf(INFO " " PACKAGE " " VERSION " successfully finished at %s %2d%s %d %02d:%02d:%02d\n",
+             get_month(tm->tm_mon),
+             tm->tm_mday,
+             get_ordinal_suffix(tm->tm_mday),
+             (tm->tm_year + 1900),
+             tm->tm_hour,
+             tm->tm_min,
+             tm->tm_sec);
+    }
   }
 
   /* Everything went well. Exit. */
@@ -297,20 +303,23 @@ void initialize(const struct config_options *co)
   setvbuf(stdout, NULL, _IONBF, 0);
 
   /* --- Show some messages. */
-  if (co->flood)
-    puts("Entering flood mode...");
-  else
-    printf("Sending %u packets...\n", co->threshold);
+  if (!co->quiet)
+  {
+    if (co->flood)
+      fputs(INFO " Entering flood mode...", stdout);
+    else
+      printf(INFO " Sending %u packets...\n", co->threshold);
 
 #ifdef __HAVE_TURBO__
-  if (co->turbo)
-    puts("Turbo mode active...");
+    if (co->turbo)
+      puts(INFO " Turbo mode active...");
 #endif
 
-  if (co->bits)
-    puts("Performing stress testing...");
+    if (co->bits)
+      puts(INFO " Performing stress testing...");
 
-  puts("Hit Ctrl+C to stop...");
+    puts(INFO " Hit Ctrl+C to stop...");
+  }
 }
 
 /* Auxiliary function to return the [constant] ordinary suffix string for a number. */
@@ -318,11 +327,15 @@ const char * const get_ordinal_suffix(unsigned int n)
 {
   static const char * const suffixes[] = { "th", "st", "nd", "rd" };
 
-  if (n >= 11 && n <= 13) return suffixes[0];
+  // 11, 12 and 13 has 'th' suffix!
+  if (n >= 11 && n <= 13) n = 0;
+  else n %= 10;
  
   // A little bit obfuscated, huh?
+  // Using a string instead of a static table of ints creates
+  // code a little bit smaller, and as fast as using ints.
   return suffixes["\000\001\002\003\000"
-                  "\000\000\000\000\000"[n % 10]];
+                  "\000\000\000\000\000"[n]];
 }
 
 /* Auxiliary function to return the [constant] string for a month.
