@@ -23,7 +23,7 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
   [DEFAULT_CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
-  [DEFAULT_CFLAGS="-Ofast -march=native -s -DNDEBUG -fno-stack-protector"])
+  [DEFAULT_CFLAGS="-O2 -march=native -s -DNDEBUG -fno-stack-protector"])
 
 AC_ARG_ENABLE([ansi],
   AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
