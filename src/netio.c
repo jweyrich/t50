@@ -167,7 +167,6 @@ _Bool send_packet(const void *const buffer,
   {
     .sin_family = AF_INET,
     .sin_port = htons(IPPORT_RND(co->dest)),
-    /* FIX: s_addr member was missing! */
     .sin_addr.s_addr = co->ip.daddr    /* Already in network byte order! */
   };
 
@@ -176,7 +175,6 @@ _Bool send_packet(const void *const buffer,
   assert(co != NULL);
 
   /* Use socket_send(), below. */
-  /* NOTE: Assume socket_send will not fail. */
   if (unlikely(socket_send(fd, &sin, (void *)buffer, size) == -1))
   {
     if (errno == EPERM)
