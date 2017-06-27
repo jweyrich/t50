@@ -84,25 +84,29 @@ void SRANDOM(void)
       "   jnc 1b;\n"
       "2: rdrand %1\n"
       "   jnc 2b"
-      : "=q" (_seed[0]), "=q" (_seed[1])
+      : "=g" (_seed[0]), "=g" (_seed[1])
       : : "cc"
     );
 #else
     __asm__ __volatile__ (
-      "1: rdrand %0; jnc 1b;\n"
-      "2: rdrand %1; jnc 2b;\n"
-      "3: rdrand %2; jnc 3b;\n"
-      "4: rdrand %3; jnc 4b;"
-      : "=r" (*(uint32_t *)_seed), 
-        "=r" (*((uint32_t *)_seed + 1)), 
-        "=r" (*((uint32_t *)_seed + 2)), 
-        "=r" (*((uint32_t *)_seed + 3))
+      "1: rdrand %0\n"
+      "   jnc 1b;\n"
+      "2: rdrand %1\n"
+      "   jnc 2b;\n"
+      "3: rdrand %2\n"
+      "   jnc 3b;\n"
+      "4: rdrand %3\n"
+      "   jnc 4b;"
+      : "=g" (*(uint32_t *)_seed), 
+        "=g" (*((uint32_t *)_seed + 1)), 
+        "=g" (*((uint32_t *)_seed + 2)), 
+        "=g" (*((uint32_t *)_seed + 3))
       : : "cc"
     );
 #endif
   }
   else
-#endif
+#endif  // The code below exists for non x86 platforms.
   {
     int _fd;
     int r;
