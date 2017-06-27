@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 
 define([VERSION_MAJOR], [5])
 define([VERSION_MINOR], [6])
-define([VERSION_FIX],   [14])
+define([VERSION_FIX],   [15])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
