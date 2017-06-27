@@ -1,4 +1,4 @@
-.TH T50 8 2017-05-16 "5.6" "T50 man page"
+.TH T50 8 2017-06-27 "5.6" "T50 man page"
 .SH NAME
 T50 - network packet injector
 .SH SYNOPSIS
@@ -7,39 +7,43 @@ T50 - network packet injector
 .IR host[/CIDR]
 .SH DESCRIPTION
 Experimental mixed packet injector tool.
+
+This is NOT a DoS tool, but a tool to inject packets using various protocols.
 .SH OPTIONS
 .TP
 .BI host[/CIDR]
-The host address can be informed in one of two formats: IP address or URI name. In both cases the CIDR can be informed following the host name or IP using '/' as separator.
-Partial IP addresses can be used. To do so, the user must exclude one or more octects (ex: 192.168 for 192.168.0.0/16 - "192.168." is an invalid host because of the last '.').
-When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or thrid octect is informed, respectively).
+The host address is the target of T50. It can be informed in one of two formats: IP address or URI name. This address can be informed as a range of IPs (by omiting one or mode octects) or using a CIDR separating the IP (full or partial) or URI with "/##", for instance: "192.168/16" or "host.com.local/22". When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or thrid octect [from right to left] are ommited, respectively).
 
-Notice that, sometimes, the host argument is misinterpreted as an option. When this happens, you can use the pseudo option '--' before the host address.
-Also, to avoid this you can provide the host address as the first argument.
+Notice that, sometimes, the "host[/CIDR]" argument is misinterpreted as an option. When this happens, you can use the pseudo option '--' before the host address.
+Also, to avoid this error you can provide the host address as the first argument.
+
+Notice, also, that ONLY IPv4 addresses are permited. T50 don't provide IPv6 support yet.
 .TP
 .BR \-\-threshold " NUM"
-Number of packets to send (default 1000).
+Number of packets to inject (default 1000).
 .TP
 .BR \-\-flood
-Superseds the threshold.
+Keep injecting packets until user terminates the process (^C). Cannot be used with \-\-threshold.
 .TP
 .BR \-B ", " \-\-bogus-csum
-Bogus checksum.
+Use a bogus "random " checksum instead of calculating the actual packet checksum.
 .TP
 .BR \-\-turbo
-Extend performance (create child process).
+Inject packets faster (creates a child process).
 .TP
 .BR \-\-shuffle
-When used with T50 "protocol", it will shuffle the available protocolos. Otherwise they will be sent in the same order as listed with \-\-list-protocols option.
+When used with T50 "protocol", it will shuffle the available protocols. Otherwise they will be sent in the same order as listed with \-\-list-protocols option.
+This option will not work with any other "protocol".
 .TP
 .BR \-s ", " \-\-saddr " ADDR"
-IP source address (default RANDOM).
+IP header source address (default RANDOM).
 .TP
 .BR \-p ", " \-\-protocol " protoname"
-Select an specific protocol to use (see --list-protocolos, below).
+Select an specific protocol to use (default: TCP. Use \-\-list-protocols to see all protocols available). Use T50 if you want to inject all available protocols.
+The "protocolname" is case insensitive.
 .TP
 .BR \-h ", " \-\-help
-Display full help.
+Display all available options and their defaults.
 .TP
 .BR \-v ", " \-\-version
 Display t50 version.
@@ -47,33 +51,62 @@ Display t50 version.
 .BR \-l ", " \-\-list-protocols
 Lists all available protocols T50 can provide.
 .SH EXAMPLES
+See all available protocols:
+.IP
+.nf
+# t50 -l
+T50 Experimental Mixed Packet Injector Tool 5.6.15
+Originally created by Nelson Brito <nbrito@sekure.org>
+Previously maintained by Fernando Mercês <fernando@mentebinaria.com.br>
+Maintained by Frederico Lamberti Pissarra <fredericopissarra@gmail.com>
+
+[INFO]  List of supported protocols (--protocol):
+   1 - ICMP (Internet Control Message Protocol)
+   2 - IGMPv1 (Internet Group Message Protocol v1)
+   3 - IGMPv3 (Internet Group Message Protocol v3)
+   4 - TCP  (Transmission Control Protocol)
+   5 - EGP  (Exterior Gateway Protocol)
+   6 - UDP  (User Datagram Protocol)
+   7 - RIPv1  (Routing Internet Protocol v1)
+   8 - RIPv2  (Routing Internet Protocol v2)
+   9 - DCCP (Datagram Congestion Control Protocol)
+   10 - RSVP  (Resource Reservation Protocol)
+   11 - IPSEC (Internet Security Protocl (AH/ESP))
+   12 - EIGRP (Enhanced Interior Gateway Routing Protocol)
+   13 - OSPF  (Open Shortest Path First)
+.fi
+.PP
 Send 500 packets to a single target:
 .IP
 # t50 192.168.0.100 --threshold 500
 .PP
-Flood test (impliced /24 CIDR. From 192.168.0.1 to 192.168.0.254):
+Flooding targets from 192.168.0.1 to 192.168.0.254 (notice the partial IP) with TCP packets:
 .IP
 # t50 192.168.0 --flood
+.PP
+Flooding targets from 192.168.0.1 to 192.168.255.254 with all protocols T50 can provide in a random order using "Turbo" mode.
+.IP
+# t50 192.168 --flood -p t50 --shuffle --turbo
 .SH NOTES
 Root privilege is mandatory to run t50.
 .P
-There are lots of options. Please, use -h or --help to see them.
+There are lots of options. Please, use -h or --help to see them and their default values.
 .SH BUGS
-As noted before, the host[/CIDR] argument sometimes is misinterpreted as an option.
-This bug was introduced when the argument parser were changed to support flexible host "names".
-Someday, I'll correct this (Frederico).
+As noted before, the "host[/CIDR]" argument sometimes is misinterpreted as an option.
+This bug was introduced when the argument parser was changed to support flexible host "names".
+Someday I'll correct this (Frederico).
 .SH AUTHORS
 Nelson Brito
 .SH CONTRIBUTORS
 Fernando Mercês
 .br
 Frederico Lamberti Pissarra
-.SH REPORTING BUGS
-Report bugs at 
+.SH BUGS and SOURCE CODE AVAILABILITY
+The latest release of the source code can be downloaded at:
 .UR http://\:github.com/\:fredericopissarra/\:t50
-t50 GitHub Repository
-.UE \ or at t50-dev google group via t50-dev@googlegroups.com.
+T50 GitHub Repository
+.UE \. You can also report bugs there or at t50-dev google group via t50-dev@googlegroups.com.
 .SH COPYRIGHT
-Copyright © 2014 T50 developers.
+Copyright © 2014-2017 T50 developers.
 Licensed GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.
