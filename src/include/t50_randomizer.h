@@ -24,8 +24,9 @@
   uint32_t: (!!(v) ? htonl((v)) : RANDOM()), \
   default: (!!(v) ? (v) : RANDOM()))
 
-#define INADDR_RND(v) __RND((v))
-#define IPPORT_RND(v) __RND((v))
+// FIX: Random IP addresses and PORTS were reversed by __RND macro above.
+#define INADDR_RND(v) ((uint32_t)(!!(v) ? (v) : RANDOM()))
+#define IPPORT_RND(v) ((uint16_t)(!!(v) ? (v) : RANDOM()))
 
 uint32_t RANDOM(void);
 void     SRANDOM(void);

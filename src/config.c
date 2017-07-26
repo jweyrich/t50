@@ -1605,12 +1605,12 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
   // Source port.
   case OPTION_SOURCE:
     check_list_separators(optname, arg);
-    co->source = toULongCheckRange(optname, arg, 0, 65535);
+    co->source = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
   // Destination port
   case OPTION_DESTINATION:
     check_list_separators(optname, arg);
-    co->dest   = toULongCheckRange(optname, arg, 0, 65535);
+    co->dest   = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
   case OPTION_IP_SOURCE:
     check_list_separators(optname, arg);
@@ -1666,7 +1666,7 @@ void set_config_option(struct config_options *__restrict__ co, char *optname, in
     break;
   case OPTION_RSVP_SENDER_PORT:
     check_list_separators(optname, arg);
-    co->rsvp.sender_port = toULongCheckRange(optname, arg, 0, 65535);
+    co->rsvp.sender_port = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
   case OPTION_RSVP_CONFIRM_ADDR:
     check_list_separators(optname, arg);
