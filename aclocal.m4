@@ -1152,3 +1152,6 @@ AC_SUBST([am__untar])
 
 m4_include([m4/ax_c___attribute__.m4])
 m4_include([m4/ax_check_compile_flag.m4])
+m4_include([m4/ax_compiler_vendor.m4])
+m4_include([m4/ax_gcc_archflag.m4])
+m4_include([m4/ax_gcc_x86_cpuid.m4])
