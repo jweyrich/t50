@@ -5852,7 +5852,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___std_gnu11" >&5
 $as_echo "$ax_cv_check_cflags___std_gnu11" >&6; }
 if test "x$ax_cv_check_cflags___std_gnu11" = xyes; then :
-  AM_CFLAGS+="-std=gnu11"
+  AM_CFLAGS+=" -std=gnu11"
 else
 
 	echo "GNU C11 standard not supported? Aborting..."
@@ -5997,19 +5997,7 @@ fi
 done
 
 
-for ac_header in arpa/inet.h
-   fcntl.h
-   inttypes.h
-   limits.h
-   netdb.h
-   netinet/in.h
-   stddef.h
-   stdint.h
-   stdlib.h
-   string.h
-   sys/socket.h
-   sys/time.h
-   unistd.h
+for ac_header in arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
