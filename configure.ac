@@ -25,17 +25,17 @@ LDFLAGS=""
 # Use specific compilation flags for debug or release mode.
 AC_ARG_ENABLE([debug],
  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
- [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-O0 -g"],
- [AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-O2 -s"])
+ [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-g"],
+ [AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-s"])
 
 # Use -march=native only if is safe, otherwise try to use -mtune.
 AX_GCC_ARCHFLAG([yes],
- [AM_CFLAGS+=" -march=native"],
- [AX_CHECK_COMPILE_FLAG[-mtune=native], [AM_CFLAGS+=" -mtune=native"],[]])
+ [AM_CFLAGS="${AM_CFLAGS} -march=native"],
+ [AX_CHECK_COMPILE_FLAG[-mtune=native], [AM_CFLAGS="${AM_CFLAGS} -mtune=native"],[]])
 
 AC_ARG_ENABLE([ansi],
  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
- [AM_CFLAGS+=" -DUSE_ANSI"],[])
+ [AM_CFLAGS="${AM_CFLAGS} -DUSE_ANSI"],[])
 
 AC_PROG_CC
 AC_PROG_CC_C_O

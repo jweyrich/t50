@@ -2909,9 +2909,9 @@ LDFLAGS=""
 # Use specific compilation flags for debug or release mode.
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug; AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-O0 -g"
+  enableval=$enable_debug; AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-g"
 else
-  AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-O2 -s"
+  AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-s"
 fi
 
 
@@ -4583,15 +4583,15 @@ if test "x$ax_cv_check_cflags__" = xyes; then :
 else
   :
 fi
--mtune=native, AM_CFLAGS+=" -mtune=native",
+-mtune=native, AM_CFLAGS="${AM_CFLAGS} -mtune=native",
 else
-  AM_CFLAGS+=" -march=native"
+  AM_CFLAGS="${AM_CFLAGS} -march=native"
 fi
 
 
 # Check whether --enable-ansi was given.
 if test "${enable_ansi+set}" = set; then :
-  enableval=$enable_ansi; AM_CFLAGS+=" -DUSE_ANSI"
+  enableval=$enable_ansi; AM_CFLAGS="${AM_CFLAGS} -DUSE_ANSI"
 fi
 
 
