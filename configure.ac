@@ -19,19 +19,19 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 #AC_CANONICAL_HOST
 
-# define default CFLAGS
-AC_SUBST([CFLAGS],[])
+CFLAGS=""
+LDFLAGS=""
 
 # Use specific compilation flags for debug or release mode.
 AC_ARG_ENABLE([debug],
  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
- [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"],
- [AM_CFLAGS="-O2 -s -DNDEBUG -fno-stack-protector"])
+ [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-O0 -g"],
+ [AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-O2 -s"])
 
-# Use -march=native only if is safe.
+# Use -march=native only if is safe, otherwise try to use -mtune.
 AX_GCC_ARCHFLAG([yes],
  [AM_CFLAGS+=" -march=native"],
- [AM_CFLAGS+=" -mtune=native"])
+ [AX_CHECK_COMPILE_FLAG[-mtune=native], [AM_CFLAGS+=" -mtune=native"],[]])
 
 AC_ARG_ENABLE([ansi],
  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
@@ -44,10 +44,10 @@ AC_C_INLINE
 AC_C_RESTRICT
 AX_C___ATTRIBUTE__
 
-AX_CHECK_COMPILE_FLAG([-std=gnu11],[AM_CFLAGS+=" -std=gnu11"],[
-	echo "GNU C11 standard not supported? Aborting..."
-	exit 1
-])
+AX_CHECK_COMPILE_FLAG([-std=gnu11],
+  [AM_CFLAGS+=" -std=gnu11"],
+  [echo "GNU C11 standard not supported? Aborting...";
+   exit 1])
 
 AC_PROG_INSTALL
 
@@ -75,5 +75,6 @@ AC_CHECK_FUNCS([alarm regcomp socket strcasecmp strchr strdup strerror strpbrk s
 AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_SUBST([AM_CFLAGS])
+AC_SUBST([AM_LDFLAGS])
 
 AC_OUTPUT

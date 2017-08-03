@@ -624,6 +624,7 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+AM_LDFLAGS
 AM_CFLAGS
 LIBOBJS
 EGREP
@@ -654,8 +655,8 @@ EXEEXT
 ac_ct_CC
 CPPFLAGS
 LDFLAGS
-CC
 CFLAGS
+CC
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -2902,19 +2903,19 @@ fi
 
 #AC_CANONICAL_HOST
 
-# define default CFLAGS
-
+CFLAGS=""
+LDFLAGS=""
 
 # Use specific compilation flags for debug or release mode.
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug; AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"
+  enableval=$enable_debug; AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-O0 -g"
 else
-  AM_CFLAGS="-O2 -s -DNDEBUG -fno-stack-protector"
+  AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-O2 -s"
 fi
 
 
-# Use -march=native only if is safe.
+# Use -march=native only if is safe, otherwise try to use -mtune.
 DEPDIR="${am__leading_dot}deps"
 
 ac_config_commands="$ac_config_commands depfiles"
@@ -4548,7 +4549,41 @@ $as_echo_n "checking for gcc architecture flag... " >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_gcc_archflag" >&5
 $as_echo "$ax_cv_gcc_archflag" >&6; }
 if test "x$ax_cv_gcc_archflag" = xunknown; then
-  AM_CFLAGS+=" -mtune=native"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts " >&5
+$as_echo_n "checking whether C compiler accepts ... " >&6; }
+if ${ax_cv_check_cflags__+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  "
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags__=yes
+else
+  ax_cv_check_cflags__=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__" >&5
+$as_echo "$ax_cv_check_cflags__" >&6; }
+if test "x$ax_cv_check_cflags__" = xyes; then :
+  :
+else
+  :
+fi
+-mtune=native, AM_CFLAGS+=" -mtune=native",
 else
   AM_CFLAGS+=" -march=native"
 fi
@@ -5854,10 +5889,8 @@ $as_echo "$ax_cv_check_cflags___std_gnu11" >&6; }
 if test "x$ax_cv_check_cflags___std_gnu11" = xyes; then :
   AM_CFLAGS+=" -std=gnu11"
 else
-
-	echo "GNU C11 standard not supported? Aborting..."
-	exit 1
-
+  echo "GNU C11 standard not supported? Aborting...";
+   exit 1
 fi
 
 
@@ -6520,6 +6553,7 @@ done
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
+
 
 
 
