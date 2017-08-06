@@ -90,6 +90,7 @@ typedef struct
   int *valid_options;
 } modules_table_t;
 
+/* Macros used to define the modules table. */
 #define BEGIN_MODULES_TABLE modules_table_t mod_table[] = {
 #define END_MODULES_TABLE { 0, NULL, NULL, NULL, NULL } };
 #define MODULE_ENTRY(id,name,descr,func) { (id), name, descr, func, func ## _validopts },
