@@ -323,6 +323,7 @@ in_addr_t resolv(char *name)
       addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
       goto end_loop;
 
+    // FIXME: This is probably wrong!
     case AF_INET6:
       if (!addr)
         addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];

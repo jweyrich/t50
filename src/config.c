@@ -460,7 +460,7 @@ struct config_options *parse_command_line(char **argv)
       /* If the option needs an argument, get the next string. */
       if (!!(next_str = *(argv + 1)))
       {
-        static const char ferrfmt[] =
+        static const char * const ferrfmt =
           "Option '%s' has no arguments.";
 
         if (ptbl->has_arg)
@@ -500,12 +500,14 @@ struct config_options *parse_command_line(char **argv)
     num_options++;
   } /* end of command line scan. */
 
+  const char * const errfmt = "Option '-%c' (or '--%s') cannot be used with other options.";
+
   /* if '-h' (or '--help') option is given... */
   if ((ptbl = find_option("-h")) != NULL)
     if (ptbl->in_use_)
     {
       if (num_options > 1)
-        error("Option '-h' (or '--help') cannot be used with other options.");
+        error(errfmt, 'h', "help");
       else
         usage();
 
@@ -517,7 +519,7 @@ struct config_options *parse_command_line(char **argv)
     if (ptbl->in_use_)
     {
       if (num_options > 1)
-        error("Option '-v' (or '--version') cannot be used with other options.");
+        error(errfmt, 'v', "version");
       /* --- already showing version, by default! --- */
       //else
       //  show_version();
@@ -530,7 +532,7 @@ struct config_options *parse_command_line(char **argv)
     if (ptbl->in_use_)
     {
       if (num_options > 1)
-        error("Option '-l' (or '--list-protocols') cannot be used with other options.");
+        error(errfmt, 'l', "list-protocols");
       else
         list_protocols();
 
@@ -542,7 +544,7 @@ struct config_options *parse_command_line(char **argv)
     {
       if (num_options > 1)
       {
-        error("Option '-q' (or '--quiet') cannot be used with other options.");
+        error(errfmt, 'q', "quiet");
         exit(EXIT_FAILURE);
       }
       else

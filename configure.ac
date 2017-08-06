@@ -15,30 +15,37 @@ AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([build])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/include/configuration.h])
+
+#AC_CANONINCAL_TARGET
+#if test "x${target_os}" != "xlinux-gnu"; then
+#  echo "Cannot compile for this target: ${target_os}. T50 will work only on linux."
+#  exit 1
+#fi
+
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
-#AC_CANONICAL_HOST
-
+# FIXME: AC_PROG_CC need this?!
 CFLAGS=""
 LDFLAGS=""
 
 # Use specific compilation flags for debug or release mode.
 AC_ARG_ENABLE([debug],
- AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
- [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-g"],
- [AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-s"])
+  AS_HELP_STRING([--enable-debug], [Enable T50 debug information]),
+  [AM_CFLAGS="-O0 -g -D__HAVE_DEBUG__"; AM_LDFLAGS="-g"],
+  [AM_CFLAGS="-O2 -DNDEBUG -fno-stack-protector"; AM_LDFLAGS="-s"])
 
 # Use -march=native only if is safe, otherwise try to use -mtune.
 AX_GCC_ARCHFLAG([yes],
- [AM_CFLAGS="${AM_CFLAGS} -march=native"],
- [AX_CHECK_COMPILE_FLAG[-mtune=native], [AM_CFLAGS="${AM_CFLAGS} -mtune=native"],[]])
+  [AM_CFLAGS="${AM_CFLAGS} -march=native"],
+  [AX_CHECK_COMPILE_FLAG[-mtune=native], 
+    [AM_CFLAGS="${AM_CFLAGS} -mtune=native"],[]])
 
 AC_ARG_ENABLE([ansi],
  AS_HELP_STRING([--enable-ansi], [Enable ANSI codes on T50 messages]),
  [AM_CFLAGS="${AM_CFLAGS} -DUSE_ANSI"],[])
 
 AC_PROG_CC
-AC_PROG_CC_C_O
+#AC_PROG_CC_C_O
 AC_C_STRINGIZE
 AC_C_INLINE
 AC_C_RESTRICT
@@ -46,8 +53,7 @@ AX_C___ATTRIBUTE__
 
 AX_CHECK_COMPILE_FLAG([-std=gnu11],
   [AM_CFLAGS+=" -std=gnu11"],
-  [echo "GNU C11 standard not supported? Aborting...";
-   exit 1])
+  [echo "GNU C11 standard not supported? Aborting..."; exit 1])
 
 AC_PROG_INSTALL
 
