@@ -12,12 +12,12 @@ This is NOT a DoS tool, but a tool to inject packets using various protocols.
 .SH OPTIONS
 .TP
 .BI host[/CIDR]
-The host address is the target of T50. It can be informed in one of two formats: IP address or URI name. This address can be informed as a range of IPs (by omiting one or mode octects) or using a CIDR separating the IP (full or partial) or URI with "/##", for instance: "192.168/16" or "host.com.local/22". When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or thrid octect [from right to left] are ommited, respectively).
+The host address is the target of T50. It can be informed in one of two formats: IP address or URI name. This address can be informed as a range of IPs (by omitting one or mode octects) or using a CIDR separating the IP (full or partial) or URI with "/##", for instance: "192.168/16" or "host.com.local/22". When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or third octect [from right to left] are omitted, respectively).
 
 Notice that, sometimes, the "host[/CIDR]" argument is misinterpreted as an option. When this happens, you can use the pseudo option '--' before the host address.
 Also, to avoid this error you can provide the host address as the first argument.
 
-Notice, also, that ONLY IPv4 addresses are permited. T50 don't provide IPv6 support yet.
+Notice, also, that ONLY IPv4 addresses are allowed. T50 don't provide IPv6 support yet.
 .TP
 .BR \-\-threshold " NUM"
 Number of packets to inject (default 1000).
