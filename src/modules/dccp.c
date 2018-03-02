@@ -39,7 +39,7 @@
  */
 void dccp(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
+  size_t length,
          dccp_length, /* DCCP header length. */
          dccp_ext_length; /* DCCP Extended Sequence Number length. */
 
@@ -64,7 +64,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   dccp_length = dccp_packet_hdr_len(co->dccp.type);
   dccp_ext_length = (co->dccp.ext ? sizeof(struct dccp_hdr_ext) : 0);
 
@@ -73,7 +73,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
           sizeof(struct psdhdr)   +
           dccp_ext_length         +
           dccp_length             +
-          greoptlen;
+          length;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -89,7 +89,7 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
                              dccp_length);
 
   /* DCCP Header structure making a pointer to Packet. */
-  dccp                 = (struct dccp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
+  dccp                 = (struct dccp_hdr *)((unsigned char *)(ip + 1) + length);
   dccp->dccph_sport    = IPPORT_RND(co->source);
   dccp->dccph_dport    = IPPORT_RND(co->dest);
 
@@ -255,11 +255,13 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons((short)(buffer_ptr - (void *)dccp));
+  length = (size_t)(buffer_ptr - (void *)dccp);
+  pseudo->len      = htons(length);
 
   /* Computing the checksum. */
+  length = (size_t)((void *)(pseudo + 1) - (void *)dccp);
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         cksum(dccp, (unsigned char *)(pseudo + 1) - (unsigned char *)dccp);
+                         cksum(dccp, length);
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);

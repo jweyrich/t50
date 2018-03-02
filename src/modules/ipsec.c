@@ -41,7 +41,7 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
 
-  size_t greoptlen,   /* GRE options size. */
+  size_t length,
          esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
          counter;
 
@@ -56,12 +56,12 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   esp_data  = auth_hmac_md5_len(1);
   *size = sizeof(struct iphdr)       +
           sizeof(struct ip_auth_hdr) +
           sizeof(struct ip_esp_hdr)  +
-          greoptlen                  +
+          length                     +
           IP_AH_ICV                  +
           esp_data;
 
@@ -99,7 +99,7 @@ void ipsec(const struct config_options *const __restrict__ co, size_t *size)
    */
 
   /* IPSec AH Header structure making a pointer to IP Header structure. */
-  ip_auth          = (struct ip_auth_hdr *)((unsigned char *)(ip + 1) + greoptlen);
+  ip_auth          = (struct ip_auth_hdr *)((unsigned char *)(ip + 1) + length);
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
                      co->ipsec.ah_length :

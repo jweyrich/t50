@@ -41,7 +41,7 @@ static void ospf_lsupdate(const struct config_options *const __restrict__, void 
  */
 void ospf(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
+  size_t length,
          ospf_length, /* OSPF header length. */
          counter,
          stemp;
@@ -62,7 +62,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   ospf_options = __RND(co->ospf.options);
   lls = TEST_BITS(ospf_options, OSPF_OPTION_LLS) ? 1 : 0;
   ospf_length = ospf_hdr_len(co->ospf.type, 
@@ -73,7 +73,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
   *size = sizeof(struct iphdr)             +
           sizeof(struct ospf_hdr)          +
           sizeof(struct ospf_auth_hdr)     +
-          greoptlen                        +
+          length                           +
           ospf_length                      +
           auth_hmac_md5_len(co->ospf.auth) +
           ospf_tlv_len(co->ospf.type, lls, co->ospf.auth);
@@ -93,7 +93,7 @@ void ospf(const struct config_options *const __restrict__ co, size_t *size)
                     ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
-  ospf          = (struct ospf_hdr *)((unsigned char *)(ip + 1) + greoptlen);
+  ospf          = (struct ospf_hdr *)((unsigned char *)(ip + 1) + length);
   ospf->version = OSPFVERSION;
   ospf->type    = co->ospf.type;
 
@@ -508,10 +508,13 @@ build_ospf_lsa:
    *     calculated, but is instead set to 0.
    */
   if (!co->ospf.auth)
+  {
     /* Computing the checksum. */
+    length = (size_t)(buffer.ptr - (void *)ospf);
     ospf->check   = co->bogus_csum ?
                     RANDOM() :
-                    cksum(ospf, buffer.ptr - (void *)ospf);
+                    cksum(ospf, length);
+  }
 
   gre_checksum(packet, co, *size);
 }

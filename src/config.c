@@ -1747,6 +1747,8 @@ void list_protocols(void)
     printf("\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description);
 }
 
+/* TODO: Replace this regex routine with a screte function. */
+
 /*--- Ok, this piece of code was, initially, an experiment.
       I have to review this code and get rip of this regex. --- */
 

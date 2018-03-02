@@ -40,7 +40,7 @@ static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const
  */
 void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,     /* GRE options size. */
+  size_t length,
          eigrp_tlv_len, /* EIGRP TLV size. */
          counter;
 
@@ -55,15 +55,15 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   prefix = __RND(co->eigrp.prefix);
   eigrp_tlv_len = eigrp_hdr_len(co->eigrp.opcode, co->eigrp.type, prefix, co->eigrp.auth);
 
   *size = sizeof(struct iphdr)     +
           sizeof(struct eigrp_hdr) +
           eigrp_tlv_len            +
-          greoptlen                +
-          8;    /* OBS: Ugly workaround! Must change this later! */
+          length                   +
+          8;    /* FIXME: Ugly workaround! Must change this later! */
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -89,7 +89,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
    *
    * EIGRP Header structure.
    */
-  eigrp              = (struct eigrp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
+  eigrp              = (struct eigrp_hdr *)((unsigned char *)(ip + 1) + length);
   eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __RND(co->eigrp.opcode);
   eigrp->flags       = __RND(co->eigrp.flags);
@@ -427,8 +427,9 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
   }
 
   /* Computing the checksum. */
+  length = (size_t)(buffer.ptr - (void *)eigrp);
   eigrp->check    = co->bogus_csum ?
-                    RANDOM() : cksum(eigrp, buffer.ptr - (void *)eigrp);
+                    RANDOM() : cksum(eigrp, length);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -39,7 +39,7 @@
  */
 void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
+  size_t length,
          counter;
 
   /* Packet and Checksum. */
@@ -54,9 +54,9 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   *size = sizeof(struct iphdr) +
-          greoptlen            +
+          length            +
           igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
 
   /* Try to reallocate packet, if necessary */
@@ -74,7 +74,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
   if (co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT)
   {
     /* IGMPv3 Report Header structure making a pointer to Packet. */
-    igmpv3_report           = (struct igmpv3_report *)((unsigned char *)(ip + 1) + greoptlen);
+    igmpv3_report           = (struct igmpv3_report *)((unsigned char *)(ip + 1) + length);
     igmpv3_report->type     = co->igmp.type;
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
@@ -96,15 +96,15 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
+    length = (size_t)(buffer.ptr - (void *)igmpv3_report);
     igmpv3_report->csum = co->bogus_csum ?
                           RANDOM() :
-                          cksum(igmpv3_report,
-                                buffer.ptr - (void *)igmpv3_report);
+                          cksum(igmpv3_report, length);
   }
   else
   {
     /* IGMPv3 Query Header structure making a pointer to Packet. */
-    igmpv3_query           = (struct igmpv3_query *)((unsigned char *)(ip + 1) + greoptlen);
+    igmpv3_query           = (struct igmpv3_query *)((unsigned char *)(ip + 1) + length);
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
     igmpv3_query->group    = INADDR_RND(co->igmp.group);
@@ -122,10 +122,10 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
+    length = (size_t)(buffer.ptr - (void *)igmpv3_query);
     igmpv3_query->csum = co->bogus_csum ?
                          RANDOM() :
-                         cksum(igmpv3_query,
-                               buffer.ptr - (void *)igmpv3_query);
+                         cksum(igmpv3_query, length);
   }
 
   /* GRE Encapsulation takes place. */

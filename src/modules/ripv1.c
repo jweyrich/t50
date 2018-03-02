@@ -41,8 +41,7 @@
  */
 void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
-         length;
+  size_t length;
 
   memptr_t buffer;
 
@@ -53,11 +52,11 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   *size = sizeof(struct iphdr)  +
           sizeof(struct udphdr) +
           sizeof(struct psdhdr) +
-          greoptlen             +
+          length             +
           rip_hdr_len(0);
 
   /* Try to reallocate packet, if necessary */
@@ -73,7 +72,7 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
                              rip_hdr_len(0));
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
+  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + length);
   udp->source = udp->dest = htons(IPPORT_RIP);
   udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
   udp->check  = 0;
@@ -125,11 +124,13 @@ void ripv1(const struct config_options *const __restrict__ co, size_t *size)
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length = (buffer.ptr - (void *)udp));
+  length = (size_t)(buffer.ptr - (void *)udp);
+  pseudo->len      = htons(length);
 
   /* Computing the checksum. */
+  length = (size_t)((void *)(pseudo + 1) - (void *)udp);
   udp->check  = co->bogus_csum ? RANDOM() :
-                cksum(udp, (void *)(pseudo + 1) - (void *)udp);
+                cksum(udp, length);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

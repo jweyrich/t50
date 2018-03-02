@@ -37,8 +37,7 @@
  */
 void egp(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen;   /* GRE options size. */
-
+  size_t length;
   struct iphdr *ip;
 
   /* EGP header and EGP acquire header. */
@@ -47,11 +46,11 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   *size = sizeof(struct iphdr)       +
           sizeof(struct egp_hdr)     +
           sizeof(struct egp_acq_hdr) +
-          greoptlen;
+          length;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -71,7 +70,7 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = (struct egp_hdr *)((unsigned char *)(ip + 1) + greoptlen);
+  egp           = (struct egp_hdr *)((unsigned char *)(ip + 1) + length);
   egp->version  = EGPVERSION;
   egp->type     = co->egp.type;
   egp->code     = co->egp.code;
@@ -86,8 +85,9 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
   egp_acq->poll  = __RND(co->egp.poll);
 
   /* Computing the checksum. */
+  length = (size_t)((void *)(egp_acq + 1) - (void *)egp);
   egp->check    = co->bogus_csum ? RANDOM() :
-                  cksum(egp, (unsigned char *)(egp_acq + 1) - (unsigned char *)egp);
+                  cksum(egp, length);
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -39,8 +39,7 @@
  */
 void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen;     /* GRE options size. */
-
+  size_t length;
   struct iphdr *ip;
 
   /* IGMPv1 header. */
@@ -49,12 +48,12 @@ void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
   assert(co != NULL);
 
   /* GRE options size. */
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
 
   /* Packet size. */
   *size = sizeof(struct iphdr)   +
           sizeof(struct igmphdr) +
-          greoptlen;
+          length;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -68,7 +67,7 @@ void igmpv1(const struct config_options *const __restrict__ co, size_t *size)
                     sizeof(struct igmphdr));
 
   /* IGMPv1 Header structure making a pointer to Packet. */
-  igmpv1        = (struct igmphdr *)((unsigned char *)(ip + 1) + greoptlen);
+  igmpv1        = (struct igmphdr *)((unsigned char *)(ip + 1) + length);
   igmpv1->type  = co->igmp.type;
   igmpv1->code  = co->igmp.code;
   igmpv1->group = INADDR_RND(co->igmp.group);

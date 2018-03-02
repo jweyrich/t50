@@ -47,8 +47,7 @@ static size_t tcp_options_len(const uint8_t, int, int);
  */
 void tcp(const struct config_options *const __restrict__ co, size_t *size)
 {
-  size_t greoptlen,   /* GRE options size. */
-         tcpolen,     /* TCP options size. */
+  size_t tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
          length,
          counter;
@@ -66,7 +65,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 
   assert(co != NULL);
 
-  greoptlen = gre_opt_len(co);
+  length = gre_opt_len(co);
   tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
   tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
 
@@ -74,7 +73,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
           sizeof(struct tcphdr) +
           sizeof(struct psdhdr) +
           tcpopt                +
-          greoptlen;
+          length;
 
   /* Try to reallocate packet, if necessary */
   alloc_packet(*size);
@@ -98,7 +97,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
                 __FUNCTION__, tcpopt);
 
   /* TCP Header structure making a pointer to IP Header structure. */
-  tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + greoptlen);
+  tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + length);
   tcp->source  = IPPORT_RND(co->source);
   tcp->dest    = IPPORT_RND(co->dest);
   tcp->res1    = TCP_RESERVED_BITS;
@@ -463,7 +462,8 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
   length += sizeof(struct psdhdr);
 
   /* Computing the checksum. */
-  tcp->check   = co->bogus_csum ? RANDOM() : cksum(tcp, length);
+  tcp->check   = co->bogus_csum ? RANDOM() : 
+                 cksum(tcp, length);
 
   gre_checksum(packet, co, *size);
 }
