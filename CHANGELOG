@@ -6,6 +6,9 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.7.1 - Mar 9th, 2018
+ * Changed size_t types from some functions to uint32_t.
+
 T50 5.7.0 - Jul 26th, 2017
  - Some IP addresses were in LITTLE ENDIAN format.
  * Improvements on configure.ac

@@ -21,7 +21,7 @@
 #ifndef __NETIO_H__
 #define __NETIO_H__
 
-#include <stddef.h>
+#include <stdint.h>
 #include <netinet/in.h>
 #include <t50_typedefs.h>
 #include <t50_config.h>
@@ -35,7 +35,7 @@ void         close_socket(void);     /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */
 _Bool send_packet(const void *const,
-                  size_t,
+                  uint32_t,
                   const struct config_options *const __restrict__);
 
 #endif

@@ -35,9 +35,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void egp(const struct config_options *const __restrict__ co, size_t *size)
+void egp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length;
+  uint32_t length;
   struct iphdr *ip;
 
   /* EGP header and EGP acquire header. */
@@ -85,7 +85,7 @@ void egp(const struct config_options *const __restrict__ co, size_t *size)
   egp_acq->poll  = __RND(co->egp.poll);
 
   /* Computing the checksum. */
-  length = (size_t)((void *)(egp_acq + 1) - (void *)egp);
+  length = (uint32_t)((void *)(egp_acq + 1) - (void *)egp);
   egp->check    = co->bogus_csum ? RANDOM() :
                   cksum(egp, length);
 

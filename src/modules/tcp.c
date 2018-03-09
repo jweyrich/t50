@@ -34,7 +34,7 @@
 /*
  * prototypes.
  */
-static size_t tcp_options_len(const uint8_t, int, int);
+static uint32_t tcp_options_len(const uint8_t, int, int);
 
 /**
  * TCP packet header configuration.
@@ -45,9 +45,9 @@ static size_t tcp_options_len(const uint8_t, int, int);
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp(const struct config_options *const __restrict__ co, size_t *size)
+void tcp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t tcpolen,     /* TCP options size. */
+  uint32_t tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
          length,
          counter;
@@ -381,7 +381,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    */
   if (co->tcp.md5)
   {
-    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+    uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
     *buffer.byte_ptr++ = TCPOPT_MD5;
     *buffer.byte_ptr++ = TCPOLEN_MD5;
@@ -418,7 +418,7 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
    */
   if (co->tcp.auth)
   {
-    size_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+    uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
@@ -469,9 +469,9 @@ void tcp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* TCP options size calculation. */
-size_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
+uint32_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
 {
-  size_t size;
+  uint32_t size;
 
   /*
    * The code starts with size '0' and it accumulates all the required

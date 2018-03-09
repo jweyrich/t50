@@ -28,7 +28,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static size_t ospf_hdr_len(const uint32_t, const int, const int, const _Bool);
+static uint32_t ospf_hdr_len(const uint32_t, const int, const int, const _Bool);
 static void ospf_lsupdate(const struct config_options *const __restrict__, void **, struct ospf_lsa_hdr *);
 
 /**
@@ -39,9 +39,9 @@ static void ospf_lsupdate(const struct config_options *const __restrict__, void 
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ospf(const struct config_options *const __restrict__ co, size_t *size)
+void ospf(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length,
+  uint32_t length,
          ospf_length, /* OSPF header length. */
          counter,
          stemp;
@@ -510,7 +510,7 @@ build_ospf_lsa:
   if (!co->ospf.auth)
   {
     /* Computing the checksum. */
-    length = (size_t)(buffer.ptr - (void *)ospf);
+    length = (uint32_t)(buffer.ptr - (void *)ospf);
     ospf->check   = co->bogus_csum ?
                     RANDOM() :
                     cksum(ospf, length);
@@ -520,12 +520,12 @@ build_ospf_lsa:
 }
 
 /* OSPF header size calculation. */
-size_t ospf_hdr_len(const uint32_t type, 
+uint32_t ospf_hdr_len(const uint32_t type, 
                     const int neighbor, 
                     const int lsa_type, 
                     const _Bool dd_include_lsa)
 {
-  size_t size;
+  uint32_t size;
 
   /*
    * The code starts with size '0' and it accumulates all the required

@@ -36,9 +36,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void udp(const struct config_options *const __restrict__ co, size_t *size)
+void udp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length;
+  uint32_t length;
 
   struct iphdr *ip;
   struct iphdr *gre_ip;
@@ -89,7 +89,7 @@ void udp(const struct config_options *const __restrict__ co, size_t *size)
   pseudo->len      = htons(sizeof(struct udphdr));
 
   /* Computing the checksum. */
-  length = (size_t)((void *)(pseudo + 1) - (void *)udp);
+  length = (uint32_t)((void *)(pseudo + 1) - (void *)udp);
   udp->check  = co->bogus_csum ? RANDOM() :
                 cksum(udp, length);
 

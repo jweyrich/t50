@@ -36,9 +36,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void icmp(const struct config_options *const __restrict__ co, size_t *size)
+void icmp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t greoptlen;   /* GRE options size. */
+  uint32_t greoptlen;   /* GRE options size. */
 
   struct iphdr *ip;
 

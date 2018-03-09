@@ -21,8 +21,10 @@
 #ifndef __MEMALLOC_H__
 #define __MEMALLOC_H__
 
+#include <stdint.h>
+
 void *packet;
 
-void alloc_packet(size_t);
+void alloc_packet(uint32_t);
 
 #endif

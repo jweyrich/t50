@@ -45,7 +45,7 @@
 static socket_t fd = -1;
 
 static int wait_for_io(int);
-static int socket_send(int, struct sockaddr_in *, void *, size_t);
+static int socket_send(int, struct sockaddr_in *, void *, uint32_t);
 
 #ifdef SO_SNDBUF
 static int setup_sendbuffer(socket_t *, uint32_t);
@@ -160,7 +160,7 @@ void close_socket(void)
  * @return true (success) or false (error).
  */
 _Bool send_packet(const void *const buffer,
-                size_t size,
+                uint32_t size,
                 const struct config_options *const __restrict__ co)
 {
   struct sockaddr_in sin =
@@ -247,7 +247,7 @@ static int wait_for_io(int fd)
 }
 
 /* NOTE: Code inspired on Apache httpd source. */
-static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, size_t size)
+static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size)
 {
   int r;
 

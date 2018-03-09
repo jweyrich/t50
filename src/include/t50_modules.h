@@ -74,7 +74,7 @@ struct psdhdr
   uint16_t  len;        /* header length       */
 };
 
-typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, size_t *);
+typedef void (*module_func_ptr_t)(const struct config_options *const __restrict__, uint32_t *);
 
 /**
  * Modules entry structure.
@@ -109,19 +109,19 @@ void    build_indices(void);
 uint32_t get_index(struct config_options *);
 
 /* Modules functions prototypes. */
-void icmp  (const struct config_options *const __restrict__, size_t *);
-void igmpv1(const struct config_options *const __restrict__, size_t *);
-void igmpv3(const struct config_options *const __restrict__, size_t *);
-void tcp   (const struct config_options *const __restrict__, size_t *);
-void egp   (const struct config_options *const __restrict__, size_t *);
-void udp   (const struct config_options *const __restrict__, size_t *);
-void ripv1 (const struct config_options *const __restrict__, size_t *);
-void ripv2 (const struct config_options *const __restrict__, size_t *);
-void dccp  (const struct config_options *const __restrict__, size_t *);
-void rsvp  (const struct config_options *const __restrict__, size_t *);
-void ipsec (const struct config_options *const __restrict__, size_t *);
-void eigrp (const struct config_options *const __restrict__, size_t *);
-void ospf  (const struct config_options *const __restrict__, size_t *);
+void icmp  (const struct config_options *const __restrict__, uint32_t *);
+void igmpv1(const struct config_options *const __restrict__, uint32_t *);
+void igmpv3(const struct config_options *const __restrict__, uint32_t *);
+void tcp   (const struct config_options *const __restrict__, uint32_t *);
+void egp   (const struct config_options *const __restrict__, uint32_t *);
+void udp   (const struct config_options *const __restrict__, uint32_t *);
+void ripv1 (const struct config_options *const __restrict__, uint32_t *);
+void ripv2 (const struct config_options *const __restrict__, uint32_t *);
+void dccp  (const struct config_options *const __restrict__, uint32_t *);
+void rsvp  (const struct config_options *const __restrict__, uint32_t *);
+void ipsec (const struct config_options *const __restrict__, uint32_t *);
+void eigrp (const struct config_options *const __restrict__, uint32_t *);
+void ospf  (const struct config_options *const __restrict__, uint32_t *);
 /* --- add yours here */
 
 #endif

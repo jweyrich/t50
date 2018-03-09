@@ -157,7 +157,7 @@ struct iphdr *gre_encapsulation(void *buffer,
  */
 void gre_checksum(void *buffer,
                   const struct config_options *__restrict__ co,
-                  size_t packet_size)
+                  uint32_t packet_size)
 {
   struct gre_hdr     *gre;
   struct gre_sum_hdr *gre_sum;
@@ -179,9 +179,9 @@ void gre_checksum(void *buffer,
 }
 
 /* GRE header size calculation. */
-size_t gre_opt_len(const struct config_options *const __restrict__ co)
+uint32_t gre_opt_len(const struct config_options *const __restrict__ co)
 {
-  size_t size;
+  uint32_t size;
 
   /*
    * The code starts with size '0' and it accumulates all the required

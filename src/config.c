@@ -737,7 +737,7 @@ void set_destination_addresses(char *arg, struct config_options *__restrict__ co
 /* Setup an option. */
 void set_config_option(struct config_options *__restrict__ co, char *optname, int optid, char *arg)
 {
-  size_t counter;
+  uint32_t counter;
   char *tmp_ptr;
   unsigned long a, b; /* Temporaries. */
 
@@ -1776,7 +1776,7 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   regex_t re;
   regmatch_t rm[6];
   unsigned matches[5];
-  size_t i, len;
+  uint32_t i, len;
   char *t;
   int bits;
 

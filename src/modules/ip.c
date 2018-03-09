@@ -44,7 +44,7 @@
  * @return Pointer to IP header structure (points to the begining of the buffer).
  */
 struct iphdr *ip_header(void *buffer,
-                        size_t packet_size,
+                        uint32_t packet_size,
                         const struct config_options *__restrict__ co)
 {
   struct iphdr *ip;

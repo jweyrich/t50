@@ -28,7 +28,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const int);
+static uint32_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const int);
 
 /**
  * EIGRP packet header configuration.
@@ -38,9 +38,9 @@ static size_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, const
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void eigrp(const struct config_options *const __restrict__ co, size_t *size)
+void eigrp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length,
+  uint32_t length,
          eigrp_tlv_len, /* EIGRP TLV size. */
          counter;
 
@@ -117,7 +117,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
           co->eigrp.type  == EIGRP_TYPE_SOFTWARE)))
     {
       /* NOTE: stemp used to avoid multiple comparisons on loop below */
-      size_t stemp;
+      uint32_t stemp;
 
       stemp = auth_hmac_md5_len(co->eigrp.auth);
 
@@ -427,7 +427,7 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
   }
 
   /* Computing the checksum. */
-  length = (size_t)(buffer.ptr - (void *)eigrp);
+  length = (uint32_t)(buffer.ptr - (void *)eigrp);
   eigrp->check    = co->bogus_csum ?
                     RANDOM() : cksum(eigrp, length);
 
@@ -436,14 +436,14 @@ void eigrp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* EIGRP header size calculation */
-size_t eigrp_hdr_len(const uint16_t opcode,
+uint32_t eigrp_hdr_len(const uint16_t opcode,
                      const uint16_t type,
                      const uint8_t prefix,
                      const int auth)
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */
-  size_t size = 0;
+  uint32_t size = 0;
 
   /*
    * The Authentication Data TVL must be used only in some cases:

@@ -19,6 +19,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdlib.h>
+#include <stdint.h>
 #include <t50_defines.h>
 #include <t50_errors.h>
 
@@ -26,7 +27,7 @@
 void  *packet = NULL;
 
 /* Used by alloc_packet(). */
-static size_t current_packet_size = 0;
+static uint32_t current_packet_size = 0;
 
 /**
  * Preallocates the packet buffer.
@@ -39,7 +40,7 @@ static size_t current_packet_size = 0;
  *
  * @param size Size of the new 'global' packet buffer.
  */
-void alloc_packet(size_t new_packet_size)
+void alloc_packet(uint32_t new_packet_size)
 {
   void *p;
 

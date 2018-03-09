@@ -37,9 +37,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void dccp(const struct config_options *const __restrict__ co, size_t *size)
+void dccp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length,
+  uint32_t length,
          dccp_length, /* DCCP header length. */
          dccp_ext_length; /* DCCP Extended Sequence Number length. */
 
@@ -255,11 +255,11 @@ void dccp(const struct config_options *const __restrict__ co, size_t *size)
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  length = (size_t)(buffer_ptr - (void *)dccp);
+  length = (uint32_t)(buffer_ptr - (void *)dccp);
   pseudo->len      = htons(length);
 
   /* Computing the checksum. */
-  length = (size_t)((void *)(pseudo + 1) - (void *)dccp);
+  length = (uint32_t)((void *)(pseudo + 1) - (void *)dccp);
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
                          cksum(dccp, length);
 

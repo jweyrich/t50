@@ -28,7 +28,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
+static  uint32_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, const uint8_t);
 
 /**
  * RSVP packet header configuration.
@@ -38,9 +38,9 @@ static  size_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, con
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void rsvp(const struct config_options *const __restrict__ co, size_t *size)
+void rsvp(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t greoptlen,       /* GRE options size. */
+  uint32_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
          counter;
 
@@ -599,9 +599,9 @@ void rsvp(const struct config_options *const __restrict__ co, size_t *size)
 }
 
 /* RSVP objects size claculation. */
-size_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec)
+uint32_t rsvp_objects_len(const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec)
 {
-  size_t size;
+  uint32_t size;
 
   /*
    * The code starts with the size of SESSION Object Class  (according

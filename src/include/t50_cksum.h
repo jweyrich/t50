@@ -24,6 +24,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-uint16_t cksum(void *, size_t);
+uint16_t cksum(void *, uint32_t);
 
 #endif

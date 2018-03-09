@@ -37,9 +37,9 @@
  * @para co Pointer to T50 configuration structure.
  * @para size Pointer to packet size (updated by the function).
  */
-void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
+void igmpv3(const struct config_options *const __restrict__ co, uint32_t *size)
 {
-  size_t length,
+  uint32_t length,
          counter;
 
   /* Packet and Checksum. */
@@ -96,7 +96,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
-    length = (size_t)(buffer.ptr - (void *)igmpv3_report);
+    length = (uint32_t)(buffer.ptr - (void *)igmpv3_report);
     igmpv3_report->csum = co->bogus_csum ?
                           RANDOM() :
                           cksum(igmpv3_report, length);
@@ -122,7 +122,7 @@ void igmpv3(const struct config_options *const __restrict__ co, size_t *size)
       *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
 
     /* Computing the checksum. */
-    length = (size_t)(buffer.ptr - (void *)igmpv3_query);
+    length = (uint32_t)(buffer.ptr - (void *)igmpv3_query);
     igmpv3_query->csum = co->bogus_csum ?
                          RANDOM() :
                          cksum(igmpv3_query, length);
