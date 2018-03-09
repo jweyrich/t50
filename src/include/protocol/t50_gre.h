@@ -22,7 +22,6 @@
 #define __GRE_H__
 
 #include <stdint.h>
-#include <stddef.h>
 
 #define GREVERSION             0
 

@@ -22,7 +22,6 @@
 #define __TYPEDEFS_INCLUDED__
 
 #include <stdint.h>
-#include <stddef.h>
 #include <netinet/in.h>
 
 /* Data types */

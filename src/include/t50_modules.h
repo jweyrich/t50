@@ -21,7 +21,7 @@
 #ifndef __MODULES_INCLUDED__
 #define __MODULES_INCLUDED__
 
-#include <stddef.h>
+#include <stdint.h>
 #include <netinet/in.h>
 #include <t50_typedefs.h>
 #include <t50_config.h>
