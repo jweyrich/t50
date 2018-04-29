@@ -27,9 +27,6 @@
 #include <t50_errors.h>
 #include <t50_randomizer.h>
 
-void     (*SRANDOM)(void);
-uint32_t (*RANDOM)(void);
-
 /* The Random SEED will be created by SRANDOM */
 static uint64_t _seed[2];
 
@@ -88,6 +85,10 @@ static void get_random_seed(void)
   if (r == -1)
     fatal_error("Cannot read initial seed from /dev/random.");
 }
+
+/* The "constructor" below will overide this. It is here just to be sure. */
+void     (*SRANDOM)(void) = xorshift128;
+uint32_t (*RANDOM)(void) = get_random_seed;
 
 /**
  * Returns the Randomized netmask if foo is 0 or the parameter, otherwise.
