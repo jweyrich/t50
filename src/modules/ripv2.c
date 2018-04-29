@@ -21,6 +21,7 @@
 
 #define RIPVERSION 2
 
+#include <stddef.h>
 #include <assert.h>
 #include <linux/ip.h>
 #include <linux/udp.h>

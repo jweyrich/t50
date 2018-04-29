@@ -28,9 +28,9 @@
 #define INADDR_RND(v) ((uint32_t)(!!(v) ? (v) : RANDOM()))
 #define IPPORT_RND(v) ((uint16_t)(!!(v) ? (v) : RANDOM()))
 
-uint32_t RANDOM(void);
-void     SRANDOM(void);
-uint32_t NETMASK_RND(uint32_t);
+extern uint32_t (*RANDOM)(void);
+extern void     (*SRANDOM)(void);
+extern uint32_t NETMASK_RND(uint32_t);
 
 #endif
 

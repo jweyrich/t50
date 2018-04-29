@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 #ifdef __HAVE_DEBUG__
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if (size > ETH_DATA_LEN)
-      fprintf(stderr, DEBUG " Protocol %s packet size (%zu bytes) exceed max. Ethernet packet data length!\n",
+      fprintf(stderr, DEBUG " Protocol %s packet size (%u bytes) exceed max. Ethernet packet data length!\n",
               ptbl->name, size);
 #endif
 

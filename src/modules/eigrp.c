@@ -19,6 +19,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stddef.h>
 #include <assert.h>
 #include <netinet/in.h>
 #include <t50_defines.h>

@@ -1,8 +1,10 @@
+```
       __________ ________  _____
      |__    ___/|   ____/ /  _  \ the fastest packet injector.
        |    |   |____  \ /  /_\  \
        |    |   /       \\  \_/   \
        |____|  /________/\\_______/
+```
 
 T50 (f.k.a. F22 Raptor) is a tool designed to perform "Stress Testing". The concept started on 2001, right after release 'nb-isakmp.c', and the main goal was:
 
@@ -61,8 +63,7 @@ T50 is a powerful and unique packet injector tool, which is capable to:
 
 The main differentiator of the T50 is that it is able to send all protocols, sequentially, using one single SOCKET, besides it is capable to be used to modify network routes, letting IT Security Professionals performing advanced "Penetration Test".
 
-HOW TO INSTALL
-==============
+##HOW TO INSTALL
 
 Use the default GNU Build System:
 
@@ -72,8 +73,7 @@ Use the default GNU Build System:
   $ sudo make install
 ```
 
-CHECKING TARBALL AUTHENTICITY ON GITHUB
-=======================================
+##CHECKING TARBALL AUTHENTICITY ON GITHUB
 
 I will attach a signature file for T50 tarballs on GitHub from now on.
 

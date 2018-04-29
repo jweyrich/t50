@@ -6,6 +6,12 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.7.2 - Apr 29th, 2018
+ - When configuring with --enable-debug, lots of compile erros occur. fixed!
+ * Uses RDRAND on Intel platforms, if it's implemented, preferably.
+ * RDRAND doesn't need a random seed...
+ * Simplification of randomizer functions due to the fact that RDRAND is, at least, 4 times faster than xorshift128+.
+
 T50 5.7.1 - Mar 9th, 2018
  * Changed size_t types from some functions to uint32_t.
 

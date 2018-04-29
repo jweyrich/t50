@@ -27,6 +27,9 @@
 #include <t50_errors.h>
 #include <t50_randomizer.h>
 
+void     (*SRANDOM)(void);
+uint32_t (*RANDOM)(void);
+
 /* The Random SEED will be created by SRANDOM */
 static uint64_t _seed[2];
 
@@ -34,7 +37,7 @@ static uint64_t _seed[2];
 
    We don't have to worry about the lower bits
    been less random than the upper. */
-uint32_t RANDOM(void)
+static uint32_t random_xorshift128plus(void)
 {
   uint64_t s0 = _seed[1];
   uint64_t s1 = _seed[0];
@@ -46,82 +49,44 @@ uint32_t RANDOM(void)
   return (_seed[1] + s0);
 }
 
+static uint32_t random_rdrand(void)
+{
+  uint32_t r;
+
+  __asm__ __volatile__ (
+    "1: rdrand %0\n"
+    "   jnc 1b"
+    : "=a" (r)
+  );
+
+  return r;
+}
+
+static void empty_srandom(void) {}
+
 /**
  * Gets an random seed from /dev/random.
  *
  * Since this routine is used only once there is no problem using "/dev/random".
  */
-void SRANDOM(void)
+static void get_random_seed(void)
 {
-#if defined(__x86_64__) || defined(__i386__)
+  // NOTE: Could use gettimeofday() and use it as seed,
+  //       but, this way I'll make sure the seed is random.
 
-#define RDRAND_BIT (1U << 30)
+  int _fd;
+  int r;
 
-  uint32_t cap;
+  if ((_fd = open("/dev/random", O_RDONLY)) == -1)
+    fatal_error("Cannot open /dev/random to get initial random seed.");
 
-  // Get CPUID features info.
-  __asm__ __volatile__ ("cpuid" : "=c" (cap) : "a" (1U) : 
-#ifdef __i386__
-    "ebx", "edx"
-#else
-    "rbx", "rdx"
-#endif
-  );
+  /* NOTE: initializes this code "global" _seed var. */
+  r = read(_fd, &_seed, sizeof(_seed));
 
-  // if RDRAND is supported...
-  if (cap & RDRAND_BIT)
-  {
-    // NOTE: Why not use RDRAND as our RNG?
-    //       Because RDRAND is slow! I use here
-    //       only 'cause SRANDOM() is called once
-    //       per process.
-    //
-    //       XorShift128+ is way faster PRNG...
+  close(_fd);
 
-#ifdef __x86_64__
-    __asm__ __volatile__ (
-      "1: rdrand %0\n"
-      "   jnc 1b;\n"
-      "2: rdrand %1\n"
-      "   jnc 2b"
-      : "=g" (_seed[0]), "=g" (_seed[1])
-      : : "cc"
-    );
-#else
-    __asm__ __volatile__ (
-      "1: rdrand %0\n"
-      "   jnc 1b;\n"
-      "2: rdrand %1\n"
-      "   jnc 2b;\n"
-      "3: rdrand %2\n"
-      "   jnc 3b;\n"
-      "4: rdrand %3\n"
-      "   jnc 4b;"
-      : "=g" (*(uint32_t *)_seed), 
-        "=g" (*((uint32_t *)_seed + 1)), 
-        "=g" (*((uint32_t *)_seed + 2)), 
-        "=g" (*((uint32_t *)_seed + 3))
-      : : "cc"
-    );
-#endif
-  }
-  else
-#endif  // The code below exists for non x86 platforms.
-  {
-    int _fd;
-    int r;
-
-    if ((_fd = open("/dev/random", O_RDONLY)) == -1)
-      fatal_error("Cannot open /dev/random to get initial random seed.");
-
-    /* NOTE: initializes this code "global" _seed var. */
-    r = read(_fd, &_seed, sizeof(_seed));
-
-    close(_fd);
-
-    if (r == -1)
-      fatal_error("Cannot read initial seed from /dev/random.");
-  }
+  if (r == -1)
+    fatal_error("Cannot read initial seed from /dev/random.");
 }
 
 /**
@@ -149,4 +114,34 @@ uint32_t NETMASK_RND(uint32_t foo)
   }
 
   return htonl(foo);
+}
+
+#define RDRAND_BIT (1U << 30)
+
+//--- Make sure to use RDRAND instruction if the processor has it.
+__attribute__((constructor))
+static void check_rdrand(void)
+{
+#if defined(__i386) || defined(__x86_64)
+  int c;
+
+  __asm__ __volatile__ ("cpuid" : "=c" (c) : "a" (1) :
+  #ifdef __i386
+                        "ebx", "edx"
+  #else /* x86_64 */
+                        "rbx", "rdx"
+  #endif
+  );
+
+  if (c & RDRAND_BIT)
+  {
+    RANDOM = random_rdrand;
+    SRANDOM = empty_srandom;  // RDRAND doesn't need a seed.
+  }
+  else
+#endif
+  {
+    RANDOM = random_xorshift128plus;
+    SRANDOM = get_random_seed;
+  }
 }
