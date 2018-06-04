@@ -1,7 +1,7 @@
 Download and Installing {#download}
 =======================
 
-Download T50 source code from sourceforge at http://t50.sf.net or from GitHub at http:://github.com/fredericopissarra/t50.git
+Download T50 source code from sourceforge at http://t50.sf.net or from GitHub at http:://gitlab.com/fredericopissarra/t50
 
 To compile and install just do:
 

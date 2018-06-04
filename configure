@@ -582,7 +582,7 @@ PACKAGE_TARNAME='t50'
 PACKAGE_VERSION='5.7.2'
 PACKAGE_STRING='t50 5.7.2'
 PACKAGE_BUGREPORT='t50-dev@googlegroups.com'
-PACKAGE_URL='https://github.com/fredericopissarra/t50.git'
+PACKAGE_URL='https://gitlab.com/fredericopissarra/t50.git'
 
 ac_unique_file="src/main.c"
 # Factoring default headers for most tests.
@@ -1399,7 +1399,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <t50-dev@googlegroups.com>.
-t50 home page: <https://github.com/fredericopissarra/t50.git>.
+t50 home page: <https://gitlab.com/fredericopissarra/t50.git>.
 _ACEOF
 ac_status=$?
 fi
@@ -7038,7 +7038,7 @@ Configuration commands:
 $config_commands
 
 Report bugs to <t50-dev@googlegroups.com>.
-t50 home page: <https://github.com/fredericopissarra/t50.git>."
+t50 home page: <https://gitlab.com/fredericopissarra/t50.git>."
 
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1

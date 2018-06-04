@@ -9,7 +9,7 @@ define([VERSION_FIX], [2])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX) 
 define([T50_GROUP], [t50-dev@googlegroups.com])
 
-AC_INIT([t50],[VERSION_NUMBER],[T50_GROUP],[],[https://github.com/fredericopissarra/t50.git])
+AC_INIT([t50],[VERSION_NUMBER],[T50_GROUP],[],[https://gitlab.com/fredericopissarra/t50.git])
 
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([build])
