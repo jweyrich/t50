@@ -87,7 +87,7 @@ static void get_random_seed(void)
 }
 
 /* The "constructor" below will overide this. It is here just to be sure. */
-void     (*SRANDOM)(void) = xorshift128;
+void     (*SRANDOM)(void) = random_xorshift128plus;
 uint32_t (*RANDOM)(void) = get_random_seed;
 
 /**
