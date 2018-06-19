@@ -6,6 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.7.3 - Jun 19th, 2018
+ * No more GNU Build System. Plain Makefile, bogus configuration script and maintainer's setversion.sh.
+   Version configuration are in src/include/configuration.h file.
+
 T50 5.7.2 - Apr 29th, 2018
  - When configuring with --enable-debug, lots of compile erros occur. fixed!
  * Uses RDRAND on Intel platforms, if it's implemented, preferably.

@@ -6,7 +6,6 @@ Download T50 source code from sourceforge at http://t50.sf.net or from GitHub at
 To compile and install just do:
 
 <pre>
-  $ ./configure
   $ make
   $ sudo make install</pre>
 
