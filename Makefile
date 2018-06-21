@@ -121,7 +121,7 @@ clean:
 
 # distclean delete the object files AND the executable.
 distclean: clean
-	-rm $(EXECUTABLE) dist/*.gz
+	-rm $(EXECUTABLE) dist/*.gz dist/*.asc
 
 # Shortcut to check if user has root privileges.
 define checkifroot
@@ -150,6 +150,6 @@ uninstall:
 
 # Needed to build the project source tarball (no signature generation here).
 dist: distclean
-	tar -czvf dist/t50-$(VERSION).tar.gz *
+	tar -czvf dist/t50-$(VERSION).tar.gz --exclude=*.tar.gz *
 	#--- using my default key!!!
 	#gpg2 -a -b dist/t50-$(VERSION).tar.gz
