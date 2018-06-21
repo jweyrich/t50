@@ -70,6 +70,18 @@ The main differentiator of the T50 is that it is able to send all protocols, seq
   $ sudo make install
 ```
 
+##COMPILE OPTIONS
+
+Define environment variable DEBUG before compiling if you don't want full optimizations to take place.
+
+Define USE_ANSI if you want some colorized texts, using ANSI CSI escape codes.
+
+Example:
+
+```bash
+$ USE_ANSI=1 make
+```
+
 ##CHECKING TARBALL AUTHENTICITY
 
 I will attach a signature file for T50 tarballs on SourceForge.

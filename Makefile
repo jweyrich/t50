@@ -26,23 +26,38 @@ LIBS=
 ifdef DEBUG
 	CFLAGS += -Og -g
 else
-	CFLAGS += -O2 -fno-stack-protector
+  # Optimization level 2 (better results) and no canaries.
+	CFLAGS += -O2 -fno-stack-protector -DNDEBUG
 
 	# FIXME: Intel, 32 bits architecture, is "i386"?!
+  # Use SSE vectorization, if available.
 	ARCHITECTURE = $(shell arch)
 	ifeq ($(ARCHITECTURE),x86_64)
 		CFLAGS += -march=native -ftree-vectorize -flto
-    LDFLAGS += -flto
+
+		# Enable link time optimizations and disable DEP.
+    # Delete relro header as well.
+    LDFLAGS += -flto -z execstack -z norelro
   else
     ifeq ($(ARCHITECTURE),i386)
       CFLAGS += -march=native -ftree-vectorize -flto
-      LDFLAGS += -flto
+
+		  # Enable link time optimizations and disable DEP.
+      # Delete relro header as well.
+      LDFLAGS += -flto -z execstack -z norelro
     endif
   endif
+
+  # strip symbols and turn more linker optimizations on (if available).
 	LDFLAGS += -s -O2
 endif
 
 CFLAGS += -I $(INCLUDEDIR) -std=gnu11
+
+# Added to use ANSI CSI codes (beautifier).
+ifdef USE_ANSI
+	CFLAGS += -DUSE_ANSI
+endif
 
 EXECUTABLE=bin/t50
 
@@ -138,4 +153,3 @@ dist: distclean
 	tar -czvf dist/t50-$(VERSION).tar.gz *
 	#--- using my default key!!!
 	#gpg2 -a -b dist/t50-$(VERSION).tar.gz
-

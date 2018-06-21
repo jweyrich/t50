@@ -70,7 +70,7 @@ void create_socket(void)
            but on linux will cause an error. */
   if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot open raw socket: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot open raw socket");
@@ -80,7 +80,7 @@ void create_socket(void)
   /* Try to change the socket mode to NON BLOCKING. */
   if ((flag = fcntl(fd, F_GETFL)) == -1)
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot get socket flags: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot get socket flags");
@@ -89,7 +89,7 @@ void create_socket(void)
 
   if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot set socket to non-blocking mode: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot set socket to non-blocking mode");
@@ -101,7 +101,7 @@ void create_socket(void)
            still makes the kernel calculates the checksum and total_length. */
   if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot set socket options: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot set socket options");
@@ -115,7 +115,7 @@ void create_socket(void)
 #ifdef SO_BROADCAST
   if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot set socket broadcast flag: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot set socket broadcast flag");
@@ -127,7 +127,7 @@ void create_socket(void)
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
   if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot set socket priority: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot set socket priority");
@@ -198,7 +198,7 @@ int setup_sendbuffer(socket_t *fd, uint32_t n)
 
   if ( getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
   {
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
     fatal_error("Cannot get socket buffer: \"%s\"", strerror(errno));
 #else
     fatal_error("Cannot get socket buffer");
@@ -217,7 +217,7 @@ int setup_sendbuffer(socket_t *fd, uint32_t n)
       if (errno == ENOBUFS)
         break;
 
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
       fatal_error("Cannot set socket buffer: \"%s\"", strerror(errno));
 #else
       fatal_error("Cannot set socket buffer");

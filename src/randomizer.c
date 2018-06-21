@@ -86,7 +86,8 @@ static void get_random_seed(void)
     fatal_error("Cannot read initial seed from /dev/random.");
 }
 
-/* The "constructor" below will overide this. It is here just to be sure. */
+/* The "constructor" below will overide this IF the platform is Intel/AMD and
+   if RDRAND is supported. */
 void     (*SRANDOM)(void) = get_random_seed;
 uint32_t (*RANDOM)(void) = random_xorshift128plus;
 
@@ -117,32 +118,29 @@ uint32_t NETMASK_RND(uint32_t foo)
   return htonl(foo);
 }
 
-#define RDRAND_BIT (1U << 30)
-
-//--- Make sure to use RDRAND instruction if the processor has it.
-__attribute__((constructor))
-static void check_rdrand(void)
-{
+// Intel architecture dependend constructor.
 #if defined(__i386) || defined(__x86_64)
-  int c;
+  #define RDRAND_BIT (1U << 30)
 
-  __asm__ __volatile__ ("cpuid" : "=c" (c) : "a" (1) :
-  #ifdef __i386
-                        "ebx", "edx"
-  #else /* x86_64 */
-                        "rbx", "rdx"
-  #endif
-  );
-
-  if (c & RDRAND_BIT)
+  //--- Make sure to use RDRAND instruction if the processor has it.
+  __attribute__((constructor))
+  static void check_rdrand(void)
   {
-    RANDOM = random_rdrand;
-    SRANDOM = empty_srandom;  // RDRAND doesn't need a seed.
+    int c;
+
+    __asm__ __volatile__ ("cpuid" : "=c" (c) : "a" (1) :
+    #ifdef __i386
+                          "ebx", "edx"
+    #else /* x86_64 */
+                          "rbx", "rdx"
+    #endif
+    );
+
+    if (c & RDRAND_BIT)
+    {
+      RANDOM = random_rdrand;
+      SRANDOM = empty_srandom;  // RDRAND doesn't need a seed.
+    }
   }
-  else
 #endif
-  {
-    RANDOM = random_xorshift128plus;
-    SRANDOM = get_random_seed;
-  }
-}
+

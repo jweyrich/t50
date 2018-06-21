@@ -30,7 +30,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
   #include <linux/if_ether.h>
 #endif
 #include <configuration.h>
@@ -99,7 +99,7 @@ int main ( int argc, char *argv[] )
 
       if ( ( pid = fork() ) == -1 )
         fatal_error ( "Cannot create child process"
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
                       ": \"%s\".\nExiting..", strerror ( errno )
 #endif
                     );
@@ -121,7 +121,7 @@ int main ( int argc, char *argv[] )
   /* Setting the priority to both parent and child process. */
   if ( setpriority ( PRIO_PROCESS, PRIO_PROCESS, -15 )  == -1 )
     fatal_error ( "Cannot set process priority"
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
                   ": \"%s\".\nExiting..", strerror ( errno )
 #endif
                 );
@@ -178,7 +178,7 @@ int main ( int argc, char *argv[] )
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func ( co, &size );
 
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
 
     /* I'll use this to fine tune the alloc_packet() function, someday! */
     if ( size > ETH_DATA_LEN )
@@ -189,7 +189,7 @@ int main ( int argc, char *argv[] )
 
     /* Try to send the packet. */
     if ( unlikely ( !send_packet ( packet, size, co ) ) )
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
       error ( "Packet for protocol %s (%zu bytes long) not sent", ptbl->name, size );
 
     /* continue trying to send other packets on debug mode! */
@@ -219,7 +219,7 @@ int main ( int argc, char *argv[] )
       {
         /* Wait 5 seconds for the child to end... */
         alarm ( WAIT_FOR_CHILD_TIMEOUT );
-#ifdef __HAVE_DEBUG__
+#ifndef NDEBUG
         fputs ( INFO " Waiting for child process to end...\n", stderr );
 #endif
 
@@ -286,7 +286,7 @@ void initialize ( const struct config_options *co )
   /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigemptyset ( &sigset );
   sigaddset ( &sigset, SIGTSTP );
-#ifndef __HAVE_DEBUG__
+#ifdef NDEBUG
   sigaddset ( &sigset, SIGTRAP );
 #endif
   sigprocmask ( SIG_BLOCK, &sigset, NULL );

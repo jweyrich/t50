@@ -9,11 +9,12 @@ Legend:
 T50 5.7.3 - Jun 19th, 2018
  * No more GNU Build System. Plain Makefile, bogus configuration script and maintainer's setversion.sh.
    Version configuration are in src/include/configuration.h file.
+ - Forgot to enable USE_ANSI feature on Makefile.
+ * Added execstack and norelro options to linker (smaller executable).
 
 T50 5.7.2 - Apr 29th, 2018
  - When configuring with --enable-debug, lots of compile erros occur. fixed!
- * Uses RDRAND on Intel platforms, if it's implemented, preferably.
- * RDRAND doesn't need a random seed...
+ * Prefeer to use RDRAND on Intel platforms, if it's implemented.
  * Simplification of randomizer functions due to the fact that RDRAND is, at least, 4 times faster than xorshift128+.
 
 T50 5.7.1 - Mar 9th, 2018
