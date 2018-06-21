@@ -9,7 +9,7 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION="5.7.3"
+VERSION=5.7.3
 
 # Change it to clang if you feel lucky!
 CC=gcc
@@ -150,6 +150,6 @@ uninstall:
 
 # Needed to build the project source tarball (no signature generation here).
 dist: distclean
-	tar -czvf dist/t50-$(VERSION).tar.gz --exclude=*.tar.gz *
+	tar -czvf dist/t50-$(VERSION).tar.gz --exclude=*.tar.gz --exclude=*.asc *
 	#--- using my default key!!!
 	#gpg2 -a -b dist/t50-$(VERSION).tar.gz

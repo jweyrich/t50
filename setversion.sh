@@ -12,4 +12,4 @@ Example:
 fi
 
 sed -i "s/PACKAGE_VERSION[ \t]\+\"\(.\+\)\"/PACKAGE_VERSION \"$1\"/" src/include/configuration.h
-sed -i "s/^VERSION *= *\(.\+\)/VERSION=\"$1\"/" Makefile
+sed -i "s/^VERSION *= *\(.\+\)/VERSION=$1/" Makefile
