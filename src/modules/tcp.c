@@ -46,7 +46,7 @@ static uint32_t tcp_options_len(const uint8_t, int, int);
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp(const struct config_options *const __restrict__ co, uint32_t *size)
+void tcp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
@@ -102,7 +102,7 @@ void tcp(const struct config_options *const __restrict__ co, uint32_t *size)
   tcp->source  = IPPORT_RND(co->source);
   tcp->dest    = IPPORT_RND(co->dest);
   tcp->res1    = TCP_RESERVED_BITS;
-  tcp->doff    = co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4);
+  tcp->doff    = htons(co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4));
   tcp->fin     = co->tcp.fin;
   tcp->syn     = co->tcp.syn;
   tcp->seq     = co->tcp.syn ? __RND(co->tcp.sequence) : 0;
@@ -464,7 +464,7 @@ void tcp(const struct config_options *const __restrict__ co, uint32_t *size)
 
   /* Computing the checksum. */
   tcp->check   = co->bogus_csum ? RANDOM() : 
-                 cksum(tcp, length);
+                 htons(cksum(tcp, length));
 
   gre_checksum(packet, co, *size);
 }

@@ -40,7 +40,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv2(const struct config_options *const __restrict__ co, uint32_t *size)
+void ripv2(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t greoptlen,     /* GRE options size. */
          length,
@@ -77,8 +77,7 @@ void ripv2(const struct config_options *const __restrict__ co, uint32_t *size)
   /* UDP Header structure making a pointer to  IP Header structure. */
   udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
   udp->source = udp->dest = htons(IPPORT_RIP);
-  udp->len    = htons(sizeof(struct udphdr) +
-                      rip_hdr_len(co->rip.auth));
+  udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(co->rip.auth));
   udp->check  = 0;
 
   buffer.ptr = udp + 1;
@@ -265,7 +264,7 @@ void ripv2(const struct config_options *const __restrict__ co, uint32_t *size)
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                cksum(udp, (void *)(pseudo + 1) - (void *)udp);
+                htons(cksum(udp, (void *)(pseudo + 1) - (void *)udp));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -38,8 +38,8 @@
  * @param total_len Length of the buffer.
  * @return Pointer to IP header (the begining of the buffer).
  */
-struct iphdr *gre_encapsulation(void *buffer,
-                                const struct config_options *const __restrict__ co,
+struct iphdr *gre_encapsulation(void * __restrict__ buffer,
+                                const struct config_options * const __restrict__ co,
                                 uint32_t total_len)
 {
   struct iphdr   *ip, *gre_ip;
@@ -134,7 +134,7 @@ struct iphdr *gre_encapsulation(void *buffer,
   gre_ip->version  = ip->version;
   gre_ip->ihl      = ip->ihl;
   gre_ip->tos      = ip->tos;
-  gre_ip->frag_off = ip->frag_off;
+  gre_ip->frag_off = htons(ip->frag_off);   // NOTE: Not swapped on config.c!
   gre_ip->tot_len  = htons(total_len);
   gre_ip->id       = ip->id;
   gre_ip->ttl      = ip->ttl;
@@ -144,7 +144,7 @@ struct iphdr *gre_encapsulation(void *buffer,
 
   /* Computing the checksum. */
   gre_ip->check    = co->bogus_csum ? RANDOM() :
-                     cksum(gre_ip, sizeof(struct iphdr));
+                     htons(cksum(gre_ip, sizeof(struct iphdr)));
 
   return gre_ip;
 }
@@ -156,8 +156,8 @@ struct iphdr *gre_encapsulation(void *buffer,
  * @param co Pointer to T50 configuration structure.
  * @packet_size Size of the packet.
  */
-void gre_checksum(void *buffer,
-                  const struct config_options *__restrict__ co,
+void gre_checksum(void * __restrict__ buffer,
+                  const struct config_options *__restrict__ const co,
                   uint32_t packet_size)
 {
   struct gre_hdr     *gre;
@@ -180,7 +180,7 @@ void gre_checksum(void *buffer,
 }
 
 /* GRE header size calculation. */
-uint32_t gre_opt_len(const struct config_options *const __restrict__ co)
+uint32_t gre_opt_len(const struct config_options * const co)
 {
   uint32_t size;
 

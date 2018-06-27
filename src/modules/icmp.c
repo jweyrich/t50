@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void icmp(const struct config_options *const __restrict__ co, uint32_t *size)
+void icmp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t greoptlen;   /* GRE options size. */
 
@@ -83,7 +83,7 @@ void icmp(const struct config_options *const __restrict__ co, uint32_t *size)
 
   /* Computing the checksum. */
   icmp->checksum = co->bogus_csum ? RANDOM() : 
-                   cksum(icmp, sizeof(struct icmphdr));
+                   htons(cksum(icmp, sizeof(struct icmphdr)));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -39,7 +39,7 @@ static uint32_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, con
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void eigrp(const struct config_options *const __restrict__ co, uint32_t *size)
+void eigrp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t length,
          eigrp_tlv_len, /* EIGRP TLV size. */
@@ -430,7 +430,7 @@ void eigrp(const struct config_options *const __restrict__ co, uint32_t *size)
   /* Computing the checksum. */
   length = (uint32_t)(buffer.ptr - (void *)eigrp);
   eigrp->check    = co->bogus_csum ?
-                    RANDOM() : cksum(eigrp, length);
+                    RANDOM() : htons(cksum(eigrp, length));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

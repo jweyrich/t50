@@ -9,7 +9,7 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION=5.7.3
+VERSION=5.8
 
 # Change it to clang if you feel lucky!
 CC=gcc
@@ -34,17 +34,11 @@ else
 	ARCHITECTURE = $(shell arch)
 	ifeq ($(ARCHITECTURE),x86_64)
 		CFLAGS += -march=native -ftree-vectorize -flto
-
-		# Enable link time optimizations and disable DEP.
-    # Delete relro header as well.
-    LDFLAGS += -flto -z execstack -z norelro
+    LDFLAGS += -flto 
   else
     ifeq ($(ARCHITECTURE),i386)
-      CFLAGS += -march=native -ftree-vectorize -flto
-
-		  # Enable link time optimizations and disable DEP.
-      # Delete relro header as well.
-      LDFLAGS += -flto -z execstack -z norelro
+      CFLAGS += -march=native -flto
+      LDFLAGS += -flto
     endif
   endif
 

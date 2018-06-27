@@ -159,8 +159,8 @@ struct gre_seq_hdr
 
 struct config_options;  /* Defined in config.h. */
 
-uint32_t gre_opt_len(const struct config_options *const __restrict__);
-struct iphdr *gre_encapsulation(void *, const struct config_options *const __restrict__, uint32_t);
-void   gre_checksum(void *, const struct config_options *, uint32_t);
+uint32_t gre_opt_len(const struct config_options * const);
+struct iphdr *gre_encapsulation(void * __restrict__, const struct config_options * const __restrict__, uint32_t);
+void   gre_checksum(void * __restrict__ , const struct config_options * const __restrict__, uint32_t);
 
 #endif  /* __GRE_H */

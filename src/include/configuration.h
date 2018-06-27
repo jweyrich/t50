@@ -5,7 +5,7 @@
 #define PACKAGE "t50"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "5.7.3"
+#define PACKAGE_VERSION "5.8"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "t50-dev@googlegroups.com"

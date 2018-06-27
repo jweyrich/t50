@@ -38,7 +38,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void igmpv1(const struct config_options *const __restrict__ co, uint32_t *size)
+void igmpv1(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t length;
   struct iphdr *ip;
@@ -75,7 +75,7 @@ void igmpv1(const struct config_options *const __restrict__ co, uint32_t *size)
   igmpv1->csum  = 0;  /* Needed 'cause cksum() call, below! */
 
   /* Computing the checksum. */
-  igmpv1->csum  = co->bogus_csum ? RANDOM() : cksum(igmpv1, sizeof(struct igmphdr));
+  igmpv1->csum  = co->bogus_csum ? RANDOM() : htons(cksum(igmpv1, sizeof(struct igmphdr)));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

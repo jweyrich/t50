@@ -40,7 +40,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv1(const struct config_options *const __restrict__ co, uint32_t *size)
+void ripv1(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t length;
 
@@ -125,13 +125,11 @@ void ripv1(const struct config_options *const __restrict__ co, uint32_t *size)
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  length = (uint32_t)(buffer.ptr - (void *)udp);
-  pseudo->len      = htons(length);
+  pseudo->len      = htons(buffer.ptr - (void *)udp);
 
   /* Computing the checksum. */
-  length = (uint32_t)((void *)(pseudo + 1) - (void *)udp);
   udp->check  = co->bogus_csum ? RANDOM() :
-                cksum(udp, length);
+                htons(cksum(udp, (void *)(pseudo + 1) - (void *)udp));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);

@@ -38,7 +38,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void dccp(const struct config_options *const __restrict__ co, uint32_t *size)
+void dccp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t length,
          dccp_length, /* DCCP header length. */
@@ -262,7 +262,7 @@ void dccp(const struct config_options *const __restrict__ co, uint32_t *size)
   /* Computing the checksum. */
   length = (uint32_t)((void *)(pseudo + 1) - (void *)dccp);
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         cksum(dccp, length);
+                         htons(cksum(dccp, length));
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);

@@ -30,7 +30,7 @@
 #include <t50_randomizer.h>
 
 static uint32_t ospf_hdr_len(const uint32_t, const int, const int, const _Bool);
-static void ospf_lsupdate(const struct config_options *const __restrict__, void **, struct ospf_lsa_hdr *);
+static void ospf_lsupdate(const struct config_options *const __restrict__, void ** __restrict__ , struct ospf_lsa_hdr * __restrict__);
 
 /**
  * OSPF packet header configuration.
@@ -40,7 +40,7 @@ static void ospf_lsupdate(const struct config_options *const __restrict__, void 
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ospf(const struct config_options *const __restrict__ co, uint32_t *size)
+void ospf(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t length,
          ospf_length, /* OSPF header length. */
@@ -378,7 +378,7 @@ build_ospf_lsa:
       /* Computing the checksum. */
       ospf_lsa->check      =  co->bogus_csum ?
                               RANDOM() :
-                              cksum(ospf_lsa, LSA_TLEN_GENERIC(0));
+                              htons(cksum(ospf_lsa, LSA_TLEN_GENERIC(0)));
     }
   }
 
@@ -495,7 +495,7 @@ build_ospf_lsa:
         /* Computing the checksum. */
         ospf_lls->check  =  co->bogus_csum ?
                             RANDOM() :
-                            cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth));
+                            htons(cksum(ospf_lls, ospf_tlv_len(co->ospf.type, lls, co->ospf.auth)));
       }
     }
   }
@@ -514,7 +514,7 @@ build_ospf_lsa:
     length = (uint32_t)(buffer.ptr - (void *)ospf);
     ospf->check   = co->bogus_csum ?
                     RANDOM() :
-                    cksum(ospf, length);
+                    htons(cksum(ospf, length));
   }
 
   gre_checksum(packet, co, *size);
@@ -607,7 +607,7 @@ uint32_t ospf_hdr_len(const uint32_t type,
   return size;
 }
 
-void ospf_lsupdate(const struct config_options *const __restrict__ co, void **ptr, struct ospf_lsa_hdr *ospf_lsa)
+void ospf_lsupdate(const struct config_options *const __restrict__ co, void ** __restrict__ ptr, struct ospf_lsa_hdr * __restrict__ ospf_lsa)
 {
   memptr_t buffer;
 
@@ -648,7 +648,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check      =  co->bogus_csum ?
                             RANDOM() :
-                            cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER);
+                            htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ROUTER));
   }
   else if (co->ospf.lsa_type == LSA_TYPE_NETWORK)
   {
@@ -675,7 +675,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check      =  co->bogus_csum  ?
                             RANDOM() :
-                            cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK);
+                            htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_NETWORK));
   }
   else if (co->ospf.lsa_type == LSA_TYPE_SUMMARY_IP ||
            co->ospf.lsa_type == LSA_TYPE_SUMMARY_AS)
@@ -714,7 +714,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check =  co->bogus_csum ?
                        RANDOM() :
-                       cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY);
+                       htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_SUMMARY));
   }
   else if (co->ospf.lsa_type == LSA_TYPE_ASBR ||
            co->ospf.lsa_type == LSA_TYPE_NSSA)
@@ -763,7 +763,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check      =  co->bogus_csum ?
                             RANDOM() :
-                            cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR);
+                            htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_ASBR));
   }
   else if (co->ospf.lsa_type == LSA_TYPE_MULTICAST)
   {
@@ -790,7 +790,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check      =  co->bogus_csum ?
                             RANDOM() :
-                            cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST);
+                            htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_MULTICAST));
     /* Building a generic OSPF LSA Header. */
   }
   else
@@ -803,7 +803,7 @@ void ospf_lsupdate(const struct config_options *const __restrict__ co, void **pt
     /* Computing the checksum. */
     ospf_lsa->check      =  co->bogus_csum ?
                             RANDOM() :
-                            cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0));
+                            htons(cksum(ospf_lsa, OSPF_TLEN_LSUPDATE + LSA_TLEN_GENERIC(0)));
   }
 
   *ptr = buffer.ptr;

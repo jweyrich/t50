@@ -39,7 +39,7 @@ static  uint32_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, c
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void rsvp(const struct config_options *const __restrict__ co, uint32_t *size)
+void rsvp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
 {
   uint32_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
@@ -593,7 +593,7 @@ void rsvp(const struct config_options *const __restrict__ co, uint32_t *size)
   /* Computing the checksum. */
   rsvp->check   = co->bogus_csum ?
                   RANDOM() :
-                  cksum(rsvp, buffer.ptr - (void *)rsvp);
+                  htons(cksum(rsvp, buffer.ptr - (void *)rsvp));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
