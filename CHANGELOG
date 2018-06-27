@@ -6,6 +6,15 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.8 - Jun 27th, 2018
+ - Lots of fields were in little endian format (Intel platforms);
+ - TCP option --ack-seq wasn't being evaluated at command line;
+ - Checksums were in little endian format as well (Intel platforms);
+ * Make sure functions with more than one pointer as arguments have __restrict__ keyword in all of them.
+   This is a hint to the compiler optimization routines in C99/C11.
+ * Makefile compile and link options changed -z norelro and -z execstack were reported to cause freezes;
+ * Using -ftree-vectorize only for x86-64 (Intel), 'cause not all i386 supports SIMD.
+
 T50 5.7.3 - Jun 19th, 2018
  * No more GNU Build System. Plain Makefile, bogus configuration script and maintainer's setversion.sh.
    Version configuration are in src/include/configuration.h file.

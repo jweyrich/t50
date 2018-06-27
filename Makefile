@@ -15,7 +15,7 @@ VERSION=5.8
 CC=gcc
 
 INCLUDEDIR=src/include
-CFLAGS=
+CFLAGS=-std=gnu11
 LDFLAGS=
 LIBS=
 
@@ -145,5 +145,3 @@ uninstall:
 # Needed to build the project source tarball (no signature generation here).
 dist: distclean
 	tar -czvf dist/t50-$(VERSION).tar.gz --exclude=*.tar.gz --exclude=*.asc *
-	#--- using my default key!!!
-	#gpg2 -a -b dist/t50-$(VERSION).tar.gz

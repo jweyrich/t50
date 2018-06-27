@@ -72,7 +72,7 @@ The main differentiator of the T50 is that it is able to send all protocols, seq
 
 ##COMPILE OPTIONS
 
-Define environment variable DEBUG before compiling if you don't want full optimizations to take place.
+Define environment variable DEBUG before compiling if you don't want full optimizations to take place and symbols linked on executable.
 
 Define USE_ANSI if you want some colorized texts, using ANSI CSI escape codes.
 
@@ -101,10 +101,10 @@ uid                  Frederico Lamberti Pissarra <fredericopissarra@gmail.com>
 sub   4096R/F9AA8B75 2016-10-06 [expires: 2019-10-06]
 ```
 
-After downloading the tar.gz file (f.i, t50-7.2.3.tar.gz), get the .asc file as well. To verify if the tarball is authentic, just type the following command:
+After downloading the tar.gz file (f.i, t50-5.8.tar.gz), get the .asc file as well. To verify if the tarball is authentic, just type the following command:
 
 ```bash
-$ gpg --verify t50-5.7.3.tar.gz.asc t50-5.7.3.tar.gz
+$ gpg --verify t50-5.8.tar.gz.asc t50-5.8.tar.gz
 gpg: Signature made Qua 25 Abr 2018 16:46:52 -03 using RSA key ID C09C2054
 gpg: Good signature from "Frederico Lamberti Pissarra <fredericopissarra@gmail.com>"
 ```

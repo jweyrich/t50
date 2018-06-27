@@ -37,7 +37,7 @@ void tcp_udp_dccp_help(void)
 void tcp_help(void)
 {
   printf("TCP Options:\n"
-         "    --acknowledge NUM         TCP ACK sequence #               (default RANDOM)\n"
+         "    --ack-seq NUM             TCP ACK sequence #               (default RANDOM)\n"
          "    --sequence NUM            TCP SYN sequence #               (default RANDOM)\n"
          "    --data-offset NUM         TCP data offset                  (default %zu)\n"
          " -F,--fin                     TCP FIN flag                     (default OFF)\n"

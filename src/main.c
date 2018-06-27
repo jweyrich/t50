@@ -223,7 +223,7 @@ int main ( int argc, char *argv[] )
         fputs ( INFO " Waiting for child process to end...\n", stderr );
 #endif
 
-        /* SIGALRM will kill the child process if necessary! */
+        /* NOTE: SIGALRM will kill the child process if necessary! */
         wait ( NULL );
         child_is_dead = 1;
 
@@ -266,9 +266,9 @@ static void signal_handler ( int signal )
       child_is_dead = 1;
       return;
 
-      // FIXME: Possibly I have to deal with SIGTERM as well...
-      //case SIGTERM:
-      //  /* TODO */
+    // FIXME: Possibly I have to deal with SIGTERM as well...
+    //case SIGTERM:
+    //  /* TODO */
   }
 
   close_socket();   // AS_SAFE!
@@ -293,6 +293,8 @@ void initialize ( const struct config_options *co )
 
   /* --- Initialize signal handlers --- */
   /* All these signals are handled by our handle. */
+  sigfillset( &sigset );
+  sa.sa_mask = sigset;
   sigaction ( SIGPIPE, &sa, NULL );
   sigaction ( SIGINT,  &sa, NULL );
   sigaction ( SIGCHLD, &sa, NULL );
