@@ -741,6 +741,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
 
   switch (optid)
   {
+  // --- GLOBAL options
 #ifdef __HAVE_TURBO__
   case OPTION_TURBO:
     co->turbo = true;
@@ -748,7 +749,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
 #endif
 
   case OPTION_THRESHOLD:
-    co->threshold = htonl(toULong(optname, arg));
+    co->threshold = toULong(optname, arg);
     break;
 
   case OPTION_FLOOD:
@@ -767,7 +768,8 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->shuffle = true;
     break;
 
-  //--- GRE options
+  // --- GRE options
+  // FIXME: gre.flags, gre.recur, optional gre.offset, not set here! 
   case OPTION_GRE_SEQUENCE_PRESENT:
     co->gre.S = true;
     break;
@@ -800,7 +802,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
 
   //--- IP options
   case OPTION_IP_TOS:
-    co->ip.tos = htonl(toULong(optname, arg));
+    co->ip.tos = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_IP_ID:
@@ -816,6 +818,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->ip.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  // --- ICMP options
   case OPTION_ICMP_TYPE:
     co->icmp.type = toULongCheckRange(optname, arg, 0, 255);
     break;
@@ -825,13 +828,19 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_ICMP_ID:
-    co->icmp.id = toULongCheckRange(optname, arg, 0, 255);
+    co->icmp.id = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_ICMP_SEQUENCE:
-    co->icmp.sequence = toULongCheckRange(optname, arg, 0, 255);
+    co->icmp.sequence = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
+  case OPTION_ICMP_GATEWAY:
+    check_list_separators(optname, arg);
+    co->icmp.gateway = resolv(arg);
+    break;
+
+  // --- IGMP options
   case OPTION_IGMP_TYPE:
     co->igmp.type = toULongCheckRange(optname, arg, 0, 255);
     break;
@@ -841,7 +850,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_IGMP_QRV:
-    co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7);
+    co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7); // only 3 bits.
     break;
 
   case OPTION_IGMP_SUPPRESS:
@@ -853,15 +862,16 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_IGMP_GREC_TYPE:
-    co->igmp.grec_type = htonl(toULong(optname, arg));
+    co->igmp.grec_type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_IGMP_SOURCES:
-    co->igmp.sources = htons(toULongCheckRange(optname, arg, 0, 65535));
+    co->igmp.sources = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_IGMP_ADDRESS:
-    /* '--igmp-address' can contain a list. */
+    /* FIXME: Need to check if an item is valid! */
+    /* More than 255 items will be ignored! */
     for (counter = 0, tmp_ptr = strtok(arg, ",");
          tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
          counter++, tmp_ptr = strtok(NULL, ","))
@@ -869,7 +879,29 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->igmp.sources = counter;
     break;
 
+  case OPTION_IGMP_GROUP:
+    check_list_separators(optname, arg);
+    co->igmp.group = resolv(arg);
+    break;
+
+  case OPTION_IGMP_GREC_MULTICAST:
+    check_list_separators(optname, arg);
+    co->igmp.grec_mca = resolv(arg);
+    break;
+
   // --- TCP options
+  case OPTION_TCP_SEQUENCE:
+    co->tcp.sequence = htonl(toULong(optname, arg));
+    break;
+
+  case OPTION_TCP_ACK_SEQ:
+    co->tcp.acknowledge = htonl(toULong(optname, arg));
+    break;
+
+  case OPTION_TCP_OFFSET:
+    co->tcp.doff = toULongCheckRange(optname, arg, 0, 15); // only 4 bits.
+    break;
+
   case OPTION_TCP_FIN:
     co->tcp.fin = true;
     break;
@@ -902,21 +934,22 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->tcp.cwr = true;
     break;
 
-  case OPTION_TCP_ACK_SEQ:
-    co->tcp.acknowledge = htonl(toULong(optname, arg));
-
   case OPTION_TCP_WINDOW:
     co->tcp.window = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
+  case OPTION_TCP_URGENT_POINTER:
+    co->tcp.urg_ptr = htons(toULongCheckRange(optname, arg, 0, 65535));
+    break;
+
   case OPTION_TCP_MSS:
     co->tcp.options |= TCP_OPTION_MSS;
-    co->tcp.mss = htonl(toULong(optname, arg));
+    co->tcp.mss = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_TCP_WSOPT:
     co->tcp.options |= TCP_OPTION_WSOPT;
-    co->tcp.wsopt = htonl(toULong(optname, arg));
+    co->tcp.wsopt = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_TCP_TSOPT:
@@ -927,8 +960,8 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     if (get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
       exit(EXIT_FAILURE);
 
-    co->tcp.tsval = a;
-    co->tcp.tsecr = b;
+    co->tcp.tsval = htonl(a);
+    co->tcp.tsecr = htonl(b);
     break;
 
   case OPTION_TCP_SACK_OK:
@@ -955,8 +988,8 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->tcp.options |= TCP_OPTION_SACK_EDGE;
     if (get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
       exit(EXIT_FAILURE);
-    co->tcp.sack_left = a;
-    co->tcp.sack_right = b;
+    co->tcp.sack_left = htonl(a);
+    co->tcp.sack_right = htonl(b);
     break;
 
   case OPTION_TCP_MD5_SIGNATURE:
@@ -968,11 +1001,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_TCP_AUTH_KEY_ID:
-    co->tcp.key_id = htonl(toULong(optname, arg));
+    co->tcp.key_id = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_TCP_AUTH_NEXT_KEY:
-    co->tcp.next_key = htonl(toULong(optname, arg));
+    co->tcp.next_key = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_TCP_NOP:
@@ -981,39 +1014,45 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
 
   // --- EGP options
   case OPTION_EGP_TYPE:
-    co->egp.type = htonl(toULong(optname, arg));
+    co->egp.type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EGP_CODE:
-    co->egp.code = htonl(toULong(optname, arg));
+    co->egp.code = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EGP_STATUS:
-    co->egp.status = htonl(toULong(optname, arg));
+    co->egp.status = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EGP_AS:
-    co->egp.as = htonl(toULong(optname, arg));
+    co->egp.as = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EGP_SEQUENCE:
-    co->egp.sequence = htonl(toULong(optname, arg));
+    co->egp.sequence = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EGP_HELLO:
-    co->egp.hello = htonl(toULong(optname, arg));
+    co->egp.hello = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EGP_POLL:
-    co->egp.poll = htonl(toULong(optname, arg));
+    co->egp.poll = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
+  // --- RIP options
   case OPTION_RIP_COMMAND:
-    co->rip.command = htonl(toULong(optname, arg));
+    co->rip.command = toULongCheckRange(optname, arg, 0, 255);
+    break;
+
+  case OPTION_RIP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rip.address = resolv(arg);
     break;
 
   case OPTION_RIP_FAMILY:
-    co->rip.family = htonl(toULong(optname, arg));
+    co->rip.family = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_RIP_METRIC:
@@ -1021,32 +1060,38 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_RIP_DOMAIN:
-    co->rip.domain = htonl(toULong(optname, arg));
+    co->rip.domain = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_RIP_TAG:
-    co->rip.tag = htonl(toULong(optname, arg));
+    co->rip.tag = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_RIP_NETMASK:
     co->rip.netmask = resolv(arg);
     break;  /* FIXME: Is this correct? */
 
+  case OPTION_RIP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->rip.next_hop = resolv(arg);
+    break;
+
   case OPTION_RIP_AUTHENTICATION:
     co->rip.auth = true;
     break;
 
   case OPTION_RIP_AUTH_KEY_ID:
-    co->rip.key_id = htonl(toULong(optname, arg));
+    co->rip.key_id = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_RIP_AUTH_SEQUENCE:
     co->rip.sequence = htonl(toULong(optname, arg));
     break;
 
+  // --- DCCP options
   case OPTION_DCCP_OFFSET:
     /* NOTE: byte swapped on tcp.c */
-    co->dccp.doff = toULongCheckRange(optname, arg, 0, 65535);
+    co->dccp.doff = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_DCCP_CSCOV:
@@ -1066,11 +1111,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_DCCP_SEQUENCE_01:
-    co->dccp.sequence_01 = htonl(toULong(optname, arg));
+    co->dccp.sequence_01 = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_DCCP_SEQUENCE_02:
-    co->dccp.sequence_02 = htonl(toULong(optname, arg));
+    co->dccp.sequence_02 = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_DCCP_SEQUENCE_03:
@@ -1082,7 +1127,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_DCCP_ACKNOWLEDGE_01:
-    co->dccp.acknowledge_01 = htonl(toULong(optname, arg));
+    co->dccp.acknowledge_01 = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_DCCP_ACKNOWLEDGE_02:
@@ -1093,6 +1138,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->dccp.rst_code = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  // --- RSVP options
   case OPTION_RSVP_FLAGS:
     co->rsvp.flags = toULongCheckRange(optname, arg, 0, 15);
     break;
@@ -1105,8 +1151,28 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255);
     break;
 
+  case OPTION_RSVP_SESSION_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.session_addr = resolv(arg);
+    break;
+
+  case OPTION_RSVP_SESSION_PROTOCOL:
+    check_list_separators(optname, arg);
+    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
+    break;
+
   case OPTION_RSVP_SESSION_FLAGS:
     co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255);
+    break;
+
+  case OPTION_RSVP_SESSION_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.session_port = htons(toULongCheckRange(optname, arg, 0, 65535));
+    break;
+
+  case OPTION_RSVP_HOP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.hop_addr = resolv(arg);
     break;
 
   case OPTION_RSVP_HOP_IFACE:
@@ -1117,8 +1183,13 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->rsvp.time_refresh = htonl(toULong(optname, arg));
     break;
 
+  case OPTION_RSVP_ERROR_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.error_addr = resolv(arg);
+    break;
+
   case OPTION_RSVP_ERROR_FLAGS:
-    co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 255);
+    co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 7); // 3 bits.
     break;
 
   case OPTION_RSVP_ERROR_CODE:
@@ -1130,11 +1201,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_RSVP_SCOPE:
-    co->rsvp.scope = htonl(toULong(optname, arg));
+    co->rsvp.scope = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_RSVP_SCOPE_ADDRESS:
-    /* '--rsvp-address' can have a list of addresses separated by ','. */
+    // FIXME: Must validate every item!
     for (counter = 0, tmp_ptr = strtok(arg, ",");
          tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
          counter++, tmp_ptr = strtok(NULL, ","))
@@ -1143,7 +1214,22 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_RSVP_STYLE_OPTION:
-    co->rsvp.style_opt = htonl(toULong(optname, arg));
+    co->rsvp.style_opt = htonl(toULongCheckRange(optname, arg, 0, (1U << 24)-1)); // 24 bits!
+    break;
+
+  case OPTION_RSVP_SENDER_ADDRESS:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_addr = resolv(arg);
+    break;
+
+  case OPTION_RSVP_SENDER_PORT:
+    check_list_separators(optname, arg);
+    co->rsvp.sender_port = htons(toULongCheckRange(optname, arg, 0, 65535));
+    break;
+
+  case OPTION_RSVP_CONFIRM_ADDR:
+    check_list_separators(optname, arg);
+    co->rsvp.confirm_addr = resolv(arg);
     break;
 
   case OPTION_RSVP_TSPEC_TRAFFIC:
@@ -1223,8 +1309,9 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
     break;
 
+  // --- IPSEC options
   case OPTION_IPSEC_AH_LENGTH:
-    co->ipsec.ah_length = htonl(toULong(optname, arg));
+    co->ipsec.ah_length = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_IPSEC_AH_SPI:
@@ -1243,8 +1330,9 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->ipsec.esp_sequence = htonl(toULong(optname, arg));
     break;
 
+  // --- EIGRP options
   case OPTION_EIGRP_OPCODE:
-    co->eigrp.opcode = htonl(toULong(optname, arg));
+    co->eigrp.opcode = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_FLAGS:
@@ -1264,40 +1352,40 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_EIGRP_TYPE:
-    co->eigrp.type = htonl(toULong(optname, arg));
+    co->eigrp.type = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EIGRP_LENGTH:
-    co->eigrp.length = htonl(toULong(optname, arg));
+    co->eigrp.length = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EIGRP_K1:
     co->eigrp.values |= EIGRP_KVALUE_K1;
-    co->eigrp.k1 = htonl(toULong(optname, arg));
+    co->eigrp.k1 = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_K2:
     co->eigrp.values |= EIGRP_KVALUE_K2;
-    co->eigrp.k2 = htonl(toULong(optname, arg));
+    co->eigrp.k2 = toULongCheckRange(optname, arg, 0, 255); 
     break;
 
   case OPTION_EIGRP_K3:
     co->eigrp.values |= EIGRP_KVALUE_K3;
-    co->eigrp.k3 = htonl(toULong(optname, arg));
+    co->eigrp.k3 = toULongCheckRange(optname, arg, 0, 255); 
     break;
 
   case OPTION_EIGRP_K4:
     co->eigrp.values |= EIGRP_KVALUE_K4;
-    co->eigrp.k4 = htonl(toULong(optname, arg));
+    co->eigrp.k4 = toULongCheckRange(optname, arg, 0, 255); 
     break;
 
   case OPTION_EIGRP_K5:
     co->eigrp.values |= EIGRP_KVALUE_K5;
-    co->eigrp.k5 = htonl(toULong(optname, arg));
+    co->eigrp.k5 = toULongCheckRange(optname, arg, 0, 255); 
     break;
 
   case OPTION_EIGRP_HOLD:
-    co->eigrp.hold = htonl(toULong(optname, arg));
+    co->eigrp.hold = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_EIGRP_IOS_VERSION:
@@ -1316,6 +1404,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->eigrp.ver_minor = b;
     break;
 
+  case OPTION_EIGRP_NEXTHOP:
+    check_list_separators(optname, arg);
+    co->eigrp.next_hop = resolv(arg);
+    break;
+
   case OPTION_EIGRP_DELAY:
     co->eigrp.delay = htonl(toULong(optname, arg));
     break;
@@ -1325,27 +1418,29 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_EIGRP_MTU:
-    co->eigrp.mtu = htonl(toULong(optname, arg));
+    co->eigrp.mtu = htonl(toULongCheckRange(optname, arg, 0, (1U << 24) - 1)); // 24 bits
     break;
 
   case OPTION_EIGRP_HOP_COUNT:
-    co->eigrp.hop_count = htonl(toULong(optname, arg));
+    co->eigrp.hop_count = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_LOAD:
-    co->eigrp.load = htonl(toULong(optname, arg));
+    co->eigrp.load = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_RELIABILITY:
-    co->eigrp.reliability = htonl(toULong(optname, arg));
+    co->eigrp.reliability = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_DESINATION:
-    if ( (tmp_ptr = strchr(arg, '/')) != NULL )
+    if ( tmp_ptr = strchr(arg, '/') )
     {
       *tmp_ptr++ = '\0';
       co->eigrp.prefix = htonl(toULong(optname, tmp_ptr));
     }
+    else
+      co->eigrp.prefix = (1U << 5) - 1;
     co->eigrp.dest = resolv(arg);
     break;
 
@@ -1366,11 +1461,16 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_EIGRP_ID:
-    co->eigrp.proto_id = htonl(toULong(optname, arg));
+    co->eigrp.proto_id = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_EIGRP_EXTERNAL_FLAGS:
-    co->eigrp.ext_flags = htonl(toULong(optname, arg));
+    co->eigrp.ext_flags = toULongCheckRange(optname, arg, 0, 255);
+    break;
+
+  case OPTION_EIGRP_ADDRESS:
+    check_list_separators(optname, arg);
+    co->eigrp.address = resolv(arg);
     break;
 
   case OPTION_EIGRP_MULTICAST:
@@ -1385,6 +1485,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     co->eigrp.key_id = htonl(toULong(optname, arg));
     break;
 
+  // --- OSPF options
   case OPTION_OSPF_TYPE:
     co->ospf.type = htonl(toULong(optname, arg));
     break;
@@ -1629,66 +1730,6 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     check_list_separators(optname, arg);
     get_ip_protocol(co, arg);
     break;
-  case OPTION_ICMP_GATEWAY:
-    check_list_separators(optname, arg);
-    co->icmp.gateway = resolv(arg);
-    break;
-  case OPTION_IGMP_GROUP:
-    check_list_separators(optname, arg);
-    co->igmp.group = resolv(arg);
-    break;
-  case OPTION_IGMP_GREC_MULTICAST:
-    check_list_separators(optname, arg);
-    co->igmp.grec_mca = resolv(arg);
-    break;
-  case OPTION_RIP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rip.address = resolv(arg);
-    break;
-  case OPTION_RIP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->rip.next_hop = resolv(arg);
-    break;
-  case OPTION_RSVP_SESSION_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.session_addr = resolv(arg);
-    break;
-  case OPTION_RSVP_SESSION_PROTOCOL:
-    check_list_separators(optname, arg);
-    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
-    break;
-  case OPTION_RSVP_ERROR_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.error_addr = resolv(arg);
-    break;
-  case OPTION_RSVP_SESSION_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.session_port = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-  case OPTION_RSVP_HOP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.hop_addr = resolv(arg);
-    break;
-  case OPTION_RSVP_SENDER_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_addr = resolv(arg);
-    break;
-  case OPTION_RSVP_SENDER_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_port = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-  case OPTION_RSVP_CONFIRM_ADDR:
-    check_list_separators(optname, arg);
-    co->rsvp.confirm_addr = resolv(arg);
-    break;
-  case OPTION_EIGRP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->eigrp.next_hop = resolv(arg);
-    break;
-  case OPTION_EIGRP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->eigrp.address = resolv(arg);
-    break;
   }
 }
 
@@ -1699,14 +1740,22 @@ uint32_t toULong(char * __restrict__ optname, char * __restrict__ value)
   unsigned long n;
 
   if (!value || !*value)
-    return 0UL;
+    return 0;
+
+  // strtoul() accepts negative values, we don't!
+  if (strchr(value, '-'))
+    goto error_exit;
 
   /* strtoul deals ok with hexadecimal, octal and decimal values. */
   errno = 0;    // errno is set only on error, so we have to reset it here.
   n = strtoul(value, NULL, 0);
-
-  if (errno == ERANGE)
+  if (errno)
+  {
+error_exit:
     fatal_error("Invalid numeric value for option '%s'.", optname);
+    // we'll never get here, return 0 just in case!
+    return 0;
+  }
 
   return (uint32_t)n;
 }

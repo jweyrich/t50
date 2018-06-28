@@ -9,6 +9,10 @@ Legend:
 T50 5.8 - Jun 27th, 2018
  - Lots of fields were in little endian format (Intel platforms);
  - TCP option --ack-seq wasn't being evaluated at command line;
+ - TCP option --sequence wasn't being evaluated at command ilne;
+ - TCP option --data-offset wasn't being evaluated at command line;
+ - TCP option --urg-pointer wasn't being evaluated at command line;
+ - Corrected range checkings for options;
  - Checksums were in little endian format as well (Intel platforms);
  * Make sure functions with more than one pointer as arguments have __restrict__ keyword in all of them.
    This is a hint to the compiler optimization routines in C99/C11.
