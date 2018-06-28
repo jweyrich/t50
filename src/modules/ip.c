@@ -60,6 +60,7 @@ struct iphdr *ip_header(void *buffer,
   /* FIXME: MAYBE TOS is filled by kernel through the SO_PRIORITY option and this is completly useless. */
   ip->tos      = co->ip.tos;
 
+  // NOTE: frag_off must be byte swapped here, not in config.c.  
   ip->frag_off = htons(co->ip.frag_off ? (co->ip.frag_off >> 3) | IP_MF : IP_DF);
 
   /* FIXME: Is it necessary to fill tot_len when IP_HDRINCL is used? */

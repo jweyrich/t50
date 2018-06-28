@@ -68,9 +68,9 @@
 #define LSA_TYPE_OPAQUE_AREA  10
 #define LSA_TYPE_OPAQUE_FLOOD 11
 
-#define LSA_TLEN_GENERIC(foo) \
+#define LSA_TLEN_GENERIC(x) \
   (sizeof(struct ospf_lsa_hdr) + \
-   ((foo) * sizeof(uint32_t)))
+   ((x) * sizeof(uint32_t)))
 
 #define LSA_TLEN_MULTICAST     LSA_TLEN_GENERIC(2)
 #define LSA_TLEN_NETWORK       LSA_TLEN_GENERIC(2)

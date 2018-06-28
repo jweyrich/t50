@@ -1487,11 +1487,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
 
   // --- OSPF options
   case OPTION_OSPF_TYPE:
-    co->ospf.type = htonl(toULong(optname, arg));
+    co->ospf.type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_LENGTH:
-    co->ospf.length = htonl(toULong(optname, arg));
+    co->ospf.length = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_OSPF_ROUTER_ID:
@@ -1540,11 +1540,11 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_HELLO_INTERVAL:
-    co->ospf.hello_interval = htonl(toULong(optname, arg));
+    co->ospf.hello_interval = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_OSPF_HELLO_PRIORITY:
-    co->ospf.hello_priority = htonl(toULong(optname, arg));
+    co->ospf.hello_priority = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_HELLO_DEAD:
@@ -1560,7 +1560,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_HELLO_NEIGHBOR:
-    co->ospf.neighbor = htonl(toULong(optname, arg));
+    co->ospf.neighbor = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_HELLO_ADDRESS:
@@ -1573,7 +1573,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_DD_MTU:
-    co->ospf.dd_mtu = htonl(toULong(optname, arg));
+    co->ospf.dd_mtu = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_OSPF_DD_MASTER_SLAVE:
@@ -1601,7 +1601,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_LSA_AGE:
-    co->ospf.lsa_age = htonl(toULong(optname, arg));
+    co->ospf.lsa_age = htons(toULongCheckRange(optname, arg, 0, 65535));
     break;
 
   case OPTION_OSPF_LSA_DO_NOT_AGE:
@@ -1609,7 +1609,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_LSA_TYPE:
-    co->ospf.lsa_type = htonl(toULong(optname, arg));
+    co->ospf.lsa_type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_LSA_LSID:
@@ -1657,7 +1657,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_LSA_LINK_TYPE:
-    co->ospf.lsa_link_type = htonl(toULong(optname, arg));
+    co->ospf.lsa_link_type = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_LSA_ATTACHED:
@@ -1701,7 +1701,7 @@ void set_config_option(struct config_options *__restrict__ co, char * __restrict
     break;
 
   case OPTION_OSPF_AUTH_KEY_ID:
-    co->ospf.key_id = htonl(toULong(optname, arg));
+    co->ospf.key_id = toULongCheckRange(optname, arg, 0, 255);
     break;
 
   case OPTION_OSPF_AUTH_SEQUENCE:
@@ -1984,7 +1984,6 @@ int get_dual_values(char *arg,
   /* Try to convert the first value. */
   errno = 0;
   *px = strtoul(p1, NULL, 10);
-
   if (errno)
     longjmp(jb, 1);
 
@@ -2001,7 +2000,6 @@ int get_dual_values(char *arg,
     /* Try to convert the second value. */
     errno = 0;
     *py = strtoul(p2, NULL, 10);
-
     if (errno)
       longjmp(jb, 1);
   }

@@ -90,9 +90,8 @@ void udp(const struct config_options *const __restrict__ co, uint32_t *size)
   pseudo->len      = htons(sizeof(struct udphdr));
 
   /* Computing the checksum. */
-  length = (uint32_t)((void *)(pseudo + 1) - (void *)udp);
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons(cksum(udp, length));
+                htons(cksum(udp, (uint32_t)((void *)(pseudo + 1) - (void *)udp)));
 
   gre_checksum(packet, co, *size);
 }

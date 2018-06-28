@@ -79,7 +79,7 @@ void icmp(const struct config_options *const __restrict__ co, uint32_t * __restr
       icmp->un.gateway = INADDR_RND(co->icmp.gateway);
     }
 
-  icmp->checksum = 0;
+  icmp->checksum = 0; // needed!
 
   /* Computing the checksum. */
   icmp->checksum = co->bogus_csum ? RANDOM() : 

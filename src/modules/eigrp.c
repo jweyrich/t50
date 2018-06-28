@@ -300,7 +300,7 @@ void eigrp(const struct config_options *const __restrict__ co, uint32_t * __rest
                            FIELD_MUST_BE_ZERO : htons(0x0004);
       *buffer.byte_ptr++ = prefix;
       *buffer.inaddr_ptr++ = EIGRP_DADDR_BUILD(dest, prefix);  // Is this correct?
-      buffer.ptr += EIGRP_DADDR_LENGTH(prefix);
+      buffer.ptr += EIGRP_DADDR_LENGTH(prefix);   // FIXME: Pointer really should not be updated here?
     }
 
     break;
@@ -428,9 +428,8 @@ void eigrp(const struct config_options *const __restrict__ co, uint32_t * __rest
   }
 
   /* Computing the checksum. */
-  length = (uint32_t)(buffer.ptr - (void *)eigrp);
   eigrp->check    = co->bogus_csum ?
-                    RANDOM() : htons(cksum(eigrp, length));
+                    RANDOM() : htons(cksum(eigrp, (uint32_t)(buffer.ptr - (void *)eigrp)));
 
   /* GRE Encapsulation takes place. */
   gre_checksum(packet, co, *size);
