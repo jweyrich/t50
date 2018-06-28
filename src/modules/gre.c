@@ -77,7 +77,7 @@ struct iphdr *gre_encapsulation(void * __restrict__ buffer,
   gre->R       = FIELD_MUST_BE_ZERO;
   gre->S       = co->gre.S;
   gre->s       = FIELD_MUST_BE_ZERO;
-  gre->recur   = FIELD_MUST_BE_ZERO;
+  gre->recur   = FIELD_MUST_BE_ZERO;    // That's why this is not in config.c!
   gre->version = GREVERSION;
   gre->flags   = FIELD_MUST_BE_ZERO;
   gre->proto   = htons(ETH_P_IP);

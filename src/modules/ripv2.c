@@ -165,7 +165,7 @@ void ripv2(const struct config_options *const __restrict__ co, uint32_t * __rest
    */
   if (co->rip.auth)
   {
-    *buffer.word_ptr++ = 0xffff;
+    *buffer.word_ptr++ = 0xffffU;
     *buffer.word_ptr++ = htons(3);
     *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
     *buffer.byte_ptr++ = co->rip.key_id;
@@ -207,7 +207,7 @@ void ripv2(const struct config_options *const __restrict__ co, uint32_t * __rest
   *buffer.word_ptr++ = __RND(co->rip.family);
   *buffer.word_ptr++ = __RND(co->rip.tag);
   *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
-  *buffer.inaddr_ptr++ = NETMASK_RND(htonl(co->rip.netmask));
+  *buffer.inaddr_ptr++ = NETMASK_RND(co->rip.netmask);
   *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
   *buffer.inaddr_ptr++ = __RND(co->rip.metric);
 
@@ -228,7 +228,7 @@ void ripv2(const struct config_options *const __restrict__ co, uint32_t * __rest
   {
     uint32_t size;
 
-    *buffer.word_ptr++ = 0xffff;
+    *buffer.word_ptr++ = 0xffffU;
     *buffer.word_ptr++ = htons(1);
 
     /*

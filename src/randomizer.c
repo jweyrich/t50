@@ -101,7 +101,7 @@ uint32_t (*RANDOM)(void) = random_xorshift128plus;
  */
 uint32_t NETMASK_RND(uint32_t foo)
 {
-  if (foo == INADDR_ANY)
+  if ( ! foo )
   {
     uint32_t t = RANDOM() & 0x1f;
     /* Here t is something between 0 and 31. */ 
@@ -112,10 +112,10 @@ uint32_t NETMASK_RND(uint32_t foo)
     /* Here t is something between 0 and 22 */ 
 
     /* We need someting between 8 and 30 bits only! */
-    foo = ~(~0U >> (t + 8));
+    foo = htonl(~(~0U >> (t + 8)));
   }
 
-  return htonl(foo);
+  return foo;
 }
 
 // Intel architecture dependend constructor.

@@ -256,13 +256,11 @@ void dccp(const struct config_options *const __restrict__ co, uint32_t * __restr
   }
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  length = (uint32_t)(buffer_ptr - (void *)dccp);
-  pseudo->len      = htons(length);
+  pseudo->len      = htons((uint32_t)(buffer_ptr - (void *)dccp));
 
   /* Computing the checksum. */
-  length = (uint32_t)((void *)(pseudo + 1) - (void *)dccp);
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         htons(cksum(dccp, length));
+                         htons(cksum(dccp, (uint32_t)((void *)(pseudo + 1) - (void *)dccp)));
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum(packet, co, *size);

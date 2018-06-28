@@ -86,7 +86,7 @@ void igmpv3(const struct config_options *const __restrict__ co, uint32_t * __res
     igmpv3_grec                = (struct igmpv3_grec *)(igmpv3_report + 1);
     igmpv3_grec->grec_type     = __RND(co->igmp.grec_type);
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
-    igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources);
+    igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources); // Necessary even if co->igmp.sources is a 8 bit value.
     igmpv3_grec->grec_mca      = INADDR_RND(co->igmp.grec_mca);
 
     /* Dealing with source address(es). */

@@ -114,7 +114,7 @@ void ospf(const struct config_options *const __restrict__ co, uint32_t * __restr
                         sizeof(struct ospf_auth_hdr) +
                         ospf_length);
   ospf->rid     = INADDR_RND(co->ospf.rid);
-  ospf->aid     = htonl(co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid);
+  ospf->aid     = co->ospf.AID ? INADDR_RND(co->ospf.aid) : co->ospf.aid;
   ospf->check   = 0;
 
   /* OSPF Authentication Header structure making a pointer to OSPF Header structure. */
@@ -122,6 +122,7 @@ void ospf(const struct config_options *const __restrict__ co, uint32_t * __restr
 
   /* Identifiyingt whether to use Authentication or not. */
   ospf_auth->reserved = FIELD_MUST_BE_ZERO;
+
   if (co->ospf.auth)
   {
     /*
@@ -251,7 +252,7 @@ void ospf(const struct config_options *const __restrict__ co, uint32_t * __restr
      *  |                     Advertising Router                        |
      *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);
+    *buffer.dword_ptr++ = htonl(co->ospf.lsa_type);   // lsa_type is a 8 bit value.
     *buffer.dword_ptr++ = __RND(co->ospf.lsa_lsid);
     *buffer.inaddr_ptr++ = INADDR_RND(co->ospf.lsa_router);
     break;
@@ -348,29 +349,29 @@ build_ospf_lsa:
       switch (co->ospf.lsa_type)
       {
         case LSA_TYPE_ROUTER:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_ROUTER;
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_ROUTER);
           break;
 
         case LSA_TYPE_NETWORK:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_NETWORK;
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_NETWORK);
           break;
 
         case LSA_TYPE_SUMMARY_IP:
         case LSA_TYPE_SUMMARY_AS:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_SUMMARY;
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_SUMMARY);
           break;
 
         case LSA_TYPE_ASBR:
         case LSA_TYPE_NSSA:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_ASBR;
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_ASBR);
           break;
 
         case LSA_TYPE_MULTICAST:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_MULTICAST;
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_MULTICAST);
           break;
 
         default:
-          ospf_lsa->length = co->ospf.length ? co->ospf.length : LSA_TLEN_GENERIC(0);
+          ospf_lsa->length = co->ospf.length ? co->ospf.length : htons(LSA_TLEN_GENERIC(0));
       }
 
       ospf_lsa->length = htons(ospf_lsa->length);
@@ -427,7 +428,7 @@ build_ospf_lsa:
        */
       *buffer.word_ptr++ = htons(OSPF_TLV_EXTENDED);
       *buffer.word_ptr++ = htons(OSPF_LEN_EXTENDED);
-      *buffer.dword_ptr++ = htonl(co->ospf.lls_options);
+      *buffer.dword_ptr++ = htonl(co->ospf.lls_options);  // byte swap is made here, not in config.c
 
       /*
        * OSPF Link-Local Signaling (RFC 5613)
@@ -509,13 +510,10 @@ build_ospf_lsa:
    *     calculated, but is instead set to 0.
    */
   if (!co->ospf.auth)
-  {
     /* Computing the checksum. */
-    length = (uint32_t)(buffer.ptr - (void *)ospf);
     ospf->check   = co->bogus_csum ?
                     RANDOM() :
-                    htons(cksum(ospf, length));
-  }
+                    htons(cksum(ospf,  (uint32_t)(buffer.ptr - (void *)ospf)));
 
   gre_checksum(packet, co, *size);
 }
