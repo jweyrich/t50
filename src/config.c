@@ -1749,7 +1749,8 @@ uint32_t toULong(char * __restrict__ optname, char * __restrict__ value)
   /* strtoul deals ok with hexadecimal, octal and decimal values. */
   errno = 0;    // errno is set only on error, so we have to reset it here.
   n = strtoul(value, NULL, 0);
-  if (errno)
+  // FIX: Check for greater values then 2³²-1 too.
+  if (errno || (n & ((uint64_t)__UINT32_MAX__ << 32)))
   {
 error_exit:
     fatal_error("Invalid numeric value for option '%s'.", optname);
@@ -1924,7 +1925,7 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
                      (matches[2] << 8)  |
                      (matches[1] << 16) |
                      (matches[0] << 24)) &
-                   (0xffffffffUL << (32 - addr_ptr->cidr));
+                   (0xffffffffU << (32 - addr_ptr->cidr));
 
   return true;
 }

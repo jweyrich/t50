@@ -56,7 +56,7 @@
 #define EIGRP_TLEN_EXTERNAL    45
 
 #define EIGRP_DADDR_BUILD(foo, bar) \
-  ((foo) &= htonl(~(0xffffffff >> (((bar) >> 3) * 8))))
+  ((foo) &= htonl(~(0xffffffffU >> (((bar) >> 3) * 8))))
 
 #define EIGRP_DADDR_LENGTH(foo) \
   ((((foo) >> 3) & 3) + ((foo) % 8 ? 1 : 0))
