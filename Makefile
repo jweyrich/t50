@@ -29,25 +29,37 @@ ifdef DEBUG
 	CFLAGS += -O0 -g
 else
   # Optimization level 2 (better results) and no canaries.
-	CFLAGS += -O2 -DNDEBUG
+  CFLAGS += -O2 -DNDEBUG
 
-	# FIXME: Intel, 32 bits architecture, is "i386"?!
+  # FIXME: Intel, 32 bits architecture, is "i386"?!
   # Use SSE vectorization, if available.
-	ARCHITECTURE = $(shell arch)
+  ARCHITECTURE = $(shell arch)
 
-	# Options for Intel architectures
-	ifeq ($(ARCHITECTURE),x86_64)
-		CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
+  # Options for x86-64
+  ifeq ($(ARCHITECTURE),x86_64)
+    CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
     LDFLAGS += -flto
-  else
-    ifeq ($(ARCHITECTURE),i386)
-      CFLAGS += -march=native -flto -fno-stack-protector
-      LDFLAGS += -flto
-    endif
+  endif
+  # Options for i386
+  ifeq ($(ARCHITECTURE),i386)
+    CFLAGS += -march=native -flto -fno-stack-protector
+    LDFLAGS += -flto
+  endif
+
+	# TODO: tunning for cortex-a#?
+  # Options for ARMv7-a
+  ifneq ($(findstr armv7,$(ARCHITECTURE)),)
+    CFLAGS += -march=armv7-a -fno-stack-protector -flto
+    LDFLAGS += -flto
+  endif
+  # Options for ARMv8-a
+  ifneq ($(findstr armv8,$(ARCHITECTURE)),)
+    CFLAGS += -march=armv8-a -fno-stack-protector -flto
+    LDFLAGS += -flto
   endif
 
   # strip symbols and turn more linker optimizations on (if available).
-	LDFLAGS += -s -O2
+  LDFLAGS += -s -O2
 endif
 
 CFLAGS += -I $(INCLUDEDIR) -std=gnu11
