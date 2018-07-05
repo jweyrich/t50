@@ -1,3 +1,4 @@
+# vim: set noet :
 #
 #     __________ ________  _____
 #    |__    ___/|   ____/ /  _  \ the fastest packet injector.
@@ -13,31 +14,34 @@ VERSION=5.8
 
 # Change it to clang if you feel lucky!
 CC=gcc
+LD=$(CC)
 
 INCLUDEDIR=src/include
 CFLAGS=-std=gnu11
 LDFLAGS=
-LIBS=
+LDLIBS=
 
 # Just define DEBUG environment var to compile for debugging:
 #
 # $ DEBUG=1 make
 #
 ifdef DEBUG
-	CFLAGS += -Og -g
+	CFLAGS += -O0 -g
 else
   # Optimization level 2 (better results) and no canaries.
-	CFLAGS += -O2 -fno-stack-protector -DNDEBUG
+	CFLAGS += -O2 -DNDEBUG
 
 	# FIXME: Intel, 32 bits architecture, is "i386"?!
   # Use SSE vectorization, if available.
 	ARCHITECTURE = $(shell arch)
+
+	# Options for Intel architectures
 	ifeq ($(ARCHITECTURE),x86_64)
-		CFLAGS += -march=native -ftree-vectorize -flto
-    LDFLAGS += -flto 
+		CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
+    LDFLAGS += -flto
   else
     ifeq ($(ARCHITECTURE),i386)
-      CFLAGS += -march=native -flto
+      CFLAGS += -march=native -flto -fno-stack-protector
       LDFLAGS += -flto
     endif
   endif
@@ -100,8 +104,9 @@ src/modules/udp.o
 all: $(EXECUTABLE)
 
 # Now we'll compile to ./bin/ directory!
+# Explicit rule needed 'cause we have multiple objects.
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 # Implicit rules (all .c files will be compiled!)
 src/%.o: src/%.c
