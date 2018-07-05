@@ -31,8 +31,6 @@ else
   # Optimization level 2 (better results) and no canaries.
   CFLAGS += -O2 -DNDEBUG
 
-  # FIXME: Intel, 32 bits architecture, is "i386"?!
-  # Use SSE vectorization, if available.
   ARCHITECTURE = $(shell arch)
 
   # Options for x86-64
@@ -41,7 +39,7 @@ else
     LDFLAGS += -flto
   endif
   # Options for i386
-  ifeq ($(ARCHITECTURE),i386)
+  ifeq ($(ARCHITECTURE),i686)
     CFLAGS += -march=native -flto -fno-stack-protector
     LDFLAGS += -flto
   endif
