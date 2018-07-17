@@ -71,14 +71,22 @@ static void get_random_seed(void)
   // NOTE: Could use gettimeofday() and use it as seed,
   //       but, this way I'll make sure the seed is random.
 
-  int _fd;
-  int r;
+  int _fd, r;
+  void *p, *endp;
 
-  if ((_fd = open("/dev/random", O_RDONLY)) == -1)
-    fatal_error("Cannot open /dev/random to get initial random seed.");
+  if ((_fd = open("/dev/urandom", O_RDONLY)) == -1)
+    fatal_error("Cannot open /dev/urandom to get initial random seed.");
 
   /* NOTE: initializes this code "global" _seed var. */
-  r = read(_fd, &_seed, sizeof(_seed));
+  p = &_seed;
+  endp = p + sizeof _seed;
+
+  while ( p < endp )
+  {
+    if ( ( r = read( _fd, p, endp - p ) ) == -1 )
+      break;
+    p += r;
+  }
 
   close(_fd);
 
