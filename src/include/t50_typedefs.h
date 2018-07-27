@@ -25,7 +25,7 @@
 #include <netinet/in.h>
 
 /* Data types */
-typedef int threshold_t;  /* FIX: If we need more than 2147483648 packets sent,
+typedef int threshold_T;  /* FIX: If we need more than 2147483648 packets sent,
                                   this type can be changed to int64_t. */
 
 /**
@@ -46,6 +46,6 @@ typedef union
   uint32_t  *dword_ptr;
   in_addr_t *inaddr_ptr;
   uint64_t  *qword_ptr;
-} memptr_t;
+} memptr_T;
 
 #endif

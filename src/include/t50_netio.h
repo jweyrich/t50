@@ -26,8 +26,6 @@
 #include <t50_typedefs.h>
 #include <t50_config.h>
 
-typedef int socket_t;
-
 /* Common routines used by code */
 in_addr_t    resolv(char *);         /* Resolve name to ip address. */
 void         create_socket(void);    /* Creates the sending socket */
@@ -36,6 +34,6 @@ void         close_socket(void);     /* Close the previously created socket */
 /* Send the actual packet from buffer, with size bytes, using config options. */
 _Bool send_packet(const void *const,
                   uint32_t,
-                  const struct config_options *const __restrict__);
+                  const config_options_T *const restrict);
 
 #endif

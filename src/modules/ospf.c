@@ -30,7 +30,7 @@
 #include <t50_randomizer.h>
 
 static uint32_t ospf_hdr_len(const uint32_t, const int, const int, const _Bool);
-static void ospf_lsupdate(const struct config_options *const __restrict__, void ** __restrict__ , struct ospf_lsa_hdr * __restrict__);
+static void ospf_lsupdate(const config_options_T *const restrict, void ** restrict , struct ospf_lsa_hdr * restrict);
 
 /**
  * OSPF packet header configuration.
@@ -40,7 +40,7 @@ static void ospf_lsupdate(const struct config_options *const __restrict__, void 
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ospf(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void ospf(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t length,
          ospf_length, /* OSPF header length. */
@@ -51,7 +51,7 @@ void ospf(const struct config_options *const __restrict__ co, uint32_t * __restr
           lls;          /* OSPF LLS header? */
 
   /* Packet and Checksum. */
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr *ip;
   struct ospf_hdr *ospf;
@@ -605,9 +605,9 @@ uint32_t ospf_hdr_len(const uint32_t type,
   return size;
 }
 
-void ospf_lsupdate(const struct config_options *const __restrict__ co, void ** __restrict__ ptr, struct ospf_lsa_hdr * __restrict__ ospf_lsa)
+void ospf_lsupdate(const config_options_T *const restrict co, void ** restrict ptr, struct ospf_lsa_hdr * restrict ospf_lsa)
 {
-  memptr_t buffer;
+  memptr_T buffer;
 
   buffer.ptr = *ptr;
 

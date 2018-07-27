@@ -39,7 +39,7 @@ static uint32_t eigrp_hdr_len(const uint16_t, const uint16_t, const uint8_t, con
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void eigrp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void eigrp(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t length,
          eigrp_tlv_len, /* EIGRP TLV size. */
@@ -49,7 +49,7 @@ void eigrp(const struct config_options *const __restrict__ co, uint32_t * __rest
   uint32_t prefix;      /* EIGRP Prefix */
 
   /* Packet and Checksum. */
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr *ip;
   struct eigrp_hdr *eigrp;

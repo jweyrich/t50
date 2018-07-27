@@ -40,22 +40,22 @@ static uint32_t current_packet_size = 0;
  *
  * @param size Size of the new 'global' packet buffer.
  */
-void alloc_packet(uint32_t new_packet_size)
+void alloc_packet ( uint32_t new_packet_size )
 {
   void *p;
 
   /* Buffer cannot be empty! */
-  if (!new_packet_size)
-    fatal_error("Cannot allocate an empty packet buffer!");
+  if ( !new_packet_size )
+    fatal_error ( "Cannot allocate an empty packet buffer!" );
 
   /* Realloc only ig the new packet size is greater than the old. */
   /* NOTE: Assume the condition is false the majority of time. */
-  if (unlikely(new_packet_size > current_packet_size))
+  if ( unlikely ( new_packet_size > current_packet_size ) )
   {
     /* Tries to reallocate memory. */
     /* NOTE: Assume realloc will not fail. */
-    if ((p = realloc(packet, new_packet_size)) == NULL)
-      fatal_error("Error reallocating packet buffer.");
+    if ( ( p = realloc ( packet, new_packet_size ) ) == NULL )
+      fatal_error ( "Error reallocating packet buffer." );
 
     /* Only assign a new pointer if successfull */
     packet = p;

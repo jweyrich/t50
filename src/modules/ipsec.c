@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ipsec(const struct config_options *const __restrict__ co, uint32_t *size)
+void ipsec(const config_options_T *const restrict co, uint32_t *size)
 {
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
@@ -47,7 +47,7 @@ void ipsec(const struct config_options *const __restrict__ co, uint32_t *size)
            counter;
 
   /* Packet. */
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr *ip;
 

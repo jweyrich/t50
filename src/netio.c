@@ -42,13 +42,13 @@
 #define TIMEOUT 1000
 
 /* Initialized for error condition, just in case! */
-static socket_t fd = -1;
+static int fd = -1;
 
 static int wait_for_io(int);
 static int socket_send(int, struct sockaddr_in *, void *, uint32_t);
 
 #ifdef SO_SNDBUF
-static int setup_sendbuffer(socket_t *, uint32_t);
+static int setup_sendbuffer(int *, uint32_t);
 #endif
 
 /**
@@ -161,7 +161,7 @@ void close_socket(void)
  */
 _Bool send_packet(const void *const buffer,
                 uint32_t size,
-                const struct config_options *const __restrict__ co)
+                const config_options_T * const restrict co)
 {
   struct sockaddr_in sin =
   {
@@ -188,7 +188,7 @@ _Bool send_packet(const void *const buffer,
 
 #ifdef SO_SNDBUF
 /* Taken from libdnet by Dug Song. */
-int setup_sendbuffer(socket_t *fd, uint32_t n)
+int setup_sendbuffer(int *fd, uint32_t n)
 {
   uint32_t i;
   socklen_t len;

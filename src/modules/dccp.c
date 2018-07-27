@@ -38,7 +38,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void dccp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void dccp(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t length,
          dccp_length, /* DCCP header length. */
@@ -174,7 +174,7 @@ void dccp(const struct config_options *const __restrict__ co, uint32_t * __restr
   dccp->dccph_seq2     = co->dccp.ext ? 0 : __RND(co->dccp.sequence_02);
   dccp->dccph_checksum = 0;
 
-  /* NOTE: Not using union 'memptr_t' this time!!! */
+  /* NOTE: Not using union 'memptr_T' this time!!! */
   buffer_ptr = dccp + 1;
 
   /* DCCP Extended Header structure making a pointer to Checksum. */

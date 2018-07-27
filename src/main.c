@@ -49,8 +49,8 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
 
-_NOINLINE static void               initialize ( const struct config_options * );
-_NOINLINE static modules_table_t   *selectProtocol ( const struct config_options *const, int * );
+_NOINLINE static void               initialize ( const config_options_T * );
+_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T * restrict, int * restrict );
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -60,9 +60,9 @@ _NOINLINE static modules_table_t   *selectProtocol ( const struct config_options
  */
 int main ( int argc, char *argv[] )
 {
-  struct config_options *co;
+  config_options_T *co;
   struct cidr           *cidr_ptr;
-  modules_table_t       *ptbl;
+  modules_table_T       *ptbl;
   int                   proto;
   time_t                lt;
 
@@ -95,7 +95,7 @@ int main ( int argc, char *argv[] )
     if ( ( co->ip.protocol == IPPROTO_T50 && co->threshold > number_of_modules ) ||
          ( co->ip.protocol != IPPROTO_T50 && co->threshold > 1 ) )
     {
-      threshold_t new_threshold;
+      threshold_T new_threshold;
 
       if ( ( pid = fork() ) == -1 )
         fatal_error ( "Cannot create child process"
@@ -133,7 +133,7 @@ int main ( int argc, char *argv[] )
     lt = time ( NULL );
 
     printf ( INFO " " PACKAGE_NAME " successfully launched at %s\n",
-             ctime( &lt ) );
+             ctime ( &lt ) );
   }
 
   // SRANDOM is here because each process has its own
@@ -266,9 +266,9 @@ static void signal_handler ( int signal )
       child_is_dead = 1;
       return;
 
-    // FIXME: Possibly I have to deal with SIGTERM as well...
-    //case SIGTERM:
-    //  /* TODO */
+      // FIXME: Possibly I have to deal with SIGTERM as well...
+      //case SIGTERM:
+      //  /* TODO */
   }
 
   close_socket();   // AS_SAFE!
@@ -278,7 +278,7 @@ static void signal_handler ( int signal )
   exit ( 128 + signal );
 }
 
-void initialize ( const struct config_options *co )
+void initialize ( const config_options_T *co )
 {
   static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
   static sigset_t sigset;
@@ -293,7 +293,7 @@ void initialize ( const struct config_options *co )
 
   /* --- Initialize signal handlers --- */
   /* All these signals are handled by our handle. */
-  sigfillset( &sigset );
+  sigfillset ( &sigset );
   sa.sa_mask = sigset;
   sigaction ( SIGPIPE, &sa, NULL );
   sigaction ( SIGINT,  &sa, NULL );
@@ -329,9 +329,9 @@ void initialize ( const struct config_options *co )
 }
 
 /* Selects the initial protocol based on the configuration. */
-modules_table_t *selectProtocol ( const struct config_options *const co, int *proto )
+modules_table_T *selectProtocol ( const config_options_T * restrict co, int * restrict proto )
 {
-  modules_table_t *ptbl;
+  modules_table_T *ptbl;
 
   ptbl = mod_table;
 

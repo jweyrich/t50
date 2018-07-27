@@ -46,14 +46,14 @@ static uint32_t tcp_options_len(const uint8_t, int, int);
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t tcpolen,     /* TCP options size. */
          tcpopt,      /* TCP options total size. */
          length,
          counter;
 
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr *ip;
 

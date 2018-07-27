@@ -40,13 +40,13 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv2(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t greoptlen,     /* GRE options size. */
          length,
          counter;
 
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr  *ip;
   struct iphdr  *gre_ip;

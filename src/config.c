@@ -48,29 +48,29 @@
 #include <t50_modules.h>
 
 /* Local prototypes. */
-static int                                check_if_option(char *);
-static int                                check_if_nul_option(char *);
-static void                               check_options_rules(struct config_options *);
-_NOINLINE static struct options_table_s * find_option(char *);
-static void                               set_config_option(struct config_options * __restrict__, char * __restrict__, int, char * __restrict__);
-_NOINLINE static uint32_t                 toULong(char * __restrict__, char * __restrict__);
-_NOINLINE static uint32_t                 toULongCheckRange(char * __restrict__, char * __restrict__, uint32_t, uint32_t);
-_NOINLINE static void                     check_list_separators(char *, char *);
-static void                               set_destination_addresses(char * __restrict__, struct config_options *__restrict__);
-static void                               list_protocols(void);
-static void                               set_default_protocol(struct config_options *);
-static void                               get_ip_protocol(struct config_options * __restrict__, char * __restrict__);
-static _Bool                              get_ip_and_cidr_from_string(char const *const, T50_tmp_addr_t *);
-_NOINLINE static int                      get_dual_values(char *, unsigned long *, unsigned long *, unsigned long, int, char, char *);
-static int                                check_threshold(const struct config_options *const __restrict__);
-static int                                check_for_valid_option(int, int *);
+static int                                check_if_option ( char * );
+static int                                check_if_nul_option ( char * );
+static void                               check_options_rules ( const config_options_T * );
+_NOINLINE static struct options_table_s *find_option ( char * );
+static void                               set_config_option ( config_options_T * restrict, char * restrict, int, char * restrict );
+_NOINLINE static uint32_t                 toULong ( char * restrict, char * restrict );
+_NOINLINE static uint32_t                 toULongCheckRange ( char * restrict, char * restrict, uint32_t, uint32_t );
+_NOINLINE static void                     check_list_separators ( char *, char * );
+static void                               set_destination_addresses ( char * restrict, config_options_T * restrict );
+static void                               list_protocols ( void );
+static void                               set_default_protocol ( config_options_T * );
+static void                               get_ip_protocol ( config_options_T * restrict, char * restrict );
+static _Bool                              get_ip_and_cidr_from_string ( char const * const, addr_T * );
+_NOINLINE static int                      get_dual_values ( char *, unsigned long *, unsigned long *, unsigned long, int, char, char * );
+static int                                check_threshold ( const config_options_T *const restrict );
+static int                                check_for_valid_option ( int, int * );
 
 // Must disable this warning 'cause the initializations are right!
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 /* Default command line interface options. */
-static struct config_options co =
+static config_options_T co =
 {
   /* XXX COMMON OPTIONS                                                         */
   .threshold = 1000,                  /* default threshold                      */
@@ -426,7 +426,7 @@ static struct options_table_s options[] =
 
 /* Substitutes getConfigOptions() function.
    NOTE: This function expects &argv[0] as the first argument. */
-struct config_options *parse_command_line(char **argv)
+config_options_T *parse_command_line ( char **argv )
 {
   struct options_table_s *ptbl;
   int num_options;
@@ -436,146 +436,154 @@ struct config_options *parse_command_line(char **argv)
   dest_addr = NULL;
 
   /* Ugly hack! */
-  set_default_protocol(&co);
+  set_default_protocol ( &co );
 
   /* Check each argument starting from the next one. */
-  for (num_options = 0, argv++; *argv; argv++)
+  for ( num_options = 0, argv++; *argv; argv++ )
   {
     opt = *argv;
 
-    if (check_if_option(opt))
+    if ( check_if_option ( opt ) )
     {
       /* Skip --. */
-      if (check_if_nul_option(opt))
+      if ( check_if_nul_option ( opt ) )
         continue;
 
-      if ((ptbl = find_option(opt)) == NULL)
-        fatal_error("Unrecognized option '%s'.", opt);
+      if ( ( ptbl = find_option ( opt ) ) == NULL )
+        fatal_error ( "Unrecognized option '%s'.", opt );
 
       /* This will assume each option should be used only once. */
-      if (ptbl->in_use_)
-        fatal_error("Option '%s' already given.", opt);
+      if ( ptbl->in_use_ )
+        fatal_error ( "Option '%s' already given.", opt );
 
       ptbl->in_use_ = 1;
 
       /* If the option needs an argument, get the next string. */
-      if (!!(next_str = *(argv + 1)))
+      if ( !! ( next_str = * ( argv + 1 ) ) )
       {
-        static const char * const ferrfmt =
+        static const char *const ferrfmt =
           "Option '%s' has no arguments.";
 
-        if (ptbl->has_arg)
+        if ( ptbl->has_arg )
         {
-          if (check_if_nul_option(next_str)) // -- is NOT allowed!
-            fatal_error(ferrfmt, opt);
+          if ( check_if_nul_option ( next_str ) ) // -- is NOT allowed!
+            fatal_error ( ferrfmt, opt );
+
           argv++;
         }
         else
         {
-          if (!check_if_nul_option(next_str)) // -- is allowed!
-            if (!check_if_option(next_str))   // no values allowed!
-              fatal_error(ferrfmt, opt);
+          if ( !check_if_nul_option ( next_str ) ) // -- is allowed!
+            if ( !check_if_option ( next_str ) ) // no values allowed!
+              fatal_error ( ferrfmt, opt );
         }
       }
 
-      if (ptbl->has_arg && !next_str)
-        fatal_error("option '%s' must have an argument.", opt);
+      if ( ptbl->has_arg && !next_str )
+        fatal_error ( "option '%s' must have an argument.", opt );
 
-      set_config_option(&co, opt, ptbl->id, next_str);
+      set_config_option ( &co, opt, ptbl->id, next_str );
     }
     else
     {
       /* NOTE: This is not an option, so it must be an IP address. */
 
       /* Check if already got an address. */
-      if (dest_addr)
-        fatal_error("Target address given twice. Aborting...");
+      if ( dest_addr )
+        fatal_error ( "Target address given twice. Aborting..." );
 
       dest_addr = *argv;
 
-      set_destination_addresses(dest_addr, &co);
+      set_destination_addresses ( dest_addr, &co );
     }
 
     /* How many options we got so far? */
     num_options++;
   } /* end of command line scan. */
 
-  const char * const errfmt = "Option '-%c' (or '--%s') cannot be used with other options.";
+  const char *const errfmt = "Option '-%c' (or '--%s') cannot be used with other options.";
 
   /* NOTE: -h, -v or -l can be called by non-privileged user! */
 
   /* if '-h' (or '--help') option is given... */
-  if ((ptbl = find_option("-h")) != NULL)
-    if (ptbl->in_use_)
+  if ( ( ptbl = find_option ( "-h" ) ) != NULL )
+    if ( ptbl->in_use_ )
     {
-      if (num_options > 1)
-        error(errfmt, 'h', "help");
+      if ( num_options > 1 )
+        error ( errfmt, 'h', "help" );
       else
         usage();
 
-      exit(EXIT_FAILURE);
+      exit ( EXIT_FAILURE );
     }
 
   /* if '-v' (or '--version') option is given... */
-  if ((ptbl = find_option("-v")) != NULL)
-    if (ptbl->in_use_)
+  if ( ( ptbl = find_option ( "-v" ) ) != NULL )
+    if ( ptbl->in_use_ )
     {
-      if (num_options > 1)
-        error(errfmt, 'v', "version");
+      if ( num_options > 1 )
+        error ( errfmt, 'v', "version" );
+
       /* --- already showing version, by default! --- */
       //else
       //  show_version();
 
-      exit(EXIT_FAILURE);
+      exit ( EXIT_FAILURE );
     }
 
   /* if '-l' (or '--list-protocols') option is given... */
-  if ((ptbl = find_option("-l")) != NULL)
-    if (ptbl->in_use_)
+  if ( ( ptbl = find_option ( "-l" ) ) != NULL )
+    if ( ptbl->in_use_ )
     {
-      if (num_options > 1)
-        error(errfmt, 'l', "list-protocols");
+      if ( num_options > 1 )
+        error ( errfmt, 'l', "list-protocols" );
       else
         list_protocols();
 
-      exit(EXIT_FAILURE);
+      exit ( EXIT_FAILURE );
     }
 
-  if ((ptbl = find_option("-q")) != NULL)
-    if (ptbl->in_use_)
+  if ( ( ptbl = find_option ( "-q" ) ) != NULL )
+    if ( ptbl->in_use_ )
     {
-      if (num_options > 1)
+      if ( num_options > 1 )
       {
-        error(errfmt, 'q', "quiet");
-        exit(EXIT_FAILURE);
+        error ( errfmt, 'q', "quiet" );
+        exit ( EXIT_FAILURE );
       }
       else
         co.quiet = 1;
     }
 
   /* We got all the options. Now, check their rules! */
-  check_options_rules(&co);
+  check_options_rules ( &co );
 
   return &co;
 }
 
 /* Check if the argument is an option. */
-int  check_if_option(char *s) { return *s == '-'; }
-int  check_if_nul_option(char *s) { return !strcmp(s, "--"); }
+int  check_if_option ( char *s )
+{
+  return *s == '-';
+}
+int  check_if_nul_option ( char *s )
+{
+  return !strcmp ( s, "--" );
+}
 
 /* NOTE: Ugly hack, but necessary!
          The default protocol is TCP, but we weren't able
          to adjust on config_options structure previously.
          Do it now. */
-void set_default_protocol(struct config_options *co)
+void set_default_protocol ( config_options_T *co )
 {
-  modules_table_t *ptbl;
+  modules_table_T *ptbl;
   int i;
 
   co->ip.protocol = IPPROTO_TCP;
 
-  for (i = 0, ptbl = mod_table; ptbl->protocol_id; i++, ptbl++)
-    if (ptbl->protocol_id == IPPROTO_TCP)
+  for ( i = 0, ptbl = mod_table; ptbl->protocol_id; i++, ptbl++ )
+    if ( ptbl->protocol_id == IPPROTO_TCP )
     {
       co->ip.protoname = i;
       break;
@@ -584,24 +592,24 @@ void set_default_protocol(struct config_options *co)
 
 /* Scans the option table trying to find the option.
    NOTE: "option" points to a string beginning with '-', always! */
-struct options_table_s *find_option(char *option)
+struct options_table_s *find_option ( char *option )
 {
   struct options_table_s *ptbl;
 
-  for (ptbl = options; ptbl->id; ptbl++)
+  for ( ptbl = options; ptbl->id; ptbl++ )
   {
     /* Is it a long option? */
-    if (*(option + 1) == '-')
+    if ( * ( option + 1 ) == '-' )
     {
       /* Find 'long option' */
-      if ((ptbl->long_opt != NULL) && *(option + 2) != '\0')
-        if (!strcmp(option + 2, ptbl->long_opt))
+      if ( ( ptbl->long_opt != NULL ) && * ( option + 2 ) != '\0' )
+        if ( !strcmp ( option + 2, ptbl->long_opt ) )
           return ptbl;
     }
     else
     {
       /* ... or, is it a short option? */
-      if (*(option + 1) == ptbl->short_opt)
+      if ( * ( option + 1 ) == ptbl->short_opt )
         return ptbl;
     }
   }
@@ -611,59 +619,61 @@ struct options_table_s *find_option(char *option)
 }
 
 /* Check rules for options, after we get them all. */
-void check_options_rules(struct config_options *co)
+void check_options_rules ( const config_options_T *co )
 {
   struct options_table_s *ptbl;
 
   /* Address field is mandatory! */
-  if (!co->ip.daddr)
-    fatal_error("Target address needed.");
+  if ( !co->ip.daddr )
+    fatal_error ( "Target address needed." );
 
 #ifdef __HAVE_TURBO__
-  if (co->turbo && !co->flood)
-    fatal_error("Turbo mode only available when flooding.");
+
+  if ( co->turbo && !co->flood )
+    fatal_error ( "Turbo mode only available when flooding." );
+
 #endif
 
-  ptbl = find_option("--threshold");
+  ptbl = find_option ( "--threshold" );
 
   /* --flood and --threshold are mutually exclusive! */
-  if (co->flood && (ptbl && ptbl->in_use_))
-    fatal_error("--flood and --threshold cannot be used at the same time.\n");
+  if ( co->flood && ( ptbl && ptbl->in_use_ ) )
+    fatal_error ( "--flood and --threshold cannot be used at the same time.\n" );
 
   /* Sanitizing the TCP Options SACK_Permitted and SACK Edges. */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK) &&
-      TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
-    fatal_error("TCP options SACK-Permitted and SACK Edges are not allowed.");
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_SACK_OK ) &&
+       TEST_BITS ( co->tcp.options, TCP_OPTION_SACK_EDGE ) )
+    fatal_error ( "TCP options SACK-Permitted and SACK Edges are not allowed." );
 
   /* Sanitizing the TCP Options T/TCP CC and T/TCP CC.ECHO. */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC) && (co->tcp.cc_echo))
-    fatal_error("TCP options T/TCP CC and T/TCP CC.ECHO are not allowed.");
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_CC ) && ( co->tcp.cc_echo ) )
+    fatal_error ( "TCP options T/TCP CC and T/TCP CC.ECHO are not allowed." );
 
   /* FIX: Checks only if flooding isn't used! */
-  if (!co->flood)
-    if (check_threshold(co))
-      exit(EXIT_FAILURE);
+  if ( !co->flood )
+    if ( check_threshold ( co ) )
+      exit ( EXIT_FAILURE );
 
   /* ***** NOTE: Insert other rules here! ***** */
 
   // Checks here if protocol isn't IPPROTO_T50 and if the set of options
   // is applyable to the choosen protocol.
-  if (co->ip.protocol != IPPROTO_T50)
+  if ( co->ip.protocol != IPPROTO_T50 )
   {
     /* Need to scan only the begining with --encapsulated option.
        Notice that options are sequentially organized. */
     struct options_table_s *popt_tbl;
     int *valid_list;
 
-    if ((popt_tbl = find_option("--encapsulated")) != NULL)
+    if ( ( popt_tbl = find_option ( "--encapsulated" ) ) != NULL )
     {
-      valid_list = get_module_valid_options_list(co->ip.protocol);
+      valid_list = get_module_valid_options_list ( co->ip.protocol );
 
       /* popt_tbl->id is an option id on options table entry. */
-      while (popt_tbl->id)
+      while ( popt_tbl->id )
       {
-        if (popt_tbl->in_use_ && !check_for_valid_option(popt_tbl->id, valid_list))
-          fatal_error("One or more options are not available to chosen protocol.");
+        if ( popt_tbl->in_use_ && !check_for_valid_option ( popt_tbl->id, valid_list ) )
+          fatal_error ( "One or more options are not available to chosen protocol." );
 
         popt_tbl++;
       }
@@ -672,10 +682,10 @@ void check_options_rules(struct config_options *co)
 }
 
 /* Get the IP PROTOCOL. */
-void get_ip_protocol(struct config_options * __restrict__ co, char * __restrict__ arg)
+void get_ip_protocol ( config_options_T * restrict co, char * restrict arg )
 {
   /* T50 protocol is a special case! It isn't in modules table! */
-  if (!strcasecmp(arg, "T50"))
+  if ( !strcasecmp ( arg, "T50" ) )
   {
     co->ip.protocol = IPPROTO_T50;
     co->ip.protoname = number_of_modules;    /* Is this correct? */
@@ -684,14 +694,14 @@ void get_ip_protocol(struct config_options * __restrict__ co, char * __restrict_
   {
     /* Scan the modules table trying to get the desired protocol. */
     int i;
-    modules_table_t *ptbl;
+    modules_table_T *ptbl;
 
     i = 0;
     ptbl = mod_table;
 
-    while (ptbl->name)
+    while ( ptbl->name )
     {
-      if (!strcasecmp(ptbl->name, arg))
+      if ( !strcasecmp ( ptbl->name, arg ) )
       {
         co->ip.protoname = i;
         co->ip.protocol = ptbl->protocol_id;
@@ -702,1106 +712,1117 @@ void get_ip_protocol(struct config_options * __restrict__ co, char * __restrict_
       ptbl++;
     }
 
-    fatal_error("Unknown protocol %s.", arg);
+    fatal_error ( "Unknown protocol %s.", arg );
   }
 }
 
-void set_destination_addresses(char * __restrict__ arg, struct config_options * __restrict__ co)
+void set_destination_addresses ( char * restrict arg, config_options_T * restrict co )
 {
   char *p;
-  T50_tmp_addr_t addr;
+  addr_T addr;
 
-  if (get_ip_and_cidr_from_string(arg, &addr))
+  if ( get_ip_and_cidr_from_string ( arg, &addr ) )
   {
     co->bits = addr.cidr;
-    co->ip.daddr = htonl(addr.addr);
+    co->ip.daddr = htonl ( addr.addr );
   }
   else
   {
     /* If get_ip_and_cidr_from_string() fails, it probably means that we have a name, instead of an IP. */
 
     /* Tries to resolve the name. */
-    p = strtok(arg, "/");
-    co->ip.daddr = resolv(p);
+    p = strtok ( arg, "/" );
+    co->ip.daddr = resolv ( p );
 
     /* Get cidr if any. */
-    if (p = strtok(NULL, "/"))
-      co->bits = atoi(p); /* NOTE: Range will be checked later. */
+    if ( p = strtok ( NULL, "/" ) )
+      co->bits = atoi ( p ); /* NOTE: Range will be checked later. */
     else
       co->bits = CIDR_MAXIMUM;
   }
 }
 
 /* Setup an option. */
-void set_config_option(struct config_options *__restrict__ co, char * __restrict__ optname, int optid, char * __restrict__ arg)
+void set_config_option ( config_options_T * restrict co, char * restrict optname, int optid, char * restrict arg )
 {
   uint32_t counter;
   char *tmp_ptr;
   unsigned long a, b; /* Temporaries. */
 
-  switch (optid)
+  switch ( optid )
   {
-  // --- GLOBAL options
+      // --- GLOBAL options
 #ifdef __HAVE_TURBO__
-  case OPTION_TURBO:
-    co->turbo = true;
-    break;
+    case OPTION_TURBO:
+      co->turbo = true;
+      break;
 #endif
 
-  case OPTION_THRESHOLD:
-    co->threshold = toULong(optname, arg);
-    break;
-
-  case OPTION_FLOOD:
-    co->flood = true;
-    break;
-
-  case OPTION_ENCAPSULATED:
-    co->encapsulated = true;
-    break;
-
-  case OPTION_BOGUSCSUM:
-    co->bogus_csum = true;
-    break;
-
-  case OPTION_SHUFFLE:
-    co->shuffle = true;
-    break;
-
-  // --- GRE options
-  // FIXME: gre.flags, gre.recur, optional gre.offset, not set here! 
-  case OPTION_GRE_SEQUENCE_PRESENT:
-    co->gre.S = true;
-    break;
-
-  case OPTION_GRE_KEY_PRESENT:
-    co->gre.K = true;
-    break;
-
-  case OPTION_GRE_CHECKSUM_PRESENT:
-    co->gre.C = true;
-    break;
-
-  case OPTION_GRE_KEY:
-    co->gre.key = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_GRE_SEQUENCE:
-    co->gre.sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_GRE_SADDR:
-    check_list_separators(optname, arg);
-    co->gre.saddr = resolv(arg);
-    break;
-
-  case OPTION_GRE_DADDR:
-    check_list_separators(optname, arg);
-    co->gre.daddr = resolv(arg);
-    break;
-
-  //--- IP options
-  case OPTION_IP_TOS:
-    co->ip.tos = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IP_ID:
-    co->ip.id = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_IP_OFFSET:
-    // NOTE: byte swap made in ip.c
-    co->ip.frag_off = toULongCheckRange(optname, arg, 0, 0x1fff);
-    break;
-
-  case OPTION_IP_TTL:
-    co->ip.ttl = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  // --- ICMP options
-  case OPTION_ICMP_TYPE:
-    co->icmp.type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_ICMP_CODE:
-    co->icmp.code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_ICMP_ID:
-    co->icmp.id = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_ICMP_SEQUENCE:
-    co->icmp.sequence = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_ICMP_GATEWAY:
-    check_list_separators(optname, arg);
-    co->icmp.gateway = resolv(arg);
-    break;
-
-  // --- IGMP options
-  case OPTION_IGMP_TYPE:
-    co->igmp.type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IGMP_CODE:
-    co->igmp.code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IGMP_QRV:
-    co->igmp.qrv = toULongCheckRange(optname, arg, 0, 7); // only 3 bits.
-    break;
-
-  case OPTION_IGMP_SUPPRESS:
-    co->igmp.suppress = true;
-    break;
-
-  case OPTION_IGMP_QQIC:
-    co->igmp.qqic = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IGMP_GREC_TYPE:
-    co->igmp.grec_type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IGMP_SOURCES:
-    co->igmp.sources = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IGMP_ADDRESS:
-    /* FIXME: Need to check if an item is valid! */
-    /* More than 255 items will be ignored! */
-    for (counter = 0, tmp_ptr = strtok(arg, ",");
-         tmp_ptr && (counter < (sizeof(co->igmp.address) / sizeof(in_addr_t)));
-         counter++, tmp_ptr = strtok(NULL, ","))
-      co->igmp.address[counter] = resolv(tmp_ptr);
-    co->igmp.sources = counter;
-    break;
-
-  case OPTION_IGMP_GROUP:
-    check_list_separators(optname, arg);
-    co->igmp.group = resolv(arg);
-    break;
-
-  case OPTION_IGMP_GREC_MULTICAST:
-    check_list_separators(optname, arg);
-    co->igmp.grec_mca = resolv(arg);
-    break;
-
-  // --- TCP options
-  case OPTION_TCP_SEQUENCE:
-    co->tcp.sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_TCP_ACK_SEQ:
-    co->tcp.acknowledge = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_TCP_OFFSET:
-    co->tcp.doff = toULongCheckRange(optname, arg, 0, 15); // only 4 bits.
-    break;
-
-  case OPTION_TCP_FIN:
-    co->tcp.fin = true;
-    break;
-
-  case OPTION_TCP_SYN:
-    co->tcp.syn = true;
-    break;
-
-  case OPTION_TCP_RST:
-    co->tcp.rst = true;
-    break;
-
-  case OPTION_TCP_PSH:
-    co->tcp.psh = true;
-    break;
-
-  case OPTION_TCP_ACK:
-    co->tcp.ack = true;
-    break;
-
-  case OPTION_TCP_URG:
-    co->tcp.urg = true;
-    break;
-
-  case OPTION_TCP_ECE:
-    co->tcp.ece = true;
-    break;
-
-  case OPTION_TCP_CWR:
-    co->tcp.cwr = true;
-    break;
-
-  case OPTION_TCP_WINDOW:
-    co->tcp.window = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_TCP_URGENT_POINTER:
-    co->tcp.urg_ptr = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_TCP_MSS:
-    co->tcp.options |= TCP_OPTION_MSS;
-    co->tcp.mss = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_TCP_WSOPT:
-    co->tcp.options |= TCP_OPTION_WSOPT;
-    co->tcp.wsopt = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_TCP_TSOPT:
-    /* This option can contain 2 values separated by ':' (second is optional). */
-    /* FIXME: Is it separated by ':' or '.'? */
-    co->tcp.options |= TCP_OPTION_TSOPT;
-
-    if (get_dual_values(arg, &a, &b, UINT_MAX, 1, '.', optname))
-      exit(EXIT_FAILURE);
-
-    co->tcp.tsval = htonl(a);
-    co->tcp.tsecr = htonl(b);
-    break;
-
-  case OPTION_TCP_SACK_OK:
-    co->tcp.options |= TCP_OPTION_SACK_OK;
-    break;
-
-  case OPTION_TCP_CC:
-    co->tcp.options |= TCP_OPTION_CC;
-    co->tcp.cc = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_TCP_CC_NEW:
-    co->tcp.options |= TCP_OPTION_CC_NEXT;
-    co->tcp.cc_new = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_TCP_CC_ECHO:
-    co->tcp.options |= TCP_OPTION_CC_NEXT;
-    co->tcp.cc_echo = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_TCP_SACK_EDGE:
-    /* NOTE: This option expects 2 values, separated by ':'. */
-    co->tcp.options |= TCP_OPTION_SACK_EDGE;
-    if (get_dual_values(arg, &a, &b, UINT_MAX, 0, ':', optname))
-      exit(EXIT_FAILURE);
-    co->tcp.sack_left = htonl(a);
-    co->tcp.sack_right = htonl(b);
-    break;
-
-  case OPTION_TCP_MD5_SIGNATURE:
-    co->tcp.md5 = !(co->tcp.auth = false);
-    break;
-
-  case OPTION_TCP_AUTHENTICATION:
-    co->tcp.auth = !(co->tcp.md5 = false);
-    break;
-
-  case OPTION_TCP_AUTH_KEY_ID:
-    co->tcp.key_id = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_TCP_AUTH_NEXT_KEY:
-    co->tcp.next_key = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_TCP_NOP:
-    co->tcp.nop = TCPOPT_NOP;
-    break;
-
-  // --- EGP options
-  case OPTION_EGP_TYPE:
-    co->egp.type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EGP_CODE:
-    co->egp.code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EGP_STATUS:
-    co->egp.status = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EGP_AS:
-    co->egp.as = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EGP_SEQUENCE:
-    co->egp.sequence = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EGP_HELLO:
-    co->egp.hello = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EGP_POLL:
-    co->egp.poll = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  // --- RIP options
-  case OPTION_RIP_COMMAND:
-    co->rip.command = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RIP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rip.address = resolv(arg);
-    break;
-
-  case OPTION_RIP_FAMILY:
-    co->rip.family = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RIP_METRIC:
-    co->rip.metric = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RIP_DOMAIN:
-    co->rip.domain = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RIP_TAG:
-    co->rip.tag = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RIP_NETMASK:
-    co->rip.netmask = resolv(arg);
-    break;  /* FIXME: Is this correct? */
-
-  case OPTION_RIP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->rip.next_hop = resolv(arg);
-    break;
-
-  case OPTION_RIP_AUTHENTICATION:
-    co->rip.auth = true;
-    break;
-
-  case OPTION_RIP_AUTH_KEY_ID:
-    co->rip.key_id = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RIP_AUTH_SEQUENCE:
-    co->rip.sequence = htonl(toULong(optname, arg));
-    break;
-
-  // --- DCCP options
-  case OPTION_DCCP_OFFSET:
-    /* NOTE: byte swapped on tcp.c */
-    co->dccp.doff = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_DCCP_CSCOV:
-    co->dccp.cscov = toULongCheckRange(optname, arg, 0, 15);
-    break;
-
-  case OPTION_DCCP_CCVAL:
-    co->dccp.ccval = toULongCheckRange(optname, arg, 0, 15);
-    break;
-
-  case OPTION_DCCP_TYPE:
-    co->dccp.type = toULongCheckRange(optname, arg, 0, 15);
-    break;
-
-  case OPTION_DCCP_EXTEND:
-    co->dccp.ext = true;
-    break;
-
-  case OPTION_DCCP_SEQUENCE_01:
-    co->dccp.sequence_01 = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_DCCP_SEQUENCE_02:
-    co->dccp.sequence_02 = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_DCCP_SEQUENCE_03:
-    co->dccp.sequence_03 = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_DCCP_SERVICE:
-    co->dccp.service = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_DCCP_ACKNOWLEDGE_01:
-    co->dccp.acknowledge_01 = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_DCCP_ACKNOWLEDGE_02:
-    co->dccp.acknowledge_02 = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_DCCP_RESET_CODE:
-    co->dccp.rst_code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  // --- RSVP options
-  case OPTION_RSVP_FLAGS:
-    co->rsvp.flags = toULongCheckRange(optname, arg, 0, 15);
-    break;
-
-  case OPTION_RSVP_TYPE:
-    co->rsvp.type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_TTL:
-    co->rsvp.ttl = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_SESSION_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.session_addr = resolv(arg);
-    break;
-
-  case OPTION_RSVP_SESSION_PROTOCOL:
-    check_list_separators(optname, arg);
-    co->rsvp.session_proto = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_SESSION_FLAGS:
-    co->rsvp.session_flags = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_SESSION_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.session_port = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RSVP_HOP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.hop_addr = resolv(arg);
-    break;
-
-  case OPTION_RSVP_HOP_IFACE:
-    co->rsvp.hop_iface = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_TIME_REFRESH:
-    co->rsvp.time_refresh = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ERROR_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.error_addr = resolv(arg);
-    break;
-
-  case OPTION_RSVP_ERROR_FLAGS:
-    co->rsvp.error_flags = toULongCheckRange(optname, arg, 0, 7); // 3 bits.
-    break;
-
-  case OPTION_RSVP_ERROR_CODE:
-    co->rsvp.error_code = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_ERROR_VALUE:
-    co->rsvp.error_value = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RSVP_SCOPE:
-    co->rsvp.scope = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_RSVP_SCOPE_ADDRESS:
-    // FIXME: Must validate every item!
-    for (counter = 0, tmp_ptr = strtok(arg, ",");
-         tmp_ptr && (counter < (sizeof(co->rsvp.address) / sizeof(in_addr_t)));
-         counter++, tmp_ptr = strtok(NULL, ","))
-      co->rsvp.address[counter] = resolv(tmp_ptr);
-    co->rsvp.scope = counter;
-    break;
-
-  case OPTION_RSVP_STYLE_OPTION:
-    co->rsvp.style_opt = htonl(toULongCheckRange(optname, arg, 0, (1U << 24)-1)); // 24 bits!
-    break;
-
-  case OPTION_RSVP_SENDER_ADDRESS:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_addr = resolv(arg);
-    break;
-
-  case OPTION_RSVP_SENDER_PORT:
-    check_list_separators(optname, arg);
-    co->rsvp.sender_port = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_RSVP_CONFIRM_ADDR:
-    check_list_separators(optname, arg);
-    co->rsvp.confirm_addr = resolv(arg);
-    break;
-
-  case OPTION_RSVP_TSPEC_TRAFFIC:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    break;
-
-  case OPTION_RSVP_TSPEC_GUARANTEED:
-    co->rsvp.tspec = TSPEC_GUARANTEED_SERVICE;
-    break;
-
-  case OPTION_RSVP_TSPEC_TOKEN_R:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    co->rsvp.tspec_r = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_TSPEC_TOKEN_B:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    co->rsvp.tspec_b = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_TSPEC_DATA_P:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    co->rsvp.tspec_p = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_TSPEC_MINIMUM:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    co->rsvp.tspec_m = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_TSPEC_MAXIMUM:
-    co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
-    co->rsvp.tspec_M = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_ISHOP:
-    co->rsvp.adspec_hop = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_PATH:
-    co->rsvp.adspec_path = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_MINIMUM:
-    co->rsvp.adspec_minimum = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_MTU:
-    co->rsvp.adspec_mtu = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_GUARANTEED:
-    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-    break;
-
-  case OPTION_RSVP_ADSPEC_CTOT:
-    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-    co->rsvp.adspec_Ctot = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_DTOT:
-    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-    co->rsvp.adspec_Dtot = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_CSUM:
-    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-    co->rsvp.adspec_Csum = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_DSUM:
-    co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
-    co->rsvp.adspec_Dsum = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_RSVP_ADSPEC_CONTROLLED:
-    co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
-    break;
-
-  // --- IPSEC options
-  case OPTION_IPSEC_AH_LENGTH:
-    co->ipsec.ah_length = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_IPSEC_AH_SPI:
-    co->ipsec.ah_spi = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_IPSEC_AH_SEQUENCE:
-    co->ipsec.ah_sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_IPSEC_ESP_SPI:
-    co->ipsec.esp_spi = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_IPSEC_ESP_SEQUENCE:
-    co->ipsec.esp_sequence = htonl(toULong(optname, arg));
-    break;
-
-  // --- EIGRP options
-  case OPTION_EIGRP_OPCODE:
-    co->eigrp.opcode = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_FLAGS:
-    co->eigrp.flags = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_SEQUENCE:
-    co->eigrp.sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_ACKNOWLEDGE:
-    co->eigrp.acknowledge = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_AS:
-    co->eigrp.as = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_TYPE:
-    co->eigrp.type = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EIGRP_LENGTH:
-    co->eigrp.length = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EIGRP_K1:
-    co->eigrp.values |= EIGRP_KVALUE_K1;
-    co->eigrp.k1 = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_K2:
-    co->eigrp.values |= EIGRP_KVALUE_K2;
-    co->eigrp.k2 = toULongCheckRange(optname, arg, 0, 255); 
-    break;
-
-  case OPTION_EIGRP_K3:
-    co->eigrp.values |= EIGRP_KVALUE_K3;
-    co->eigrp.k3 = toULongCheckRange(optname, arg, 0, 255); 
-    break;
-
-  case OPTION_EIGRP_K4:
-    co->eigrp.values |= EIGRP_KVALUE_K4;
-    co->eigrp.k4 = toULongCheckRange(optname, arg, 0, 255); 
-    break;
-
-  case OPTION_EIGRP_K5:
-    co->eigrp.values |= EIGRP_KVALUE_K5;
-    co->eigrp.k5 = toULongCheckRange(optname, arg, 0, 255); 
-    break;
-
-  case OPTION_EIGRP_HOLD:
-    co->eigrp.hold = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_EIGRP_IOS_VERSION:
-    if (get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
-      exit(EXIT_FAILURE);
-
-    co->eigrp.ios_major = a;
-    co->eigrp.ios_minor = b;
-    break;
-
-  case OPTION_EIGRP_PROTO_VERSION:
-    if (get_dual_values(arg, &a, &b, UCHAR_MAX, 0, '.', optname))
-      exit(EXIT_FAILURE);
-
-    co->eigrp.ver_major = a;
-    co->eigrp.ver_minor = b;
-    break;
-
-  case OPTION_EIGRP_NEXTHOP:
-    check_list_separators(optname, arg);
-    co->eigrp.next_hop = resolv(arg);
-    break;
-
-  case OPTION_EIGRP_DELAY:
-    co->eigrp.delay = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_BANDWIDTH:
-    co->eigrp.bandwidth = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_MTU:
-    co->eigrp.mtu = htonl(toULongCheckRange(optname, arg, 0, (1U << 24) - 1)); // 24 bits
-    break;
-
-  case OPTION_EIGRP_HOP_COUNT:
-    co->eigrp.hop_count = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_LOAD:
-    co->eigrp.load = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_RELIABILITY:
-    co->eigrp.reliability = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_DESINATION:
-    if ( tmp_ptr = strchr(arg, '/') )
-    {
-      *tmp_ptr++ = '\0';
-      co->eigrp.prefix = htonl(toULong(optname, tmp_ptr));
-    }
-    else
-      co->eigrp.prefix = (1U << 5) - 1;
-    co->eigrp.dest = resolv(arg);
-    break;
-
-  case OPTION_EIGRP_SOURCE_ROUTER:
-    co->eigrp.src_router = resolv(arg);
-    break;
-
-  case OPTION_EIGRP_SOURCE_AS:
-    co->eigrp.src_as = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_TAG:
-    co->eigrp.tag = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_METRIC:
-    co->eigrp.proto_metric = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_ID:
-    co->eigrp.proto_id = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_EXTERNAL_FLAGS:
-    co->eigrp.ext_flags = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_EIGRP_ADDRESS:
-    check_list_separators(optname, arg);
-    co->eigrp.address = resolv(arg);
-    break;
-
-  case OPTION_EIGRP_MULTICAST:
-    co->eigrp.multicast = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_EIGRP_AUTHENTICATION:
-    co->eigrp.auth = true;
-    break;
-
-  case OPTION_EIGRP_AUTH_KEY_ID:
-    co->eigrp.key_id = htonl(toULong(optname, arg));
-    break;
-
-  // --- OSPF options
-  case OPTION_OSPF_TYPE:
-    co->ospf.type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_LENGTH:
-    co->ospf.length = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_OSPF_ROUTER_ID:
-    co->ospf.rid = resolv(arg);
-    break;
-
-  case OPTION_OSPF_AREA_ID:
-    co->ospf.AID = true;
-    co->ospf.aid = resolv(arg);
-    break;
-
-  case OPTION_OSPF_MT:
-    co->ospf.options |= OSPF_OPTION_TOS;
-    break;
-
-  case OPTION_OSPF_E:
-    co->ospf.options |= OSPF_OPTION_EXTERNAL;
-    break;
-
-  case OPTION_OSPF_MC:
-    co->ospf.options |= OSPF_OPTION_MULTICAST;
-    break;
-
-  case OPTION_OSPF_NP:
-    co->ospf.options |= OSPF_OPTION_NSSA;
-    break;
-
-  case OPTION_OSPF_L:
-    co->ospf.options |= OSPF_OPTION_LLS;
-    break;
-
-  case OPTION_OSPF_DC:
-    co->ospf.options |= OSPF_OPTION_DEMAND;
-    break;
-
-  case OPTION_OSPF_O:
-    co->ospf.options |= OSPF_OPTION_OPAQUE;
-    break;
-
-  case OPTION_OSPF_DN:
-    co->ospf.options |= OSPF_OPTION_DOWN;
-    break;
-
-  case OPTION_OSPF_NETMASK:
-    co->ospf.netmask = resolv(arg);
-    break;
-
-  case OPTION_OSPF_HELLO_INTERVAL:
-    co->ospf.hello_interval = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_OSPF_HELLO_PRIORITY:
-    co->ospf.hello_priority = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_HELLO_DEAD:
-    co->ospf.hello_dead = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_OSPF_HELLO_DESIGN:
-    co->ospf.hello_design = resolv(arg);
-    break;
-
-  case OPTION_OSPF_HELLO_BACKUP:
-    co->ospf.hello_backup = resolv(arg);
-    break;
-
-  case OPTION_OSPF_HELLO_NEIGHBOR:
-    co->ospf.neighbor = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_HELLO_ADDRESS:
-    for (counter = 0, tmp_ptr = strtok(arg, ",");
-         tmp_ptr && (counter < (sizeof(co->ospf.address) / sizeof(in_addr_t)));
-         counter++, tmp_ptr = strtok(NULL, ","))
-      co->ospf.address[counter] = resolv(tmp_ptr);
-
-    co->ospf.neighbor = counter;
-    break;
-
-  case OPTION_OSPF_DD_MTU:
-    co->ospf.dd_mtu = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_OSPF_DD_MASTER_SLAVE:
-    co->ospf.dd_dbdesc |= DD_DBDESC_MSLAVE;
-    break;
-
-  case OPTION_OSPF_DD_MORE:
-    co->ospf.dd_dbdesc |= DD_DBDESC_MORE;
-    break;
-
-  case OPTION_OSPF_DD_INIT:
-    co->ospf.dd_dbdesc |= DD_DBDESC_INIT;
-    break;
-
-  case OPTION_OSPF_DD_OOBRESYNC:
-    co->ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC;
-    break;
-
-  case OPTION_OSPF_DD_SEQUENCE:
-    co->ospf.dd_sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_OSPF_DD_INCLUDE_LSA:
-    co->ospf.dd_include_lsa = true;
-    break;
-
-  case OPTION_OSPF_LSA_AGE:
-    co->ospf.lsa_age = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-
-  case OPTION_OSPF_LSA_DO_NOT_AGE:
-    co->ospf.lsa_dage = true;
-    break;
-
-  case OPTION_OSPF_LSA_TYPE:
-    co->ospf.lsa_type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_LSA_LSID:
-    co->ospf.lsa_lsid = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_ROUTER:
-    co->ospf.lsa_router = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_SEQUENCE:
-    co->ospf.lsa_sequence = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_OSPF_LSA_METRIC:
-    co->ospf.lsa_metric = htonl(toULong(optname, arg));
-    break;
-
-  case OPTION_OSPF_LSA_FLAG_BORDER:
-    co->ospf.lsa_flags |= ROUTER_FLAG_BORDER;
-    break;
-
-  case OPTION_OSPF_LSA_FLAG_EXTERNAL:
-    co->ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL;
-    break;
-
-  case OPTION_OSPF_LSA_FLAG_VIRTUAL:
-    co->ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL;
-    break;
-
-  case OPTION_OSPF_LSA_FLAG_WILD:
-    co->ospf.lsa_flags |= ROUTER_FLAG_WILD;
-    break;
-
-  case OPTION_OSPF_LSA_FLAG_NSSA_TR:
-    co->ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR;
-    break;
-
-  case OPTION_OSPF_LSA_LINK_ID:
-    co->ospf.lsa_link_id = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_LINK_DATA:
-    co->ospf.lsa_link_data = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_LINK_TYPE:
-    co->ospf.lsa_link_type = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_LSA_ATTACHED:
-    co->ospf.lsa_attached = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_LARGER:
-    co->ospf.lsa_larger = true;
-    break;
-
-  case OPTION_OSPF_LSA_FORWARD:
-    co->ospf.lsa_forward = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LSA_EXTERNAL:
-    co->ospf.lsa_external = resolv(arg);
-    break;
-
-  case OPTION_OSPF_VERTEX_ROUTER:
-    co->ospf.vertex_type = VERTEX_TYPE_ROUTER;
-    break;
-
-  case OPTION_OSPF_VERTEX_NETWORK:
-    co->ospf.vertex_type = VERTEX_TYPE_NETWORK;
-    break;
-
-  case OPTION_OSPF_VERTEX_ID:
-    co->ospf.vertex_id = resolv(arg);
-    break;
-
-  case OPTION_OSPF_LLS_OPTION_LR:
-    co->ospf.lls_options = EXTENDED_OPTIONS_LR;
-    break;
-
-  case OPTION_OSPF_LLS_OPTION_RS:
-    co->ospf.lls_options = EXTENDED_OPTIONS_RS;
-    break;
-
-  case OPTION_OSPF_AUTHENTICATION:
-    co->ospf.auth = true;
-    break;
-
-  case OPTION_OSPF_AUTH_KEY_ID:
-    co->ospf.key_id = toULongCheckRange(optname, arg, 0, 255);
-    break;
-
-  case OPTION_OSPF_AUTH_SEQUENCE:
-    co->ospf.sequence = htonl(toULong(optname, arg));
-    break;
-
-  /*
-   * FIXME: These options expect to deal with lists, but only the first item
-   *        is used...
-   */
-  // Source port.
-  case OPTION_SOURCE:
-    check_list_separators(optname, arg);
-    co->source = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-  // Destination port
-  case OPTION_DESTINATION:
-    check_list_separators(optname, arg);
-    co->dest   = htons(toULongCheckRange(optname, arg, 0, 65535));
-    break;
-  case OPTION_IP_SOURCE:
-    check_list_separators(optname, arg);
-    co->ip.saddr = resolv(arg);
-    break;
-  case OPTION_IP_PROTOCOL:
-    check_list_separators(optname, arg);
-    get_ip_protocol(co, arg);
-    break;
+    case OPTION_THRESHOLD:
+      co->threshold = toULong ( optname, arg );
+      break;
+
+    case OPTION_FLOOD:
+      co->flood = true;
+      break;
+
+    case OPTION_ENCAPSULATED:
+      co->encapsulated = true;
+      break;
+
+    case OPTION_BOGUSCSUM:
+      co->bogus_csum = true;
+      break;
+
+    case OPTION_SHUFFLE:
+      co->shuffle = true;
+      break;
+
+    // --- GRE options
+    // FIXME: gre.flags, gre.recur, optional gre.offset, not set here!
+    case OPTION_GRE_SEQUENCE_PRESENT:
+      co->gre.S = true;
+      break;
+
+    case OPTION_GRE_KEY_PRESENT:
+      co->gre.K = true;
+      break;
+
+    case OPTION_GRE_CHECKSUM_PRESENT:
+      co->gre.C = true;
+      break;
+
+    case OPTION_GRE_KEY:
+      co->gre.key = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_GRE_SEQUENCE:
+      co->gre.sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_GRE_SADDR:
+      check_list_separators ( optname, arg );
+      co->gre.saddr = resolv ( arg );
+      break;
+
+    case OPTION_GRE_DADDR:
+      check_list_separators ( optname, arg );
+      co->gre.daddr = resolv ( arg );
+      break;
+
+    //--- IP options
+    case OPTION_IP_TOS:
+      co->ip.tos = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IP_ID:
+      co->ip.id = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_IP_OFFSET:
+      // NOTE: byte swap made in ip.c
+      co->ip.frag_off = toULongCheckRange ( optname, arg, 0, 0x1fff );
+      break;
+
+    case OPTION_IP_TTL:
+      co->ip.ttl = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    // --- ICMP options
+    case OPTION_ICMP_TYPE:
+      co->icmp.type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_ICMP_CODE:
+      co->icmp.code = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_ICMP_ID:
+      co->icmp.id = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_ICMP_SEQUENCE:
+      co->icmp.sequence = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_ICMP_GATEWAY:
+      check_list_separators ( optname, arg );
+      co->icmp.gateway = resolv ( arg );
+      break;
+
+    // --- IGMP options
+    case OPTION_IGMP_TYPE:
+      co->igmp.type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IGMP_CODE:
+      co->igmp.code = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IGMP_QRV:
+      co->igmp.qrv = toULongCheckRange ( optname, arg, 0, 7 ); // only 3 bits.
+      break;
+
+    case OPTION_IGMP_SUPPRESS:
+      co->igmp.suppress = true;
+      break;
+
+    case OPTION_IGMP_QQIC:
+      co->igmp.qqic = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IGMP_GREC_TYPE:
+      co->igmp.grec_type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IGMP_SOURCES:
+      co->igmp.sources = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IGMP_ADDRESS:
+
+      /* FIXME: Need to check if an item is valid! */
+      /* More than 255 items will be ignored! */
+      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
+            tmp_ptr && ( counter < ( sizeof ( co->igmp.address ) / sizeof ( in_addr_t ) ) );
+            counter++, tmp_ptr = strtok ( NULL, "," ) )
+        co->igmp.address[counter] = resolv ( tmp_ptr );
+
+      co->igmp.sources = counter;
+      break;
+
+    case OPTION_IGMP_GROUP:
+      check_list_separators ( optname, arg );
+      co->igmp.group = resolv ( arg );
+      break;
+
+    case OPTION_IGMP_GREC_MULTICAST:
+      check_list_separators ( optname, arg );
+      co->igmp.grec_mca = resolv ( arg );
+      break;
+
+    // --- TCP options
+    case OPTION_TCP_SEQUENCE:
+      co->tcp.sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_TCP_ACK_SEQ:
+      co->tcp.acknowledge = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_TCP_OFFSET:
+      co->tcp.doff = toULongCheckRange ( optname, arg, 0, 15 ); // only 4 bits.
+      break;
+
+    case OPTION_TCP_FIN:
+      co->tcp.fin = true;
+      break;
+
+    case OPTION_TCP_SYN:
+      co->tcp.syn = true;
+      break;
+
+    case OPTION_TCP_RST:
+      co->tcp.rst = true;
+      break;
+
+    case OPTION_TCP_PSH:
+      co->tcp.psh = true;
+      break;
+
+    case OPTION_TCP_ACK:
+      co->tcp.ack = true;
+      break;
+
+    case OPTION_TCP_URG:
+      co->tcp.urg = true;
+      break;
+
+    case OPTION_TCP_ECE:
+      co->tcp.ece = true;
+      break;
+
+    case OPTION_TCP_CWR:
+      co->tcp.cwr = true;
+      break;
+
+    case OPTION_TCP_WINDOW:
+      co->tcp.window = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_TCP_URGENT_POINTER:
+      co->tcp.urg_ptr = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_TCP_MSS:
+      co->tcp.options |= TCP_OPTION_MSS;
+      co->tcp.mss = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_TCP_WSOPT:
+      co->tcp.options |= TCP_OPTION_WSOPT;
+      co->tcp.wsopt = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_TCP_TSOPT:
+      /* This option can contain 2 values separated by ':' (second is optional). */
+      /* FIXME: Is it separated by ':' or '.'? */
+      co->tcp.options |= TCP_OPTION_TSOPT;
+
+      if ( get_dual_values ( arg, &a, &b, UINT_MAX, 1, '.', optname ) )
+        exit ( EXIT_FAILURE );
+
+      co->tcp.tsval = htonl ( a );
+      co->tcp.tsecr = htonl ( b );
+      break;
+
+    case OPTION_TCP_SACK_OK:
+      co->tcp.options |= TCP_OPTION_SACK_OK;
+      break;
+
+    case OPTION_TCP_CC:
+      co->tcp.options |= TCP_OPTION_CC;
+      co->tcp.cc = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_TCP_CC_NEW:
+      co->tcp.options |= TCP_OPTION_CC_NEXT;
+      co->tcp.cc_new = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_TCP_CC_ECHO:
+      co->tcp.options |= TCP_OPTION_CC_NEXT;
+      co->tcp.cc_echo = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_TCP_SACK_EDGE:
+      /* NOTE: This option expects 2 values, separated by ':'. */
+      co->tcp.options |= TCP_OPTION_SACK_EDGE;
+
+      if ( get_dual_values ( arg, &a, &b, UINT_MAX, 0, ':', optname ) )
+        exit ( EXIT_FAILURE );
+
+      co->tcp.sack_left = htonl ( a );
+      co->tcp.sack_right = htonl ( b );
+      break;
+
+    case OPTION_TCP_MD5_SIGNATURE:
+      co->tcp.md5 = ! ( co->tcp.auth = false );
+      break;
+
+    case OPTION_TCP_AUTHENTICATION:
+      co->tcp.auth = ! ( co->tcp.md5 = false );
+      break;
+
+    case OPTION_TCP_AUTH_KEY_ID:
+      co->tcp.key_id = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_TCP_AUTH_NEXT_KEY:
+      co->tcp.next_key = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_TCP_NOP:
+      co->tcp.nop = TCPOPT_NOP;
+      break;
+
+    // --- EGP options
+    case OPTION_EGP_TYPE:
+      co->egp.type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EGP_CODE:
+      co->egp.code = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EGP_STATUS:
+      co->egp.status = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EGP_AS:
+      co->egp.as = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EGP_SEQUENCE:
+      co->egp.sequence = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EGP_HELLO:
+      co->egp.hello = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EGP_POLL:
+      co->egp.poll = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    // --- RIP options
+    case OPTION_RIP_COMMAND:
+      co->rip.command = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RIP_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->rip.address = resolv ( arg );
+      break;
+
+    case OPTION_RIP_FAMILY:
+      co->rip.family = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RIP_METRIC:
+      co->rip.metric = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RIP_DOMAIN:
+      co->rip.domain = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RIP_TAG:
+      co->rip.tag = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RIP_NETMASK:
+      co->rip.netmask = resolv ( arg );
+      break;  /* FIXME: Is this correct? */
+
+    case OPTION_RIP_NEXTHOP:
+      check_list_separators ( optname, arg );
+      co->rip.next_hop = resolv ( arg );
+      break;
+
+    case OPTION_RIP_AUTHENTICATION:
+      co->rip.auth = true;
+      break;
+
+    case OPTION_RIP_AUTH_KEY_ID:
+      co->rip.key_id = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RIP_AUTH_SEQUENCE:
+      co->rip.sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    // --- DCCP options
+    case OPTION_DCCP_OFFSET:
+      /* NOTE: byte swapped on tcp.c */
+      co->dccp.doff = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_DCCP_CSCOV:
+      co->dccp.cscov = toULongCheckRange ( optname, arg, 0, 15 );
+      break;
+
+    case OPTION_DCCP_CCVAL:
+      co->dccp.ccval = toULongCheckRange ( optname, arg, 0, 15 );
+      break;
+
+    case OPTION_DCCP_TYPE:
+      co->dccp.type = toULongCheckRange ( optname, arg, 0, 15 );
+      break;
+
+    case OPTION_DCCP_EXTEND:
+      co->dccp.ext = true;
+      break;
+
+    case OPTION_DCCP_SEQUENCE_01:
+      co->dccp.sequence_01 = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_DCCP_SEQUENCE_02:
+      co->dccp.sequence_02 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_DCCP_SEQUENCE_03:
+      co->dccp.sequence_03 = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_DCCP_SERVICE:
+      co->dccp.service = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_DCCP_ACKNOWLEDGE_01:
+      co->dccp.acknowledge_01 = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_DCCP_ACKNOWLEDGE_02:
+      co->dccp.acknowledge_02 = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_DCCP_RESET_CODE:
+      co->dccp.rst_code = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    // --- RSVP options
+    case OPTION_RSVP_FLAGS:
+      co->rsvp.flags = toULongCheckRange ( optname, arg, 0, 15 );
+      break;
+
+    case OPTION_RSVP_TYPE:
+      co->rsvp.type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_TTL:
+      co->rsvp.ttl = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_SESSION_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->rsvp.session_addr = resolv ( arg );
+      break;
+
+    case OPTION_RSVP_SESSION_PROTOCOL:
+      check_list_separators ( optname, arg );
+      co->rsvp.session_proto = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_SESSION_FLAGS:
+      co->rsvp.session_flags = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_SESSION_PORT:
+      check_list_separators ( optname, arg );
+      co->rsvp.session_port = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RSVP_HOP_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->rsvp.hop_addr = resolv ( arg );
+      break;
+
+    case OPTION_RSVP_HOP_IFACE:
+      co->rsvp.hop_iface = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_TIME_REFRESH:
+      co->rsvp.time_refresh = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ERROR_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->rsvp.error_addr = resolv ( arg );
+      break;
+
+    case OPTION_RSVP_ERROR_FLAGS:
+      co->rsvp.error_flags = toULongCheckRange ( optname, arg, 0, 7 ); // 3 bits.
+      break;
+
+    case OPTION_RSVP_ERROR_CODE:
+      co->rsvp.error_code = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_ERROR_VALUE:
+      co->rsvp.error_value = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RSVP_SCOPE:
+      co->rsvp.scope = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_RSVP_SCOPE_ADDRESS:
+
+      // FIXME: Must validate every item!
+      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
+            tmp_ptr && ( counter < ( sizeof ( co->rsvp.address ) / sizeof ( in_addr_t ) ) );
+            counter++, tmp_ptr = strtok ( NULL, "," ) )
+        co->rsvp.address[counter] = resolv ( tmp_ptr );
+
+      co->rsvp.scope = counter;
+      break;
+
+    case OPTION_RSVP_STYLE_OPTION:
+      co->rsvp.style_opt = htonl ( toULongCheckRange ( optname, arg, 0, ( 1U << 24 ) - 1 ) ); // 24 bits!
+      break;
+
+    case OPTION_RSVP_SENDER_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->rsvp.sender_addr = resolv ( arg );
+      break;
+
+    case OPTION_RSVP_SENDER_PORT:
+      check_list_separators ( optname, arg );
+      co->rsvp.sender_port = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_RSVP_CONFIRM_ADDR:
+      check_list_separators ( optname, arg );
+      co->rsvp.confirm_addr = resolv ( arg );
+      break;
+
+    case OPTION_RSVP_TSPEC_TRAFFIC:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      break;
+
+    case OPTION_RSVP_TSPEC_GUARANTEED:
+      co->rsvp.tspec = TSPEC_GUARANTEED_SERVICE;
+      break;
+
+    case OPTION_RSVP_TSPEC_TOKEN_R:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      co->rsvp.tspec_r = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_TSPEC_TOKEN_B:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      co->rsvp.tspec_b = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_TSPEC_DATA_P:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      co->rsvp.tspec_p = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_TSPEC_MINIMUM:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      co->rsvp.tspec_m = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_TSPEC_MAXIMUM:
+      co->rsvp.tspec = TSPEC_TRAFFIC_SERVICE;
+      co->rsvp.tspec_M = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_ISHOP:
+      co->rsvp.adspec_hop = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_PATH:
+      co->rsvp.adspec_path = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_MINIMUM:
+      co->rsvp.adspec_minimum = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_MTU:
+      co->rsvp.adspec_mtu = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_GUARANTEED:
+      co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+      break;
+
+    case OPTION_RSVP_ADSPEC_CTOT:
+      co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+      co->rsvp.adspec_Ctot = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_DTOT:
+      co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+      co->rsvp.adspec_Dtot = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_CSUM:
+      co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+      co->rsvp.adspec_Csum = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_DSUM:
+      co->rsvp.adspec = ADSPEC_GUARANTEED_SERVICE;
+      co->rsvp.adspec_Dsum = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_RSVP_ADSPEC_CONTROLLED:
+      co->rsvp.adspec = ADSPEC_CONTROLLED_SERVICE;
+      break;
+
+    // --- IPSEC options
+    case OPTION_IPSEC_AH_LENGTH:
+      co->ipsec.ah_length = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_IPSEC_AH_SPI:
+      co->ipsec.ah_spi = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_IPSEC_AH_SEQUENCE:
+      co->ipsec.ah_sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_IPSEC_ESP_SPI:
+      co->ipsec.esp_spi = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_IPSEC_ESP_SEQUENCE:
+      co->ipsec.esp_sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    // --- EIGRP options
+    case OPTION_EIGRP_OPCODE:
+      co->eigrp.opcode = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_FLAGS:
+      co->eigrp.flags = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_SEQUENCE:
+      co->eigrp.sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_ACKNOWLEDGE:
+      co->eigrp.acknowledge = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_AS:
+      co->eigrp.as = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_TYPE:
+      co->eigrp.type = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EIGRP_LENGTH:
+      co->eigrp.length = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EIGRP_K1:
+      co->eigrp.values |= EIGRP_KVALUE_K1;
+      co->eigrp.k1 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_K2:
+      co->eigrp.values |= EIGRP_KVALUE_K2;
+      co->eigrp.k2 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_K3:
+      co->eigrp.values |= EIGRP_KVALUE_K3;
+      co->eigrp.k3 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_K4:
+      co->eigrp.values |= EIGRP_KVALUE_K4;
+      co->eigrp.k4 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_K5:
+      co->eigrp.values |= EIGRP_KVALUE_K5;
+      co->eigrp.k5 = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_HOLD:
+      co->eigrp.hold = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_EIGRP_IOS_VERSION:
+      if ( get_dual_values ( arg, &a, &b, UCHAR_MAX, 0, '.', optname ) )
+        exit ( EXIT_FAILURE );
+
+      co->eigrp.ios_major = a;
+      co->eigrp.ios_minor = b;
+      break;
+
+    case OPTION_EIGRP_PROTO_VERSION:
+      if ( get_dual_values ( arg, &a, &b, UCHAR_MAX, 0, '.', optname ) )
+        exit ( EXIT_FAILURE );
+
+      co->eigrp.ver_major = a;
+      co->eigrp.ver_minor = b;
+      break;
+
+    case OPTION_EIGRP_NEXTHOP:
+      check_list_separators ( optname, arg );
+      co->eigrp.next_hop = resolv ( arg );
+      break;
+
+    case OPTION_EIGRP_DELAY:
+      co->eigrp.delay = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_BANDWIDTH:
+      co->eigrp.bandwidth = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_MTU:
+      co->eigrp.mtu = htonl ( toULongCheckRange ( optname, arg, 0, ( 1U << 24 ) - 1 ) ); // 24 bits
+      break;
+
+    case OPTION_EIGRP_HOP_COUNT:
+      co->eigrp.hop_count = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_LOAD:
+      co->eigrp.load = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_RELIABILITY:
+      co->eigrp.reliability = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_DESINATION:
+      if ( tmp_ptr = strchr ( arg, '/' ) )
+      {
+        *tmp_ptr++ = '\0';
+        co->eigrp.prefix = htonl ( toULong ( optname, tmp_ptr ) );
+      }
+      else
+        co->eigrp.prefix = ( 1U << 5 ) - 1;
+
+      co->eigrp.dest = resolv ( arg );
+      break;
+
+    case OPTION_EIGRP_SOURCE_ROUTER:
+      co->eigrp.src_router = resolv ( arg );
+      break;
+
+    case OPTION_EIGRP_SOURCE_AS:
+      co->eigrp.src_as = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_TAG:
+      co->eigrp.tag = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_METRIC:
+      co->eigrp.proto_metric = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_ID:
+      co->eigrp.proto_id = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_EXTERNAL_FLAGS:
+      co->eigrp.ext_flags = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_EIGRP_ADDRESS:
+      check_list_separators ( optname, arg );
+      co->eigrp.address = resolv ( arg );
+      break;
+
+    case OPTION_EIGRP_MULTICAST:
+      co->eigrp.multicast = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_EIGRP_AUTHENTICATION:
+      co->eigrp.auth = true;
+      break;
+
+    case OPTION_EIGRP_AUTH_KEY_ID:
+      co->eigrp.key_id = htonl ( toULong ( optname, arg ) );
+      break;
+
+    // --- OSPF options
+    case OPTION_OSPF_TYPE:
+      co->ospf.type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_LENGTH:
+      co->ospf.length = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_OSPF_ROUTER_ID:
+      co->ospf.rid = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_AREA_ID:
+      co->ospf.AID = true;
+      co->ospf.aid = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_MT:
+      co->ospf.options |= OSPF_OPTION_TOS;
+      break;
+
+    case OPTION_OSPF_E:
+      co->ospf.options |= OSPF_OPTION_EXTERNAL;
+      break;
+
+    case OPTION_OSPF_MC:
+      co->ospf.options |= OSPF_OPTION_MULTICAST;
+      break;
+
+    case OPTION_OSPF_NP:
+      co->ospf.options |= OSPF_OPTION_NSSA;
+      break;
+
+    case OPTION_OSPF_L:
+      co->ospf.options |= OSPF_OPTION_LLS;
+      break;
+
+    case OPTION_OSPF_DC:
+      co->ospf.options |= OSPF_OPTION_DEMAND;
+      break;
+
+    case OPTION_OSPF_O:
+      co->ospf.options |= OSPF_OPTION_OPAQUE;
+      break;
+
+    case OPTION_OSPF_DN:
+      co->ospf.options |= OSPF_OPTION_DOWN;
+      break;
+
+    case OPTION_OSPF_NETMASK:
+      co->ospf.netmask = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_HELLO_INTERVAL:
+      co->ospf.hello_interval = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_OSPF_HELLO_PRIORITY:
+      co->ospf.hello_priority = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_HELLO_DEAD:
+      co->ospf.hello_dead = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_OSPF_HELLO_DESIGN:
+      co->ospf.hello_design = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_HELLO_BACKUP:
+      co->ospf.hello_backup = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_HELLO_NEIGHBOR:
+      co->ospf.neighbor = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_HELLO_ADDRESS:
+      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
+            tmp_ptr && ( counter < ( sizeof ( co->ospf.address ) / sizeof ( in_addr_t ) ) );
+            counter++, tmp_ptr = strtok ( NULL, "," ) )
+        co->ospf.address[counter] = resolv ( tmp_ptr );
+
+      co->ospf.neighbor = counter;
+      break;
+
+    case OPTION_OSPF_DD_MTU:
+      co->ospf.dd_mtu = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_OSPF_DD_MASTER_SLAVE:
+      co->ospf.dd_dbdesc |= DD_DBDESC_MSLAVE;
+      break;
+
+    case OPTION_OSPF_DD_MORE:
+      co->ospf.dd_dbdesc |= DD_DBDESC_MORE;
+      break;
+
+    case OPTION_OSPF_DD_INIT:
+      co->ospf.dd_dbdesc |= DD_DBDESC_INIT;
+      break;
+
+    case OPTION_OSPF_DD_OOBRESYNC:
+      co->ospf.dd_dbdesc |= DD_DBDESC_OOBRESYNC;
+      break;
+
+    case OPTION_OSPF_DD_SEQUENCE:
+      co->ospf.dd_sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_OSPF_DD_INCLUDE_LSA:
+      co->ospf.dd_include_lsa = true;
+      break;
+
+    case OPTION_OSPF_LSA_AGE:
+      co->ospf.lsa_age = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_OSPF_LSA_DO_NOT_AGE:
+      co->ospf.lsa_dage = true;
+      break;
+
+    case OPTION_OSPF_LSA_TYPE:
+      co->ospf.lsa_type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_LSA_LSID:
+      co->ospf.lsa_lsid = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_ROUTER:
+      co->ospf.lsa_router = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_SEQUENCE:
+      co->ospf.lsa_sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_OSPF_LSA_METRIC:
+      co->ospf.lsa_metric = htonl ( toULong ( optname, arg ) );
+      break;
+
+    case OPTION_OSPF_LSA_FLAG_BORDER:
+      co->ospf.lsa_flags |= ROUTER_FLAG_BORDER;
+      break;
+
+    case OPTION_OSPF_LSA_FLAG_EXTERNAL:
+      co->ospf.lsa_flags |= ROUTER_FLAG_EXTERNAL;
+      break;
+
+    case OPTION_OSPF_LSA_FLAG_VIRTUAL:
+      co->ospf.lsa_flags |= ROUTER_FLAG_VIRTUAL;
+      break;
+
+    case OPTION_OSPF_LSA_FLAG_WILD:
+      co->ospf.lsa_flags |= ROUTER_FLAG_WILD;
+      break;
+
+    case OPTION_OSPF_LSA_FLAG_NSSA_TR:
+      co->ospf.lsa_flags |= ROUTER_FLAG_NSSA_TR;
+      break;
+
+    case OPTION_OSPF_LSA_LINK_ID:
+      co->ospf.lsa_link_id = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_LINK_DATA:
+      co->ospf.lsa_link_data = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_LINK_TYPE:
+      co->ospf.lsa_link_type = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_LSA_ATTACHED:
+      co->ospf.lsa_attached = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_LARGER:
+      co->ospf.lsa_larger = true;
+      break;
+
+    case OPTION_OSPF_LSA_FORWARD:
+      co->ospf.lsa_forward = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LSA_EXTERNAL:
+      co->ospf.lsa_external = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_VERTEX_ROUTER:
+      co->ospf.vertex_type = VERTEX_TYPE_ROUTER;
+      break;
+
+    case OPTION_OSPF_VERTEX_NETWORK:
+      co->ospf.vertex_type = VERTEX_TYPE_NETWORK;
+      break;
+
+    case OPTION_OSPF_VERTEX_ID:
+      co->ospf.vertex_id = resolv ( arg );
+      break;
+
+    case OPTION_OSPF_LLS_OPTION_LR:
+      co->ospf.lls_options = EXTENDED_OPTIONS_LR;
+      break;
+
+    case OPTION_OSPF_LLS_OPTION_RS:
+      co->ospf.lls_options = EXTENDED_OPTIONS_RS;
+      break;
+
+    case OPTION_OSPF_AUTHENTICATION:
+      co->ospf.auth = true;
+      break;
+
+    case OPTION_OSPF_AUTH_KEY_ID:
+      co->ospf.key_id = toULongCheckRange ( optname, arg, 0, 255 );
+      break;
+
+    case OPTION_OSPF_AUTH_SEQUENCE:
+      co->ospf.sequence = htonl ( toULong ( optname, arg ) );
+      break;
+
+    /*
+     * FIXME: These options expect to deal with lists, but only the first item
+     *        is used...
+     */
+    // Source port.
+    case OPTION_SOURCE:
+      check_list_separators ( optname, arg );
+      co->source = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    // Destination port
+    case OPTION_DESTINATION:
+      check_list_separators ( optname, arg );
+      co->dest   = htons ( toULongCheckRange ( optname, arg, 0, 65535 ) );
+      break;
+
+    case OPTION_IP_SOURCE:
+      check_list_separators ( optname, arg );
+      co->ip.saddr = resolv ( arg );
+      break;
+
+    case OPTION_IP_PROTOCOL:
+      check_list_separators ( optname, arg );
+      get_ip_protocol ( co, arg );
+      break;
   }
 }
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-uint32_t toULong(char * __restrict__ optname, char * __restrict__ value)
+uint32_t toULong ( char * restrict optname, char * restrict value )
 {
   unsigned long n;
 
-  if (!value || !*value)
+  if ( !value || !*value )
     return 0;
 
   // strtoul() accepts negative values, we don't!
-  if (strchr(value, '-'))
+  if ( strchr ( value, '-' ) )
     goto error_exit;
 
   /* strtoul deals ok with hexadecimal, octal and decimal values. */
   errno = 0;    // errno is set only on error, so we have to reset it here.
-  n = strtoul(value, NULL, 0);
+  n = strtoul ( value, NULL, 0 );
+
   // FIX: Check for greater values then 2³²-1 too.
-  if (errno || (n & ((uint64_t)__UINT32_MAX__ << 32)))
+  if ( errno || ( n & ( ( uint64_t )__UINT32_MAX__ << 32 ) ) )
   {
 error_exit:
-    fatal_error("Invalid numeric value for option '%s'.", optname);
+    fatal_error ( "Invalid numeric value for option '%s'.", optname );
     // we'll never get here, return 0 just in case!
     return 0;
   }
 
-  return (uint32_t)n;
+  return ( uint32_t )n;
 }
 
 /* Tries to convert string to uint32_t, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-uint32_t toULongCheckRange(char * __restrict__ optname, char * __restrict__ value, uint32_t min, uint32_t max)
+uint32_t toULongCheckRange ( char * restrict optname, char * restrict value, uint32_t min, uint32_t max )
 {
   uint32_t n;
 
-  if (value && *value)
-  {    
-    if (min > max)
-      fatal_error("Min & Max values when calling toULongCheckRange(\"%s\", \"%s\", %" PRIu32 ", %" PRIu32 ").",
-        optname, value, min, max);
+  if ( value && *value )
+  {
+    if ( min > max )
+      fatal_error ( "Min & Max values when calling toULongCheckRange(\"%s\", \"%s\", %" PRIu32 ", %" PRIu32 ").",
+                    optname, value, min, max );
 
-    n = toULong(optname, value);
+    n = toULong ( optname, value );
 
-    if (n < min || n > max)
-      fatal_error("Value out of range for option '%s'. Range must be between %u and %u.", optname, min, max);
+    if ( n < min || n > max )
+      fatal_error ( "Value out of range for option '%s'. Range must be between %u and %u.", optname, min, max );
   }
 
   return n;
 }
 
 /* Check if there are any separators on string. */
-void check_list_separators(char *optname, char *arg)
+void check_list_separators ( char *optname, char *arg )
 {
-  assert(arg != NULL);
+  assert ( arg != NULL );
 
-  if (strpbrk(arg, ",;:"))
-    fatal_error("Option '%s' does not accept a list.\n", optname);
+  if ( strpbrk ( arg, ",;:" ) )
+    fatal_error ( "Option '%s' does not accept a list.\n", optname );
 }
 
 /* List procotolos on modules table */
-void list_protocols(void)
+void list_protocols ( void )
 {
-  modules_table_t *ptbl;
+  modules_table_T *ptbl;
   int i;
 
-  puts(INFO " List of supported protocols (--protocol):");
+  puts ( INFO " List of supported protocols (--protocol):" );
 
-  for (i = 1, ptbl = mod_table; ptbl->func; ptbl++)
-    printf("\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description);
+  for ( i = 1, ptbl = mod_table; ptbl->func; ptbl++ )
+    printf ( "\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description );
 }
 
 /* TODO: Replace this regex routine with a screte function. */
@@ -1828,7 +1849,7 @@ void list_protocols(void)
   }
 
 /* Ok... this is UGLY. */
-_Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_ptr)
+_Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
 {
   regex_t re;
   regmatch_t rm[6];
@@ -1840,34 +1861,34 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   addr_ptr->addr = addr_ptr->cidr = 0;
 
   /* Try to compile the regular expression. */
-  if (regcomp(&re, IP_REGEX, REG_EXTENDED))
+  if ( regcomp ( &re, IP_REGEX, REG_EXTENDED ) )
     return false;
 
   /* Try to execute regex against the addr string. */
-  if (regexec(&re, addr, 6, rm, 0))
+  if ( regexec ( &re, addr, 6, rm, 0 ) )
   {
-    regfree(&re);
+    regfree ( &re );
     return false;
   }
 
   /* Allocate enough space for temporary string. */
-  if ((t = strdup(addr)) == NULL) 
-    error("Cannot allocate temporary string: " __FILE__ ":%d", __LINE__);
+  if ( ( t = strdup ( addr ) ) == NULL )
+    error ( "Cannot allocate temporary string: " __FILE__ ":%d", __LINE__ );
 
   /* Convert IP octects matches. */
-  len = MATCH_LENGTH(rm[1]);
-  COPY_SUBSTRING(t, addr + rm[1].rm_so, len);
-  matches[0] = atoi(t);
+  len = MATCH_LENGTH ( rm[1] );
+  COPY_SUBSTRING ( t, addr + rm[1].rm_so, len );
+  matches[0] = atoi ( t );
 
   bits = CIDR_MAXIMUM;  /* default is 32 bits netmask. */
 
-  for (i = 2; i <= 4; i++)
+  for ( i = 2; i <= 4; i++ )
   {
-    if (MATCH(rm[i]))
+    if ( MATCH ( rm[i] ) )
     {
-      len = MATCH_LENGTH(rm[i]) - 1;
-      COPY_SUBSTRING(t, addr + rm[i].rm_so + 1, len);
-      matches[i - 1] = atoi(t);
+      len = MATCH_LENGTH ( rm[i] ) - 1;
+      COPY_SUBSTRING ( t, addr + rm[i].rm_so + 1, len );
+      matches[i - 1] = atoi ( t );
     }
     else
     {
@@ -1878,16 +1899,16 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   }
 
   /* Convert cidr match. */
-  if (MATCH(rm[5]))
+  if ( MATCH ( rm[5] ) )
   {
-    len = MATCH_LENGTH(rm[5]) - 1;
-    COPY_SUBSTRING(t, addr + rm[5].rm_so + 1, len);
+    len = MATCH_LENGTH ( rm[5] ) - 1;
+    COPY_SUBSTRING ( t, addr + rm[5].rm_so + 1, len );
 
-    if ((matches[4] = atoi(t)) == 0)
+    if ( ( matches[4] = atoi ( t ) ) == 0 )
     {
       /* if cidr is actually '0', then it is an error! */
-      free(t);
-      regfree(&re);
+      free ( t );
+      regfree ( &re );
       return false;
     }
   }
@@ -1898,34 +1919,34 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
   }
 
   /* We don't need 't' string anymore. */
-  free(t);
+  free ( t );
 
   /* Validate ip octects */
-  for (i = 0; i < 4; i++)
-    if (matches[i] > 255)
+  for ( i = 0; i < 4; i++ )
+    if ( matches[i] > 255 )
     {
-      regfree(&re);
+      regfree ( &re );
       return false;
     }
 
   /* NOTE: Check 'bits' here! */
   /* Validate cidr. */
-  if (matches[4] < CIDR_MINIMUM || matches[4] > CIDR_MAXIMUM)
+  if ( matches[4] < CIDR_MINIMUM || matches[4] > CIDR_MAXIMUM )
   {
-    error("CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM);
-    regfree(&re);
+    error ( "CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM );
+    regfree ( &re );
     return false;
   }
 
-  regfree(&re);
+  regfree ( &re );
 
   /* Prepare CIDR structure */
   addr_ptr->cidr = matches[4];
   addr_ptr->addr = ( matches[3]         |
-                     (matches[2] << 8)  |
-                     (matches[1] << 16) |
-                     (matches[0] << 24)) &
-                   (0xffffffffU << (32 - addr_ptr->cidr));
+                     ( matches[2] << 8 )  |
+                     ( matches[1] << 16 ) |
+                     ( matches[0] << 24 ) ) &
+                   ( 0xffffffffU << ( 32 - addr_ptr->cidr ) );
 
   return true;
 }
@@ -1941,12 +1962,12 @@ _Bool get_ip_and_cidr_from_string(char const *const addr, T50_tmp_addr_t *addr_p
    NOTE: Since this funcion is defined and used in this module, it's marked with
          the attribute "noinline". Because it's big!
 */
-int get_dual_values(char *arg,
-                    unsigned long *px, unsigned long *py,
-                    unsigned long max,
-                    int optional,
-                    char separator,
-                    char *optname)
+int get_dual_values ( char *arg,
+                      unsigned long *px, unsigned long *py,
+                      unsigned long max,
+                      int optional,
+                      char separator,
+                      char *optname )
 {
   /* 'static' because we don't need to allocate these every time! */
   static char nseps[] = " ,;";
@@ -1956,59 +1977,61 @@ int get_dual_values(char *arg,
   jmp_buf jb;
 
   /* Error handling... */
-  if (setjmp(jb))
+  if ( setjmp ( jb ) )
   {
-    error("'%s' should be formatted as 'n%s'.", optname, optional ? "[.n]" : ".n");
+    error ( "'%s' should be formatted as 'n%s'.", optname, optional ? "[.n]" : ".n" );
     return !0;
   }
 
-  nseps[0] = ((sep[0] = separator) == '.') ? ':' : '.';
+  nseps[0] = ( ( sep[0] = separator ) == '.' ) ? ':' : '.';
 
   /* There are any invalid separators? */
-  if (strpbrk(arg, nseps))
-    longjmp(jb, 1);
+  if ( strpbrk ( arg, nseps ) )
+    longjmp ( jb, 1 );
 
-  p1 = strtok(arg, sep);
-  p2 = strtok(NULL, sep);
+  p1 = strtok ( arg, sep );
+  p2 = strtok ( NULL, sep );
 
   /* If the second parameter is mandatory, then if p2 is NULL we have a problem! */
-  if (!optional && !p2)
-    longjmp(jb, 1);
+  if ( !optional && !p2 )
+    longjmp ( jb, 1 );
 
   /* Error handling... */
-  if (setjmp(jb))
+  if ( setjmp ( jb ) )
   {
-    error("'%s' arguments are out of range or invalid.", optname);
+    error ( "'%s' arguments are out of range or invalid.", optname );
     return !0;
   }
 
   /* Try to convert the first value. */
   errno = 0;
-  *px = strtoul(p1, NULL, 10);
-  if (errno)
-    longjmp(jb, 1);
+  *px = strtoul ( p1, NULL, 10 );
 
-  if (!p2)
+  if ( errno )
+    longjmp ( jb, 1 );
+
+  if ( !p2 )
   {
     /* If the second parameter is optional and missing, assume 0, otherwise... error! */
-    if (optional)
+    if ( optional )
       *py = 0;
     else
-      longjmp(jb, 1);
+      longjmp ( jb, 1 );
   }
   else
   {
     /* Try to convert the second value. */
     errno = 0;
-    *py = strtoul(p2, NULL, 10);
-    if (errno)
-      longjmp(jb, 1);
+    *py = strtoul ( p2, NULL, 10 );
+
+    if ( errno )
+      longjmp ( jb, 1 );
   }
 
   /* Check values ranges. */
-  if (*px > max || *py > max)
+  if ( *px > max || *py > max )
   {
-    error("One or both arguments of '%s' option are out of range.", optname);
+    error ( "One or both arguments of '%s' option are out of range.", optname );
     return !0;
   }
 
@@ -2018,21 +2041,21 @@ int get_dual_values(char *arg,
 
 /* Checks if threshold is valid. */
 /* NOTE: Moved here 'cause it's used just here. */
-int check_threshold(const struct config_options *const __restrict__ co)
+int check_threshold ( const config_options_T *const restrict co )
 {
-  threshold_t minThreshold;
+  threshold_T minThreshold;
 
-  if (co->ip.protocol == IPPROTO_T50)
+  if ( co->ip.protocol == IPPROTO_T50 )
     /* When sending multiple packets using T50 "protocol", the threshold
        must be greater than the number of protocols! */
     minThreshold = number_of_modules;
   else
     minThreshold = 1;
 
-  if (co->threshold < minThreshold)
+  if ( co->threshold < minThreshold )
   {
-    error("Protool %s cannot have threshold smaller than %d.",
-          mod_table[co->ip.protoname].name, minThreshold);
+    error ( "Protool %s cannot have threshold smaller than %d.",
+            mod_table[co->ip.protoname].name, minThreshold );
     return !0;
   }
 
@@ -2041,16 +2064,16 @@ int check_threshold(const struct config_options *const __restrict__ co)
 
 // Cheks if an option is on a list of valid options.
 // The lists of valid options are contained on the modules table!
-int check_for_valid_option(int opt, int *list)
+int check_for_valid_option ( int opt, int *list )
 {
-  assert(opt > 0);
+  assert ( opt > 0 );
 
   // If the first item is negative, all options are valid!
-  if (list != NULL)
+  if ( list != NULL )
   {
     // Scan the valid options list and cheks if 'option' is in it.
-    for (; *list; list++)
-      if (opt == *list)
+    for ( ; *list; list++ )
+      if ( opt == *list )
         return !0;
   }
 

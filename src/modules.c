@@ -162,7 +162,7 @@ static uint32_t next_index = 0;
 
 int *get_module_valid_options_list(int protocol)
 {
-  modules_table_t *ptbl;
+  modules_table_T *ptbl;
 
   for (ptbl = mod_table; ptbl->func; ptbl++)
     if (ptbl->protocol_id == protocol)
@@ -181,7 +181,7 @@ void build_indices(void)
     indices[i] = i;
 }
 
-uint32_t get_index(struct config_options *co)
+uint32_t get_index(config_options_T *co)
 {
   uint32_t n;
 

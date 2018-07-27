@@ -39,14 +39,14 @@ static  uint32_t rsvp_objects_len(const uint8_t, const uint8_t, const uint8_t, c
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void rsvp(const struct config_options *const __restrict__ co, uint32_t * __restrict__ size)
+void rsvp(const config_options_T *const restrict co, uint32_t * restrict size)
 {
   uint32_t greoptlen,       /* GRE options size. */
          objects_length,  /* RSVP objects length. */
          counter;
 
   /* Packet and Checksum. */
-  memptr_t buffer;
+  memptr_T buffer;
 
   struct iphdr *ip;
 

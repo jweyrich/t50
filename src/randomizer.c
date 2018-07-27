@@ -61,11 +61,6 @@ static uint32_t random_rdrand(void)
 
 static void empty_srandom(void) {}
 
-/**
- * Gets an random seed from /dev/random.
- *
- * Since this routine is used only once there is no problem using "/dev/random".
- */
 static void get_random_seed(void)
 {
   // NOTE: Could use gettimeofday() and use it as seed,
@@ -91,7 +86,7 @@ static void get_random_seed(void)
   close(_fd);
 
   if (r == -1)
-    fatal_error("Cannot read initial seed from /dev/random.");
+    fatal_error("Cannot read initial seed from /dev/urandom.");
 }
 
 /* The "constructor" below will overide this IF the platform is Intel/AMD and

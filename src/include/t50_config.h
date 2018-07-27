@@ -294,7 +294,7 @@ enum
 struct config_options
 {
   /* XXX COMMON OPTIONS                                            */
-  threshold_t threshold;            /* amount of packets           */
+  threshold_T threshold;            /* amount of packets           */
   _Bool     flood;                  /* flood                       */
   _Bool     encapsulated;           /* GRE encapsulated            */
   _Bool     bogus_csum;             /* bogus packet checksum       */
@@ -577,6 +577,8 @@ struct config_options
   /* NOTE: Add structures configuration for new protocols here! */
 };
 
+typedef struct config_options config_options_T;
+
 /* Structure used to contain the command line options info. */
 struct options_table_s
 {
@@ -594,8 +596,8 @@ typedef struct
 {
   uint32_t addr;
   uint32_t cidr;
-} T50_tmp_addr_t;
+} addr_T;
 
-struct config_options *parse_command_line(char **);
+config_options_T *parse_command_line(char **);
 
 #endif /* CONFIG_H */

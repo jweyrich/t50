@@ -25,6 +25,6 @@
 
 struct config_options;  /* Defined in config.h. */
 
-struct iphdr *ip_header(void *, uint32_t, const struct config_options *__restrict__);
+struct iphdr *ip_header(void *, uint32_t, const struct config_options *restrict);
 
 #endif
