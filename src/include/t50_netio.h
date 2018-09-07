@@ -27,6 +27,7 @@
 #include <t50_config.h>
 
 extern uint64_t bytes_sent;
+extern uint64_t packets_sent;
 
 /* Common routines used by code */
 in_addr_t    resolv ( char * );      /* Resolve name to ip address. */

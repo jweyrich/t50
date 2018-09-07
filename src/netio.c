@@ -45,6 +45,7 @@
 static int fd = -1;
 
 uint64_t bytes_sent = 0ULL;
+uint64_t packets_sent = 0ULL;
 
 //static int wait_for_io ( int );
 static int socket_send ( int, struct sockaddr_in *, void *, uint32_t );
@@ -70,6 +71,7 @@ void create_socket ( void )
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
            but on linux will cause an error. */
+  errno = 0;
   if ( ( fd = socket ( AF_INET, SOCK_RAW, IPPROTO_RAW ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -80,6 +82,7 @@ void create_socket ( void )
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
+  errno = 0;
   if ( ( flag = fcntl ( fd, F_GETFL ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -89,6 +92,7 @@ void create_socket ( void )
 #endif
   }
 
+  errno = 0;
   if ( fcntl ( fd, F_SETFL, flag | O_NONBLOCK ) == -1 )
   {
 #ifndef NDEBUG
@@ -101,6 +105,7 @@ void create_socket ( void )
   /* Setting IP_HDRINCL. */
   /* NOTE: We will provide the IP header, but enabling this option, on linux,
            still makes the kernel calculates the checksum and total_length. */
+  errno = 0;
   if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -116,6 +121,7 @@ void create_socket ( void )
 
 #ifdef SO_BROADCAST
 
+  errno = 0;
   if ( setsockopt ( fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -130,6 +136,7 @@ void create_socket ( void )
 #ifdef SO_PRIORITY
 
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
+  errno = 0;
   if ( setsockopt ( fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -189,6 +196,8 @@ _Bool send_packet ( const void *const buffer,
     return false;
   }
 
+  packets_sent++;
+
   return true;
 }
 
@@ -202,6 +211,7 @@ int setup_sendbuffer ( int *fd, uint32_t n )
   /* Getting SO_SNDBUF. */
   len = sizeof ( n );
 
+  errno = 0;
   if ( getsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &n, &len ) == -1 )
   {
 #ifndef NDEBUG
@@ -218,7 +228,6 @@ int setup_sendbuffer ( int *fd, uint32_t n )
   {
     /* Setting SO_SNDBUF. */
     errno = 0;
-
     if ( setsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof ( i ) ) == -1 )
     {
       if ( errno == ENOBUFS )
@@ -262,8 +271,14 @@ static int socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32
   /* Tries to send the packet. If sendto is interrupted (not likely), tries again... */
   do
   {
+    errno = 0;
     if ( ( r = sendto ( fd, buffer, size, MSG_NOSIGNAL, ( struct sockaddr * ) saddr, sizeof ( struct sockaddr_in ) ) ) > 0 )
-      bytes_sent += size;
+    {
+      // FIX: EAGAIN or EWOULDBLOCK will occur to non-blocking sockets if
+      // there is no space available on sending buffer.
+      if ( errno != EAGAIN )
+        bytes_sent += size;
+    }
   } while ( unlikely ( r == -1 && errno == EINTR ) );
 
   return r;

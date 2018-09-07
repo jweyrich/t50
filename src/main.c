@@ -49,7 +49,6 @@
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
-static uint64_t packets_sent = 0;
 static double t0;
 
 _NOINLINE static void               initialize ( const config_options_T * );
@@ -188,7 +187,6 @@ int main ( int argc, char *argv[] )
     /* Finally, calls the 'module' function to build the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func ( co, &size );
-    packets_sent++;
 
 #ifndef NDEBUG
 
