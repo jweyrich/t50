@@ -38,10 +38,10 @@
  * @para co Pointer to T50 configuration structure.
  * @para size Pointer to packet size (updated by the function).
  */
-void igmpv3(const config_options_T *const restrict co, uint32_t * restrict size)
+void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t length,
-         counter;
+           counter;
 
   /* Packet and Checksum. */
   memptr_T buffer;
@@ -53,82 +53,82 @@ void igmpv3(const config_options_T *const restrict co, uint32_t * restrict size)
   struct igmpv3_report *igmpv3_report;
   struct igmpv3_grec *igmpv3_grec;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  *size = sizeof(struct iphdr) +
+  length = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr ) +
           length            +
-          igmpv3_hdr_len(co->igmp.type, co->igmp.sources);
+          igmpv3_hdr_len ( co->igmp.type, co->igmp.sources );
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, co,
-                    sizeof(struct iphdr) +
-                    igmpv3_hdr_len(co->igmp.type, co->igmp.sources));
+  gre_encapsulation ( packet, co,
+                      sizeof ( struct iphdr ) +
+                      igmpv3_hdr_len ( co->igmp.type, co->igmp.sources ) );
 
   /* Identifying the IGMP Type and building it. */
-  if (co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT)
+  if ( co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT )
   {
     /* IGMPv3 Report Header structure making a pointer to Packet. */
-    igmpv3_report           = (struct igmpv3_report *)((unsigned char *)(ip + 1) + length);
+    igmpv3_report           = ( struct igmpv3_report * ) ( ( unsigned char * ) ( ip + 1 ) + length );
     igmpv3_report->type     = co->igmp.type;
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
-    igmpv3_report->ngrec    = htons(1);
+    igmpv3_report->ngrec    = htons ( 1 );
     igmpv3_report->csum     = FIELD_MUST_BE_ZERO;
 
     /* IGMPv3 Group Record Header structure making a pointer to Checksum. */
-    igmpv3_grec                = (struct igmpv3_grec *)(igmpv3_report + 1);
-    igmpv3_grec->grec_type     = __RND(co->igmp.grec_type);
+    igmpv3_grec                = ( struct igmpv3_grec * ) ( igmpv3_report + 1 );
+    igmpv3_grec->grec_type     = __RND ( co->igmp.grec_type );
     igmpv3_grec->grec_auxwords = FIELD_MUST_BE_ZERO;
-    igmpv3_grec->grec_nsrcs    = htons(co->igmp.sources); // Necessary even if co->igmp.sources is a 8 bit value.
-    igmpv3_grec->grec_mca      = INADDR_RND(co->igmp.grec_mca);
+    igmpv3_grec->grec_nsrcs    = htons ( co->igmp.sources ); // Necessary even if co->igmp.sources is a 8 bit value.
+    igmpv3_grec->grec_mca      = INADDR_RND ( co->igmp.grec_mca );
 
     /* Dealing with source address(es). */
     buffer.ptr = igmpv3_grec + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for (counter = 0; likely(counter < co->igmp.sources); counter++)
-      *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
+    for ( counter = 0; likely ( counter < co->igmp.sources ); counter++ )
+      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
 
     /* Computing the checksum. */
-    length = (uint32_t)(buffer.ptr - (void *)igmpv3_report);
+    length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_report );
     igmpv3_report->csum = co->bogus_csum ?
                           RANDOM() :
-                          htons(cksum(igmpv3_report, length));
+                          htons ( cksum ( igmpv3_report, length ) );
   }
   else
   {
     /* IGMPv3 Query Header structure making a pointer to Packet. */
-    igmpv3_query           = (struct igmpv3_query *)((unsigned char *)(ip + 1) + length);
+    igmpv3_query           = ( struct igmpv3_query * ) ( ( unsigned char * ) ( ip + 1 ) + length );
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
-    igmpv3_query->group    = INADDR_RND(co->igmp.group);
-    igmpv3_query->suppress = (co->igmp.suppress != 0);
-    igmpv3_query->qrv      = __RND(co->igmp.qrv);
-    igmpv3_query->qqic     = __RND(co->igmp.qqic);
-    igmpv3_query->nsrcs    = htons(co->igmp.sources);
+    igmpv3_query->group    = INADDR_RND ( co->igmp.group );
+    igmpv3_query->suppress = ( co->igmp.suppress != 0 );
+    igmpv3_query->qrv      = __RND ( co->igmp.qrv );
+    igmpv3_query->qqic     = __RND ( co->igmp.qqic );
+    igmpv3_query->nsrcs    = htons ( co->igmp.sources );
     igmpv3_query->csum     = 0;
 
     /* Dealing with source address(es). */
     buffer.ptr = igmpv3_query + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for (counter = 0; likely(counter < co->igmp.sources); counter++)
-      *buffer.inaddr_ptr++ = INADDR_RND(co->igmp.address[counter]);
+    for ( counter = 0; likely ( counter < co->igmp.sources ); counter++ )
+      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
 
     /* Computing the checksum. */
-    length = (uint32_t)(buffer.ptr - (void *)igmpv3_query);
+    length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_query );
     igmpv3_query->csum = co->bogus_csum ?
                          RANDOM() :
-                         htons(cksum(igmpv3_query, length));
+                         htons ( cksum ( igmpv3_query, length ) );
   }
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

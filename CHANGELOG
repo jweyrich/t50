@@ -6,6 +6,11 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T58 5.8.1 - Sep 4th, 2018
+ * Some routines were simplified to increase performance.
+ + Display Statistics on process termination: Number of packets and throughput (experimental).
+   (each process will print their statistics preceeded by [PID:...]).
+
 T50 5.8 - Jun 27th, 2018
  - Lots of fields were in little endian format (Intel platforms);
  - TCP option --ack-seq wasn't being evaluated at command line;

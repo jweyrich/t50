@@ -63,3 +63,7 @@ void alloc_packet ( uint32_t new_packet_size )
   }
 }
 
+void destroy_packet_buffer ( void )
+{
+  SAFE_FREE ( packet );
+}

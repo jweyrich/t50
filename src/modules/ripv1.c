@@ -40,7 +40,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv1(const config_options_T *const restrict co, uint32_t * restrict size)
+void ripv1 ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t length;
 
@@ -51,31 +51,31 @@ void ripv1(const config_options_T *const restrict co, uint32_t * restrict size)
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  *size = sizeof(struct iphdr)  +
-          sizeof(struct udphdr) +
-          sizeof(struct psdhdr) +
+  length = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr )  +
+          sizeof ( struct udphdr ) +
+          sizeof ( struct psdhdr ) +
           length             +
-          rip_hdr_len(0);
+          rip_hdr_len ( 0 );
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr)  +
-                             sizeof(struct udphdr) +
-                             rip_hdr_len(0));
+  gre_ip = gre_encapsulation ( packet, co,
+                               sizeof ( struct iphdr )  +
+                               sizeof ( struct udphdr ) +
+                               rip_hdr_len ( 0 ) );
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + length);
-  udp->source = udp->dest = htons(IPPORT_RIP);
-  udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(0));
+  udp         = ( struct udphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  udp->source = udp->dest = htons ( IPPORT_RIP );
+  udp->len    = htons ( sizeof ( struct udphdr ) + rip_hdr_len ( 0 ) );
   udp->check  = 0;
 
   buffer.ptr = udp + 1;
@@ -104,16 +104,17 @@ void ripv1(const config_options_T *const restrict co, uint32_t * restrict size)
   *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.word_ptr++ = __RND(co->rip.family);
+  *buffer.word_ptr++ = __RND ( co->rip.family );
   *buffer.word_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
+  *buffer.inaddr_ptr++ = INADDR_RND ( co->rip.address );
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
   *buffer.inaddr_ptr++ = FIELD_MUST_BE_ZERO;
-  *buffer.inaddr_ptr++ = __RND(co->rip.metric);
+  *buffer.inaddr_ptr++ = __RND ( co->rip.metric );
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo = buffer.ptr;
-  if (co->encapsulated)
+
+  if ( co->encapsulated )
   {
     pseudo->saddr = gre_ip->saddr;
     pseudo->daddr = gre_ip->daddr;
@@ -123,14 +124,15 @@ void ripv1(const config_options_T *const restrict co, uint32_t * restrict size)
     pseudo->saddr = ip->saddr;
     pseudo->daddr = ip->daddr;
   }
+
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(buffer.ptr - (void *)udp);
+  pseudo->len      = htons ( buffer.ptr - ( void * ) udp );
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons(cksum(udp, (void *)(pseudo + 1) - (void *)udp));
+                htons ( cksum ( udp, ( void * ) ( pseudo + 1 ) - ( void * ) udp ) );
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

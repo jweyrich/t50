@@ -512,11 +512,11 @@ struct config_options
     in_addr_t next_hop;       /* next hop address            */
     uint32_t  delay;          /* delay                       */
     uint32_t  bandwidth;      /* bandwidth                   */
-    uint32_t  mtu:24;         /* maximum transmission unit   */
+    uint32_t  mtu: 24;        /* maximum transmission unit   */
     uint8_t   hop_count;      /* hop count                   */
     uint8_t   load;           /* load                        */
     uint8_t   reliability;    /* reliability                 */
-    uint8_t   prefix:5;       /* subnet prefix - aka CIDR    */
+    uint8_t   prefix: 5;      /* subnet prefix - aka CIDR    */
     in_addr_t dest;           /* destination address         */
     in_addr_t src_router;     /* originating router          */
     uint32_t  src_as;         /* originating autonomous sys  */
@@ -598,6 +598,6 @@ typedef struct
   uint32_t cidr;
 } addr_T;
 
-config_options_T *parse_command_line(char **);
+config_options_T *parse_command_line ( char ** );
 
 #endif /* CONFIG_H */

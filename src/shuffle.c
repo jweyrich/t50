@@ -26,17 +26,17 @@
 // NOTE: It is safe to use uint32_t instead of uint32_t 'cause
 //       the index buffer will never be greater than the number
 //       of available protocols.
-void shuffle(uint32_t *p, uint32_t size)
+void shuffle ( uint32_t *p, uint32_t size )
 {
   uint32_t i, j;
 
-  for (i = 0; i < (size - 2); i++)
+  for ( i = 0; i < size - 2; i++ )
   {
     // NOTE: This routine will be called once each 'size'
     //       main loop iterations. This division will not
     //       slow things down very much...
-    j = (RANDOM() % (size - i)) + i;
-    swap(p[i], p[j]);
+    j = ( RANDOM() % ( size - i ) ) + i;
+    swap ( p[i], p[j] );
   }
 }
 

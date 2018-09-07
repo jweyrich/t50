@@ -1,4 +1,4 @@
-.TH T50 8 2017-06-27 "5.6" "T50 man page"
+.TH T50 8 2018-09-5 "5.8" "T50 man page"
 .SH NAME
 T50 - network packet injector
 .SH SYNOPSIS
@@ -14,10 +14,13 @@ This is NOT a DoS tool, but a tool to inject packets using various protocols.
 .BI host[/CIDR]
 The host address is the target of T50. It can be informed in one of two formats: IP address or URI name. This address can be informed as a range of IPs (by omitting one or mode octects) or using a CIDR separating the IP (full or partial) or URI with "/##", for instance: "192.168/16" or "host.com.local/22". When using a partial IP address T50 will calculate CIDR automatically (8, 16 or 24 bits, if the first, second or third octect [from right to left] are omitted, respectively).
 
-Notice that, sometimes, the "host[/CIDR]" argument is misinterpreted as an option. When this happens, you can use the pseudo option '--' before the host address.
+Notice that, sometimes, the "host[/CIDR]" argument is misinterpreted as an option. When this happens, you can use the pseudo option '--' before the host address:
+.IP
+# t50 --flood -- 192.168.1.32/27
+
 Also, to avoid this error you can provide the host address as the first argument.
 
-Notice, also, that ONLY IPv4 addresses are allowed. T50 don't provide IPv6 support yet.
+Notice, also, ONLY IPv4 addresses are allowed. T50 don't provide IPv6 support yet.
 .TP
 .BR \-\-threshold " NUM"
 Number of packets to inject (default 1000).
@@ -105,8 +108,8 @@ Frederico Lamberti Pissarra
 The latest release of the source code can be downloaded at:
 .UR https://\:gitlab.com/\:fredericopissarra/\:t50
 T50 GitLab Repository
-.UE \. You can also report bugs there or at t50-dev google group via t50-dev@googlegroups.com.
+.UE \. You can also report bugs there or at t50-dev google group via t50-dev@googlegroups.com (but gitlab's is preferable!).
 .SH COPYRIGHT
-Copyright © 2014-2017 T50 developers.
+Copyright © 2014-2018 T50 developers.
 Licensed GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.

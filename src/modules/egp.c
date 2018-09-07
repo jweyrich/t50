@@ -36,7 +36,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void egp(const config_options_T *const restrict co, uint32_t * restrict size)
+void egp ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t length;
   struct iphdr *ip;
@@ -45,25 +45,25 @@ void egp(const config_options_T *const restrict co, uint32_t * restrict size)
   struct egp_hdr *egp;
   struct egp_acq_hdr *egp_acq;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  *size = sizeof(struct iphdr)       +
-          sizeof(struct egp_hdr)     +
-          sizeof(struct egp_acq_hdr) +
+  length = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr )       +
+          sizeof ( struct egp_hdr )     +
+          sizeof ( struct egp_acq_hdr ) +
           length;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, co,
-                    sizeof(struct iphdr)    +
-                    sizeof(struct egp_hdr)  +
-                    sizeof(struct egp_acq_hdr));
+  gre_encapsulation ( packet, co,
+                      sizeof ( struct iphdr )    +
+                      sizeof ( struct egp_hdr )  +
+                      sizeof ( struct egp_acq_hdr ) );
 
   /*
    * @nbrito -- Tue Jan 18 11:09:34 BRST 2011
@@ -71,24 +71,24 @@ void egp(const config_options_T *const restrict co, uint32_t * restrict size)
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = (struct egp_hdr *)((unsigned char *)(ip + 1) + length);
+  egp           = ( struct egp_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
   egp->version  = EGPVERSION;
   egp->type     = co->egp.type;
   egp->code     = co->egp.code;
   egp->status   = co->egp.status;
-  egp->as       = __RND(co->egp.as);
-  egp->sequence = __RND(co->egp.sequence);
+  egp->as       = __RND ( co->egp.as );
+  egp->sequence = __RND ( co->egp.sequence );
   egp->check    = 0;
 
   /* EGP Acquire Header structure. */
-  egp_acq        = (struct egp_acq_hdr *)(egp + 1);
-  egp_acq->hello = __RND(co->egp.hello);
-  egp_acq->poll  = __RND(co->egp.poll);
+  egp_acq        = ( struct egp_acq_hdr * ) ( egp + 1 );
+  egp_acq->hello = __RND ( co->egp.hello );
+  egp_acq->poll  = __RND ( co->egp.poll );
 
   /* Computing the checksum. */
   egp->check    = co->bogus_csum ? RANDOM() :
-                  htons(cksum(egp, (void *)(egp_acq + 1) - (void *)egp));
+                  htons ( cksum ( egp, ( void * ) ( egp_acq + 1 ) - ( void * ) egp ) );
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

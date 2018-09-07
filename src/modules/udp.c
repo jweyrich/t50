@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void udp(const config_options_T *const restrict co, uint32_t *size)
+void udp ( const config_options_T *const restrict co, uint32_t *size )
 {
   uint32_t length;
 
@@ -46,35 +46,35 @@ void udp(const config_options_T *const restrict co, uint32_t *size)
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  *size = sizeof(struct iphdr)  +
-          sizeof(struct udphdr) +
-          sizeof(struct psdhdr) +
+  length = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr )  +
+          sizeof ( struct udphdr ) +
+          sizeof ( struct psdhdr ) +
           length;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* Fill IP header. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
-  gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr) +
-                             sizeof(struct udphdr));
+  gre_ip = gre_encapsulation ( packet, co,
+                               sizeof ( struct iphdr ) +
+                               sizeof ( struct udphdr ) );
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + length);
-  udp->source = IPPORT_RND(co->source);
-  udp->dest   = IPPORT_RND(co->dest);
-  udp->len    = htons(sizeof(struct udphdr));
+  udp         = ( struct udphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  udp->source = IPPORT_RND ( co->source );
+  udp->dest   = IPPORT_RND ( co->dest );
+  udp->len    = htons ( sizeof ( struct udphdr ) );
   udp->check  = 0;    /* needed 'cause of cksum(), below! */
 
   /* Fill PSEUDO Header structure. */
-  pseudo      = (struct psdhdr *)(udp + 1);
+  pseudo      = ( struct psdhdr * ) ( udp + 1 );
 
-  if (co->encapsulated)
+  if ( co->encapsulated )
   {
     pseudo->saddr = gre_ip->saddr;
     pseudo->daddr = gre_ip->daddr;
@@ -87,11 +87,11 @@ void udp(const config_options_T *const restrict co, uint32_t *size)
 
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(sizeof(struct udphdr));
+  pseudo->len      = htons ( sizeof ( struct udphdr ) );
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons(cksum(udp, (uint32_t)((void *)(pseudo + 1) - (void *)udp)));
+                htons ( cksum ( udp, ( uint32_t ) ( ( void * ) ( pseudo + 1 ) - ( void * ) udp ) ) );
 
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

@@ -38,7 +38,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void igmpv1(const config_options_T *const restrict co, uint32_t * restrict size)
+void igmpv1 ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t length;
   struct iphdr *ip;
@@ -46,37 +46,37 @@ void igmpv1(const config_options_T *const restrict co, uint32_t * restrict size)
   /* IGMPv1 header. */
   struct igmphdr *igmpv1;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
   /* GRE options size. */
-  length = gre_opt_len(co);
+  length = gre_opt_len ( co );
 
   /* Packet size. */
-  *size = sizeof(struct iphdr)   +
-          sizeof(struct igmphdr) +
+  *size = sizeof ( struct iphdr )   +
+          sizeof ( struct igmphdr ) +
           length;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, co,
-                    sizeof(struct iphdr) +
-                    sizeof(struct igmphdr));
+  gre_encapsulation ( packet, co,
+                      sizeof ( struct iphdr ) +
+                      sizeof ( struct igmphdr ) );
 
   /* IGMPv1 Header structure making a pointer to Packet. */
-  igmpv1        = (struct igmphdr *)((unsigned char *)(ip + 1) + length);
+  igmpv1        = ( struct igmphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
   igmpv1->type  = co->igmp.type;
   igmpv1->code  = co->igmp.code;
-  igmpv1->group = INADDR_RND(co->igmp.group);
+  igmpv1->group = INADDR_RND ( co->igmp.group );
   igmpv1->csum  = 0;  /* Needed 'cause cksum() call, below! */
 
   /* Computing the checksum. */
-  igmpv1->csum  = co->bogus_csum ? RANDOM() : htons(cksum(igmpv1, sizeof(struct igmphdr)));
+  igmpv1->csum  = co->bogus_csum ? RANDOM() : htons ( cksum ( igmpv1, sizeof ( struct igmphdr ) ) );
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

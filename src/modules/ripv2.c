@@ -40,11 +40,11 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
+void ripv2 ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t greoptlen,     /* GRE options size. */
-         length,
-         counter;
+           length,
+           counter;
 
   memptr_T buffer;
 
@@ -53,31 +53,31 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
   struct udphdr *udp;
   struct psdhdr *pseudo;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  greoptlen = gre_opt_len(co);
-  *size = sizeof(struct iphdr)  +
-          sizeof(struct udphdr) +
-          sizeof(struct psdhdr) +
+  greoptlen = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr )  +
+          sizeof ( struct udphdr ) +
+          sizeof ( struct psdhdr ) +
           greoptlen             +
-          rip_hdr_len(co->rip.auth);
+          rip_hdr_len ( co->rip.auth );
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr)  +
-                             sizeof(struct udphdr) +
-                             rip_hdr_len(co->rip.auth));
+  gre_ip = gre_encapsulation ( packet, co,
+                               sizeof ( struct iphdr )  +
+                               sizeof ( struct udphdr ) +
+                               rip_hdr_len ( co->rip.auth ) );
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = (struct udphdr *)((unsigned char *)(ip + 1) + greoptlen);
-  udp->source = udp->dest = htons(IPPORT_RIP);
-  udp->len    = htons(sizeof(struct udphdr) + rip_hdr_len(co->rip.auth));
+  udp         = ( struct udphdr * ) ( ( unsigned char * ) ( ip + 1 ) + greoptlen );
+  udp->source = udp->dest = htons ( IPPORT_RIP );
+  udp->len    = htons ( sizeof ( struct udphdr ) + rip_hdr_len ( co->rip.auth ) );
   udp->check  = 0;
 
   buffer.ptr = udp + 1;
@@ -115,7 +115,7 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
    */
   *buffer.byte_ptr++ = co->rip.command;
   *buffer.byte_ptr++ = RIPVERSION;
-  *buffer.word_ptr++ = __RND(co->rip.domain);
+  *buffer.word_ptr++ = __RND ( co->rip.domain );
 
   /* DON'T NEED THIS */
   /* length = sizeof(struct udphdr) + RIP_HEADER_LENGTH; */
@@ -163,14 +163,14 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
    *   |               reserved must be zero                           |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  if (co->rip.auth)
+  if ( co->rip.auth )
   {
     *buffer.word_ptr++ = 0xffffU;
-    *buffer.word_ptr++ = htons(3);
-    *buffer.word_ptr++ = htons(RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH);
+    *buffer.word_ptr++ = htons ( 3 );
+    *buffer.word_ptr++ = htons ( RIP_HEADER_LENGTH + RIP_AUTH_LENGTH + RIP_MESSAGE_LENGTH );
     *buffer.byte_ptr++ = co->rip.key_id;
     *buffer.byte_ptr++ = RIP_AUTH_LENGTH;
-    *buffer.dword_ptr++ = __RND(co->rip.sequence);
+    *buffer.dword_ptr++ = __RND ( co->rip.sequence );
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
     *buffer.dword_ptr++ = FIELD_MUST_BE_ZERO;
   }
@@ -204,12 +204,12 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
    *   |                                                               |
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  *buffer.word_ptr++ = __RND(co->rip.family);
-  *buffer.word_ptr++ = __RND(co->rip.tag);
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.address);
-  *buffer.inaddr_ptr++ = NETMASK_RND(co->rip.netmask);
-  *buffer.inaddr_ptr++ = INADDR_RND(co->rip.next_hop);
-  *buffer.inaddr_ptr++ = __RND(co->rip.metric);
+  *buffer.word_ptr++ = __RND ( co->rip.family );
+  *buffer.word_ptr++ = __RND ( co->rip.tag );
+  *buffer.inaddr_ptr++ = INADDR_RND ( co->rip.address );
+  *buffer.inaddr_ptr++ = NETMASK_RND ( co->rip.netmask );
+  *buffer.inaddr_ptr++ = INADDR_RND ( co->rip.next_hop );
+  *buffer.inaddr_ptr++ = __RND ( co->rip.metric );
 
   /*
    * XXX Playing with:
@@ -224,25 +224,27 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
    *   /  Authentication Data (var. length; 16 bytes with Keyed MD5)   /
    *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  if (co->rip.auth)
+  if ( co->rip.auth )
   {
     uint32_t size;
 
     *buffer.word_ptr++ = 0xffffU;
-    *buffer.word_ptr++ = htons(1);
+    *buffer.word_ptr++ = htons ( 1 );
 
     /*
      * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
      */
-    size = auth_hmac_md5_len(co->rip.auth);
+    size = auth_hmac_md5_len ( co->rip.auth );
+
     /* NOTE: Assume size > 0. */
-    for (counter = 0; likely(counter < size); counter++)
+    for ( counter = 0; likely ( counter < size ); counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 
   /* PSEUDO Header structure making a pointer to Checksum. */
   pseudo           = buffer.ptr;
-  if (co->encapsulated)
+
+  if ( co->encapsulated )
   {
     pseudo->saddr    = gre_ip->saddr;
     pseudo->daddr    = gre_ip->daddr;
@@ -252,9 +254,10 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
     pseudo->saddr    = ip->saddr;
     pseudo->daddr    = ip->daddr;
   }
+
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length = (buffer.ptr - (void *)udp));
+  pseudo->len      = htons ( length = ( buffer.ptr - ( void * ) udp ) );
 
   /* FIX: buffer.ptr points to 'pseudo' So, it is simple to calculate the size used
           by cksum() function.
@@ -264,8 +267,8 @@ void ripv2(const config_options_T *const restrict co, uint32_t * restrict size)
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons(cksum(udp, (void *)(pseudo + 1) - (void *)udp));
+                htons ( cksum ( udp, ( void * ) ( pseudo + 1 ) - ( void * ) udp ) );
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

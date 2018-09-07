@@ -74,7 +74,7 @@ struct psdhdr
   uint16_t  len;        /* header length       */
 };
 
-typedef void (*module_func_ptr_t)(const config_options_T *const restrict, uint32_t * restrict);
+typedef void ( *module_func_ptr_t ) ( const config_options_T *const restrict, uint32_t *restrict );
 
 /**
  * Modules entry structure.
@@ -104,24 +104,24 @@ extern modules_table_T mod_table[]; // Must be extern here!
 extern const uint32_t number_of_modules;
 extern uint32_t indices[];
 
-int    *get_module_valid_options_list(int);
-void    build_indices(void);
-uint32_t get_index(config_options_T *);
+int    *get_module_valid_options_list ( int );
+void    build_indices ( void );
+uint32_t get_index ( config_options_T * );
 
 /* Modules functions prototypes. */
-void icmp  (const config_options_T *const restrict, uint32_t * restrict);
-void igmpv1(const config_options_T *const restrict, uint32_t * restrict);
-void igmpv3(const config_options_T *const restrict, uint32_t * restrict);
-void tcp   (const config_options_T *const restrict, uint32_t * restrict);
-void egp   (const config_options_T *const restrict, uint32_t * restrict);
-void udp   (const config_options_T *const restrict, uint32_t * restrict);
-void ripv1 (const config_options_T *const restrict, uint32_t * restrict);
-void ripv2 (const config_options_T *const restrict, uint32_t * restrict);
-void dccp  (const config_options_T *const restrict, uint32_t * restrict);
-void rsvp  (const config_options_T *const restrict, uint32_t * restrict);
-void ipsec (const config_options_T *const restrict, uint32_t * restrict);
-void eigrp (const config_options_T *const restrict, uint32_t * restrict);
-void ospf  (const config_options_T *const restrict, uint32_t * restrict);
+void icmp ( const config_options_T *const restrict, uint32_t *restrict );
+void igmpv1 ( const config_options_T *const restrict, uint32_t *restrict );
+void igmpv3 ( const config_options_T *const restrict, uint32_t *restrict );
+void tcp ( const config_options_T *const restrict, uint32_t *restrict );
+void egp ( const config_options_T *const restrict, uint32_t *restrict );
+void udp ( const config_options_T *const restrict, uint32_t *restrict );
+void ripv1 ( const config_options_T *const restrict, uint32_t *restrict );
+void ripv2 ( const config_options_T *const restrict, uint32_t *restrict );
+void dccp ( const config_options_T *const restrict, uint32_t *restrict );
+void rsvp ( const config_options_T *const restrict, uint32_t *restrict );
+void ipsec ( const config_options_T *const restrict, uint32_t *restrict );
+void eigrp ( const config_options_T *const restrict, uint32_t *restrict );
+void ospf ( const config_options_T *const restrict, uint32_t *restrict );
 /* --- add yours here */
 
 #endif

@@ -23,8 +23,9 @@
 
 #include <stdint.h>
 
-void *packet;
+extern void *packet;
 
-void alloc_packet(uint32_t);
+void alloc_packet ( uint32_t );
+void destroy_packet_buffer( void );
 
 #endif

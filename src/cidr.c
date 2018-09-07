@@ -37,7 +37,7 @@ static struct cidr cidr = {0};
  * @param address IP address from command line (in network order).
  * @return Pointer to cidr structure.
  */
-struct cidr *config_cidr(const config_options_T * const restrict co)
+struct cidr *config_cidr ( const config_options_T *const restrict co )
 {
   /*
    * nbrito -- Thu Dec 23 13:06:39 BRST 2010
@@ -67,7 +67,7 @@ struct cidr *config_cidr(const config_options_T * const restrict co)
    */
 
   // FIXME: Is this condition is really necessary!
-  if (co->bits < CIDR_MAXIMUM)
+  if ( co->bits < CIDR_MAXIMUM )
   {
     uint32_t netmask;
 
@@ -89,26 +89,26 @@ struct cidr *config_cidr(const config_options_T * const restrict co)
     //
     // hostid == 0 means: use the address as it is!
     //
-    cidr.hostid = (1U << (32 - co->bits)) - 2U;
+    cidr.hostid = ( 1U << ( 32 - co->bits ) ) - 2U;
 
     /* XXX Sanitizing the maximum host identifier's IP addresses.
      * XXX Should never reaches here!!! */
-    if (cidr.hostid > MAXIMUM_IP_ADDRESSES)
+    if ( cidr.hostid > MAXIMUM_IP_ADDRESSES )
     {
-      error("internal error detecded -- please, report.\n"
-            "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error.",
-            cidr.hostid, MAXIMUM_IP_ADDRESSES);
+      error ( "internal error detecded -- please, report.\n"
+              "cidr.hostid (%u) > MAXIMUM_IP_ADDRESSES (%u): Probably a specific platform error.",
+              cidr.hostid, MAXIMUM_IP_ADDRESSES );
 
       return NULL;
     }
 
-    netmask = ~(~0U >> co->bits);
-    cidr.__1st_addr = (ntohl(co->ip.daddr) & netmask) + 1; // avoid bit 0 = 0.
+    netmask = ~ ( ~0U >> co->bits );
+    cidr.__1st_addr = ( ntohl ( co->ip.daddr ) & netmask ) + 1; // avoid bit 0 = 0.
   }
   else
   {
     cidr.hostid = 0;    // means "not random address".
-    cidr.__1st_addr = ntohl(co->ip.daddr);
+    cidr.__1st_addr = ntohl ( co->ip.daddr );
   }
 
   return &cidr;

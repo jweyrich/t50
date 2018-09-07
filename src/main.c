@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <time.h>
 #include <locale.h>
@@ -48,9 +49,12 @@
 
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
+static uint64_t packets_sent = 0;
+static double t0;
 
 _NOINLINE static void               initialize ( const config_options_T * );
-_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T * restrict, int * restrict );
+_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
+static void show_statistics( void );
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -65,6 +69,7 @@ int main ( int argc, char *argv[] )
   modules_table_T       *ptbl;
   int                   proto;
   time_t                lt;
+  struct timeval        tv;
 
   // default C (US) locale...
   setlocale ( LC_ALL, "C" );
@@ -116,6 +121,8 @@ int main ( int argc, char *argv[] )
     }
   }
 
+  printf( INFO "PID=%u\n", getpid() );
+
 #endif  /* __HAVE_TURBO__ */
 
   /* Setting the priority to both parent and child process. */
@@ -132,7 +139,7 @@ int main ( int argc, char *argv[] )
     /* Getting the local time. */
     lt = time ( NULL );
 
-    printf ( INFO " " PACKAGE_NAME " successfully launched at %s\n",
+    printf ( INFO "" PACKAGE_NAME " successfully launched at %s\n",
              ctime ( &lt ) );
   }
 
@@ -145,6 +152,7 @@ int main ( int argc, char *argv[] )
 
   /* Preallocate packet buffer. */
   alloc_packet ( INITIAL_PACKET_SIZE );
+  atexit( destroy_packet_buffer );
 
   /* Selects the initial protocol to use. */
   if ( co->ip.protocol != IPPROTO_T50 )
@@ -159,6 +167,9 @@ int main ( int argc, char *argv[] )
   /* MAIN LOOP */
   // OBS: flood means non stop injection.
   //      threshold is the number of packets to inject.
+  gettimeofday( &tv, NULL );
+  t0 = tv.tv_usec * 1e-6 + tv.tv_sec;
+  atexit( show_statistics );
   while ( co->flood || co->threshold )
   {
     /* Will hold the actual packet size after module function call. */
@@ -177,6 +188,7 @@ int main ( int argc, char *argv[] )
     /* Finally, calls the 'module' function to build the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func ( co, &size );
+    packets_sent++;
 
 #ifndef NDEBUG
 
@@ -220,7 +232,7 @@ int main ( int argc, char *argv[] )
         /* Wait 5 seconds for the child to end... */
         alarm ( WAIT_FOR_CHILD_TIMEOUT );
 #ifndef NDEBUG
-        fputs ( INFO " Waiting for child process to end...\n", stderr );
+        fputs ( INFO "Waiting for child process to end...\n", stderr );
 #endif
 
         /* NOTE: SIGALRM will kill the child process if necessary! */
@@ -240,7 +252,7 @@ int main ( int argc, char *argv[] )
     {
       lt = time ( NULL );
 
-      printf ( INFO " " PACKAGE_NAME " successfully finished at %s\n",
+      printf ( INFO "" PACKAGE_NAME " successfully finished at %s\n",
                ctime ( &lt ) );
     }
   }
@@ -259,19 +271,13 @@ static void signal_handler ( int signal )
     case SIGALRM:
       if ( !IS_CHILD_PID ( pid ) )
         kill ( pid, SIGKILL );
-
       return;
 
     case SIGCHLD:
       child_is_dead = 1;
       return;
-
-      // FIXME: Possibly I have to deal with SIGTERM as well...
-      //case SIGTERM:
-      //  /* TODO */
   }
 
-  close_socket();   // AS_SAFE!
 
   /* The shell documentation (bash) specifies that a process,
      when exits because a signal, must return 128+signal#. */
@@ -299,7 +305,6 @@ void initialize ( const config_options_T *co )
   sigaction ( SIGINT,  &sa, NULL );
   sigaction ( SIGCHLD, &sa, NULL );
   sigaction ( SIGALRM, &sa, NULL );
-  //sigaction(SIGTERM, &sa, NULL );
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */
@@ -310,26 +315,26 @@ void initialize ( const config_options_T *co )
   if ( !co->quiet )
   {
     if ( co->flood )
-      fputs ( INFO " Entering flood mode...", stdout );
+      fputs ( INFO "Entering flood mode...", stdout );
     else
-      printf ( INFO " Sending %u packets...\n", co->threshold );
+      printf ( INFO "Sending %u packets...\n", co->threshold );
 
 #ifdef __HAVE_TURBO__
 
     if ( co->turbo )
-      puts ( INFO " Turbo mode active..." );
+      puts ( INFO "Turbo mode active..." );
 
 #endif
 
     if ( co->bits )
-      puts ( INFO " Performing stress testing..." );
+      puts ( INFO "Performing stress testing..." );
 
-    puts ( INFO " Hit Ctrl+C to stop..." );
+    puts ( INFO "Hit Ctrl+C to stop..." );
   }
 }
 
 /* Selects the initial protocol based on the configuration. */
-modules_table_T *selectProtocol ( const config_options_T * restrict co, int * restrict proto )
+modules_table_T *selectProtocol ( const config_options_T *restrict co, int *restrict proto )
 {
   modules_table_T *ptbl;
 
@@ -339,4 +344,34 @@ modules_table_T *selectProtocol ( const config_options_T * restrict co, int * re
     ptbl += co->ip.protoname;
 
   return ptbl;
+}
+
+void show_statistics( void )
+{
+  struct timeval tv;
+
+  // FIXME: This is not as precise as I want.
+  //        A bunch of microseconds (maybe milisseconds) will
+  //        be accounted as the finalization queue routines
+  //        are dispatched.
+  gettimeofday( &tv, NULL );
+
+  // FIX: We'll make sure the socket is closed here!
+  close_socket();
+
+  if ( packets_sent )
+  {
+    pid_t pid;
+    double t1;
+
+    t1 = tv.tv_usec * 1e-6 + tv.tv_sec;
+
+    pid = getpid();
+    printf( INFO "(PID:%1$u) packets:    %2$" PRIu64 " (%3$" PRIu64 " bytes sent).\n"
+            INFO "(PID:%1$u) throughput: %4$.2f packets/second.\n",
+            pid, 
+            packets_sent, 
+            bytes_sent, 
+            (double)packets_sent/(t1 - t0) );
+  }
 }

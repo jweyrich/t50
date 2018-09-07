@@ -35,7 +35,7 @@
 /*
  * prototypes.
  */
-static uint32_t tcp_options_len(const uint8_t, int, int);
+static uint32_t tcp_options_len ( const uint8_t, int, int );
 
 /**
  * TCP packet header configuration.
@@ -46,12 +46,12 @@ static uint32_t tcp_options_len(const uint8_t, int, int);
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
+void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t tcpolen,     /* TCP options size. */
-         tcpopt,      /* TCP options total size. */
-         length,
-         counter;
+           tcpopt,      /* TCP options total size. */
+           length,
+           counter;
 
   memptr_T buffer;
 
@@ -64,28 +64,28 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
   struct tcphdr *tcp;
   struct psdhdr *pseudo;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  tcpolen = tcp_options_len(co->tcp.options, co->tcp.md5, co->tcp.auth);
-  tcpopt = tcpolen + TCPOLEN_PADDING(tcpolen);
+  length = gre_opt_len ( co );
+  tcpolen = tcp_options_len ( co->tcp.options, co->tcp.md5, co->tcp.auth );
+  tcpopt = tcpolen + TCPOLEN_PADDING ( tcpolen );
 
-  *size = sizeof(struct iphdr)  +
-          sizeof(struct tcphdr) +
-          sizeof(struct psdhdr) +
+  *size = sizeof ( struct iphdr )  +
+          sizeof ( struct tcphdr ) +
+          sizeof ( struct psdhdr ) +
           tcpopt                +
           length;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
-  gre_ip = gre_encapsulation(packet, co,
-                             sizeof(struct iphdr)  +
-                             sizeof(struct tcphdr) +
-                             tcpopt);
+  gre_ip = gre_encapsulation ( packet, co,
+                               sizeof ( struct iphdr )  +
+                               sizeof ( struct tcphdr ) +
+                               tcpopt );
 
   /*
    * The RFC 793 has defined a 4-bit field in the TCP header which encodes the size
@@ -93,28 +93,28 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    * Of this, 20 bytes are taken up by non-options fields of the TCP header,  which
    * leaves 40 bytes (TCP header * 2) for options.
    */
-  if (unlikely(tcpopt > (sizeof(struct tcphdr) * 2)))
-    fatal_error("%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
-                __FUNCTION__, tcpopt);
+  if ( unlikely ( tcpopt > ( sizeof ( struct tcphdr ) * 2 ) ) )
+    fatal_error ( "%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
+                  __FUNCTION__, tcpopt );
 
   /* TCP Header structure making a pointer to IP Header structure. */
-  tcp          = (struct tcphdr *)((unsigned char *)(ip + 1) + length);
-  tcp->source  = IPPORT_RND(co->source);
-  tcp->dest    = IPPORT_RND(co->dest);
+  tcp          = ( struct tcphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  tcp->source  = IPPORT_RND ( co->source );
+  tcp->dest    = IPPORT_RND ( co->dest );
   tcp->res1    = TCP_RESERVED_BITS;
-  tcp->doff    = htons(co->tcp.doff ? co->tcp.doff : ((sizeof(struct tcphdr) + tcpopt) / 4));
+  tcp->doff    = htons ( co->tcp.doff ? co->tcp.doff : ( ( sizeof ( struct tcphdr ) + tcpopt ) / 4 ) );
   tcp->fin     = co->tcp.fin;
   tcp->syn     = co->tcp.syn;
-  tcp->seq     = co->tcp.syn ? __RND(co->tcp.sequence) : 0;
+  tcp->seq     = co->tcp.syn ? __RND ( co->tcp.sequence ) : 0;
   tcp->rst     = co->tcp.rst;
   tcp->psh     = co->tcp.psh;
   tcp->ack     = co->tcp.ack;
-  tcp->ack_seq = co->tcp.ack ? __RND(co->tcp.acknowledge) : 0;
+  tcp->ack_seq = co->tcp.ack ? __RND ( co->tcp.acknowledge ) : 0;
   tcp->urg     = co->tcp.urg;
-  tcp->urg_ptr = co->tcp.urg ? __RND(co->tcp.urg_ptr) : 0;
+  tcp->urg_ptr = co->tcp.urg ? __RND ( co->tcp.urg_ptr ) : 0;
   tcp->ece     = co->tcp.ece;
   tcp->cwr     = co->tcp.cwr;
-  tcp->window  = __RND(co->tcp.window);
+  tcp->window  = __RND ( co->tcp.window );
   tcp->check   = 0; /* Needed 'cause of cksum() call */
 
   buffer.ptr = tcp + 1;
@@ -132,11 +132,11 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |00000010|00000100|   max seg size   |
    *    +--------+--------+---------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_MSS))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_MSS ) )
   {
     *buffer.byte_ptr++ = TCPOPT_MSS;
     *buffer.byte_ptr++ = TCPOLEN_MSS;
-    *buffer.word_ptr++ = __RND(co->tcp.mss);
+    *buffer.word_ptr++ = __RND ( co->tcp.mss );
   }
 
   /*
@@ -152,11 +152,11 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |00000011|00000011| shift  |
    *    +--------+--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_WSOPT))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_WSOPT ) )
   {
     *buffer.byte_ptr++ = TCPOPT_WSOPT;
     *buffer.byte_ptr++ = TCPOLEN_WSOPT;
-    *buffer.byte_ptr++ = __RND(co->tcp.wsopt);
+    *buffer.byte_ptr++ = __RND ( co->tcp.wsopt );
   }
 
   /*
@@ -176,7 +176,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |       TS Echo Reply (TSecr)       |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_TSOPT))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_TSOPT ) )
   {
     /*
      * TCP Extensions for High Performance (RFC 1323)
@@ -196,14 +196,14 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
      *       |          TSecr   timestamp        |
      *       +--------+--------+--------+--------+
      */
-    if (!co->tcp.syn)
-      for (; tcpolen & 3; tcpolen++)  /* NOTE: Cannot assume anything about tcpolen. */
+    if ( !co->tcp.syn )
+      for ( ; tcpolen & 3; tcpolen++ ) /* NOTE: Cannot assume anything about tcpolen. */
         *buffer.byte_ptr++ = TCPOPT_NOP;
 
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
-    *buffer.dword_ptr++ = __RND(co->tcp.tsval);
-    *buffer.dword_ptr++ = __RND(co->tcp.tsecr);
+    *buffer.dword_ptr++ = __RND ( co->tcp.tsval );
+    *buffer.dword_ptr++ = __RND ( co->tcp.tsecr );
   }
 
   /*
@@ -221,11 +221,11 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_CC ) )
   {
     *buffer.byte_ptr++ = TCPOPT_CC;
     *buffer.byte_ptr++ = TCPOLEN_CC;
-    *buffer.dword_ptr++ = __RND(co->tcp.cc);
+    *buffer.dword_ptr++ = __RND ( co->tcp.cc );
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -238,7 +238,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
      *  value from the sender's TCB.
      */
     tcp->syn     = true;
-    tcp->seq     = __RND(co->tcp.sequence);
+    tcp->seq     = __RND ( co->tcp.sequence );
   }
 
   /*
@@ -268,16 +268,16 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |     Connection Count:  SEG.CC     |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_CC_NEXT))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_CC_NEXT ) )
   {
     *buffer.byte_ptr++  = co->tcp.cc_new ? TCPOPT_CC_NEW : TCPOPT_CC_ECHO;
     *buffer.byte_ptr++  = TCPOLEN_CC;
     *buffer.dword_ptr++ = co->tcp.cc_new ?
-                            __RND(co->tcp.cc_new) :
-                            __RND(co->tcp.cc_echo);
+                          __RND ( co->tcp.cc_new ) :
+                          __RND ( co->tcp.cc_echo );
 
     tcp->syn = true;
-    tcp->seq = __RND(co->tcp.sequence);
+    tcp->seq = __RND ( co->tcp.sequence );
 
     /*
      * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -289,7 +289,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
      * may not be larger than the previous value.   Its  SEG.CC  value is the
      * TCB.CCsend value from the sender's TCB.
      */
-    if (!co->tcp.cc_new)
+    if ( !co->tcp.cc_new )
     {
       /*
        * TCP Extensions for Transactions Functional Specification (RFC 1644)
@@ -303,7 +303,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
        * from the initial SYN.
        */
       tcp->ack     = true;
-      tcp->ack_seq = __RND(co->tcp.acknowledge);
+      tcp->ack_seq = __RND ( co->tcp.acknowledge );
     }
   }
 
@@ -320,7 +320,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |00000100|00000010|
    *    +--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_OK))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_SACK_OK ) )
   {
     *buffer.byte_ptr++ = TCPOPT_SACK_OK;
     *buffer.byte_ptr++ = TCPOLEN_SACK_OK;
@@ -351,12 +351,12 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |      Right Edge of nth Block      |
    *    +--------+--------+--------+--------+
    */
-  if (TEST_BITS(co->tcp.options, TCP_OPTION_SACK_EDGE))
+  if ( TEST_BITS ( co->tcp.options, TCP_OPTION_SACK_EDGE ) )
   {
     *buffer.byte_ptr++  = TCPOPT_SACK_EDGE;
-    *buffer.byte_ptr++  = TCPOLEN_SACK_EDGE(1);
-    *buffer.dword_ptr++ = __RND(co->tcp.sack_left);
-    *buffer.dword_ptr++ = __RND(co->tcp.sack_right);
+    *buffer.byte_ptr++  = TCPOLEN_SACK_EDGE ( 1 );
+    *buffer.dword_ptr++ = __RND ( co->tcp.sack_left );
+    *buffer.dword_ptr++ = __RND ( co->tcp.sack_right );
   }
 
   /*
@@ -380,7 +380,7 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |...digest (con't)|
    *    +-----------------+
    */
-  if (co->tcp.md5)
+  if ( co->tcp.md5 )
   {
     uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
@@ -389,10 +389,10 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    stemp = auth_hmac_md5_len(co->tcp.md5);
+    stemp = auth_hmac_md5_len ( co->tcp.md5 );
 
     /* NOTE: Assume stemp > 0. */
-    for (counter = 0; likely(counter < stemp); counter++)
+    for ( counter = 0; likely ( counter < stemp ); counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 
@@ -417,35 +417,35 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
    *    |    ... MAC      |
    *    +-----------------+
    */
-  if (co->tcp.auth)
+  if ( co->tcp.auth )
   {
     uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
-    *buffer.byte_ptr++ = __RND(co->tcp.key_id);
-    *buffer.byte_ptr++ = __RND(co->tcp.next_key);
+    *buffer.byte_ptr++ = __RND ( co->tcp.key_id );
+    *buffer.byte_ptr++ = __RND ( co->tcp.next_key );
     /*
      * The Authentication key uses HMAC-MD5 digest.
      */
-    stemp = auth_hmac_md5_len(co->tcp.auth);
+    stemp = auth_hmac_md5_len ( co->tcp.auth );
 
     /* NOTE: Assume stemp > 0. */
-    for (counter = 0; likely(counter < stemp); counter++)
+    for ( counter = 0; likely ( counter < stemp ); counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 
   /* Padding the TCP Options. */
-  for (; tcpolen & 3; tcpolen++)
+  for ( ; tcpolen & 3; tcpolen++ )
     *buffer.byte_ptr++ = co->tcp.nop;
 
   /* Needed here 'cause we'll need to initialize pseudo->len. */
-  length = sizeof(struct tcphdr) + tcpolen;
+  length = sizeof ( struct tcphdr ) + tcpolen;
 
   /* Fill PSEUDO Header structure. */
   pseudo           = buffer.ptr;
 
-  if (co->encapsulated)
+  if ( co->encapsulated )
   {
     pseudo->saddr    = gre_ip->saddr;
     pseudo->daddr    = gre_ip->daddr;
@@ -458,19 +458,19 @@ void tcp(const config_options_T *const restrict co, uint32_t * restrict size)
 
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons(length);
+  pseudo->len      = htons ( length );
 
-  length += sizeof(struct psdhdr);
+  length += sizeof ( struct psdhdr );
 
   /* Computing the checksum. */
-  tcp->check   = co->bogus_csum ? RANDOM() : 
-                 htons(cksum(tcp, length));
+  tcp->check   = co->bogus_csum ? RANDOM() :
+                 htons ( cksum ( tcp, length ) );
 
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }
 
 /* TCP options size calculation. */
-uint32_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
+uint32_t tcp_options_len ( const uint8_t tcp_options, int useMD5, int useAuth )
 {
   uint32_t size;
 
@@ -483,54 +483,54 @@ uint32_t tcp_options_len(const uint8_t tcp_options, int useMD5, int useAuth)
   /*
    * TCP Options has Maximum Segment Size (MSS) Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_MSS))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_MSS ) )
     size += TCPOLEN_MSS;
 
   /*
    * TCP Options has Window Scale (WSopt) Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_WSOPT))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_WSOPT ) )
     size += TCPOLEN_WSOPT;
 
   /*
    * TCP Options has Timestamp (TSopt) Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_TSOPT))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_TSOPT ) )
     size += TCPOLEN_TSOPT;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK-Permitted) Option
    * defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_SACK_OK))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_SACK_OK ) )
     size += TCPOLEN_SACK_OK;
 
   /*
    * TCP Options has Connection Count (CC) Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_CC))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_CC ) )
     size += TCPOLEN_CC;
 
   /*
    * TCP Options has CC.NEW or CC.ECHO Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_CC_NEXT))
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_CC_NEXT ) )
     size += TCPOLEN_CC;
 
   /*
    * TCP Options has Selective Acknowledgement (SACK) Option defined.
    */
-  if (TEST_BITS(tcp_options, TCP_OPTION_SACK_EDGE))
-    size += TCPOLEN_SACK_EDGE(1);
+  if ( TEST_BITS ( tcp_options, TCP_OPTION_SACK_EDGE ) )
+    size += TCPOLEN_SACK_EDGE ( 1 );
 
   /*
    * Defining it the size should use MD5 Signature Option or the brand
    * new TCP Authentication Option (TCP-AO).
    */
-  if (useMD5)
+  if ( useMD5 )
     size += TCPOLEN_MD5;
 
-  if (useAuth)
+  if ( useAuth )
     size += TCPOLEN_AO;
 
   return size;

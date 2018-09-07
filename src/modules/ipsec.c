@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ipsec(const config_options_T *const restrict co, uint32_t *size)
+void ipsec ( const config_options_T *const restrict co, uint32_t *size )
 {
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
@@ -55,29 +55,29 @@ void ipsec(const config_options_T *const restrict co, uint32_t *size)
   struct ip_auth_hdr *ip_auth;
   struct ip_esp_hdr *ip_esp;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  length = gre_opt_len(co);
-  esp_data  = auth_hmac_md5_len(1);
-  *size = sizeof(struct iphdr)       +
-          sizeof(struct ip_auth_hdr) +
-          sizeof(struct ip_esp_hdr)  +
+  length = gre_opt_len ( co );
+  esp_data  = auth_hmac_md5_len ( 1 );
+  *size = sizeof ( struct iphdr )       +
+          sizeof ( struct ip_auth_hdr ) +
+          sizeof ( struct ip_esp_hdr )  +
           length                     +
           IP_AH_ICV                  +
           esp_data;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, co,
-                    sizeof(struct iphdr)       +
-                    sizeof(struct ip_auth_hdr) +
-                    sizeof(struct ip_esp_hdr)  +
-                    IP_AH_ICV                  +
-                    esp_data);
+  gre_encapsulation ( packet, co,
+                      sizeof ( struct iphdr )       +
+                      sizeof ( struct ip_auth_hdr ) +
+                      sizeof ( struct ip_esp_hdr )  +
+                      IP_AH_ICV                  +
+                      esp_data );
 
   /*
    * IP Authentication Header (RFC 2402)
@@ -100,33 +100,33 @@ void ipsec(const config_options_T *const restrict co, uint32_t *size)
    */
 
   /* IPSec AH Header structure making a pointer to IP Header structure. */
-  ip_auth          = (struct ip_auth_hdr *)((unsigned char *)(ip + 1) + length);
+  ip_auth          = ( struct ip_auth_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
                      co->ipsec.ah_length :
-                     (sizeof(struct ip_auth_hdr) / 4) + 1;   /* FIX: The previous line was:
+                     ( sizeof ( struct ip_auth_hdr ) / 4 ) + 1;   /* FIX: The previous line was:
                                                  (sizeof(struct ip_auth_hdr) / 4) + (ip_ah_icv / ip_ah_icv); */
 
-  ip_auth->spi     = __RND(co->ipsec.ah_spi);
-  ip_auth->seq_no  = __RND(co->ipsec.ah_sequence);
+  ip_auth->spi     = __RND ( co->ipsec.ah_spi );
+  ip_auth->seq_no  = __RND ( co->ipsec.ah_sequence );
 
   buffer.ptr = ip_auth + 1;
 
   /* Setting a fake encrypted content. */
-  for (counter = 0; counter < IP_AH_ICV; counter++)
+  for ( counter = 0; counter < IP_AH_ICV; counter++ )
     *buffer.byte_ptr++ = RANDOM();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
   ip_esp         = buffer.ptr;
-  ip_esp->spi    = __RND(co->ipsec.esp_spi);
-  ip_esp->seq_no = __RND(co->ipsec.esp_sequence);
+  ip_esp->spi    = __RND ( co->ipsec.esp_spi );
+  ip_esp->seq_no = __RND ( co->ipsec.esp_sequence );
 
   buffer.ptr = ip_esp + 1;
 
   /* Setting a fake encrypted content. */
-  for (counter = 0; counter < esp_data; counter++)
+  for ( counter = 0; counter < esp_data; counter++ )
     *buffer.byte_ptr++ = RANDOM();
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

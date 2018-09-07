@@ -31,7 +31,7 @@
  * @return 16 bits checksum.
  */
 // FIX: Changed to 32 bit length 'cause it's faster!
-uint16_t cksum(void *data, uint32_t length)
+uint16_t cksum ( void *data, uint32_t length )
 {
   uint32_t sum;
   uint16_t *p = data;
@@ -42,21 +42,21 @@ uint16_t cksum(void *data, uint32_t length)
   length >>= 1;     // lenth contains # of words.
 
   /* Accumulate all 16 bit words on buffer. */
-  while (length--)
+  while ( length-- )
     sum += *p++;
 
   /* Is there a single byte remaining? */
-  if (rem)
-    sum += *(uint8_t *)p;
+  if ( rem )
+    sum += * ( uint8_t * ) p;
 
   /* Accumulate 16 bits carry-outs.*/
 
   // FIX: Don't need the loop. A 16 MiB buffer full of 0xff will overflow the 32bit sum,
   //      but we're dealing with much smalled buffers.
-  if (sum > 0xffff)
+  if ( sum > 0xffff )
   {
-    sum = (sum & 0xffff) + (sum >> 16);
-    sum += (sum >> 16);
+    sum = ( sum & 0xffff ) + ( sum >> 16 );
+    sum += ( sum >> 16 );
   }
 
   return ~sum;

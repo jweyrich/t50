@@ -44,22 +44,24 @@
 /* Initialized for error condition, just in case! */
 static int fd = -1;
 
-static int wait_for_io(int);
-static int socket_send(int, struct sockaddr_in *, void *, uint32_t);
+uint64_t bytes_sent = 0ULL;
+
+//static int wait_for_io ( int );
+static int socket_send ( int, struct sockaddr_in *, void *, uint32_t );
 
 #ifdef SO_SNDBUF
-static int setup_sendbuffer(int *, uint32_t);
+  static int setup_sendbuffer ( int *, uint32_t );
 #endif
 
 /**
  * Creates and configure a raw socket.
  */
-void create_socket(void)
+void create_socket ( void )
 {
   socklen_t len;
   uint32_t i, n = 1;  /* FIXME: if I indended, someday, to port
                                 this code to Solaris, I must use
-                                char to n and set to '1'.
+                                n as char type and set it to '1' (0x31).
 
                                 Must change setsockopt() calls as well. */
   int flag;
@@ -68,83 +70,87 @@ void create_socket(void)
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
            but on linux will cause an error. */
-  if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+  if ( ( fd = socket ( AF_INET, SOCK_RAW, IPPROTO_RAW ) ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot open raw socket: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot open raw socket: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot open raw socket");
+    fatal_error ( "Cannot open raw socket" );
 #endif
   }
 
   /* Try to change the socket mode to NON BLOCKING. */
-  if ((flag = fcntl(fd, F_GETFL)) == -1)
+  if ( ( flag = fcntl ( fd, F_GETFL ) ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot get socket flags: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot get socket flags: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot get socket flags");
+    fatal_error ( "Cannot get socket flags" );
 #endif
   }
 
-  if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
+  if ( fcntl ( fd, F_SETFL, flag | O_NONBLOCK ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot set socket to non-blocking mode: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot set socket to non-blocking mode: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot set socket to non-blocking mode");
+    fatal_error ( "Cannot set socket to non-blocking mode" );
 #endif
   }
 
   /* Setting IP_HDRINCL. */
   /* NOTE: We will provide the IP header, but enabling this option, on linux,
            still makes the kernel calculates the checksum and total_length. */
-  if ( setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof(n)) == -1 )
+  if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot set socket options: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot set socket options: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot set socket options");
+    fatal_error ( "Cannot set socket options" );
 #endif
   }
 
 #ifdef SO_SNDBUF
-  setup_sendbuffer(&fd, n);
+  setup_sendbuffer ( &fd, n );
 #endif
 
 #ifdef SO_BROADCAST
-  if ( setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof(n)) == -1 )
+
+  if ( setsockopt ( fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot set socket broadcast flag: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot set socket broadcast flag: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot set socket broadcast flag");
+    fatal_error ( "Cannot set socket broadcast flag" );
 #endif
   }
+
 #endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
+
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
-  if ( setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof(n)) == -1 )
+  if ( setsockopt ( fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot set socket priority: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot set socket priority: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot set socket priority");
+    fatal_error ( "Cannot set socket priority" );
 #endif
   }
+
 #endif /* SO_PRIORITY */
 }
 
 /**
  * Tiny routine used to make sure the socket file descriptor is closed.
  */
-void close_socket(void)
+void close_socket ( void )
 {
   /* Close only if the descriptor is valid. */
-  if (fd > 0)
+  if ( fd > 0 )
   {
-    close(fd);    // AS_SAFE!
+    close ( fd ); // AS_SAFE!
 
     /* Added to avoid multiple socket closing. */
     fd = -1;
@@ -159,26 +165,26 @@ void close_socket(void)
  * @param co Pointer to configurations for T50.
  * @return true (success) or false (error).
  */
-_Bool send_packet(const void *const buffer,
-                uint32_t size,
-                const config_options_T * const restrict co)
+_Bool send_packet ( const void *const buffer,
+                    uint32_t size,
+                    const config_options_T *const restrict co )
 {
   struct sockaddr_in sin =
   {
     .sin_family = AF_INET,
-    .sin_port = htons(IPPORT_RND(co->dest)),
+    .sin_port = htons ( IPPORT_RND ( co->dest ) ),
     .sin_addr.s_addr = co->ip.daddr    /* Already in network byte order! */
   };
 
-  assert(buffer != NULL);
-  assert(size > 0);
-  assert(co != NULL);
+  assert ( buffer != NULL );
+  assert ( size > 0 );
+  assert ( co != NULL );
 
   /* Use socket_send(), below. */
-  if (unlikely(socket_send(fd, &sin, (void *)buffer, size) == -1))
+  if ( unlikely ( socket_send ( fd, &sin, ( void * ) buffer, size ) == -1 ) )
   {
-    if (errno == EPERM)
-      fatal_error("Cannot send packet (Permission!?). Please check your firewall rules (iptables?).");
+    if ( errno == EPERM )
+      fatal_error ( "Cannot send packet (Permission!?). Please check your firewall rules (iptables?)." );
 
     return false;
   }
@@ -188,39 +194,40 @@ _Bool send_packet(const void *const buffer,
 
 #ifdef SO_SNDBUF
 /* Taken from libdnet by Dug Song. */
-int setup_sendbuffer(int *fd, uint32_t n)
+int setup_sendbuffer ( int *fd, uint32_t n )
 {
   uint32_t i;
   socklen_t len;
 
   /* Getting SO_SNDBUF. */
-  len = sizeof(n);
+  len = sizeof ( n );
 
-  if ( getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &n, &len) == -1 )
+  if ( getsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &n, &len ) == -1 )
   {
 #ifndef NDEBUG
-    fatal_error("Cannot get socket buffer: \"%s\"", strerror(errno));
+    fatal_error ( "Cannot get socket buffer: \"%s\"", strerror ( errno ) );
 #else
-    fatal_error("Cannot get socket buffer");
+    fatal_error ( "Cannot get socket buffer" );
 #endif
   }
 
   /* Setting the maximum SO_SNDBUF in bytes.
    * 128      =  1 Kib
    * 10485760 = 80 Mib */
-  for (i = n + 128; i < 10485760; i += 128)
+  for ( i = n + 128; i < 10485760; i += 128 )
   {
     /* Setting SO_SNDBUF. */
     errno = 0;
-    if ( setsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(i)) == -1 )
+
+    if ( setsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof ( i ) ) == -1 )
     {
-      if (errno == ENOBUFS)
+      if ( errno == ENOBUFS )
         break;
 
 #ifndef NDEBUG
-      fatal_error("Cannot set socket buffer: \"%s\"", strerror(errno));
+      fatal_error ( "Cannot set socket buffer: \"%s\"", strerror ( errno ) );
 #else
-      fatal_error("Cannot set socket buffer");
+      fatal_error ( "Cannot set socket buffer" );
 #endif
     }
   }
@@ -231,7 +238,8 @@ int setup_sendbuffer(int *fd, uint32_t n)
      are marked as SA_RESTART, but I want to be sure! */
 
 /* NOTE: Code inspired on Apache httpd source. */
-static int wait_for_io(int fd)
+#if 0
+static int wait_for_io ( int fd )
 {
   int r;
   struct pollfd pfd = { .fd = fd, .events = POLLOUT };
@@ -239,46 +247,25 @@ static int wait_for_io(int fd)
   /* NOTE: Assume poll will not fail. */
   do
   {
-    r = poll(&pfd, 1, TIMEOUT);
-  }
-  while (unlikely(r == -1 && errno == EINTR));
+    r = poll ( &pfd, 1, TIMEOUT );
+  } while ( unlikely ( r == -1 && errno == EINTR ) );
 
   return r;
 }
+#endif
 
-/* NOTE: Code inspired on Apache httpd source. */
-static int socket_send(int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size)
+// FIXME: Maybe it is necessary to insert a counter, in case of multiple failures...
+static int socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size )
 {
   int r;
 
-  /* Tries to send the packet until it's signal interrupted. */
-  /* NOTE: Assume sendto will not fail. */
+  /* Tries to send the packet. If sendto is interrupted (not likely), tries again... */
   do
   {
-    r = sendto(fd, buffer, size, MSG_NOSIGNAL, (struct sockaddr *)saddr, sizeof(struct sockaddr_in));
-  }
-  while (unlikely(r == -1 && errno == EINTR));
+    if ( ( r = sendto ( fd, buffer, size, MSG_NOSIGNAL, ( struct sockaddr * ) saddr, sizeof ( struct sockaddr_in ) ) ) > 0 )
+      bytes_sent += size;
+  } while ( unlikely ( r == -1 && errno == EINTR ) );
 
-  /* If it wasn't interrupted, tries to send the packet again. */
-  /* NOTE: Assume previous sendto will not fail. */
-  while (unlikely(r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)))
-  {
-    do
-    {
-      if ((r = wait_for_io(fd)) == -1)
-        goto socket_send_exit;
-    }
-    while (unlikely(!r));
-
-    /* ... and tries to send again. */
-    do
-    {
-      r = sendto(fd, buffer, size, MSG_NOSIGNAL, (struct sockaddr *)saddr, sizeof(struct sockaddr_in));
-    }
-    while (unlikely(r == -1 && errno == EINTR));
-  }
-
-socket_send_exit:
   return r;
 }
 
@@ -292,7 +279,7 @@ socket_send_exit:
  * @param name The name, as in "www.target.com"...
  * @return IPv4 address found (in network order), or 0 if not found.
  */
-in_addr_t resolv(char *name)
+in_addr_t resolv ( char *name )
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -304,36 +291,31 @@ in_addr_t resolv(char *name)
   in_addr_t addr = 0;
   int err;
 
-  assert(name != NULL);
+  assert ( name != NULL );
 
-  if ((err = getaddrinfo(name, NULL, &hints, &res0)) != 0)
+  if ( ( err = getaddrinfo ( name, NULL, &hints, &res0 ) ) != 0 )
   {
-    if (res0)
-      freeaddrinfo(res0);
+    if ( res0 )
+      freeaddrinfo ( res0 );
 
-    error("Error on resolv(). getaddrinfo() reports: %s.", gai_strerror(err));
+    error ( "Error on resolv(). getaddrinfo() reports: %s.", gai_strerror ( err ) );
   }
 
   /* scan all the list. */
-  for (res = res0; res; res = res->ai_next)
-  {
-    switch (res->ai_family)
+  for ( res = res0; res && !addr; res = res->ai_next )
+    switch ( res->ai_family )
     {
-    case AF_INET:
-      addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
-      goto end_loop;
+      case AF_INET:
+        addr = ( ( struct sockaddr_in * ) res->ai_addr )->sin_addr.s_addr;
+        break;
 
-    // FIXME: This is probably wrong!
-    case AF_INET6:
-      if (!addr)
-        addr = ((struct sockaddr_in6 *)res->ai_addr)->sin6_addr.s6_addr32[3];
+      // FIXME: This is probably wrong!
+      case AF_INET6:
+        addr = ( ( struct sockaddr_in6 * ) res->ai_addr )->sin6_addr.s6_addr32[3];
     }
-  }
-end_loop:
 
   // Free the linked list.
-  if (res0)
-    freeaddrinfo(res0);
+  freeaddrinfo ( res0 );
 
   return addr;
 }

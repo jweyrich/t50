@@ -23,6 +23,6 @@
 
 #include <stdint.h>
 
-void shuffle(uint32_t *, uint32_t);
+void shuffle ( uint32_t *, uint32_t );
 
 #endif

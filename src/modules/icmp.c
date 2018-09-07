@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void icmp(const config_options_T *const restrict co, uint32_t * restrict size)
+void icmp ( const config_options_T *const restrict co, uint32_t *restrict size )
 {
   uint32_t greoptlen;   /* GRE options size. */
 
@@ -46,45 +46,45 @@ void icmp(const config_options_T *const restrict co, uint32_t * restrict size)
   /* ICMP header. */
   struct icmphdr *icmp;
 
-  assert(co != NULL);
+  assert ( co != NULL );
 
-  greoptlen = gre_opt_len(co);
-  *size = sizeof(struct iphdr)   +
-          sizeof(struct icmphdr) +
+  greoptlen = gre_opt_len ( co );
+  *size = sizeof ( struct iphdr )   +
+          sizeof ( struct icmphdr ) +
           greoptlen;
 
   /* Try to reallocate packet, if necessary */
-  alloc_packet(*size);
+  alloc_packet ( *size );
 
   /* IP Header structure making a pointer to Packet. */
-  ip = ip_header(packet, *size, co);
+  ip = ip_header ( packet, *size, co );
 
   /* GRE Encapsulation takes place. */
-  gre_encapsulation(packet, co,
-                    sizeof(struct iphdr) +
-                    sizeof(struct icmphdr));
+  gre_encapsulation ( packet, co,
+                      sizeof ( struct iphdr ) +
+                      sizeof ( struct icmphdr ) );
 
   /* ICMP Header structure making a pointer to Packet. */
-  icmp                   = (struct icmphdr *)((unsigned char *)(ip + 1) + greoptlen);
+  icmp                   = ( struct icmphdr * ) ( ( unsigned char * ) ( ip + 1 ) + greoptlen );
   icmp->type             = co->icmp.type;
   icmp->code             = co->icmp.code;
-  icmp->un.echo.id       = __RND(co->icmp.id);
-  icmp->un.echo.sequence = __RND(co->icmp.sequence);
+  icmp->un.echo.id       = __RND ( co->icmp.id );
+  icmp->un.echo.sequence = __RND ( co->icmp.sequence );
 
-  if (co->icmp.type == ICMP_REDIRECT)
-    switch (co->icmp.code)
+  if ( co->icmp.type == ICMP_REDIRECT )
+    switch ( co->icmp.code )
     {
-    case ICMP_REDIR_HOST:
-    case ICMP_REDIR_NET:
-      icmp->un.gateway = INADDR_RND(co->icmp.gateway);
+      case ICMP_REDIR_HOST:
+      case ICMP_REDIR_NET:
+        icmp->un.gateway = INADDR_RND ( co->icmp.gateway );
     }
 
   icmp->checksum = 0; // needed!
 
   /* Computing the checksum. */
-  icmp->checksum = co->bogus_csum ? RANDOM() : 
-                   htons(cksum(icmp, sizeof(struct icmphdr)));
+  icmp->checksum = co->bogus_csum ? RANDOM() :
+                   htons ( cksum ( icmp, sizeof ( struct icmphdr ) ) );
 
   /* GRE Encapsulation takes place. */
-  gre_checksum(packet, co, *size);
+  gre_checksum ( packet, co, *size );
 }

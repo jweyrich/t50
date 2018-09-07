@@ -23,20 +23,20 @@
 #include <t50_modules.h>
 
 /** Common options help function. */
-void general_help(void)
+void general_help ( void )
 {
-  puts("Common Options:\n"
-       "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
-       "    --flood                   This option supersedes the \'threshold\'\n"
-       "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
-       " -B,--bogus-csum              Bogus checksum                   (default OFF)\n"
-       "    --shuffle                 Shuffling for T50 protocol       (default OFF)\n"
-       " -q,--quiet                   Disable INFOs\n"
+  puts ( "Common Options:\n"
+         "    --threshold NUM           Threshold of packets to send     (default 1000)\n"
+         "    --flood                   This option supersedes the \'threshold\'\n"
+         "    --encapsulated            Encapsulated protocol (GRE)      (default OFF)\n"
+         " -B,--bogus-csum              Bogus checksum                   (default OFF)\n"
+         "    --shuffle                 Shuffling for T50 protocol       (default OFF)\n"
+         " -q,--quiet                   Disable INFOs\n"
 #ifdef  __HAVE_TURBO__
-       "    --turbo                   Extend the performance           (default OFF)\n"
+         "    --turbo                   Extend the performance           (default OFF)\n"
 #endif  /* __HAVE_TURBO__ */
-       " -l,--list-protocols          List all available protocols\n"
-       " -v,--version                 Print version and exit\n"
-       " -h,--help                    Display this help and exit\n");
+         " -l,--list-protocols          List all available protocols\n"
+         " -v,--version                 Print version and exit\n"
+         " -h,--help                    Display this help and exit\n" );
 }
 

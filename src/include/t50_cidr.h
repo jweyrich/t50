@@ -36,6 +36,6 @@ struct cidr
   in_addr_t __1st_addr;   /* first IP address  */
 };
 
-struct cidr *config_cidr(const config_options_T * const restrict);
+struct cidr *config_cidr ( const config_options_T *const restrict );
 
 #endif

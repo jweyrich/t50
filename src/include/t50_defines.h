@@ -22,6 +22,7 @@
 #define __DEFINES_INCLUDED__
 
 #define _NOINLINE __attribute__((noinline))
+#define _INIT __attribute__((constructor))
 
 /**
  * Amount of time, in seconds, to wait for child process termination.
@@ -64,24 +65,25 @@
          over another, depending how likely or ulikely the criteria is true
          or false!. No actual hardware hints are emitted. */
 #ifndef unlikely
-#define unlikely(c) __builtin_expect(!!(c), 0)
+  #define unlikely(c) __builtin_expect(!!(c), 0)
 #endif
 #ifndef likely
-#define likely(c) __builtin_expect(!!(c), 1)
+  #define likely(c) __builtin_expect(!!(c), 1)
 #endif
 
 #define swap(a,b) { typeof((a)) t; t = (a); (a) = (b); (b) = t; }
+#define SAFE_FREE(ptr) { if ((ptr)) { free((ptr)); (ptr) = NULL; } }
 
 #ifdef USE_ANSI
-#define ERROR "\x1b[31m[ERROR]\x1b[0m"
-#define FATAL "\x1b[31;1m[FATAL]\x1b[0m"
-#define INFO  "\x1b[33;1m[INFO]\x1b[0m "
-#define DEBUG "\x1b[34m[DEBUG]\x1b[0m"
+  #define ERROR "\x1b[31m[ERROR]\x1b[0m"
+  #define FATAL "\x1b[31;1m[FATAL]\x1b[0m"
+  #define INFO  "\x1b[33;1m[INFO]\x1b[0m "
+  #define DEBUG "\x1b[34m[DEBUG]\x1b[0m"
 #else
-#define ERROR "[ERROR]"
-#define FATAL "[FATAL]"
-#define INFO  "[INFO] "
-#define DEBUG "[DEBUG]"
+  #define ERROR "[ERROR]"
+  #define FATAL "[FATAL]"
+  #define INFO  "[INFO] "
+  #define DEBUG "[DEBUG]"
 #endif
 
 #endif

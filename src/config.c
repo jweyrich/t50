@@ -52,15 +52,15 @@ static int                                check_if_option ( char * );
 static int                                check_if_nul_option ( char * );
 static void                               check_options_rules ( const config_options_T * );
 _NOINLINE static struct options_table_s *find_option ( char * );
-static void                               set_config_option ( config_options_T * restrict, char * restrict, int, char * restrict );
-_NOINLINE static uint32_t                 toULong ( char * restrict, char * restrict );
-_NOINLINE static uint32_t                 toULongCheckRange ( char * restrict, char * restrict, uint32_t, uint32_t );
+static void                               set_config_option ( config_options_T *restrict, char *restrict, int, char *restrict );
+_NOINLINE static uint32_t                 toULong ( char *restrict, char *restrict );
+_NOINLINE static uint32_t                 toULongCheckRange ( char *restrict, char *restrict, uint32_t, uint32_t );
 _NOINLINE static void                     check_list_separators ( char *, char * );
-static void                               set_destination_addresses ( char * restrict, config_options_T * restrict );
+static void                               set_destination_addresses ( char *restrict, config_options_T *restrict );
 static void                               list_protocols ( void );
 static void                               set_default_protocol ( config_options_T * );
-static void                               get_ip_protocol ( config_options_T * restrict, char * restrict );
-static _Bool                              get_ip_and_cidr_from_string ( char const * const, addr_T * );
+static void                               get_ip_protocol ( config_options_T *restrict, char *restrict );
+static _Bool                              get_ip_and_cidr_from_string ( char const *const, addr_T * );
 _NOINLINE static int                      get_dual_values ( char *, unsigned long *, unsigned long *, unsigned long, int, char, char * );
 static int                                check_threshold ( const config_options_T *const restrict );
 static int                                check_for_valid_option ( int, int * );
@@ -682,7 +682,7 @@ void check_options_rules ( const config_options_T *co )
 }
 
 /* Get the IP PROTOCOL. */
-void get_ip_protocol ( config_options_T * restrict co, char * restrict arg )
+void get_ip_protocol ( config_options_T *restrict co, char *restrict arg )
 {
   /* T50 protocol is a special case! It isn't in modules table! */
   if ( !strcasecmp ( arg, "T50" ) )
@@ -716,7 +716,7 @@ void get_ip_protocol ( config_options_T * restrict co, char * restrict arg )
   }
 }
 
-void set_destination_addresses ( char * restrict arg, config_options_T * restrict co )
+void set_destination_addresses ( char *restrict arg, config_options_T *restrict co )
 {
   char *p;
   addr_T addr;
@@ -743,7 +743,7 @@ void set_destination_addresses ( char * restrict arg, config_options_T * restric
 }
 
 /* Setup an option. */
-void set_config_option ( config_options_T * restrict co, char * restrict optname, int optid, char * restrict arg )
+void set_config_option ( config_options_T *restrict co, char *restrict optname, int optid, char *restrict arg )
 {
   uint32_t counter;
   char *tmp_ptr;
@@ -1755,7 +1755,7 @@ void set_config_option ( config_options_T * restrict co, char * restrict optname
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-uint32_t toULong ( char * restrict optname, char * restrict value )
+uint32_t toULong ( char *restrict optname, char *restrict value )
 {
   unsigned long n;
 
@@ -1771,21 +1771,21 @@ uint32_t toULong ( char * restrict optname, char * restrict value )
   n = strtoul ( value, NULL, 0 );
 
   // FIX: Check for greater values then 2³²-1 too.
-  if ( errno || ( n & ( ( uint64_t )__UINT32_MAX__ << 32 ) ) )
+  if ( errno || ( n & ( ( uint64_t ) __UINT32_MAX__ << 32 ) ) )
   {
-error_exit:
+  error_exit:
     fatal_error ( "Invalid numeric value for option '%s'.", optname );
     // we'll never get here, return 0 just in case!
     return 0;
   }
 
-  return ( uint32_t )n;
+  return ( uint32_t ) n;
 }
 
 /* Tries to convert string to uint32_t, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-uint32_t toULongCheckRange ( char * restrict optname, char * restrict value, uint32_t min, uint32_t max )
+uint32_t toULongCheckRange ( char *restrict optname, char *restrict value, uint32_t min, uint32_t max )
 {
   uint32_t n;
 
@@ -2069,7 +2069,7 @@ int check_for_valid_option ( int opt, int *list )
   assert ( opt > 0 );
 
   // If the first item is negative, all options are valid!
-  if ( list != NULL )
+  if ( list )
   {
     // Scan the valid options list and cheks if 'option' is in it.
     for ( ; *list; list++ )
