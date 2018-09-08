@@ -48,7 +48,7 @@ uint64_t bytes_sent = 0ULL;
 uint64_t packets_sent = 0ULL;
 
 //static int wait_for_io ( int );
-static int socket_send ( int, struct sockaddr_in *, void *, uint32_t );
+static ssize_t socket_send ( int, struct sockaddr_in *, void *, uint32_t );
 
 #ifdef SO_SNDBUF
   static int setup_sendbuffer ( int *, uint32_t );
@@ -264,22 +264,27 @@ static int wait_for_io ( int fd )
 #endif
 
 // FIXME: Maybe it is necessary to insert a counter, in case of multiple failures...
-static int socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size )
+static ssize_t socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size )
 {
-  int r;
+  ssize_t r;
 
-  /* Tries to send the packet. If sendto is interrupted (not likely), tries again... */
-  do
+  /* sendto can set errno to EINTR if a signal interrupts the syscall or
+     EAGAIN (or EWOULDBLOCK) if there is no room in the send buffer. */
+retry:
+  errno = 0;
+  r = sendto ( fd, buffer, size, MSG_NOSIGNAL, ( struct sockaddr * ) saddr, sizeof ( struct sockaddr_in ) );
+
+  switch ( errno )
   {
-    errno = 0;
-    if ( ( r = sendto ( fd, buffer, size, MSG_NOSIGNAL, ( struct sockaddr * ) saddr, sizeof ( struct sockaddr_in ) ) ) > 0 )
-    {
-      // FIX: EAGAIN or EWOULDBLOCK will occur to non-blocking sockets if
-      // there is no space available on sending buffer.
-      if ( errno != EAGAIN )
-        bytes_sent += size;
-    }
-  } while ( unlikely ( r == -1 && errno == EINTR ) );
+    case EINTR:
+    case EAGAIN:
+#if EWOULDBLOCK != EAGAIN
+    case EWOULDBLOCK:
+#endif
+      goto retry;
+  }
+
+  bytes_sent += size;
 
   return r;
 }
