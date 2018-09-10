@@ -6,7 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
-T58 5.8.1 - Sep 4th, 2018
+T50 5.8.2 - Sep 10th, 2018
+ - cksum() RFC 1071 compliance and endianess fixes.
+
+T50 5.8.1 - Sep 4th, 2018
  * Some routines were simplified to increase performance.
  + Display Statistics on process termination: Number of packets and throughput (experimental).
    (each process will print their statistics preceeded by [PID:...]).

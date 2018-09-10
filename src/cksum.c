@@ -26,38 +26,32 @@
  *
  * RFC 1071 compliant checksum routine.
  *
- * @param data Pointer to buffer.
- * @param length Length of the buffer.
- * @return 16 bits checksum.
+ * FIXED: last implementation was WRONG... I can't find any faster way to do this!
+ *        Yet... There was another error that didn't consider BIG ENDIAN machines...
+ *        Note to myself: Don't mess with this routine again!
  */
-// FIX: Changed to 32 bit length 'cause it's faster!
 uint16_t cksum ( void *data, uint32_t length )
 {
+  uint16_t *ptr;
   uint32_t sum;
-  uint16_t *p = data;
-  _Bool rem;
 
   sum = 0;
-  rem = length & 1; // if there is a remaining byte this will be true.
-  length >>= 1;     // lenth contains # of words.
+  for ( ptr = data; length > 1; length -= 2 )
+    sum += *ptr++;
 
-  /* Accumulate all 16 bit words on buffer. */
-  while ( length-- )
-    sum += *p++;
+  // if there is any additional bytes remaining...
+  if ( length > 0 )
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+   sum += (uint16_t)(*(uint8_t *)ptr) << 8;   // last byte must be
+                                              // aligned to upper 8 bits.
+#else
+   sum += *(uint8_t *)ptr;
+#endif
 
-  /* Is there a single byte remaining? */
-  if ( rem )
-    sum += * ( uint8_t * ) p;
+  // Add carry-outs...
+  while ( sum >> 16 )
+    sum = ( sum & 0xffffU ) + ( sum >> 16 );
 
-  /* Accumulate 16 bits carry-outs.*/
-
-  // FIX: Don't need the loop. A 16 MiB buffer full of 0xff will overflow the 32bit sum,
-  //      but we're dealing with much smalled buffers.
-  if ( sum > 0xffff )
-  {
-    sum = ( sum & 0xffff ) + ( sum >> 16 );
-    sum += ( sum >> 16 );
-  }
-
+  // NOTE: Let the caller put this in network order, if necessary!
   return ~sum;
 }
