@@ -2,10 +2,7 @@
 #define __RANDOMIZER_H__
 
 #include <stdint.h>
-
-#if !defined(__GNUC__) || (__STDC_VERSION__ < 201112)
-  #error "Need GCC with C11 standard support to compile!"
-#endif
+#include <configuration.h>
 
 /* Randomizer macros and function */
 /* NOTE: int8_t, int16_t, int32_t are synonimous of
@@ -14,6 +11,7 @@
 /* Sometipes, v is a bitfield and NOT compatible with primitive types.
    Because of this, the default selector is necessary! */
 /* RANDOM call results have not endianess! */
+
 #define __RND(v) _Generic((v), \
                           _Bool: (!!(v) ? (v) : RANDOM()),           \
                           int8_t: (!!(v) ? (v) : RANDOM()),          \

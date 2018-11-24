@@ -10,9 +10,8 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION=5.8.2
+VERSION=5.8.3
 
-# Change it to clang if you feel lucky!
 CC=gcc
 LD=$(CC)
 
@@ -20,6 +19,14 @@ INCLUDEDIR=src/include
 CFLAGS=-std=gnu11
 LDFLAGS=
 LDLIBS=
+
+# Check GCC version (must be 5 or greater)
+# OBS: This makes compilation GCC dependent (cannot use clang).
+#      If you are feeling lucky, comment these lines and change CC to 'clang'.
+GCCVERSION=$(shell expr "`gcc -dumpversion | sed -n 's/^\([0-9]\+\)\.*.*$$/\1/p'`" \>= 5)
+ifeq "$(GCCVERSION)" "0"
+  $(error "T50 will compile only with GCC 5 or greater")
+endif
 
 # Just define DEBUG environment var to compile for debugging:
 #

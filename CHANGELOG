@@ -6,6 +6,9 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.8.3 - Nov 24th, 2018
+  - Makefile now checks GCC version (5 or greater needed!)
+
 T50 5.8.2 - Sep 10th, 2018
  - cksum() RFC 1071 compliance and endianess fixes.
 
