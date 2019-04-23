@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <time.h>
 #include <locale.h>
+#include <termios.h>
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -50,6 +51,7 @@
 static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
 static double t0;
+static int echo_enabled = 1;
 
 _NOINLINE static void               initialize ( const config_options_T * );
 _NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
@@ -286,6 +288,13 @@ void initialize ( const config_options_T *co )
 {
   static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
   static sigset_t sigset;
+  struct termios tios;
+
+  /* Hide ^X char output from terminal */
+  tcgetattr( STDOUT_FILENO, &tios );
+  if ( echo_enabled = tios.c_lflag & ECHO )
+    tios.c_lflag &= ~ECHO;
+  tcsetattr( STDOUT_FILENO, TCSANOW, &tios );
 
   /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigemptyset ( &sigset );
@@ -371,5 +380,18 @@ void show_statistics( void )
             packets_sent, 
             bytes_sent, 
             (double)packets_sent/(t1 - t0) );
+  }
+}
+
+__attribute__((destructor))
+static void dtor( void ) 
+{
+  struct termios tios;
+
+  if ( echo_enabled )
+  {
+    tcgetattr( STDOUT_FILENO, &tios );
+    tios.c_lflag |= ECHO;
+    tcsetattr( STDOUT_FILENO, TCSANOW, &tios );
   }
 }
