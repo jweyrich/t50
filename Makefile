@@ -12,7 +12,7 @@
 
 VERSION=5.8.4
 
-CC=gcc
+#CC=gcc
 LD=$(CC)
 
 INCLUDEDIR=src/include
