@@ -50,7 +50,7 @@ void alloc_packet ( uint32_t new_packet_size )
 
   /* Realloc only ig the new packet size is greater than the old. */
   /* NOTE: Assume the condition is false the majority of time. */
-  if ( unlikely ( new_packet_size > current_packet_size ) )
+  if ( new_packet_size > current_packet_size )
   {
     /* Tries to reallocate memory. */
     /* NOTE: Assume realloc will not fail. */

@@ -202,7 +202,7 @@ void ospf ( const config_options_T *const restrict co, uint32_t *restrict size )
 
       /* Dealing with neighbor address(es). */
       /* NOTE: Assume co->ospf.neighbor > 0. */
-      for ( counter = 0; likely ( counter < co->ospf.neighbor ); counter++ )
+      for ( counter = 0; counter < co->ospf.neighbor; counter++ )
         *buffer.inaddr_ptr++ = INADDR_RND ( co->ospf.address[counter] );
 
       break;
@@ -392,7 +392,7 @@ build_ospf_lsupdate:
   stemp = auth_hmac_md5_len ( co->ospf.auth );
 
   /* NOTE: Assume stemp > 0. */
-  for ( counter = 0; likely ( counter < stemp ); counter++ )
+  for ( counter = 0; counter < stemp; counter++ )
     *buffer.byte_ptr++ = RANDOM();
 
   /*
@@ -482,7 +482,7 @@ build_ospf_lsupdate:
         stemp = auth_hmac_md5_len ( co->ospf.auth );
 
         /* NOTE: Assume stemp > 0. */
-        for ( counter = 0; likely ( counter < stemp ); counter++ )
+        for ( counter = 0; counter < stemp; counter++ )
           *buffer.byte_ptr++ = RANDOM();
 
         /*

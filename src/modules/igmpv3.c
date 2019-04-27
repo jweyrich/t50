@@ -93,7 +93,7 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
     buffer.ptr = igmpv3_grec + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for ( counter = 0; likely ( counter < co->igmp.sources ); counter++ )
+    for ( counter = 0; counter < co->igmp.sources; counter++ )
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
 
     /* Computing the checksum. */
@@ -119,7 +119,7 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
     buffer.ptr = igmpv3_query + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for ( counter = 0; likely ( counter < co->igmp.sources ); counter++ )
+    for ( counter = 0; counter < co->igmp.sources; counter++ )
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
 
     /* Computing the checksum. */

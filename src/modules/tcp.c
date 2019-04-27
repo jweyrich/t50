@@ -93,7 +93,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
    * Of this, 20 bytes are taken up by non-options fields of the TCP header,  which
    * leaves 40 bytes (TCP header * 2) for options.
    */
-  if ( unlikely ( tcpopt > ( sizeof ( struct tcphdr ) * 2 ) ) )
+  if ( tcpopt > ( sizeof ( struct tcphdr ) * 2 ) )
     fatal_error ( "%s() - TCP option size (%zu bytes) is bigger than two times the TCP header size.",
                   __FUNCTION__, tcpopt );
 
@@ -392,7 +392,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
     stemp = auth_hmac_md5_len ( co->tcp.md5 );
 
     /* NOTE: Assume stemp > 0. */
-    for ( counter = 0; likely ( counter < stemp ); counter++ )
+    for ( counter = 0; counter < stemp; counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 
@@ -431,7 +431,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
     stemp = auth_hmac_md5_len ( co->tcp.auth );
 
     /* NOTE: Assume stemp > 0. */
-    for ( counter = 0; likely ( counter < stemp ); counter++ )
+    for ( counter = 0; counter < stemp; counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 

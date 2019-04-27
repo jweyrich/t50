@@ -557,7 +557,7 @@ void rsvp ( const config_options_T *const restrict co, uint32_t *restrict size )
 
       /* Dealing with scope address(es). */
       /* NOTE: Assume co->rsvp.scope > 0. */
-      for ( counter = 0; likely ( counter < co->rsvp.scope ) ; counter++ )
+      for ( counter = 0; counter < co->rsvp.scope; counter++ )
         *buffer.inaddr_ptr++ = INADDR_RND ( co->rsvp.address[counter] );
     }
 

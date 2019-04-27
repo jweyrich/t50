@@ -188,7 +188,7 @@ _Bool send_packet ( const void *const buffer,
   assert ( co != NULL );
 
   /* Use socket_send(), below. */
-  if ( unlikely ( socket_send ( fd, &sin, ( void * ) buffer, size ) == -1 ) )
+  if ( socket_send ( fd, &sin, ( void * ) buffer, size ) == -1 )
   {
     if ( errno == EPERM )
       fatal_error ( "Cannot send packet (Permission!?). Please check your firewall rules (iptables?)." );
@@ -257,7 +257,7 @@ static int wait_for_io ( int fd )
   do
   {
     r = poll ( &pfd, 1, TIMEOUT );
-  } while ( unlikely ( r == -1 && errno == EINTR ) );
+  } while ( r == -1 && errno == EINTR );
 
   return r;
 }

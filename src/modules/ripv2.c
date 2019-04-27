@@ -237,7 +237,7 @@ void ripv2 ( const config_options_T *const restrict co, uint32_t *restrict size 
     size = auth_hmac_md5_len ( co->rip.auth );
 
     /* NOTE: Assume size > 0. */
-    for ( counter = 0; likely ( counter < size ); counter++ )
+    for ( counter = 0; counter < size; counter++ )
       *buffer.byte_ptr++ = RANDOM();
   }
 

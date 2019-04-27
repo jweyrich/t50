@@ -200,7 +200,7 @@ int main ( int argc, char *argv[] )
 #endif
 
     /* Try to send the packet. */
-    if ( unlikely ( !send_packet ( packet, size, co ) ) )
+    if ( ! send_packet ( packet, size, co ) )
 #ifndef NDEBUG
       error ( "Packet for protocol %s (%zu bytes long) not sent", ptbl->name, size );
 
