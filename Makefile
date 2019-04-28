@@ -13,20 +13,17 @@
 VERSION=5.8.4
 
 #CC=gcc
+#
+# OBS: T50 will compile only on GCC 5 or above. If you are feeling lucky,
+#      try GCC 4.9 or CLANG... But I don't recomended.
+#
+
 LD=$(CC)
 
 INCLUDEDIR=src/include
 CFLAGS=-std=gnu11
 LDFLAGS=
 LDLIBS=
-
-# Check GCC version (must be 5 or greater)
-# OBS: This makes compilation GCC dependent (cannot use clang).
-#      If you are feeling lucky, comment these lines and change CC to 'clang'.
-GCCVERSION=$(shell expr "`gcc -dumpversion | sed -n 's/^\([0-9]\+\)\.*.*$$/\1/p'`" \>= 5)
-ifeq "$(GCCVERSION)" "0"
-  $(error "T50 will compile only with GCC 5 or greater")
-endif
 
 # Just define DEBUG environment var to compile for debugging:
 #
@@ -38,33 +35,29 @@ else
   # Optimization level 2 (better results) and no canaries.
   CFLAGS += -O2 -DNDEBUG
 
+  # strip symbols and turn more linker optimizations on (if available).
+  LDFLAGS += -flto -s -O2
+
   ARCHITECTURE = $(shell arch)
 
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
     CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
-    LDFLAGS += -flto
   endif
   # Options for i386
   ifeq ($(ARCHITECTURE),i686)
     CFLAGS += -march=native -flto -fno-stack-protector
-    LDFLAGS += -flto
   endif
 
 	# TODO: tunning for cortex-a#?
   # Options for ARMv7-a
   ifneq ($(findstr armv7,$(ARCHITECTURE)),)
     CFLAGS += -march=armv7-a -fno-stack-protector -flto
-    LDFLAGS += -flto
   endif
   # Options for ARMv8-a
   ifneq ($(findstr armv8,$(ARCHITECTURE)),)
     CFLAGS += -march=armv8-a -fno-stack-protector -flto
-    LDFLAGS += -flto
   endif
-
-  # strip symbols and turn more linker optimizations on (if available).
-  LDFLAGS += -s -O2
 endif
 
 CFLAGS += -I $(INCLUDEDIR) -std=gnu11
