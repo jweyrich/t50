@@ -2,7 +2,6 @@
 
 # Checks if all necessary dependencies are in place.
 unset ERROR
-if ! which gcc > /dev/null 2>&1;  then echo 'gcc needed...'; ERROR=1; fi
 if ! which make > /dev/null 2>&1; then echo 'make needed...'; ERROR=1; fi
 if ! which gzip > /dev/null 2>&1; then echo 'gzip needed...'; ERROR=1; fi
 
