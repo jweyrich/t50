@@ -55,7 +55,7 @@ static int echo_enabled = 1;
 
 _NOINLINE static void               initialize ( const config_options_T * );
 _NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
-static void show_statistics( void );
+static void show_statistics ( void );
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -66,11 +66,11 @@ static void show_statistics( void );
 int main ( int argc, char *argv[] )
 {
   config_options_T *co;
-  struct cidr           *cidr_ptr;
-  modules_table_T       *ptbl;
-  int                   proto;
-  time_t                lt;
-  struct timeval        tv;
+  struct cidr      *cidr_ptr;
+  modules_table_T  *ptbl;
+  int              proto;
+  time_t           lt;
+  struct timeval   tv;
 
   // default C (US) locale...
   setlocale ( LC_ALL, "C" );
@@ -122,7 +122,7 @@ int main ( int argc, char *argv[] )
     }
   }
 
-  printf( INFO "PID=%u\n", getpid() );
+  printf ( INFO "PID=%u\n", getpid() );
 
 #endif  /* __HAVE_TURBO__ */
 
@@ -153,7 +153,7 @@ int main ( int argc, char *argv[] )
 
   /* Preallocate packet buffer. */
   alloc_packet ( INITIAL_PACKET_SIZE );
-  atexit( destroy_packet_buffer );
+  atexit ( destroy_packet_buffer );
 
   /* Selects the initial protocol to use. */
   if ( co->ip.protocol != IPPROTO_T50 )
@@ -168,9 +168,10 @@ int main ( int argc, char *argv[] )
   /* MAIN LOOP */
   // OBS: flood means non stop injection.
   //      threshold is the number of packets to inject.
-  gettimeofday( &tv, NULL );
+  gettimeofday ( &tv, NULL );
   t0 = tv.tv_usec * 1e-6 + tv.tv_sec;
-  atexit( show_statistics );
+  atexit ( show_statistics );
+
   while ( co->flood || co->threshold )
   {
     /* Will hold the actual packet size after module function call. */
@@ -271,6 +272,7 @@ static void signal_handler ( int signal )
     case SIGALRM:
       if ( !IS_CHILD_PID ( pid ) )
         kill ( pid, SIGKILL );
+
       return;
 
     case SIGCHLD:
@@ -291,10 +293,12 @@ void initialize ( const config_options_T *co )
   struct termios tios;
 
   /* Hide ^X char output from terminal */
-  tcgetattr( STDOUT_FILENO, &tios );
+  tcgetattr ( STDOUT_FILENO, &tios );
+
   if ( echo_enabled = tios.c_lflag & ECHO )
     tios.c_lflag &= ~ECHO;
-  tcsetattr( STDOUT_FILENO, TCSANOW, &tios );
+
+  tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 
   /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigemptyset ( &sigset );
@@ -353,7 +357,7 @@ modules_table_T *selectProtocol ( const config_options_T *restrict co, int *rest
   return ptbl;
 }
 
-void show_statistics( void )
+void show_statistics ( void )
 {
   struct timeval tv;
 
@@ -361,7 +365,7 @@ void show_statistics( void )
   //        A bunch of microseconds (maybe milisseconds) will
   //        be accounted as the finalization queue routines
   //        are dispatched.
-  gettimeofday( &tv, NULL );
+  gettimeofday ( &tv, NULL );
 
   // FIX: We'll make sure the socket is closed here!
   close_socket();
@@ -374,24 +378,23 @@ void show_statistics( void )
     t1 = tv.tv_usec * 1e-6 + tv.tv_sec;
 
     pid = getpid();
-    printf( INFO "(PID:%1$u) packets:    %2$" PRIu64 " (%3$" PRIu64 " bytes sent).\n"
-            INFO "(PID:%1$u) throughput: %4$.2f packets/second.\n",
-            pid, 
-            packets_sent, 
-            bytes_sent, 
-            (double)packets_sent/(t1 - t0) );
+    printf ( INFO "(PID:%1$u) packets:    %2$" PRIu64 " (%3$" PRIu64 " bytes sent).\n"
+             INFO "(PID:%1$u) throughput: %4$.2f packets/second.\n",
+             pid,
+             packets_sent,
+             bytes_sent,
+             ( double ) packets_sent / ( t1 - t0 ) );
   }
 }
 
-__attribute__((destructor))
-static void dtor( void ) 
+_FINI static void dtor ( void )
 {
   struct termios tios;
 
   if ( echo_enabled )
   {
-    tcgetattr( STDOUT_FILENO, &tios );
+    tcgetattr ( STDOUT_FILENO, &tios );
     tios.c_lflag |= ECHO;
-    tcsetattr( STDOUT_FILENO, TCSANOW, &tios );
+    tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
   }
 }

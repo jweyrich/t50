@@ -23,6 +23,7 @@
 
 #define _NOINLINE __attribute__((noinline))
 #define _INIT __attribute__((constructor))
+#define _FINI __attribute__((destructor))
 
 /**
  * Amount of time, in seconds, to wait for child process termination.

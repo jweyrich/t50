@@ -70,7 +70,7 @@ struct iphdr *ip_header ( void *buffer,
   ip->ttl      = co->ip.ttl;
   ip->protocol = co->encapsulated ? IPPROTO_GRE : co->ip.protocol;
   ip->saddr    = INADDR_RND ( co->ip.saddr );
-  ip->daddr    = co->ip.daddr;    // FIXME: Is this already BIG ENDIAN?
+  ip->daddr    = co->ip.daddr;
   ip->check    = 0;               // NOTE: it will be calculated by the kernel!
 
   // FIXME: In case this code will be ported to other OSses,

@@ -420,7 +420,7 @@ static struct options_table_s options[] =
   { OPTION_OSPF_AUTH_SEQUENCE,       0,  "ospf-auth-sequence",   1 },
 
   /* Last item must be all zeroes. */
-  { 0, 0, NULL, 0 }
+  { 0 }
 };
 #pragma GCC diagnostic pop
 

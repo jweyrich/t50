@@ -444,7 +444,6 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
 
   /* Fill PSEUDO Header structure. */
   pseudo           = buffer.ptr;
-
   if ( co->encapsulated )
   {
     pseudo->saddr    = gre_ip->saddr;
@@ -460,6 +459,8 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
   pseudo->protocol = co->ip.protocol;
   pseudo->len      = htons ( length );
 
+  // FIXME: Maybe it is safer to do:
+  //  length = (uint32_t)((void *)(pseudo+1) - (void *)tcp);
   length += sizeof ( struct psdhdr );
 
   /* Computing the checksum. */
