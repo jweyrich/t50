@@ -36,7 +36,10 @@ void shuffle ( uint32_t *p, uint32_t size )
     //       main loop iterations. This division will not
     //       slow things down very much...
     j = ( RANDOM() % ( size - i ) ) + i;
-    swap ( p[i], p[j] );
+
+    // we need to swap only different positions.
+    if ( i != j )
+      swap ( p[i], p[j] );
   }
 }
 
