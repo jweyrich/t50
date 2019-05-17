@@ -165,13 +165,14 @@ int main ( int argc, char *argv[] )
     ptbl = &mod_table[get_index ( co )];
   }
 
-  /* MAIN LOOP */
-  // OBS: flood means non stop injection.
-  //      threshold is the number of packets to inject.
+  /* Used to calculate the time spent injecting packets */
   gettimeofday ( &tv, NULL );
   t0 = tv.tv_usec * 1e-6 + tv.tv_sec;
   atexit ( show_statistics );
 
+  /* MAIN LOOP */
+  // OBS: flood means non stop injection.
+  //      threshold is the number of packets to inject.
   while ( co->flood || co->threshold )
   {
     /* Will hold the actual packet size after module function call. */
@@ -272,7 +273,6 @@ static void signal_handler ( int signal )
     case SIGALRM:
       if ( !IS_CHILD_PID ( pid ) )
         kill ( pid, SIGKILL );
-
       return;
 
     case SIGCHLD:
@@ -280,6 +280,7 @@ static void signal_handler ( int signal )
       return;
   }
 
+  /* Every other signals will exit the process */
 
   /* The shell documentation (bash) specifies that a process,
      when exits because a signal, must return 128+signal#. */
@@ -288,8 +289,14 @@ static void signal_handler ( int signal )
 
 void initialize ( const config_options_T *co )
 {
+  /* 0 is an invalid signal! */
+  static int handled_signals[] = { SIGPIPE, SIGINT, SIGCHLD, SIGALRM, 0 };
+  int *sigsp;
+
+  /* allows libc calls to restart after a signal! */
   static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
-  static sigset_t sigset;
+  sigset_t sigset;
+
   struct termios tios;
 
   /* Hide ^X char output from terminal */
@@ -300,22 +307,23 @@ void initialize ( const config_options_T *co )
 
   tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 
-  /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigemptyset ( &sigset );
+  /* Blocks SIGTSTP avoiding ^Z behavior. */
   sigaddset ( &sigset, SIGTSTP );
-#ifdef NDEBUG
-  sigaddset ( &sigset, SIGTRAP );
-#endif
+  /* OBS: SIGSTOP cannot be caught, blocked or ignored! */
+  /*      Don't need to block SIGCONT */
+
+  /* Setup the signals block mask */
   sigprocmask ( SIG_BLOCK, &sigset, NULL );
 
   /* --- Initialize signal handlers --- */
-  /* All these signals are handled by our handle. */
+  /* All these signals are handled by our handle,
+     except those blocked previously. */
   sigfillset ( &sigset );
   sa.sa_mask = sigset;
-  sigaction ( SIGPIPE, &sa, NULL );
-  sigaction ( SIGINT,  &sa, NULL );
-  sigaction ( SIGCHLD, &sa, NULL );
-  sigaction ( SIGALRM, &sa, NULL );
+  sigsp = handled_signals;
+  while ( *sigsp )
+    sigaction( *sigsp++, &sa, NULL );
 
   /* --- To simplify things, make sure stdout is unbuffered
          (otherwise, it's line buffered). --- */
