@@ -33,7 +33,8 @@ ifdef DEBUG
 	CFLAGS += -O0 -g
 else
   # Optimization level 2 (better results) and no canaries.
-  CFLAGS += -O2 -DNDEBUG
+
+  CFLAGS += -O2 -DNDEBUG -ffast-math
 
   # strip symbols and turn more linker optimizations on (if available).
   LDFLAGS += -flto -s -O2
@@ -50,7 +51,8 @@ else
   endif
 
 	# TODO: tunning for cortex-a#?
-  # Options for ARMv7-a
+  # TODO: aarch64?!
+	# Options for ARMv7-a
   ifneq ($(findstr armv7,$(ARCHITECTURE)),)
     CFLAGS += -march=armv7-a -fno-stack-protector -flto
   endif
@@ -149,9 +151,9 @@ install:
 	fi;
 	cp bin/t50 /sbin/; cp doc/t50.8 /usr/share/man/man8/; \
 	chown root: /sbin/t50 /usr/share/man/man8; \
-	chmod 0750 /sbin/t50; \
+	chmod 4750 /sbin/t50; \
 	gzip -9 /usr/share/man/man8/t50.8; \
-	chmod 0664 /usr/share/man/man8/t50.8.gz
+	chmod 0644 /usr/share/man/man8/t50.8.gz
 
 uninstall:
 	@$(call checkifroot)
