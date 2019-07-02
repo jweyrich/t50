@@ -46,12 +46,11 @@ static uint32_t tcp_options_len ( const uint8_t, int, int );
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
+void tcp ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
   uint32_t tcpolen,     /* TCP options size. */
            tcpopt,      /* TCP options total size. */
-           length,
-           counter;
+           length;
 
   memptr_T buffer;
 
@@ -73,7 +72,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
   *size = sizeof ( struct iphdr )  +
           sizeof ( struct tcphdr ) +
           sizeof ( struct psdhdr ) +
-          tcpopt                +
+          tcpopt                   +
           length;
 
   /* Try to reallocate packet, if necessary */
@@ -197,8 +196,14 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
      *       +--------+--------+--------+--------+
      */
     if ( !co->tcp.syn )
-      for ( ; tcpolen & 3; tcpolen++ ) /* NOTE: Cannot assume anything about tcpolen. */
+    {
+      /* NOTE: Cannot assume anything about tcpolen. */
+      while ( tcpolen & 3 )
+      {
         *buffer.byte_ptr++ = TCPOPT_NOP;
+        tcpolen++;
+      }
+    }
 
     *buffer.byte_ptr++ = TCPOPT_TSOPT;
     *buffer.byte_ptr++ = TCPOLEN_TSOPT;
@@ -382,7 +387,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
    */
   if ( co->tcp.md5 )
   {
-    uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+    uint32_t stemp, counter;
 
     *buffer.byte_ptr++ = TCPOPT_MD5;
     *buffer.byte_ptr++ = TCPOLEN_MD5;
@@ -392,7 +397,8 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
     stemp = auth_hmac_md5_len ( co->tcp.md5 );
 
     /* NOTE: Assume stemp > 0. */
-    for ( counter = 0; counter < stemp; counter++ )
+    counter = 0;
+    while ( counter++ < stemp )
       *buffer.byte_ptr++ = RANDOM();
   }
 
@@ -419,7 +425,7 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
    */
   if ( co->tcp.auth )
   {
-    uint32_t stemp; /* Used to do just one call to auth_hmac_md5_len(). */
+    uint32_t stemp, counter;
 
     *buffer.byte_ptr++ = TCPOPT_AO;
     *buffer.byte_ptr++ = TCPOLEN_AO;
@@ -431,13 +437,17 @@ void tcp ( const config_options_T *const restrict co, uint32_t *restrict size )
     stemp = auth_hmac_md5_len ( co->tcp.auth );
 
     /* NOTE: Assume stemp > 0. */
-    for ( counter = 0; counter < stemp; counter++ )
+    counter = 0;
+    while ( counter++ < stemp )
       *buffer.byte_ptr++ = RANDOM();
   }
 
   /* Padding the TCP Options. */
-  for ( ; tcpolen & 3; tcpolen++ )
+  while ( tcpolen & 3 )
+  {
     *buffer.byte_ptr++ = co->tcp.nop;
+    tcpolen++;
+  }
 
   /* Needed here 'cause we'll need to initialize pseudo->len. */
   length = sizeof ( struct tcphdr ) + tcpolen;

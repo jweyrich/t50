@@ -44,9 +44,9 @@
  * @param co Pointer to T50 configuration structure.
  * @return Pointer to IP header structure (points to the begining of the buffer).
  */
-struct iphdr *ip_header ( void *buffer,
+struct iphdr *ip_header ( void * restrict buffer,
                           uint32_t packet_size,
-                          const config_options_T *restrict co )
+                          const config_options_T * restrict co )
 {
   struct iphdr *ip;
 

@@ -40,11 +40,10 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv2 ( const config_options_T *const restrict co, uint32_t *restrict size )
+void ripv2 ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
   uint32_t greoptlen,     /* GRE options size. */
-           length,
-           counter;
+           length;
 
   memptr_T buffer;
 
@@ -226,7 +225,7 @@ void ripv2 ( const config_options_T *const restrict co, uint32_t *restrict size 
    */
   if ( co->rip.auth )
   {
-    uint32_t size;
+    uint32_t size, counter;
 
     *buffer.word_ptr++ = 0xffffU;
     *buffer.word_ptr++ = htons ( 1 );
@@ -237,7 +236,8 @@ void ripv2 ( const config_options_T *const restrict co, uint32_t *restrict size 
     size = auth_hmac_md5_len ( co->rip.auth );
 
     /* NOTE: Assume size > 0. */
-    for ( counter = 0; counter < size; counter++ )
+    counter = 0;
+    while ( counter++ < size )
       *buffer.byte_ptr++ = RANDOM();
   }
 

@@ -36,8 +36,12 @@ uint16_t cksum ( void *data, uint32_t length )
   uint32_t sum;
 
   sum = 0;
-  for ( ptr = data; length > 1; length -= 2 )
+  ptr = data;  
+  while ( length > 1 )
+  {
     sum += *ptr++;
+    length -= 2;
+  }
 
   // if there is any additional bytes remaining...
   if ( length > 0 )

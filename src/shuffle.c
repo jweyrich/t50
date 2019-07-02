@@ -30,7 +30,8 @@ void shuffle ( uint32_t *p, uint32_t size )
 {
   uint32_t i, j;
 
-  for ( i = 0; i < size - 2; i++ )
+  i = 0;
+  while ( i < size - 2 )
   {
     // NOTE: This routine will be called once each 'size'
     //       main loop iterations. This division will not
@@ -40,6 +41,8 @@ void shuffle ( uint32_t *p, uint32_t size )
     // we need to swap only different positions.
     if ( i != j )
       swap ( p[i], p[j] );
+
+    i++;
   }
 }
 

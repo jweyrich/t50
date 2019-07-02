@@ -40,7 +40,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv1 ( const config_options_T *const restrict co, uint32_t *restrict size )
+void ripv1 ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
   uint32_t length;
 

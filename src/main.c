@@ -32,9 +32,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
-#ifndef NDEBUG
-  #include <linux/if_ether.h>
-#endif
+//#ifndef NDEBUG
+//  #include <linux/if_ether.h>
+//#endif
 #include <configuration.h>
 #include <t50_defines.h>
 #include <t50_typedefs.h>
@@ -54,7 +54,7 @@ static double t0;
 static int echo_enabled = 1;
 
 _NOINLINE static void               initialize ( const config_options_T * );
-_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
+_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T * restrict, int * restrict );
 static void show_statistics ( void );
 
 #pragma GCC diagnostic push
@@ -86,6 +86,7 @@ int main ( int argc, char *argv[] )
     fatal_error ( "User must have root privilege to run." );
 
   initialize ( co );
+
   create_socket();
 
   /* Calculates CIDR for destination address. */
@@ -104,11 +105,7 @@ int main ( int argc, char *argv[] )
       threshold_T new_threshold;
 
       if ( ( pid = fork() ) == -1 )
-        fatal_error ( "Cannot create child process"
-#ifndef NDEBUG
-                      ": \"%s\".\nExiting..", strerror ( errno )
-#endif
-                    );
+        fatal_error ( "Cannot create child process" );
 
       /* Divide the process iterations in main loop between both processes. */
       new_threshold = co->threshold / 2;
@@ -128,11 +125,7 @@ int main ( int argc, char *argv[] )
 
   /* Setting the priority to both parent and child process. */
   if ( setpriority ( PRIO_PROCESS, PRIO_PROCESS, -15 )  == -1 )
-    fatal_error ( "Cannot set process priority"
-#ifndef NDEBUG
-                  ": \"%s\".\nExiting..", strerror ( errno )
-#endif
-                );
+    fatal_error ( "Cannot set process priority" );
 
   /* Show launch info only for parent process. */
   if ( !IS_CHILD_PID ( pid ) && !co->quiet )
@@ -192,21 +185,20 @@ int main ( int argc, char *argv[] )
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func ( co, &size );
 
-#ifndef NDEBUG
-
-    /* I'll use this to fine tune the alloc_packet() function, someday! */
-    if ( size > ETH_DATA_LEN )
-      fprintf ( stderr, DEBUG " Protocol %s packet size (%u bytes) exceed max. Ethernet packet data length!\n",
-                ptbl->name, size );
-
-#endif
+//#ifndef NDEBUG
+//
+//    /* I'll use this to fine tune the alloc_packet() function, someday! */
+//    if ( size > ETH_DATA_LEN )
+//      fprintf ( stderr, DEBUG " Protocol %s packet size (%u bytes) exceed max. Ethernet packet data length!\n",
+//                ptbl->name, size );
+//
+//#endif
 
     /* Try to send the packet. */
     if ( ! send_packet ( packet, size, co ) )
 #ifndef NDEBUG
       error ( "Packet for protocol %s (%zu bytes long) not sent", ptbl->name, size );
-
-    /* continue trying to send other packets on debug mode! */
+      /* continue trying to send other packets on debug mode! */
 #else
       fatal_error ( "Unspecified error sending a packet" );
 #endif
@@ -233,9 +225,6 @@ int main ( int argc, char *argv[] )
       {
         /* Wait 5 seconds for the child to end... */
         alarm ( WAIT_FOR_CHILD_TIMEOUT );
-#ifndef NDEBUG
-        fputs ( INFO "Waiting for child process to end...\n", stderr );
-#endif
 
         /* NOTE: SIGALRM will kill the child process if necessary! */
         wait ( NULL );
@@ -353,7 +342,7 @@ void initialize ( const config_options_T *co )
 }
 
 /* Selects the initial protocol based on the configuration. */
-modules_table_T *selectProtocol ( const config_options_T *restrict co, int *restrict proto )
+modules_table_T *selectProtocol ( const config_options_T * restrict co, int * restrict proto )
 {
   modules_table_T *ptbl;
 

@@ -30,13 +30,13 @@ extern uint64_t bytes_sent;
 extern uint64_t packets_sent;
 
 /* Common routines used by code */
-in_addr_t    resolv ( char * );      /* Resolve name to ip address. */
-void         create_socket ( void ); /* Creates the sending socket */
-void         close_socket ( void );  /* Close the previously created socket */
+in_addr_t resolv ( char * );      /* Resolve name to ip address. */
+void      create_socket ( void ); /* Creates the sending socket */
+void      close_socket ( void );  /* Close the previously created socket */
 
 /* Send the actual packet from buffer, with size bytes, using config options. */
-_Bool send_packet ( const void *const,
-                    uint32_t,
-                    const config_options_T *const restrict );
+int       send_packet ( const void * const,
+                        uint32_t,
+                        const config_options_T * const restrict );
 
 #endif

@@ -39,11 +39,10 @@ static  uint32_t rsvp_objects_len ( const uint8_t, const uint8_t, const uint8_t,
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void rsvp ( const config_options_T *const restrict co, uint32_t *restrict size )
+void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
   uint32_t greoptlen,       /* GRE options size. */
-           objects_length,  /* RSVP objects length. */
-           counter;
+           objects_length;  /* RSVP objects length. */
 
   /* Packet and Checksum. */
   memptr_T buffer;
@@ -534,6 +533,8 @@ void rsvp ( const config_options_T *const restrict co, uint32_t *restrict size )
          co->rsvp.type == RSVP_MESSAGE_TYPE_RESVTEAR ||
          co->rsvp.type == RSVP_MESSAGE_TYPE_RESVERR )
     {
+      uint32_t counter;
+
       /*
        * Resource ReSerVation Protocol (RSVP) (RFC 2205)
        *
@@ -557,8 +558,9 @@ void rsvp ( const config_options_T *const restrict co, uint32_t *restrict size )
 
       /* Dealing with scope address(es). */
       /* NOTE: Assume co->rsvp.scope > 0. */
-      for ( counter = 0; counter < co->rsvp.scope; counter++ )
-        *buffer.inaddr_ptr++ = INADDR_RND ( co->rsvp.address[counter] );
+      counter = 0;
+      while ( counter < co->rsvp.scope )
+        *buffer.inaddr_ptr++ = INADDR_RND ( co->rsvp.address[counter++] );
     }
 
     /*

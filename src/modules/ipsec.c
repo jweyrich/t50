@@ -37,7 +37,7 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ipsec ( const config_options_T *const restrict co, uint32_t *size )
+void ipsec ( const config_options_T * const restrict co, uint32_t *size )
 {
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
@@ -113,7 +113,8 @@ void ipsec ( const config_options_T *const restrict co, uint32_t *size )
   buffer.ptr = ip_auth + 1;
 
   /* Setting a fake encrypted content. */
-  for ( counter = 0; counter < IP_AH_ICV; counter++ )
+  counter = 0;
+  while ( counter++ < IP_AH_ICV )
     *buffer.byte_ptr++ = RANDOM();
 
   /* IPSec ESP Header structure making a pointer to Checksum. */
@@ -124,7 +125,8 @@ void ipsec ( const config_options_T *const restrict co, uint32_t *size )
   buffer.ptr = ip_esp + 1;
 
   /* Setting a fake encrypted content. */
-  for ( counter = 0; counter < esp_data; counter++ )
+  counter = 0;
+  while ( counter++ < esp_data )
     *buffer.byte_ptr++ = RANDOM();
 
   /* GRE Encapsulation takes place. */

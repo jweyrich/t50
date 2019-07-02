@@ -39,11 +39,10 @@ static uint32_t eigrp_hdr_len ( const uint16_t, const uint16_t, const uint8_t, c
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void eigrp ( const config_options_T *const restrict co, uint32_t *restrict size )
+void eigrp ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
   uint32_t length,
-           eigrp_tlv_len, /* EIGRP TLV size. */
-           counter;
+           eigrp_tlv_len; /* EIGRP TLV size. */
 
   in_addr_t dest;       /* EIGRP Destination address */
   uint32_t prefix;      /* EIGRP Prefix */
@@ -118,7 +117,7 @@ void eigrp ( const config_options_T *const restrict co, uint32_t *restrict size 
              co->eigrp.type  == EIGRP_TYPE_SOFTWARE ) ) )
     {
       /* NOTE: stemp used to avoid multiple comparisons on loop below */
-      uint32_t stemp;
+      uint32_t stemp, counter;
 
       stemp = auth_hmac_md5_len ( co->eigrp.auth );
 
@@ -157,13 +156,15 @@ void eigrp ( const config_options_T *const restrict co, uint32_t *restrict size 
       *buffer.word_ptr++ = htons ( stemp );
       *buffer.dword_ptr++ = __RND ( co->eigrp.key_id );
 
-      for ( counter = 0; counter < EIGRP_PADDING_BLOCK; counter++ )
+      counter = 0;
+      while ( counter++ < EIGRP_PADDING_BLOCK )
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
 
       /*
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
-      for ( counter = 0; counter < stemp; counter++ )
+      counter = 0;
+      while ( counter++ < stemp )
         *buffer.byte_ptr++ = RANDOM();
     }
   }

@@ -48,10 +48,17 @@ uint64_t bytes_sent = 0ULL;
 uint64_t packets_sent = 0ULL;
 
 //static int wait_for_io ( int );
+static void socket_setnonblocking( int );
+static void socket_setiphdrincl( int );
 static ssize_t socket_send ( int, struct sockaddr_in *, void *, uint32_t );
-
 #ifdef SO_SNDBUF
-  static int setup_sendbuffer ( int *, uint32_t );
+  static void socket_setup_sendbuffer ( int );
+#endif
+#ifdef SO_BROADCAST
+  static void socket_setbroadcast( int );
+#endif
+#ifdef SO_PRIORITY
+  static void socket_setpriority( int );
 #endif
 
 /**
@@ -59,19 +66,10 @@ static ssize_t socket_send ( int, struct sockaddr_in *, void *, uint32_t );
  */
 void create_socket ( void )
 {
-  socklen_t len;
-  uint32_t i, n = 1;  /* FIXME: if I indended, someday, to port
-                                this code to Solaris, I must use
-                                n as char type and set it to '1' (0x31).
-
-                                Must change setsockopt() calls as well. */
-  int flag;
-
   /* Setting SOCKET RAW.
      NOTE: Protocol must be IPPROTO_RAW on Linux.
            On FreeBSD, if we use 0 IPPROTO_RAW is assumed by default,
            but on linux will cause an error. */
-  errno = 0;
   if ( ( fd = socket ( AF_INET, SOCK_RAW, IPPROTO_RAW ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -81,72 +79,20 @@ void create_socket ( void )
 #endif
   }
 
-  /* Try to change the socket mode to NON BLOCKING. */
-  errno = 0;
-  if ( ( flag = fcntl ( fd, F_GETFL ) ) == -1 )
-  {
-#ifndef NDEBUG
-    fatal_error ( "Cannot get socket flags: \"%s\"", strerror ( errno ) );
-#else
-    fatal_error ( "Cannot get socket flags" );
-#endif
-  }
-
-  errno = 0;
-  if ( fcntl ( fd, F_SETFL, flag | O_NONBLOCK ) == -1 )
-  {
-#ifndef NDEBUG
-    fatal_error ( "Cannot set socket to non-blocking mode: \"%s\"", strerror ( errno ) );
-#else
-    fatal_error ( "Cannot set socket to non-blocking mode" );
-#endif
-  }
-
-  /* Setting IP_HDRINCL. */
-  /* NOTE: We will provide the IP header, but enabling this option, on linux,
-           still makes the kernel calculates the checksum and total_length. */
-  errno = 0;
-  if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
-  {
-#ifndef NDEBUG
-    fatal_error ( "Cannot set socket options: \"%s\"", strerror ( errno ) );
-#else
-    fatal_error ( "Cannot set socket options" );
-#endif
-  }
+  socket_setnonblocking( fd );
+  socket_setiphdrincl( fd );
 
 #ifdef SO_SNDBUF
-  setup_sendbuffer ( &fd, n );
+  socket_setup_sendbuffer ( fd );
 #endif
 
 #ifdef SO_BROADCAST
-
-  errno = 0;
-  if ( setsockopt ( fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof ( n ) ) == -1 )
-  {
-#ifndef NDEBUG
-    fatal_error ( "Cannot set socket broadcast flag: \"%s\"", strerror ( errno ) );
-#else
-    fatal_error ( "Cannot set socket broadcast flag" );
+  socket_setbroadcast( fd );
 #endif
-  }
-
-#endif /* SO_BROADCAST */
 
 #ifdef SO_PRIORITY
-
-  /* FIXME: Is it a good idea to ajust the socket priority to 1? */
-  errno = 0;
-  if ( setsockopt ( fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof ( n ) ) == -1 )
-  {
-#ifndef NDEBUG
-    fatal_error ( "Cannot set socket priority: \"%s\"", strerror ( errno ) );
-#else
-    fatal_error ( "Cannot set socket priority" );
+  socket_setpriority( fd );
 #endif
-  }
-
-#endif /* SO_PRIORITY */
 }
 
 /**
@@ -172,9 +118,9 @@ void close_socket ( void )
  * @param co Pointer to configurations for T50.
  * @return true (success) or false (error).
  */
-_Bool send_packet ( const void *const buffer,
-                    uint32_t size,
-                    const config_options_T *const restrict co )
+int send_packet ( const void * const buffer,
+                  uint32_t size,
+                  const config_options_T * const restrict co )
 {
   struct sockaddr_in sin =
   {
@@ -188,31 +134,31 @@ _Bool send_packet ( const void *const buffer,
   assert ( co != NULL );
 
   /* Use socket_send(), below. */
+  errno = 0;
   if ( socket_send ( fd, &sin, ( void * ) buffer, size ) == -1 )
   {
     if ( errno == EPERM )
       fatal_error ( "Cannot send packet (Permission!?). Please check your firewall rules (iptables?)." );
 
-    return false;
+    return 0;
   }
 
   packets_sent++;
 
-  return true;
+  return 1;
 }
 
 #ifdef SO_SNDBUF
 /* Taken from libdnet by Dug Song. */
-int setup_sendbuffer ( int *fd, uint32_t n )
+void socket_setup_sendbuffer ( int fd )
 {
-  uint32_t i;
+  uint32_t i, n;
   socklen_t len;
 
   /* Getting SO_SNDBUF. */
   len = sizeof ( n );
 
-  errno = 0;
-  if ( getsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &n, &len ) == -1 )
+  if ( getsockopt ( fd, SOL_SOCKET, SO_SNDBUF, &n, &len ) == -1 )
   {
 #ifndef NDEBUG
     fatal_error ( "Cannot get socket buffer: \"%s\"", strerror ( errno ) );
@@ -224,44 +170,23 @@ int setup_sendbuffer ( int *fd, uint32_t n )
   /* Setting the maximum SO_SNDBUF in bytes.
    * 128      =  1 Kib
    * 10485760 = 80 Mib */
-  for ( i = n + 128; i < 10485760; i += 128 )
+  i = n + 128;
+  while ( i < 10485760 )
   {
     /* Setting SO_SNDBUF. */
     errno = 0;
-    if ( setsockopt ( *fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof ( i ) ) == -1 )
+    if ( setsockopt ( fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof ( i ) ) == -1 )
     {
       if ( errno == ENOBUFS )
         break;
 
-#ifndef NDEBUG
-      fatal_error ( "Cannot set socket buffer: \"%s\"", strerror ( errno ) );
-#else
       fatal_error ( "Cannot set socket buffer" );
-#endif
     }
+
+    i += 128;
   }
 }
 #endif /* SO_SNDBUF */
-
-/*** I realize that EINTR probably never happens, since the signals
-     are marked as SA_RESTART, but I want to be sure! */
-
-/* NOTE: Code inspired on Apache httpd source. */
-#if 0
-static int wait_for_io ( int fd )
-{
-  int r;
-  struct pollfd pfd = { .fd = fd, .events = POLLOUT };
-
-  /* NOTE: Assume poll will not fail. */
-  do
-  {
-    r = poll ( &pfd, 1, TIMEOUT );
-  } while ( r == -1 && errno == EINTR );
-
-  return r;
-}
-#endif
 
 // FIXME: Maybe it is necessary to insert a counter, in case of multiple failures...
 static ssize_t socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size )
@@ -322,7 +247,9 @@ in_addr_t resolv ( char *name )
   }
 
   /* scan all the list. */
-  for ( res = res0; res && !addr; res = res->ai_next )
+  res = res0;
+  while ( res && ! addr )
+  {
     switch ( res->ai_family )
     {
       case AF_INET:
@@ -334,9 +261,86 @@ in_addr_t resolv ( char *name )
         addr = ( ( struct sockaddr_in6 * ) res->ai_addr )->sin6_addr.s6_addr32[3];
     }
 
+    res = res->ai_next;
+  }
+
   // Free the linked list.
   freeaddrinfo ( res0 );
 
   return addr;
 }
 
+void socket_setnonblocking( int fd )
+{
+  int flag;
+
+  /* Try to change the socket mode to NON BLOCKING. */
+  if ( ( flag = fcntl ( fd, F_GETFL ) ) == -1 )
+  {
+#ifndef NDEBUG
+    fatal_error ( "Cannot get socket flags: \"%s\"", strerror ( errno ) );
+#else
+    fatal_error ( "Cannot get socket flags" );
+#endif
+  }
+
+  if ( fcntl ( fd, F_SETFL, flag | O_NONBLOCK ) == -1 )
+  {
+#ifndef NDEBUG
+    fatal_error ( "Cannot set socket to non-blocking mode: \"%s\"", strerror ( errno ) );
+#else
+    fatal_error ( "Cannot set socket to non-blocking mode" );
+#endif
+  }
+}
+
+void socket_setiphdrincl( int fd )
+{
+  /* This is valid for Linux */
+  int n = 1;
+
+  /* Setting IP_HDRINCL. */
+  /* NOTE: We will provide the IP header, but enabling this option, on linux,
+           still makes the kernel calculates the checksum and total_length. */
+  if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
+  {
+#ifndef NDEBUG
+    fatal_error ( "Cannot set socket options: \"%s\"", strerror ( errno ) );
+#else
+    fatal_error ( "Cannot set socket options" );
+#endif
+  }
+}
+
+#ifdef SO_BROADCAST
+void socket_setbroadcast( int fd )
+{
+  int n = 1;
+
+  if ( setsockopt ( fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof ( n ) ) == -1 )
+  {
+#ifndef NDEBUG
+    fatal_error ( "Cannot set socket broadcast flag: \"%s\"", strerror ( errno ) );
+#else
+    fatal_error ( "Cannot set socket broadcast flag" );
+#endif
+  }
+}
+#endif
+
+#ifdef SO_PRIORITY
+void socket_setpriority( int fd )
+{
+  int n = 1;
+
+  /* FIXME: Is it a good idea to ajust the socket priority to 1? */
+  if ( setsockopt ( fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof ( n ) ) == -1 )
+  {
+#ifndef NDEBUG
+    fatal_error ( "Cannot set socket priority: \"%s\"", strerror ( errno ) );
+#else
+    fatal_error ( "Cannot set socket priority" );
+#endif
+  }
+}
+#endif

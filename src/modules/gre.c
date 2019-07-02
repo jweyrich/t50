@@ -38,8 +38,8 @@
  * @param total_len Length of the buffer.
  * @return Pointer to IP header (the begining of the buffer).
  */
-struct iphdr *gre_encapsulation ( void *restrict buffer,
-                                  const config_options_T *const restrict co,
+struct iphdr *gre_encapsulation ( void * restrict buffer,
+                                  const config_options_T * const restrict co,
                                   uint32_t total_len )
 {
   struct iphdr   *ip, *gre_ip;
@@ -156,8 +156,8 @@ struct iphdr *gre_encapsulation ( void *restrict buffer,
  * @param co Pointer to T50 configuration structure.
  * @packet_size Size of the packet.
  */
-void gre_checksum ( void *restrict buffer,
-                    const config_options_T *restrict const co,
+void gre_checksum ( void * restrict buffer,
+                    const config_options_T * restrict const co,
                     uint32_t packet_size )
 {
   struct gre_hdr     *gre;
@@ -180,7 +180,7 @@ void gre_checksum ( void *restrict buffer,
 }
 
 /* GRE header size calculation. */
-uint32_t gre_opt_len ( const config_options_T *const co )
+uint32_t gre_opt_len ( const config_options_T * const co )
 {
   uint32_t size;
 

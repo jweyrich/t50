@@ -37,7 +37,7 @@ static struct cidr cidr = {0};
  * @param address IP address from command line (in network order).
  * @return Pointer to cidr structure.
  */
-struct cidr *config_cidr ( const config_options_T *const restrict co )
+struct cidr *config_cidr ( const config_options_T * const co )
 {
   /*
    * nbrito -- Thu Dec 23 13:06:39 BRST 2010

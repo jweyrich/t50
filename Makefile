@@ -10,7 +10,7 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION=5.8.4
+VERSION=5.8.5
 
 #CC=gcc
 #
@@ -21,7 +21,7 @@ VERSION=5.8.4
 LD=$(CC)
 
 INCLUDEDIR=src/include
-CFLAGS=-std=gnu11
+CFLAGS=-std=gnu11 -I $(INCLUDEDIR)
 LDFLAGS=
 LDLIBS=
 
@@ -33,21 +33,22 @@ ifdef DEBUG
 	CFLAGS += -O0 -g
 else
   # Optimization level 2 (better results) and no canaries.
-
   CFLAGS += -O2 -DNDEBUG -ffast-math
 
   # strip symbols and turn more linker optimizations on (if available).
-  LDFLAGS += -flto -s -O2
+  LDFLAGS += -s -O2
 
   ARCHITECTURE = $(shell arch)
 
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
     CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
+		LDFLAGS += -flto
   endif
   # Options for i386
   ifeq ($(ARCHITECTURE),i686)
     CFLAGS += -march=native -flto -fno-stack-protector
+		LDFLAGS += -flto
   endif
 
 	# TODO: tunning for cortex-a#?
@@ -55,14 +56,14 @@ else
 	# Options for ARMv7-a
   ifneq ($(findstr armv7,$(ARCHITECTURE)),)
     CFLAGS += -march=armv7-a -fno-stack-protector -flto
+		LDFLAGS += -flto
   endif
   # Options for ARMv8-a
   ifneq ($(findstr armv8,$(ARCHITECTURE)),)
     CFLAGS += -march=armv8-a -fno-stack-protector -flto
+		LDFLAGS += -flto
   endif
 endif
-
-CFLAGS += -I $(INCLUDEDIR) -std=gnu11
 
 # Added to use ANSI CSI codes (beautifier).
 ifdef USE_ANSI

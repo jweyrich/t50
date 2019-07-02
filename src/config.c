@@ -51,18 +51,18 @@
 static int                                check_if_option ( char * );
 static int                                check_if_nul_option ( char * );
 static void                               check_options_rules ( const config_options_T * );
-_NOINLINE static struct options_table_s *find_option ( char * );
-static void                               set_config_option ( config_options_T *restrict, char *restrict, int, char *restrict );
-_NOINLINE static uint32_t                 toULong ( char *restrict, char *restrict );
-_NOINLINE static uint32_t                 toULongCheckRange ( char *restrict, char *restrict, uint32_t, uint32_t );
-_NOINLINE static void                     check_list_separators ( char *, char * );
-static void                               set_destination_addresses ( char *restrict, config_options_T *restrict );
+_NOINLINE static struct options_table_s  *find_option ( char * );
+static void                               set_config_option ( config_options_T * restrict, char * restrict, int, char * restrict );
+_NOINLINE static uint32_t                 toULong ( char * restrict, char * restrict );
+_NOINLINE static uint32_t                 toULongCheckRange ( char * restrict, char * restrict, uint32_t, uint32_t );
+_NOINLINE static void                     check_list_separators ( char * restrict, char * restrict );
+static void                               set_destination_addresses ( char * restrict, config_options_T * restrict );
 static void                               list_protocols ( void );
 static void                               set_default_protocol ( config_options_T * );
-static void                               get_ip_protocol ( config_options_T *restrict, char *restrict );
-static _Bool                              get_ip_and_cidr_from_string ( char const *const, addr_T * );
+static void                               get_ip_protocol ( config_options_T * restrict, char * restrict );
+static int                                get_ip_and_cidr_from_string ( char const * const, addr_T * );
 _NOINLINE static int                      get_dual_values ( char *, unsigned long *, unsigned long *, unsigned long, int, char, char * );
-static int                                check_threshold ( const config_options_T *const restrict );
+static int                                check_threshold ( const config_options_T * const );
 static int                                check_for_valid_option ( int, int * );
 
 // Must disable this warning 'cause the initializations are right!
@@ -432,6 +432,9 @@ config_options_T *parse_command_line ( char **argv )
   int num_options;
   char *opt, *next_str, *dest_addr;
 
+  // Used just to help the compiler to merge strings...
+  static const char * const errfmt = "Option '-%c' (or '--%s') cannot be used with other options.";
+
   num_options = 0;
   dest_addr = NULL;
 
@@ -439,13 +442,14 @@ config_options_T *parse_command_line ( char **argv )
   set_default_protocol ( &co );
 
   /* Check each argument starting from the next one. */
-  for ( num_options = 0, argv++; *argv; argv++ )
+  num_options = 0;
+  while ( *++argv )
   {
     opt = *argv;
 
     if ( check_if_option ( opt ) )
     {
-      /* Skip --. */
+      /* Skip '--'. */
       if ( check_if_nul_option ( opt ) )
         continue;
 
@@ -461,7 +465,7 @@ config_options_T *parse_command_line ( char **argv )
       /* If the option needs an argument, get the next string. */
       if ( !! ( next_str = * ( argv + 1 ) ) )
       {
-        static const char *const ferrfmt =
+        static const char * const ferrfmt =
           "Option '%s' has no arguments.";
 
         if ( ptbl->has_arg )
@@ -500,8 +504,6 @@ config_options_T *parse_command_line ( char **argv )
     /* How many options we got so far? */
     num_options++;
   } /* end of command line scan. */
-
-  const char *const errfmt = "Option '-%c' (or '--%s') cannot be used with other options.";
 
   /* NOTE: -h, -v or -l can be called by non-privileged user! */
 
@@ -566,6 +568,7 @@ int  check_if_option ( char *s )
 {
   return *s == '-';
 }
+
 int  check_if_nul_option ( char *s )
 {
   return !strcmp ( s, "--" );
@@ -582,12 +585,19 @@ void set_default_protocol ( config_options_T *co )
 
   co->ip.protocol = IPPROTO_TCP;
 
-  for ( i = 0, ptbl = mod_table; ptbl->protocol_id; i++, ptbl++ )
+  i = 0;
+  ptbl = mod_table;
+  while ( ptbl->protocol_id )
+  {
     if ( ptbl->protocol_id == IPPROTO_TCP )
     {
       co->ip.protoname = i;
       break;
     }
+
+    i++;
+    ptbl++;
+  }
 }
 
 /* Scans the option table trying to find the option.
@@ -596,7 +606,8 @@ struct options_table_s *find_option ( char *option )
 {
   struct options_table_s *ptbl;
 
-  for ( ptbl = options; ptbl->id; ptbl++ )
+  ptbl = options;
+  while ( ptbl->id )
   {
     /* Is it a long option? */
     if ( * ( option + 1 ) == '-' )
@@ -607,11 +618,11 @@ struct options_table_s *find_option ( char *option )
           return ptbl;
     }
     else
-    {
       /* ... or, is it a short option? */
       if ( * ( option + 1 ) == ptbl->short_opt )
         return ptbl;
-    }
+
+    ptbl++;
   }
 
   /* Option not found. */
@@ -682,7 +693,7 @@ void check_options_rules ( const config_options_T *co )
 }
 
 /* Get the IP PROTOCOL. */
-void get_ip_protocol ( config_options_T *restrict co, char *restrict arg )
+void get_ip_protocol ( config_options_T * restrict co, char * restrict arg )
 {
   /* T50 protocol is a special case! It isn't in modules table! */
   if ( !strcasecmp ( arg, "T50" ) )
@@ -716,7 +727,7 @@ void get_ip_protocol ( config_options_T *restrict co, char *restrict arg )
   }
 }
 
-void set_destination_addresses ( char *restrict arg, config_options_T *restrict co )
+void set_destination_addresses ( char * restrict arg, config_options_T * restrict co )
 {
   char *p;
   addr_T addr;
@@ -743,7 +754,7 @@ void set_destination_addresses ( char *restrict arg, config_options_T *restrict 
 }
 
 /* Setup an option. */
-void set_config_option ( config_options_T *restrict co, char *restrict optname, int optid, char *restrict arg )
+void set_config_option ( config_options_T * restrict co, char * restrict optname, int optid, char * restrict arg )
 {
   uint32_t counter;
   char *tmp_ptr;
@@ -754,7 +765,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       // --- GLOBAL options
 #ifdef __HAVE_TURBO__
     case OPTION_TURBO:
-      co->turbo = true;
+      co->turbo = 1;
       break;
 #endif
 
@@ -763,33 +774,33 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_FLOOD:
-      co->flood = true;
+      co->flood = 1;
       break;
 
     case OPTION_ENCAPSULATED:
-      co->encapsulated = true;
+      co->encapsulated = 1;
       break;
 
     case OPTION_BOGUSCSUM:
-      co->bogus_csum = true;
+      co->bogus_csum = 1;
       break;
 
     case OPTION_SHUFFLE:
-      co->shuffle = true;
+      co->shuffle = 1;
       break;
 
     // --- GRE options
     // FIXME: gre.flags, gre.recur, optional gre.offset, not set here!
     case OPTION_GRE_SEQUENCE_PRESENT:
-      co->gre.S = true;
+      co->gre.S = 1;
       break;
 
     case OPTION_GRE_KEY_PRESENT:
-      co->gre.K = true;
+      co->gre.K = 1;
       break;
 
     case OPTION_GRE_CHECKSUM_PRESENT:
-      co->gre.C = true;
+      co->gre.C = 1;
       break;
 
     case OPTION_GRE_KEY:
@@ -864,7 +875,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_IGMP_SUPPRESS:
-      co->igmp.suppress = true;
+      co->igmp.suppress = 1;
       break;
 
     case OPTION_IGMP_QQIC:
@@ -883,10 +894,13 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
 
       /* FIXME: Need to check if an item is valid! */
       /* More than 255 items will be ignored! */
-      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
-            tmp_ptr && ( counter < ( sizeof ( co->igmp.address ) / sizeof ( in_addr_t ) ) );
-            counter++, tmp_ptr = strtok ( NULL, "," ) )
-        co->igmp.address[counter] = resolv ( tmp_ptr );
+      counter = 0;
+      tmp_ptr = strtok( arg, "," );
+      while ( tmp_ptr && ( counter < ( sizeof ( co->igmp.address ) / sizeof ( in_addr_t ) ) ) )
+      {
+        co->igmp.address[counter++] = resolv( tmp_ptr );
+        tmp_ptr = strtok( NULL, "," );
+      }
 
       co->igmp.sources = counter;
       break;
@@ -915,35 +929,35 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_TCP_FIN:
-      co->tcp.fin = true;
+      co->tcp.fin = 1;
       break;
 
     case OPTION_TCP_SYN:
-      co->tcp.syn = true;
+      co->tcp.syn = 1;
       break;
 
     case OPTION_TCP_RST:
-      co->tcp.rst = true;
+      co->tcp.rst = 1;
       break;
 
     case OPTION_TCP_PSH:
-      co->tcp.psh = true;
+      co->tcp.psh = 1;
       break;
 
     case OPTION_TCP_ACK:
-      co->tcp.ack = true;
+      co->tcp.ack = 1;
       break;
 
     case OPTION_TCP_URG:
-      co->tcp.urg = true;
+      co->tcp.urg = 1;
       break;
 
     case OPTION_TCP_ECE:
-      co->tcp.ece = true;
+      co->tcp.ece = 1;
       break;
 
     case OPTION_TCP_CWR:
-      co->tcp.cwr = true;
+      co->tcp.cwr = 1;
       break;
 
     case OPTION_TCP_WINDOW:
@@ -1007,11 +1021,11 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_TCP_MD5_SIGNATURE:
-      co->tcp.md5 = ! ( co->tcp.auth = false );
+      co->tcp.md5 = ! ( co->tcp.auth = 0 );
       break;
 
     case OPTION_TCP_AUTHENTICATION:
-      co->tcp.auth = ! ( co->tcp.md5 = false );
+      co->tcp.auth = ! ( co->tcp.md5 = 0 );
       break;
 
     case OPTION_TCP_AUTH_KEY_ID:
@@ -1091,7 +1105,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_RIP_AUTHENTICATION:
-      co->rip.auth = true;
+      co->rip.auth = 1;
       break;
 
     case OPTION_RIP_AUTH_KEY_ID:
@@ -1121,7 +1135,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_DCCP_EXTEND:
-      co->dccp.ext = true;
+      co->dccp.ext = 1;
       break;
 
     case OPTION_DCCP_SEQUENCE_01:
@@ -1221,10 +1235,13 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
     case OPTION_RSVP_SCOPE_ADDRESS:
 
       // FIXME: Must validate every item!
-      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
-            tmp_ptr && ( counter < ( sizeof ( co->rsvp.address ) / sizeof ( in_addr_t ) ) );
-            counter++, tmp_ptr = strtok ( NULL, "," ) )
-        co->rsvp.address[counter] = resolv ( tmp_ptr );
+      counter = 0;
+      tmp_ptr = strtok( arg, "," );
+      while ( tmp_ptr && ( counter < ( sizeof ( co->rsvp.address ) / sizeof ( in_addr_t ) ) ) )
+      {
+        co->rsvp.address[counter++] = resolv( tmp_ptr );
+        tmp_ptr = strtok( NULL, "," );
+      }
 
       co->rsvp.scope = counter;
       break;
@@ -1495,7 +1512,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_EIGRP_AUTHENTICATION:
-      co->eigrp.auth = true;
+      co->eigrp.auth = 1;
       break;
 
     case OPTION_EIGRP_AUTH_KEY_ID:
@@ -1516,7 +1533,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_AREA_ID:
-      co->ospf.AID = true;
+      co->ospf.AID = 1;
       co->ospf.aid = resolv ( arg );
       break;
 
@@ -1581,10 +1598,13 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_HELLO_ADDRESS:
-      for ( counter = 0, tmp_ptr = strtok ( arg, "," );
-            tmp_ptr && ( counter < ( sizeof ( co->ospf.address ) / sizeof ( in_addr_t ) ) );
-            counter++, tmp_ptr = strtok ( NULL, "," ) )
-        co->ospf.address[counter] = resolv ( tmp_ptr );
+      counter = 0;
+      tmp_ptr = strtok( arg, "," );
+      while ( tmp_ptr && ( counter < ( sizeof ( co->ospf.address ) / sizeof ( in_addr_t ) ) ) )
+      {
+        co->ospf.address[counter++] = resolv( tmp_ptr );
+        tmp_ptr = strtok( NULL, "," );
+      }
 
       co->ospf.neighbor = counter;
       break;
@@ -1614,7 +1634,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_DD_INCLUDE_LSA:
-      co->ospf.dd_include_lsa = true;
+      co->ospf.dd_include_lsa = 1;
       break;
 
     case OPTION_OSPF_LSA_AGE:
@@ -1622,7 +1642,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_LSA_DO_NOT_AGE:
-      co->ospf.lsa_dage = true;
+      co->ospf.lsa_dage = 1;
       break;
 
     case OPTION_OSPF_LSA_TYPE:
@@ -1682,7 +1702,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_LSA_LARGER:
-      co->ospf.lsa_larger = true;
+      co->ospf.lsa_larger = 1;
       break;
 
     case OPTION_OSPF_LSA_FORWARD:
@@ -1714,7 +1734,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
       break;
 
     case OPTION_OSPF_AUTHENTICATION:
-      co->ospf.auth = true;
+      co->ospf.auth = 1;
       break;
 
     case OPTION_OSPF_AUTH_KEY_ID:
@@ -1755,7 +1775,7 @@ void set_config_option ( config_options_T *restrict co, char *restrict optname, 
 
 /* Tries to convert string to an unsigned value.
    NOTE: Marked as "noinline" because it's big enough! */
-uint32_t toULong ( char *restrict optname, char *restrict value )
+uint32_t toULong ( char * restrict optname, char * restrict value )
 {
   unsigned long n;
 
@@ -1785,7 +1805,7 @@ uint32_t toULong ( char *restrict optname, char *restrict value )
 /* Tries to convert string to uint32_t, checking range.
    NOTE: 'min' MUST BE smaller than 'max'.
    NOTE: Marked as "noinline" because it's big enough. */
-uint32_t toULongCheckRange ( char *restrict optname, char *restrict value, uint32_t min, uint32_t max )
+uint32_t toULongCheckRange ( char * restrict optname, char * restrict value, uint32_t min, uint32_t max )
 {
   uint32_t n;
 
@@ -1805,7 +1825,7 @@ uint32_t toULongCheckRange ( char *restrict optname, char *restrict value, uint3
 }
 
 /* Check if there are any separators on string. */
-void check_list_separators ( char *optname, char *arg )
+void check_list_separators ( char * restrict optname, char * restrict arg )
 {
   assert ( arg != NULL );
 
@@ -1821,8 +1841,13 @@ void list_protocols ( void )
 
   puts ( INFO " List of supported protocols (--protocol):" );
 
-  for ( i = 1, ptbl = mod_table; ptbl->func; ptbl++ )
+  i = 1;
+  ptbl = mod_table;
+  while ( ptbl->func )
+  {
     printf ( "\t% 2d - %s\t(%s)\n", i++, ptbl->name, ptbl->description );
+    ptbl++;
+  }
 }
 
 /* TODO: Replace this regex routine with a screte function. */
@@ -1849,7 +1874,7 @@ void list_protocols ( void )
   }
 
 /* Ok... this is UGLY. */
-_Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
+int get_ip_and_cidr_from_string ( char const * const addr, addr_T *addr_ptr )
 {
   regex_t re;
   regmatch_t rm[6];
@@ -1862,13 +1887,13 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
 
   /* Try to compile the regular expression. */
   if ( regcomp ( &re, IP_REGEX, REG_EXTENDED ) )
-    return false;
+    return 0;
 
   /* Try to execute regex against the addr string. */
   if ( regexec ( &re, addr, 6, rm, 0 ) )
   {
     regfree ( &re );
-    return false;
+    return 0;
   }
 
   /* Allocate enough space for temporary string. */
@@ -1882,7 +1907,8 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
 
   bits = CIDR_MAXIMUM;  /* default is 32 bits netmask. */
 
-  for ( i = 2; i <= 4; i++ )
+  i = 2;
+  while ( i <= 4 )
   {
     if ( MATCH ( rm[i] ) )
     {
@@ -1896,6 +1922,8 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
       bits -= 8;
       matches[i - 1] = 0;
     }
+
+    i++;
   }
 
   /* Convert cidr match. */
@@ -1909,7 +1937,7 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
       /* if cidr is actually '0', then it is an error! */
       free ( t );
       regfree ( &re );
-      return false;
+      return 0;
     }
   }
   else
@@ -1922,12 +1950,17 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
   free ( t );
 
   /* Validate ip octects */
-  for ( i = 0; i < 4; i++ )
+  i = 0;
+  while ( i < 4 )
+  {
     if ( matches[i] > 255 )
     {
       regfree ( &re );
-      return false;
+      return 0;
     }
+
+    i++;
+  }
 
   /* NOTE: Check 'bits' here! */
   /* Validate cidr. */
@@ -1935,20 +1968,20 @@ _Bool get_ip_and_cidr_from_string ( char const *const addr, addr_T *addr_ptr )
   {
     error ( "CIDR must be between %u and %u.\n", CIDR_MINIMUM, CIDR_MAXIMUM );
     regfree ( &re );
-    return false;
+    return 0;
   }
 
   regfree ( &re );
 
   /* Prepare CIDR structure */
   addr_ptr->cidr = matches[4];
-  addr_ptr->addr = ( matches[3]         |
+  addr_ptr->addr = ( matches[3]           |
                      ( matches[2] << 8 )  |
                      ( matches[1] << 16 ) |
                      ( matches[0] << 24 ) ) &
-                   ( 0xffffffffU << ( 32 - addr_ptr->cidr ) );
+                   ( ~0U << ( 32 - addr_ptr->cidr ) );
 
-  return true;
+  return 1;
 }
 
 /* Convert strings like "10.3" to it's components.
@@ -1976,7 +2009,7 @@ int get_dual_values ( char *arg,
   char *p1, *p2;
   jmp_buf jb;
 
-  /* Error handling... */
+  /* Error handling... safe because we won't use to longjmp outside this function! */
   if ( setjmp ( jb ) )
   {
     error ( "'%s' should be formatted as 'n%s'.", optname, optional ? "[.n]" : ".n" );
@@ -2032,7 +2065,7 @@ int get_dual_values ( char *arg,
   if ( *px > max || *py > max )
   {
     error ( "One or both arguments of '%s' option are out of range.", optname );
-    return !0;
+    return 1;
   }
 
   /* Everything ok! */
@@ -2041,7 +2074,7 @@ int get_dual_values ( char *arg,
 
 /* Checks if threshold is valid. */
 /* NOTE: Moved here 'cause it's used just here. */
-int check_threshold ( const config_options_T *const restrict co )
+int check_threshold ( const config_options_T * const co )
 {
   threshold_T minThreshold;
 
@@ -2056,7 +2089,7 @@ int check_threshold ( const config_options_T *const restrict co )
   {
     error ( "Protool %s cannot have threshold smaller than %d.",
             mod_table[co->ip.protoname].name, minThreshold );
-    return !0;
+    return 1;
   }
 
   return 0;
@@ -2070,12 +2103,14 @@ int check_for_valid_option ( int opt, int *list )
 
   // If the first item is negative, all options are valid!
   if ( list )
-  {
     // Scan the valid options list and cheks if 'option' is in it.
-    for ( ; *list; list++ )
+    while ( *list )
+    {
       if ( opt == *list )
-        return !0;
-  }
+        return 1;
+
+      list++;
+    }
 
   return 0;
 }

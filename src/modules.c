@@ -164,9 +164,14 @@ int *get_module_valid_options_list ( int protocol )
 {
   modules_table_T *ptbl;
 
-  for ( ptbl = mod_table; ptbl->func; ptbl++ )
+  ptbl = mod_table;
+  while ( ptbl->func )
+  {
     if ( ptbl->protocol_id == protocol )
       return ptbl->valid_options;
+
+    ptbl++;
+  }
 
   /* Returns NULL if not found. */
   return NULL;
@@ -177,8 +182,12 @@ void build_indices ( void )
   uint32_t i;
 
   // Without shuffling get the sequence.
-  for ( i = 0; i < NUM_OF_MODULES; i++ )
+  i = 0;
+  while ( i < NUM_OF_MODULES )
+  {
     indices[i] = i;
+    i++;
+  }
 }
 
 uint32_t get_index ( config_options_T *co )

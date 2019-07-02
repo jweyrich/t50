@@ -38,10 +38,9 @@
  * @para co Pointer to T50 configuration structure.
  * @para size Pointer to packet size (updated by the function).
  */
-void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size )
+void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict size )
 {
-  uint32_t length,
-           counter;
+  uint32_t length;
 
   /* Packet and Checksum. */
   memptr_T buffer;
@@ -74,6 +73,8 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
   /* Identifying the IGMP Type and building it. */
   if ( co->igmp.type == IGMPV3_HOST_MEMBERSHIP_REPORT )
   {
+    uint32_t counter;
+
     /* IGMPv3 Report Header structure making a pointer to Packet. */
     igmpv3_report           = ( struct igmpv3_report * ) ( ( unsigned char * ) ( ip + 1 ) + length );
     igmpv3_report->type     = co->igmp.type;
@@ -93,8 +94,9 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
     buffer.ptr = igmpv3_grec + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for ( counter = 0; counter < co->igmp.sources; counter++ )
-      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
+    counter = 0;
+    while ( counter < co->igmp.sources )
+      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 
     /* Computing the checksum. */
     length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_report );
@@ -104,6 +106,8 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
   }
   else
   {
+    uint32_t counter;
+
     /* IGMPv3 Query Header structure making a pointer to Packet. */
     igmpv3_query           = ( struct igmpv3_query * ) ( ( unsigned char * ) ( ip + 1 ) + length );
     igmpv3_query->type     = co->igmp.type;
@@ -119,8 +123,9 @@ void igmpv3 ( const config_options_T *const restrict co, uint32_t *restrict size
     buffer.ptr = igmpv3_query + 1;
 
     /* NOTE: Assume co->igmp.sources > 0. */
-    for ( counter = 0; counter < co->igmp.sources; counter++ )
-      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter] );
+    counter = 0;
+    while ( counter < co->igmp.sources )
+      *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 
     /* Computing the checksum. */
     length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_query );
