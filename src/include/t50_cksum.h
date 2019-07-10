@@ -21,8 +21,9 @@
 #ifndef __CKSUM_H__
 #define __CKSUM_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
-uint16_t cksum ( void *, uint32_t );
+uint16_t cksum ( void *, size_t );
 
 #endif

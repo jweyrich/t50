@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -595,7 +595,7 @@ void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size
   /* Computing the checksum. */
   rsvp->check   = co->bogus_csum ?
                   RANDOM() :
-                  htons ( cksum ( rsvp, buffer.ptr - ( void * ) rsvp ) );
+                  htons ( cksum ( rsvp, ( size_t ) buffer.ptr - ( size_t ) rsvp ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );

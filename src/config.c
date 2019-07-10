@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -980,7 +980,7 @@ void set_config_option ( config_options_T * restrict co, char * restrict optname
 
     case OPTION_TCP_TSOPT:
       /* This option can contain 2 values separated by ':' (second is optional). */
-      /* FIXME: Is it separated by ':' or '.'? */
+      /* FIXME: Shouldn't this be separated by ':', instead of '.' ? */
       co->tcp.options |= TCP_OPTION_TSOPT;
 
       if ( get_dual_values ( arg, &a, &b, UINT_MAX, 1, '.', optname ) )
@@ -1096,8 +1096,9 @@ void set_config_option ( config_options_T * restrict co, char * restrict optname
       break;
 
     case OPTION_RIP_NETMASK:
+      /* FIXME: Is this correct? To resolve a 'netmask'? */
       co->rip.netmask = resolv ( arg );
-      break;  /* FIXME: Is this correct? */
+      break;
 
     case OPTION_RIP_NEXTHOP:
       check_list_separators ( optname, arg );
@@ -1746,7 +1747,7 @@ void set_config_option ( config_options_T * restrict co, char * restrict optname
       break;
 
     /*
-     * FIXME: These options expect to deal with lists, but only the first item
+     * FIXME: These options should deal with lists, but only the first item
      *        is used...
      */
     // Source port.

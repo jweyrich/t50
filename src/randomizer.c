@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ static uint32_t random_xorshift128plus ( void )
 }
 
 // NOTE: Intel specific!
+#if defined(__i386) || defined(__x86_64)
 static uint32_t random_rdrand ( void )
 {
   uint32_t r;
@@ -59,6 +60,7 @@ static uint32_t random_rdrand ( void )
 
   return r;
 }
+#endif
 
 static void empty_srandom ( void ) {}
 

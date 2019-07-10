@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -127,11 +127,11 @@ void ripv1 ( const config_options_T * const restrict co, uint32_t * restrict siz
 
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons ( buffer.ptr - ( void * ) udp );
+  pseudo->len      = htons ( ( size_t ) buffer.ptr - ( size_t ) udp );
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons ( cksum ( udp, ( void * ) ( pseudo + 1 ) - ( void * ) udp ) );
+                htons ( cksum ( udp, ( size_t ) ( pseudo + 1 ) - ( size_t ) udp ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );

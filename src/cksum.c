@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
  *        Yet... There was another error that didn't consider BIG ENDIAN machines...
  *        Note to myself: Don't mess with this routine again!
  */
-uint16_t cksum ( void *data, uint32_t length )
+uint16_t cksum ( void *data, size_t length )
 {
   uint16_t *ptr;
   uint32_t sum;

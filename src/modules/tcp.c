@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -470,7 +470,7 @@ void tcp ( const config_options_T * const restrict co, uint32_t * restrict size 
   pseudo->len      = htons ( length );
 
   // FIXME: Maybe it is safer to do:
-  //  length = (uint32_t)((void *)(pseudo+1) - (void *)tcp);
+  //  length = (uint32_t)((size_t)(pseudo+1) - (size_t)tcp);
   length += sizeof ( struct psdhdr );
 
   /* Computing the checksum. */

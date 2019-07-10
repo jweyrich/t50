@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 
     /* Computing the checksum. */
-    length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_report );
+    length =  ( size_t ) buffer.ptr - ( size_t ) igmpv3_report;
     igmpv3_report->csum = co->bogus_csum ?
                           RANDOM() :
                           htons ( cksum ( igmpv3_report, length ) );
@@ -128,7 +128,7 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 
     /* Computing the checksum. */
-    length = ( uint32_t ) ( buffer.ptr - ( void * ) igmpv3_query );
+    length = ( size_t ) buffer.ptr - ( size_t ) igmpv3_query;
     igmpv3_query->csum = co->bogus_csum ?
                          RANDOM() :
                          htons ( cksum ( igmpv3_query, length ) );

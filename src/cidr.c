@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -71,24 +71,6 @@ struct cidr *config_cidr ( const config_options_T * const co )
   {
     uint32_t netmask;
 
-    //
-    // Calc maximum number of ip addresses based on cidr.
-    //
-    // These will cause "internal error":
-    // 0 bits: 0xfffffffe ok
-    // 1 bit : 0x7ffffffe ok
-    // ...
-    //
-    // These will work well:
-    // 8 bits : 0x00fffffe ok
-    // 16 bits: 0x0000fffe ok
-    // 30 bits: 2 ok
-    //
-    // This will work as if 32 bits.
-    // 31 bits: 0
-    //
-    // hostid == 0 means: use the address as it is!
-    //
     cidr.hostid = ( 1U << ( 32 - co->bits ) ) - 2U;
 
     /* XXX Sanitizing the maximum host identifier's IP addresses.
