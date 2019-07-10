@@ -3,7 +3,7 @@
 /*
  *  T50 - Experimental Mixed Packet Injector
  *
- *  Copyright (C) 2010 - 2015 - T50 developers
+ *  Copyright (C) 2010 - 2019 - T50 developers
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,9 +32,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h> /* POSIX.1 compliant */
-//#ifndef NDEBUG
-//  #include <linux/if_ether.h>
-//#endif
 #include <configuration.h>
 #include <t50_defines.h>
 #include <t50_typedefs.h>
@@ -60,9 +57,6 @@ static void show_statistics ( void );
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-/**
- * Main function launches all T50 modules
- */
 int main ( int argc, char *argv[] )
 {
   config_options_T *co;
@@ -72,7 +66,6 @@ int main ( int argc, char *argv[] )
   time_t           lt;
   struct timeval   tv;
 
-  // default C (US) locale...
   setlocale ( LC_ALL, "C" );
 
   show_version();
@@ -81,7 +74,6 @@ int main ( int argc, char *argv[] )
      This must be called before testing user privileges. */
   co = parse_command_line ( argv );
 
-  /* User must have root privileges to run T50, unless --help or --version options are found on command line. */
   if ( getuid() )
     fatal_error ( "User must have root privilege to run." );
 
@@ -95,10 +87,9 @@ int main ( int argc, char *argv[] )
 
 #ifdef  __HAVE_TURBO__
 
-  /* Creates the forked process if turbo is turned on. */
+  /* Creates the forked process only if turbo is turned on. */
   if ( co->turbo )
   {
-    /* if it's necessary to fork a new process... */
     if ( ( co->ip.protocol == IPPROTO_T50 && co->threshold > number_of_modules ) ||
          ( co->ip.protocol != IPPROTO_T50 && co->threshold > 1 ) )
     {
@@ -107,14 +98,10 @@ int main ( int argc, char *argv[] )
       if ( ( pid = fork() ) == -1 )
         fatal_error ( "Cannot create child process" );
 
-      /* Divide the process iterations in main loop between both processes. */
+      /* Distribute the number of packets between processes */
       new_threshold = co->threshold / 2;
-
-      /* Don't let parent process get the extra packet if threshold is odd. */
       if ( !IS_CHILD_PID ( pid ) )
         new_threshold += ( co->threshold & 1 );
-
-      /* Updates threshold for this process. */
       co->threshold = new_threshold;
     }
   }
@@ -123,14 +110,12 @@ int main ( int argc, char *argv[] )
 
 #endif  /* __HAVE_TURBO__ */
 
-  /* Setting the priority to both parent and child process. */
   if ( setpriority ( PRIO_PROCESS, PRIO_PROCESS, -15 )  == -1 )
     fatal_error ( "Cannot set process priority" );
 
   /* Show launch info only for parent process. */
   if ( !IS_CHILD_PID ( pid ) && !co->quiet )
   {
-    /* Getting the local time. */
     lt = time ( NULL );
 
     printf ( INFO "" PACKAGE_NAME " successfully launched at %s\n",
@@ -138,17 +123,17 @@ int main ( int argc, char *argv[] )
   }
 
   // SRANDOM is here because each process has its own
-  // random seed. Notice this is called after fork().
+  // random seed. Notice this is called after fork()!
   SRANDOM();
 
-  // Indices used for IPPROTO_T50 shuffling.
+  // Initialize indices used for IPPROTO_T50 shuffling.
   build_indices();
 
   /* Preallocate packet buffer. */
   alloc_packet ( INITIAL_PACKET_SIZE );
   atexit ( destroy_packet_buffer );
 
-  /* Selects the initial protocol to use. */
+  /* Selects the initial protocol. */
   if ( co->ip.protocol != IPPROTO_T50 )
     ptbl = selectProtocol ( co, &proto );
   else
@@ -184,15 +169,6 @@ int main ( int argc, char *argv[] )
     /* Finally, calls the 'module' function to build the packet. */
     co->ip.protocol = ptbl->protocol_id;
     ptbl->func ( co, &size );
-
-//#ifndef NDEBUG
-//
-//    /* I'll use this to fine tune the alloc_packet() function, someday! */
-//    if ( size > ETH_DATA_LEN )
-//      fprintf ( stderr, DEBUG " Protocol %s packet size (%u bytes) exceed max. Ethernet packet data length!\n",
-//                ptbl->name, size );
-//
-//#endif
 
     /* Try to send the packet. */
     if ( ! send_packet ( packet, size, co ) )
@@ -236,7 +212,6 @@ int main ( int argc, char *argv[] )
 
 #endif
 
-    /* Finally we close the raw socket. */
     close_socket();
 
     if ( !co->quiet )
@@ -249,7 +224,7 @@ int main ( int argc, char *argv[] )
   }
 
   /* Everything went well. Exit. */
-  return 0;
+  return EXIT_SUCCESS;
 }
 #pragma GCC diagnostic pop
 
@@ -278,7 +253,7 @@ static void signal_handler ( int signal )
 
 void initialize ( const config_options_T *co )
 {
-  /* 0 is an invalid signal! */
+  /* 0 is an invalid signal! (marks the end of the list) */
   static int handled_signals[] = { SIGPIPE, SIGINT, SIGCHLD, SIGALRM, 0 };
   int *sigsp;
 
@@ -290,19 +265,16 @@ void initialize ( const config_options_T *co )
 
   /* Hide ^X char output from terminal */
   tcgetattr ( STDOUT_FILENO, &tios );
-
   if ( echo_enabled = tios.c_lflag & ECHO )
     tios.c_lflag &= ~ECHO;
-
   tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 
-  sigemptyset ( &sigset );
   /* Blocks SIGTSTP avoiding ^Z behavior. */
+  sigemptyset ( &sigset );
   sigaddset ( &sigset, SIGTSTP );
   /* OBS: SIGSTOP cannot be caught, blocked or ignored! */
   /*      Don't need to block SIGCONT */
 
-  /* Setup the signals block mask */
   sigprocmask ( SIG_BLOCK, &sigset, NULL );
 
   /* --- Initialize signal handlers --- */
@@ -314,12 +286,12 @@ void initialize ( const config_options_T *co )
   while ( *sigsp )
     sigaction( *sigsp++, &sa, NULL );
 
-  /* --- To simplify things, make sure stdout is unbuffered
-         (otherwise, it's line buffered). --- */
+  /* To simplify things, make sure stdout is unbuffered
+     (otherwise, it's line buffered). */
   fflush ( stdout );
   setvbuf ( stdout, NULL, _IONBF, 0 );
 
-  /* --- Show some messages. */
+  /* Show some messages. */
   if ( !co->quiet )
   {
     if ( co->flood )
@@ -348,6 +320,7 @@ modules_table_T *selectProtocol ( const config_options_T * restrict co, int * re
 
   ptbl = mod_table;
 
+  // FIXME: Of course this is a 'hack'. Maybe I should divise something more portable here.
   if ( ( *proto = co->ip.protocol ) != IPPROTO_T50 )
     ptbl += co->ip.protoname;
 
@@ -358,14 +331,13 @@ void show_statistics ( void )
 {
   struct timeval tv;
 
-  // FIXME: This is not as precise as I want.
+  // FIXME: This is not as precise as I wanted.
   //        A bunch of microseconds (maybe milisseconds) will
   //        be accounted as the finalization queue routines
   //        are dispatched.
   gettimeofday ( &tv, NULL );
 
-  // FIX: We'll make sure the socket is closed here!
-  close_socket();
+  close_socket(); // NOTE: This will 'flush' the buffers?!
 
   if ( packets_sent )
   {
