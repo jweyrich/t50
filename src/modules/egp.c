@@ -36,9 +36,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void egp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void egp ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length;
+  size_t length;
   struct iphdr *ip;
 
   /* EGP header and EGP acquire header. */
@@ -71,7 +71,7 @@ void egp ( const config_options_T * const restrict co, uint32_t * restrict size 
    * XXX Checking EGP Type and building appropriate header.
    */
   /* EGP Header structure making a pointer to Packet. */
-  egp           = ( struct egp_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  egp           = ( void * ) ( ip + 1 ) + length;
   egp->version  = EGPVERSION;
   egp->type     = co->egp.type;
   egp->code     = co->egp.code;

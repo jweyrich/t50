@@ -37,9 +37,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void icmp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void icmp ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t greoptlen;   /* GRE options size. */
+  size_t greoptlen;   /* GRE options size. */
 
   struct iphdr *ip;
 
@@ -65,7 +65,7 @@ void icmp ( const config_options_T * const restrict co, uint32_t * restrict size
                       sizeof ( struct icmphdr ) );
 
   /* ICMP Header structure making a pointer to Packet. */
-  icmp                   = ( struct icmphdr * ) ( ( unsigned char * ) ( ip + 1 ) + greoptlen );
+  icmp                   = ( void * ) ( ip + 1 ) + greoptlen;
   icmp->type             = co->icmp.type;
   icmp->code             = co->icmp.code;
   icmp->un.echo.id       = __RND ( co->icmp.id );

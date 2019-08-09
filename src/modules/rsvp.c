@@ -29,7 +29,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static  uint32_t rsvp_objects_len ( const uint8_t, const uint8_t, const uint8_t, const uint8_t );
+static size_t rsvp_objects_len ( const uint8_t, const uint8_t, const uint8_t, const uint8_t );
 
 /**
  * RSVP packet header configuration.
@@ -39,10 +39,10 @@ static  uint32_t rsvp_objects_len ( const uint8_t, const uint8_t, const uint8_t,
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void rsvp ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t greoptlen,       /* GRE options size. */
-           objects_length;  /* RSVP objects length. */
+  size_t greoptlen,       /* GRE options size. */
+         objects_length;  /* RSVP objects length. */
 
   /* Packet and Checksum. */
   memptr_T buffer;
@@ -75,7 +75,7 @@ void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size
                       objects_length );
 
   /* RSVP Header structure making a pointer to IP Header structure. */
-  rsvp           = ( struct rsvp_common_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + greoptlen );
+  rsvp           = ( void * ) ( ip + 1 ) + greoptlen;
   rsvp->flags    = __RND ( co->rsvp.flags );
   rsvp->version  = RSVPVERSION;
   rsvp->type     = co->rsvp.type;
@@ -559,6 +559,7 @@ void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size
       /* Dealing with scope address(es). */
       /* NOTE: Assume co->rsvp.scope > 0. */
       counter = 0;
+
       while ( counter < co->rsvp.scope )
         *buffer.inaddr_ptr++ = INADDR_RND ( co->rsvp.address[counter++] );
     }
@@ -602,9 +603,9 @@ void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size
 }
 
 /* RSVP objects size claculation. */
-uint32_t rsvp_objects_len ( const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec )
+size_t rsvp_objects_len ( const uint8_t type, const uint8_t scope, const uint8_t adspec, const uint8_t tspec )
 {
-  uint32_t size;
+  size_t size;
 
   /*
    * The code starts with the size of SESSION Object Class  (according

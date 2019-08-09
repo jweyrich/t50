@@ -26,9 +26,9 @@
 // NOTE: It is safe to use uint32_t instead of uint32_t 'cause
 //       the index buffer will never be greater than the number
 //       of available protocols.
-void shuffle ( uint32_t *p, uint32_t size )
+void shuffle ( uint32_t *p, size_t size )
 {
-  uint32_t i, j;
+  size_t i, j;
 
   i = 0;
   while ( i < size - 2 )

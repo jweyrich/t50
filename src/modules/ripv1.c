@@ -40,9 +40,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ripv1 ( const config_options_T * const restrict co, uint32_t * restrict size )
+void ripv1 ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length;
+  size_t length;
 
   memptr_T buffer;
 
@@ -73,7 +73,7 @@ void ripv1 ( const config_options_T * const restrict co, uint32_t * restrict siz
                                rip_hdr_len ( 0 ) );
 
   /* UDP Header structure making a pointer to IP Header structure. */
-  udp         = ( struct udphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  udp         = ( void * ) ( ip + 1 ) + length;
   udp->source = udp->dest = htons ( IPPORT_RIP );
   udp->len    = htons ( sizeof ( struct udphdr ) + rip_hdr_len ( 0 ) );
   udp->check  = 0;

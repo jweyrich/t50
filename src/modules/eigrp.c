@@ -29,7 +29,7 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static uint32_t eigrp_hdr_len ( const uint16_t, const uint16_t, const uint8_t, const int );
+static size_t eigrp_hdr_len ( const uint16_t, const uint16_t, const uint8_t, const int );
 
 /**
  * EIGRP packet header configuration.
@@ -39,10 +39,10 @@ static uint32_t eigrp_hdr_len ( const uint16_t, const uint16_t, const uint8_t, c
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void eigrp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void eigrp ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length,
-           eigrp_tlv_len; /* EIGRP TLV size. */
+  size_t length,
+         eigrp_tlv_len; /* EIGRP TLV size. */
 
   in_addr_t dest;       /* EIGRP Destination address */
   uint32_t prefix;      /* EIGRP Prefix */
@@ -89,7 +89,7 @@ void eigrp ( const config_options_T * const restrict co, uint32_t * restrict siz
    *
    * EIGRP Header structure.
    */
-  eigrp              = ( struct eigrp_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  eigrp              = ( void * ) ( ip + 1 ) + length;
   eigrp->version     = co->eigrp.ver_minor ? co->eigrp.ver_minor : EIGRPVERSION;
   eigrp->opcode      = __RND ( co->eigrp.opcode );
   eigrp->flags       = __RND ( co->eigrp.flags );
@@ -157,6 +157,7 @@ void eigrp ( const config_options_T * const restrict co, uint32_t * restrict siz
       *buffer.dword_ptr++ = __RND ( co->eigrp.key_id );
 
       counter = 0;
+
       while ( counter++ < EIGRP_PADDING_BLOCK )
         *buffer.byte_ptr++ = FIELD_MUST_BE_ZERO;
 
@@ -164,6 +165,7 @@ void eigrp ( const config_options_T * const restrict co, uint32_t * restrict siz
        * The Authentication key uses HMAC-MD5 or HMAC-SHA-1 digest.
        */
       counter = 0;
+
       while ( counter++ < stemp )
         *buffer.byte_ptr++ = RANDOM();
     }
@@ -430,21 +432,21 @@ void eigrp ( const config_options_T * const restrict co, uint32_t * restrict siz
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
-                    RANDOM() : htons ( cksum ( eigrp, ( uint32_t ) ( ( size_t ) buffer.ptr - ( size_t ) eigrp ) ) );
+                    RANDOM() : htons ( cksum ( eigrp, ( size_t ) buffer.ptr - ( size_t ) eigrp ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );
 }
 
 /* EIGRP header size calculation */
-uint32_t eigrp_hdr_len ( const uint16_t opcode,
-                         const uint16_t type,
-                         const uint8_t prefix,
-                         const int auth )
+size_t eigrp_hdr_len ( const uint16_t opcode,
+                       const uint16_t type,
+                       const uint8_t prefix,
+                       const int auth )
 {
   /* The code starts with size '0' and it accumulates all the required
    * size if the conditionals match. Otherwise, it returns size '0'. */
-  uint32_t size = 0;
+  size_t size = 0;
 
   /*
    * The Authentication Data TVL must be used only in some cases:

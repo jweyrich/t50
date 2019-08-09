@@ -29,8 +29,8 @@
 #include <t50_modules.h>
 #include <t50_randomizer.h>
 
-static uint32_t ospf_hdr_len ( uint32_t, int, int, int );
-static void ospf_lsupdate ( const config_options_T * const restrict, void ** restrict, struct ospf_lsa_hdr * restrict );
+static size_t ospf_hdr_len ( uint32_t, int, int, int );
+static void ospf_lsupdate ( const config_options_T *const restrict, void **restrict, struct ospf_lsa_hdr *restrict );
 
 /**
  * OSPF packet header configuration.
@@ -40,12 +40,12 @@ static void ospf_lsupdate ( const config_options_T * const restrict, void ** res
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ospf ( const config_options_T * const restrict co, uint32_t * restrict size )
+void ospf ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length,
-           ospf_length, /* OSPF header length. */
-           counter,
-           stemp;
+  size_t length,
+         ospf_length, /* OSPF header length. */
+         counter,
+         stemp;
 
   uint8_t ospf_options, /* OSPF options? */
           lls;          /* OSPF LLS header? */
@@ -94,7 +94,7 @@ void ospf ( const config_options_T * const restrict co, uint32_t * restrict size
                       ospf_tlv_len ( co->ospf.type, lls, co->ospf.auth ) );
 
   /* OSPF Header structure making a pointer to  IP Header structure. */
-  ospf          = ( struct ospf_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  ospf          = ( void * ) ( ip + 1 ) + length;
   ospf->version = OSPFVERSION;
   ospf->type    = co->ospf.type;
 
@@ -203,6 +203,7 @@ void ospf ( const config_options_T * const restrict co, uint32_t * restrict size
       /* Dealing with neighbor address(es). */
       /* NOTE: Assume co->ospf.neighbor > 0. */
       counter = 0;
+
       while ( counter < co->ospf.neighbor )
         *buffer.inaddr_ptr++ = INADDR_RND ( co->ospf.address[counter++] );
 
@@ -394,6 +395,7 @@ build_ospf_lsupdate:
 
   /* NOTE: Assume stemp > 0. */
   counter = 0;
+
   while ( counter++ < stemp )
     *buffer.byte_ptr++ = RANDOM();
 
@@ -485,6 +487,7 @@ build_ospf_lsupdate:
 
         /* NOTE: Assume stemp > 0. */
         counter = 0;
+
         while ( counter++ < stemp )
           *buffer.byte_ptr++ = RANDOM();
 
@@ -527,12 +530,12 @@ build_ospf_lsupdate:
 }
 
 /* OSPF header size calculation. */
-uint32_t ospf_hdr_len ( uint32_t type,
-                        int neighbor,
-                        int lsa_type,
-                        int dd_include_lsa )
+size_t ospf_hdr_len ( uint32_t type,
+                      int neighbor,
+                      int lsa_type,
+                      int dd_include_lsa )
 {
-  uint32_t size;
+  size_t size;
 
   /*
    * The code starts with size '0' and it accumulates all the required
@@ -616,7 +619,7 @@ uint32_t ospf_hdr_len ( uint32_t type,
   return size;
 }
 
-void ospf_lsupdate ( const config_options_T * const restrict co, void ** restrict ptr, struct ospf_lsa_hdr * restrict ospf_lsa )
+void ospf_lsupdate ( const config_options_T *const restrict co, void **restrict ptr, struct ospf_lsa_hdr *restrict ospf_lsa )
 {
   memptr_T buffer;
 

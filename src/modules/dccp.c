@@ -38,11 +38,11 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void dccp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void dccp ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length,
-           dccp_length, /* DCCP header length. */
-           dccp_ext_length; /* DCCP Extended Sequence Number length. */
+  size_t length,
+         dccp_length, /* DCCP header length. */
+         dccp_ext_length; /* DCCP Extended Sequence Number length. */
 
   /* Packet and Checksum. */
   void *buffer_ptr;
@@ -90,7 +90,7 @@ void dccp ( const config_options_T * const restrict co, uint32_t * restrict size
                                dccp_length );
 
   /* DCCP Header structure making a pointer to Packet. */
-  dccp                 = ( struct dccp_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  dccp                 = ( void * ) ( ip + 1 ) + length;
   dccp->dccph_sport    = IPPORT_RND ( co->source );
   dccp->dccph_dport    = IPPORT_RND ( co->dest );
 
@@ -259,11 +259,11 @@ void dccp ( const config_options_T * const restrict co, uint32_t * restrict size
 
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons ( ( uint32_t ) ( ( size_t ) buffer_ptr - ( size_t ) dccp ) );
+  pseudo->len      = htons ( ( size_t ) buffer_ptr - ( size_t ) dccp );
 
   /* Computing the checksum. */
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         htons ( cksum ( dccp, ( uint32_t ) ( ( size_t ) ( pseudo + 1 ) - ( size_t ) dccp ) ) );
+                         htons ( cksum ( dccp, ( size_t ) ( pseudo + 1 ) - ( size_t ) dccp ) );
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum ( packet, co, *size );

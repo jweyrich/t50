@@ -38,9 +38,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void igmpv1 ( const config_options_T * const restrict co, uint32_t * restrict size )
+void igmpv1 ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length;
+  size_t length;
   struct iphdr *ip;
 
   /* IGMPv1 header. */
@@ -68,7 +68,7 @@ void igmpv1 ( const config_options_T * const restrict co, uint32_t * restrict si
                       sizeof ( struct igmphdr ) );
 
   /* IGMPv1 Header structure making a pointer to Packet. */
-  igmpv1        = ( struct igmphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  igmpv1        = ( void * ) ( ip + 1 ) + length;
   igmpv1->type  = co->igmp.type;
   igmpv1->code  = co->igmp.code;
   igmpv1->group = INADDR_RND ( co->igmp.group );

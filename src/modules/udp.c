@@ -37,9 +37,9 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void udp ( const config_options_T * const restrict co, uint32_t *size )
+void udp ( const config_options_T * const restrict co, size_t * restrict size )
 {
-  uint32_t length;
+  size_t length;
 
   struct iphdr *ip;
   struct iphdr *gre_ip;
@@ -65,7 +65,7 @@ void udp ( const config_options_T * const restrict co, uint32_t *size )
                                sizeof ( struct udphdr ) );
 
   /* UDP Header structure making a pointer to  IP Header structure. */
-  udp         = ( struct udphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  udp         = ( void * ) ( ip + 1 ) + length;
   udp->source = IPPORT_RND ( co->source );
   udp->dest   = IPPORT_RND ( co->dest );
   udp->len    = htons ( sizeof ( struct udphdr ) );
@@ -91,7 +91,7 @@ void udp ( const config_options_T * const restrict co, uint32_t *size )
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons ( cksum ( udp, ( uint32_t ) ( ( size_t ) ( pseudo + 1 ) - ( size_t ) udp ) ) );
+                htons ( cksum ( udp, ( size_t ) ( pseudo + 1 ) - ( size_t ) udp ) );
 
   gre_checksum ( packet, co, *size );
 }

@@ -18,9 +18,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __GRE_H__
-#define __GRE_H__
+#ifndef GRE_H_INCLUDED_
+#define GRE_H_INCLUDED_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define GREVERSION             0
@@ -159,8 +160,8 @@ struct gre_seq_hdr
 
 struct config_options;  /* Defined in config.h. */
 
-uint32_t gre_opt_len ( const struct config_options * const );
-struct iphdr *gre_encapsulation ( void * restrict, const struct config_options * const restrict, uint32_t );
-void   gre_checksum ( void * restrict, const struct config_options * const restrict, uint32_t );
+size_t gre_opt_len ( const struct config_options * const );
+struct iphdr *gre_encapsulation ( void * restrict, const struct config_options * const restrict, size_t );
+void   gre_checksum ( void * restrict, const struct config_options * const restrict, size_t );
 
 #endif  /* __GRE_H */

@@ -154,7 +154,7 @@ int main ( int argc, char *argv[] )
   while ( co->flood || co->threshold )
   {
     /* Will hold the actual packet size after module function call. */
-    uint32_t size;
+    size_t size;
 
     /* Set the destination IP address to RANDOM IP address. */
     co->ip.daddr = cidr_ptr->__1st_addr;

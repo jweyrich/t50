@@ -44,13 +44,14 @@
 /* Initialized for error condition, just in case! */
 static int fd = -1;
 
+/* Used for statistics. */
 uint64_t bytes_sent = 0ULL;
 uint64_t packets_sent = 0ULL;
 
 //static int wait_for_io ( int );
 static void socket_setnonblocking( int );
 static void socket_setiphdrincl( int );
-static ssize_t socket_send ( int, struct sockaddr_in *, void *, uint32_t );
+static ssize_t socket_send ( int, struct sockaddr_in *, void *, size_t );
 #ifdef SO_SNDBUF
   static void socket_setup_sendbuffer ( int );
 #endif
@@ -119,7 +120,7 @@ void close_socket ( void )
  * @return true (success) or false (error).
  */
 int send_packet ( const void * const buffer,
-                  uint32_t size,
+                  size_t size,
                   const config_options_T * const restrict co )
 {
   struct sockaddr_in sin =
@@ -189,7 +190,7 @@ void socket_setup_sendbuffer ( int fd )
 #endif /* SO_SNDBUF */
 
 // FIXME: Maybe it is necessary to insert a counter, in case of multiple failures...
-static ssize_t socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, uint32_t size )
+static ssize_t socket_send ( int fd, struct sockaddr_in *saddr, void *buffer, size_t size )
 {
   ssize_t r;
 

@@ -35,7 +35,7 @@
 /*
  * prototypes.
  */
-static uint32_t tcp_options_len ( const uint8_t, int, int );
+static size_t tcp_options_len ( const uint8_t, int, int );
 
 /**
  * TCP packet header configuration.
@@ -46,11 +46,11 @@ static uint32_t tcp_options_len ( const uint8_t, int, int );
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to size of the packet (updated by the function).
  */
-void tcp ( const config_options_T * const restrict co, uint32_t * restrict size )
+void tcp ( const config_options_T * const restrict co, size_t * restrict size )
 {
   uint32_t tcpolen,     /* TCP options size. */
-           tcpopt,      /* TCP options total size. */
-           length;
+           tcpopt;      /* TCP options total size. */
+  size_t   length;
 
   memptr_T buffer;
 
@@ -97,7 +97,7 @@ void tcp ( const config_options_T * const restrict co, uint32_t * restrict size 
                   __FUNCTION__, tcpopt );
 
   /* TCP Header structure making a pointer to IP Header structure. */
-  tcp          = ( struct tcphdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  tcp          = ( void * ) ( ip + 1 ) + length;
   tcp->source  = IPPORT_RND ( co->source );
   tcp->dest    = IPPORT_RND ( co->dest );
   tcp->res1    = TCP_RESERVED_BITS;
@@ -198,6 +198,8 @@ void tcp ( const config_options_T * const restrict co, uint32_t * restrict size 
     if ( !co->tcp.syn )
     {
       /* NOTE: Cannot assume anything about tcpolen. */
+      /* FIXME: Should avoid using a loop to increase speed, but
+                probably this loop will be unrolled. */
       while ( tcpolen & 3 )
       {
         *buffer.byte_ptr++ = TCPOPT_NOP;
@@ -481,9 +483,9 @@ void tcp ( const config_options_T * const restrict co, uint32_t * restrict size 
 }
 
 /* TCP options size calculation. */
-uint32_t tcp_options_len ( const uint8_t tcp_options, int useMD5, int useAuth )
+size_t tcp_options_len ( const uint8_t tcp_options, int useMD5, int useAuth )
 {
-  uint32_t size;
+  size_t size;
 
   /*
    * The code starts with size '0' and it accumulates all the required

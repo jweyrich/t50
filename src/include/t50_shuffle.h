@@ -21,8 +21,9 @@
 #ifndef __T50_SHUFFLE_INCLUDED__
 #define __T50_SHUFFLE_INCLUDED__
 
+#include <stddef.h>
 #include <stdint.h>
 
-void shuffle ( uint32_t *, uint32_t );
+void shuffle ( uint32_t *, size_t );
 
 #endif

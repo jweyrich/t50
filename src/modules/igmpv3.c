@@ -38,9 +38,9 @@
  * @para co Pointer to T50 configuration structure.
  * @para size Pointer to packet size (updated by the function).
  */
-void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict size )
+void igmpv3 ( const config_options_T *const restrict co, size_t *restrict size )
 {
-  uint32_t length;
+  size_t length;
 
   /* Packet and Checksum. */
   memptr_T buffer;
@@ -76,7 +76,7 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
     uint32_t counter;
 
     /* IGMPv3 Report Header structure making a pointer to Packet. */
-    igmpv3_report           = ( struct igmpv3_report * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+    igmpv3_report           = ( void * ) ( ip + 1 ) + length;
     igmpv3_report->type     = co->igmp.type;
     igmpv3_report->resv1    = FIELD_MUST_BE_ZERO;
     igmpv3_report->resv2    = FIELD_MUST_BE_ZERO;
@@ -95,11 +95,12 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
 
     /* NOTE: Assume co->igmp.sources > 0. */
     counter = 0;
+
     while ( counter < co->igmp.sources )
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 
     /* Computing the checksum. */
-    length =  ( size_t ) buffer.ptr - ( size_t ) igmpv3_report;
+    length = ( size_t ) buffer.ptr - ( size_t ) igmpv3_report;
     igmpv3_report->csum = co->bogus_csum ?
                           RANDOM() :
                           htons ( cksum ( igmpv3_report, length ) );
@@ -109,7 +110,7 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
     uint32_t counter;
 
     /* IGMPv3 Query Header structure making a pointer to Packet. */
-    igmpv3_query           = ( struct igmpv3_query * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+    igmpv3_query           = ( void * ) ( ip + 1 ) + length;
     igmpv3_query->type     = co->igmp.type;
     igmpv3_query->code     = co->igmp.code;
     igmpv3_query->group    = INADDR_RND ( co->igmp.group );
@@ -124,6 +125,7 @@ void igmpv3 ( const config_options_T * const restrict co, uint32_t * restrict si
 
     /* NOTE: Assume co->igmp.sources > 0. */
     counter = 0;
+
     while ( counter < co->igmp.sources )
       *buffer.inaddr_ptr++ = INADDR_RND ( co->igmp.address[counter++] );
 

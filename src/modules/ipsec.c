@@ -37,14 +37,14 @@
  * @param co Pointer to T50 configuration structure.
  * @param size Pointer to packet size (updated by the function).
  */
-void ipsec ( const config_options_T * const restrict co, uint32_t *size )
+void ipsec ( const config_options_T *const restrict co, size_t *size )
 {
   /* IPSec AH Integrity Check Value (ICV). */
 #define IP_AH_ICV (sizeof(uint32_t) * 3)
 
-  uint32_t length,
-           esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
-           counter;
+  size_t length,
+         esp_data,    /* IPSec ESP Data Encrypted (RANDOM). */
+         counter;
 
   /* Packet. */
   memptr_T buffer;
@@ -100,7 +100,7 @@ void ipsec ( const config_options_T * const restrict co, uint32_t *size )
    */
 
   /* IPSec AH Header structure making a pointer to IP Header structure. */
-  ip_auth          = ( struct ip_auth_hdr * ) ( ( unsigned char * ) ( ip + 1 ) + length );
+  ip_auth          = ( void * ) ( ip + 1 ) + length;
   ip_auth->nexthdr = IPPROTO_ESP;
   ip_auth->hdrlen  = co->ipsec.ah_length ?
                      co->ipsec.ah_length :
@@ -114,6 +114,7 @@ void ipsec ( const config_options_T * const restrict co, uint32_t *size )
 
   /* Setting a fake encrypted content. */
   counter = 0;
+
   while ( counter++ < IP_AH_ICV )
     *buffer.byte_ptr++ = RANDOM();
 
@@ -126,6 +127,7 @@ void ipsec ( const config_options_T * const restrict co, uint32_t *size )
 
   /* Setting a fake encrypted content. */
   counter = 0;
+
   while ( counter++ < esp_data )
     *buffer.byte_ptr++ = RANDOM();
 
