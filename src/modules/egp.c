@@ -87,7 +87,7 @@ void egp ( const config_options_T * const restrict co, uint32_t * restrict size 
 
   /* Computing the checksum. */
   egp->check    = co->bogus_csum ? RANDOM() :
-                  htons ( cksum ( egp, ( void * ) ( egp_acq + 1 ) - ( void * ) egp ) );
+                  htons ( cksum ( egp, ( size_t ) ( egp_acq + 1 ) - ( size_t ) egp ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );

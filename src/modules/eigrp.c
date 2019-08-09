@@ -430,7 +430,7 @@ void eigrp ( const config_options_T * const restrict co, uint32_t * restrict siz
 
   /* Computing the checksum. */
   eigrp->check    = co->bogus_csum ?
-                    RANDOM() : htons ( cksum ( eigrp, ( uint32_t ) ( buffer.ptr - ( void * ) eigrp ) ) );
+                    RANDOM() : htons ( cksum ( eigrp, ( uint32_t ) ( ( size_t ) buffer.ptr - ( size_t ) eigrp ) ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );

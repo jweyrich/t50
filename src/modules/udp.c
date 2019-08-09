@@ -91,7 +91,7 @@ void udp ( const config_options_T * const restrict co, uint32_t *size )
 
   /* Computing the checksum. */
   udp->check  = co->bogus_csum ? RANDOM() :
-                htons ( cksum ( udp, ( uint32_t ) ( ( void * ) ( pseudo + 1 ) - ( void * ) udp ) ) );
+                htons ( cksum ( udp, ( uint32_t ) ( ( size_t ) ( pseudo + 1 ) - ( size_t ) udp ) ) );
 
   gre_checksum ( packet, co, *size );
 }

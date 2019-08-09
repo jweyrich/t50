@@ -595,7 +595,7 @@ void rsvp ( const config_options_T * const restrict co, uint32_t * restrict size
   /* Computing the checksum. */
   rsvp->check   = co->bogus_csum ?
                   RANDOM() :
-                  htons ( cksum ( rsvp, buffer.ptr - ( void * ) rsvp ) );
+                  htons ( cksum ( rsvp, ( size_t ) buffer.ptr - ( size_t ) rsvp ) );
 
   /* GRE Encapsulation takes place. */
   gre_checksum ( packet, co, *size );

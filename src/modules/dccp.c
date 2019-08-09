@@ -259,11 +259,11 @@ void dccp ( const config_options_T * const restrict co, uint32_t * restrict size
 
   pseudo->zero     = 0;
   pseudo->protocol = co->ip.protocol;
-  pseudo->len      = htons ( ( uint32_t ) ( buffer_ptr - ( void * ) dccp ) );
+  pseudo->len      = htons ( ( uint32_t ) ( ( size_t ) buffer_ptr - ( size_t ) dccp ) );
 
   /* Computing the checksum. */
   dccp->dccph_checksum = co->bogus_csum ? RANDOM() :
-                         htons ( cksum ( dccp, ( uint32_t ) ( ( void * ) ( pseudo + 1 ) - ( void * ) dccp ) ) );
+                         htons ( cksum ( dccp, ( uint32_t ) ( ( size_t ) ( pseudo + 1 ) - ( size_t ) dccp ) ) );
 
   /* Finish GRE encapsulation, if needed */
   gre_checksum ( packet, co, *size );

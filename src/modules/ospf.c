@@ -521,7 +521,7 @@ build_ospf_lsupdate:
     /* Computing the checksum. */
     ospf->check   = co->bogus_csum ?
                     RANDOM() :
-                    htons ( cksum ( ospf, ( uint32_t ) ( buffer.ptr - ( void * ) ospf ) ) );
+                    htons ( cksum ( ospf, ( size_t ) buffer.ptr - ( size_t ) ospf ) );
 
   gre_checksum ( packet, co, *size );
 }
