@@ -51,7 +51,7 @@ static double t0;
 static int echo_enabled = 1;
 
 _NOINLINE static void               initialize ( const config_options_T * );
-_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T * restrict, int * restrict );
+_NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
 static void show_statistics ( void );
 
 #pragma GCC diagnostic push
@@ -100,8 +100,10 @@ int main ( int argc, char *argv[] )
 
       /* Distribute the number of packets between processes */
       new_threshold = co->threshold / 2;
+
       if ( !IS_CHILD_PID ( pid ) )
         new_threshold += ( co->threshold & 1 );
+
       co->threshold = new_threshold;
     }
   }
@@ -174,7 +176,8 @@ int main ( int argc, char *argv[] )
     if ( ! send_packet ( packet, size, co ) )
 #ifndef NDEBUG
       error ( "Packet for protocol %s (%zu bytes long) not sent", ptbl->name, size );
-      /* continue trying to send other packets on debug mode! */
+
+    /* continue trying to send other packets on debug mode! */
 #else
       fatal_error ( "Unspecified error sending a packet" );
 #endif
@@ -237,6 +240,7 @@ static void signal_handler ( int signal )
     case SIGALRM:
       if ( !IS_CHILD_PID ( pid ) )
         kill ( pid, SIGKILL );
+
       return;
 
     case SIGCHLD:
@@ -265,8 +269,10 @@ void initialize ( const config_options_T *co )
 
   /* Hide ^X char output from terminal */
   tcgetattr ( STDOUT_FILENO, &tios );
+
   if ( echo_enabled = tios.c_lflag & ECHO )
     tios.c_lflag &= ~ECHO;
+
   tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 
   /* Blocks SIGTSTP avoiding ^Z behavior. */
@@ -283,8 +289,9 @@ void initialize ( const config_options_T *co )
   sigfillset ( &sigset );
   sa.sa_mask = sigset;
   sigsp = handled_signals;
+
   while ( *sigsp )
-    sigaction( *sigsp++, &sa, NULL );
+    sigaction ( *sigsp++, &sa, NULL );
 
   /* To simplify things, make sure stdout is unbuffered
      (otherwise, it's line buffered). */
@@ -314,7 +321,7 @@ void initialize ( const config_options_T *co )
 }
 
 /* Selects the initial protocol based on the configuration. */
-modules_table_T *selectProtocol ( const config_options_T * restrict co, int * restrict proto )
+modules_table_T *selectProtocol ( const config_options_T *restrict co, int *restrict proto )
 {
   modules_table_T *ptbl;
 
@@ -360,6 +367,7 @@ _FINI static void dtor ( void )
 {
   struct termios tios;
 
+  /* Restore terminal ECHO */
   if ( echo_enabled )
   {
     tcgetattr ( STDOUT_FILENO, &tios );

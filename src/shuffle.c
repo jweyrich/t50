@@ -23,6 +23,8 @@
 #include <t50_shuffle.h>
 #include <t50_randomizer.h>
 
+// FIXME: Should divise a faster algorithm!
+
 // NOTE: It is safe to use uint32_t instead of uint32_t 'cause
 //       the index buffer will never be greater than the number
 //       of available protocols.

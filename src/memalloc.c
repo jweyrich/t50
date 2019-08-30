@@ -23,11 +23,8 @@
 #include <t50_defines.h>
 #include <t50_errors.h>
 
-/* Actual packet buffer. Allocated dynamically. */
-void  *packet = NULL;
-
-/* Used by alloc_packet(). */
-static size_t current_packet_size = 0;
+void  *packet = NULL;                   /* Actual packet buffer. Allocated dynamically. */
+static size_t current_packet_size = 0;  /* Used by alloc_packet(). */
 
 /**
  * Preallocates the packet buffer.
@@ -54,7 +51,7 @@ void alloc_packet ( size_t new_packet_size )
   {
     /* Tries to reallocate memory. */
     /* NOTE: Assume realloc will not fail. */
-    if ( ( p = realloc ( packet, new_packet_size ) ) == NULL )
+    if ( ! ( p = realloc ( packet, new_packet_size ) ) )
       fatal_error ( "Error reallocating packet buffer." );
 
     /* Only assign a new pointer if successfull */

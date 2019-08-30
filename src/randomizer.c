@@ -33,7 +33,7 @@ static uint64_t _seed[2];
 /* xorshift128+
 
    We don't have to worry about the lower bits
-   been less random than the upper. */
+   been less random than the upper, in theory. */
 static uint32_t random_xorshift128plus ( void )
 {
   uint64_t s0 = _seed[1];

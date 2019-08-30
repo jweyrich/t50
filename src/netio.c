@@ -200,6 +200,7 @@ retry:
   errno = 0;
   r = sendto ( fd, buffer, size, MSG_NOSIGNAL, ( struct sockaddr * ) saddr, sizeof ( struct sockaddr_in ) );
 
+  /* FIXME: Is this really necessary? */
   switch ( errno )
   {
     case EINTR:
@@ -229,7 +230,8 @@ in_addr_t resolv ( char *name )
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-  /* Hints getaddrinfo() to return only IPv4 compatible addresses. */
+  /* FIXME: Hints getaddrinfo() to return only IPv4 compatible addresses. 
+            Not sure if it is wise to use AF_UNSPEC here... */
   struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_flags = AI_ALL | AI_V4MAPPED },
   *res, *res0 = NULL;
 #pragma GCC diagnostic pop

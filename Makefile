@@ -51,13 +51,14 @@ else
 		LDFLAGS += -flto
   endif
 
-	# TODO: tunning for cortex-a#?
+	# TODO: tunning for arm-cortex-a7? (Raspberry PI?)
   # TODO: aarch64?!
 	# Options for ARMv7-a
   ifneq ($(findstr armv7,$(ARCHITECTURE)),)
     CFLAGS += -march=armv7-a -fno-stack-protector -flto
 		LDFLAGS += -flto
   endif
+
   # Options for ARMv8-a
   ifneq ($(findstr armv8,$(ARCHITECTURE)),)
     CFLAGS += -march=armv8-a -fno-stack-protector -flto

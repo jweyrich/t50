@@ -29,6 +29,8 @@
  * FIXED: last implementation was WRONG... I can't find any faster way to do this!
  *        Yet... There was another error that didn't consider BIG ENDIAN machines...
  *        Note to myself: Don't mess with this routine again!
+ *
+ *        That being said, I shold find a way to calculate the checksum faster.
  */
 uint16_t cksum ( void *data, size_t length )
 {
