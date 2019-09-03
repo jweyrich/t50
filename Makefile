@@ -43,32 +43,32 @@ else
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
     CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
-		LDFLAGS += -flto
+    LDFLAGS += -flto
   endif
   # Options for i386
   ifeq ($(ARCHITECTURE),i686)
     CFLAGS += -march=native -flto -fno-stack-protector
-		LDFLAGS += -flto
+    LDFLAGS += -flto
   endif
 
-	# TODO: tunning for arm-cortex-a7? (Raspberry PI?)
+  # TODO: tunning for arm-cortex-a7? (Raspberry PI?)
   # TODO: aarch64?!
-	# Options for ARMv7-a
-  ifneq ($(findstr armv7,$(ARCHITECTURE)),)
+  # Options for ARMv7-a
+  ifneq ($(findstring armv7,$(ARCHITECTURE)),)
     CFLAGS += -march=armv7-a -fno-stack-protector -flto
-		LDFLAGS += -flto
+    LDFLAGS += -flto
   endif
 
   # Options for ARMv8-a
-  ifneq ($(findstr armv8,$(ARCHITECTURE)),)
+  ifneq ($(findstring armv8,$(ARCHITECTURE)),)
     CFLAGS += -march=armv8-a -fno-stack-protector -flto
-		LDFLAGS += -flto
+    LDFLAGS += -flto
   endif
 endif
 
 # Added to use ANSI CSI codes (beautifier).
 ifdef USE_ANSI
-	CFLAGS += -DUSE_ANSI
+  CFLAGS += -DUSE_ANSI
 endif
 
 EXECUTABLE=bin/t50
