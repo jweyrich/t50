@@ -6,6 +6,11 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.8.5 - Aug 30th, 2019
+  * Fixed possible pointer arithmetic problems in modules
+  * Regression: back using size_t instead of uint32_t
+  * Improved readbility (using while loops, instead of for)
+
 T50 5.8.4 - Apr 23rd, 2019
   - ^C is not shown when user stops the flooding process.
 
