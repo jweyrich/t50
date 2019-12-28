@@ -10,7 +10,7 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION=5.8.5
+VERSION=5.8.7
 
 #CC=gcc
 #

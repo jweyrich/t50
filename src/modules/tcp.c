@@ -101,7 +101,7 @@ void tcp ( const config_options_T * const restrict co, size_t * restrict size )
   tcp->source  = IPPORT_RND ( co->source );
   tcp->dest    = IPPORT_RND ( co->dest );
   tcp->res1    = TCP_RESERVED_BITS;
-  tcp->doff    = htons ( co->tcp.doff ? co->tcp.doff : ( ( sizeof ( struct tcphdr ) + tcpopt ) / 4 ) );
+  tcp->doff    = co->tcp.doff ? co->tcp.doff : ( ( sizeof ( struct tcphdr ) + tcpopt ) / 4 );
   tcp->fin     = co->tcp.fin;
   tcp->syn     = co->tcp.syn;
   tcp->seq     = co->tcp.syn ? __RND ( co->tcp.sequence ) : 0;
