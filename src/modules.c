@@ -186,7 +186,7 @@ void build_indices ( void )
   while ( i < NUM_OF_MODULES )
   {
     indices[i] = i;
-    i++;
+    i++;    // Here to avoid undefined behavior.
   }
 }
 
@@ -197,7 +197,7 @@ uint32_t get_index ( config_options_T *co )
   if ( next_index >= NUM_OF_MODULES )
   {
     // We hit the end of the indices array.
-    // reshuffle.
+    // reshuffle if shuffling is used.
     if ( co->shuffle )
       shuffle ( indices, NUM_OF_MODULES );
 

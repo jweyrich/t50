@@ -45,14 +45,14 @@
 #include <t50_shuffle.h>
 #include <t50_help.h>
 
-static pid_t pid = -1;      /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
+static pid_t pid = -1;                 /* -1 is a trick used when __HAVE_TURBO__ isn't defined. */
 static sig_atomic_t child_is_dead = 0; /* Used to kill child process if necessary. */
-static double t0;
+static double t0;                      /* Used to calcualte time spent on T50. */
 static int echo_enabled = 1;
 
 _NOINLINE static void               initialize ( const config_options_T * );
 _NOINLINE static modules_table_T   *selectProtocol ( const config_options_T *restrict, int *restrict );
-static void show_statistics ( void );
+static void                         show_statistics ( void );
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -70,15 +70,15 @@ int main ( int argc, char *argv[] )
 
   show_version();
 
-  /* Parse_command_line returns ONLY if there are no errors.
+  /* Parse_command_line() returns ONLY if there are no errors.
      This must be called before testing user privileges. */
   co = parse_command_line ( argv );
 
+  /* If user don't have root privilege, abort. */
   if ( getuid() )
     fatal_error ( "User must have root privilege to run." );
 
   initialize ( co );
-
   create_socket();
 
   /* Calculates CIDR for destination address. */
@@ -112,6 +112,7 @@ int main ( int argc, char *argv[] )
 
 #endif  /* __HAVE_TURBO__ */
 
+  /* This process must have higher priority. */
   if ( setpriority ( PRIO_PROCESS, PRIO_PROCESS, -15 )  == -1 )
     fatal_error ( "Cannot set process priority" );
 
@@ -124,14 +125,15 @@ int main ( int argc, char *argv[] )
              ctime ( &lt ) );
   }
 
-  // SRANDOM is here because each process has its own
-  // random seed. Notice this is called after fork()!
+  // SRANDOM is here because each process must have its own
+  // random seed.
   SRANDOM();
 
   // Initialize indices used for IPPROTO_T50 shuffling.
   build_indices();
 
-  /* Preallocate packet buffer. */
+  /* Preallocate packet buffer.
+     Register deallocator after successful allocation. */
   alloc_packet ( INITIAL_PACKET_SIZE );
   atexit ( destroy_packet_buffer );
 
@@ -141,14 +143,16 @@ int main ( int argc, char *argv[] )
   else
   {
     proto = co->ip.protocol;
-    shuffle ( indices, number_of_modules );
+    shuffle ( indices, number_of_modules );   // do initial shuffle.
+                                              // this maybe NOT used afterwards.
     ptbl = &mod_table[get_index ( co )];
   }
 
   /* Used to calculate the time spent injecting packets */
   gettimeofday ( &tv, NULL );
   t0 = tv.tv_usec * 1e-6 + tv.tv_sec;
-  atexit ( show_statistics );
+  atexit ( show_statistics );                 // Register show_statistics() if
+                                              // we got to this point.
 
   /* MAIN LOOP */
   // OBS: flood means non stop injection.
@@ -240,7 +244,6 @@ static void signal_handler ( int signal )
     case SIGALRM:
       if ( !IS_CHILD_PID ( pid ) )
         kill ( pid, SIGKILL );
-
       return;
 
     case SIGCHLD:
@@ -258,21 +261,19 @@ static void signal_handler ( int signal )
 void initialize ( const config_options_T *co )
 {
   /* 0 is an invalid signal! (marks the end of the list) */
-  static int handled_signals[] = { SIGPIPE, SIGINT, SIGCHLD, SIGALRM, 0 };
+  int handled_signals[] = { SIGPIPE, SIGINT, SIGCHLD, SIGALRM, 0 };
   int *sigsp;
 
   /* allows libc calls to restart after a signal! */
-  static struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
+  struct sigaction sa = { .sa_handler = signal_handler, .sa_flags = SA_RESTART };
   sigset_t sigset;
 
   struct termios tios;
 
   /* Hide ^X char output from terminal */
   tcgetattr ( STDOUT_FILENO, &tios );
-
   if ( echo_enabled = tios.c_lflag & ECHO )
     tios.c_lflag &= ~ECHO;
-
   tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 
   /* Blocks SIGTSTP avoiding ^Z behavior. */

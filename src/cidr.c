@@ -66,7 +66,7 @@ struct cidr *config_cidr ( const config_options_T * const co )
    *     for the CIDR.
    */
 
-  // FIXME: Is this condition is really necessary!
+  // FIXME: Is this condition is really necessary?
   if ( co->bits < CIDR_MAXIMUM )
   {
     uint32_t netmask;
@@ -84,7 +84,7 @@ struct cidr *config_cidr ( const config_options_T * const co )
       return NULL;
     }
 
-    netmask = ~ ( ~0U >> co->bits );
+    netmask = ~( ~0U >> co->bits );
     cidr.__1st_addr = ( ntohl ( co->ip.daddr ) & netmask ) + 1; // avoid bit 0 = 0.
   }
   else
