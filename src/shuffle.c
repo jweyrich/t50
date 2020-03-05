@@ -23,28 +23,15 @@
 #include <t50_shuffle.h>
 #include <t50_randomizer.h>
 
-// FIXME: Should divise a faster algorithm!
-
-// NOTE: It is safe to use uint32_t instead of uint32_t 'cause
-//       the index buffer will never be greater than the number
-//       of available protocols.
+// Knuth-Fisher-Yates (this one) is faster!
 void shuffle ( uint32_t *p, size_t size )
 {
-  size_t i, j;
+  size_t i;
 
-  i = 0;
-  while ( i < size - 2 )
+  while ( size )
   {
-    // NOTE: This routine will be called once each 'size'
-    //       main loop iterations. This division will not
-    //       slow things down very much...
-    j = ( RANDOM() % ( size - i ) ) + i;
-
-    // we need to swap only different positions.
-    if ( i != j )
-      swap ( p[i], p[j] );
-
-    i++;
+    i = RANDOM() % size--;
+    swap ( p[size], p[i] );
   }
 }
 
