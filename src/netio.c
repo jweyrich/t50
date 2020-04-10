@@ -80,7 +80,7 @@ void create_socket ( void )
 #endif
   }
 
-  socket_setnonblocking( fd );
+  socket_setnonblocking( fd );  // FIXME: Possibly not necessary!
   socket_setiphdrincl( fd );
 
 #ifdef SO_SNDBUF
@@ -273,6 +273,8 @@ in_addr_t resolv ( char *name )
   return addr;
 }
 
+// FIXME: Accordingly to Nelson Brito, this is not necessary
+//        because we're dealing with RAW sockets. Must check!
 void socket_setnonblocking( int fd )
 {
   int flag;
