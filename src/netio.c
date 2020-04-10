@@ -29,7 +29,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <poll.h>
 #include <t50_defines.h>
 #include <t50_errors.h>
 #include <t50_netio.h>
@@ -307,6 +306,8 @@ void socket_setiphdrincl( int fd )
   /* Setting IP_HDRINCL. */
   /* NOTE: We will provide the IP header, but enabling this option, on linux,
            still makes the kernel calculates the checksum and total_length. */
+  /* FIXME: manpages says IP_HDRINCL enabled provides the IP packet checksum automatically.
+            Must check! */
   if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
