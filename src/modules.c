@@ -177,7 +177,7 @@ int *get_module_valid_options_list ( int protocol )
   return NULL;
 }
 
-void build_indices ( void )
+void build_proto_indices ( void )
 {
   uint32_t i;
 
@@ -190,7 +190,7 @@ void build_indices ( void )
   }
 }
 
-uint32_t get_index ( config_options_T *co )
+uint32_t get_proto_index ( config_options_T *co )
 {
   uint32_t n;
 

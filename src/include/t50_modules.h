@@ -106,8 +106,8 @@ extern const uint32_t number_of_modules;
 extern uint32_t indices[];
 
 int    *get_module_valid_options_list ( int );
-void    build_indices ( void );
-uint32_t get_index ( config_options_T * );
+void    build_proto_indices ( void );
+uint32_t get_proto_index ( config_options_T * );
 
 /* Modules functions prototypes. */
 void icmp ( const config_options_T * const restrict, size_t * restrict );

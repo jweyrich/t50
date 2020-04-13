@@ -130,7 +130,7 @@ int main ( int argc, char *argv[] )
   SRANDOM();
 
   // Initialize indices used for IPPROTO_T50 shuffling.
-  build_indices();
+  build_proto_indices();
 
   /* Preallocate packet buffer.
      Register deallocator after successful allocation. */
@@ -144,8 +144,8 @@ int main ( int argc, char *argv[] )
   {
     proto = co->ip.protocol;
     shuffle ( indices, number_of_modules );   // do initial shuffle.
-                                              // this maybe NOT used afterwards.
-    ptbl = &mod_table[get_index ( co )];
+                                              // this maybe NOT be used afterwards.
+    ptbl = &mod_table[get_proto_index ( co )];
   }
 
   /* Used to calculate the time spent injecting packets */
@@ -188,7 +188,7 @@ int main ( int argc, char *argv[] )
 
     /* If protocol is 'T50', then get the next true protocol. */
     if ( proto == IPPROTO_T50 )
-      ptbl = &mod_table[get_index ( co )];
+      ptbl = &mod_table[get_proto_index ( co )];
 
     /* Decrement the threshold only if not flooding! */
     if ( !co->flood )
