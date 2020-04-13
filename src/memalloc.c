@@ -18,6 +18,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <t50_defines.h>
@@ -29,11 +30,9 @@ static size_t current_packet_size = 0;  /* Used by alloc_packet(). */
 /**
  * Preallocates the packet buffer.
  *
- * Since VLAs are "dirty" allocations on stack frame, it's not a problem to use
- * the technique below.
- *
  * The function will reallocate memory only if the buffer isn't big enough to acomodate
- * new_packet_size bytes.
+ * new_packet_size bytes. Using IPPROTO_T50, after the first 'round', the buffer will be
+ * big enough to accomodate all packets and no reallocations will be made.
  *
  * @param size Size of the new 'global' packet buffer.
  */
@@ -41,9 +40,7 @@ void alloc_packet ( size_t new_packet_size )
 {
   void *p;
 
-  /* Buffer cannot be empty! */
-  if ( ! new_packet_size )
-    fatal_error ( "Cannot allocate an empty packet buffer!" );
+  assert( new_packet_size );
 
   /* Realloc only ig the new packet size is greater than the old. */
   /* NOTE: Assume the condition is false the majority of time. */

@@ -175,6 +175,8 @@ void socket_setup_sendbuffer ( int fd )
   {
     /* Setting SO_SNDBUF. */
     errno = 0;
+
+    /* FIXME: On kernel's net/ipv4.raw.c seems that only ICMP_FILTER is a valid option. Must check! */
     if ( setsockopt ( fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof ( i ) ) == -1 )
     {
       if ( errno == ENOBUFS )
@@ -308,6 +310,7 @@ void socket_setiphdrincl( int fd )
            still makes the kernel calculates the checksum and total_length. */
   /* FIXME: manpages says IP_HDRINCL enabled provides the IP packet checksum automatically.
             Must check! */
+  /* FIXME: On kernel's net/ipv4.raw.c seems that only ICMP_FILTER is a valid option. Must check! */
   if ( setsockopt ( fd, IPPROTO_IP, IP_HDRINCL, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -323,6 +326,7 @@ void socket_setbroadcast( int fd )
 {
   int n = 1;
 
+  /* FIXME: On kernel's net/ipv4.raw.c seems that only ICMP_FILTER is a valid option. Must check! */
   if ( setsockopt ( fd, SOL_SOCKET, SO_BROADCAST, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
@@ -340,6 +344,7 @@ void socket_setpriority( int fd )
   int n = 1;
 
   /* FIXME: Is it a good idea to ajust the socket priority to 1? */
+  /* FIXME: On kernel's net/ipv4.raw.c seems that only ICMP_FILTER is a valid option. Must check! */
   if ( setsockopt ( fd, SOL_SOCKET, SO_PRIORITY, &n, sizeof ( n ) ) == -1 )
   {
 #ifndef NDEBUG
