@@ -42,12 +42,12 @@ else
 
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
-    CFLAGS += -march=native -ftree-vectorize -flto -fno-stack-protector
+    CFLAGS += -march=native -mtune=native -ftree-vectorize -flto -fno-stack-protector
     LDFLAGS += -flto
   endif
   # Options for i386
   ifeq ($(ARCHITECTURE),i686)
-    CFLAGS += -march=native -flto -fno-stack-protector
+    CFLAGS += -march=native -mtune=native -flto -fno-stack-protector
     LDFLAGS += -flto
   endif
 
