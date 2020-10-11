@@ -1,4 +1,3 @@
-# vim: set noet :
 #
 #     __________ ________  _____
 #    |__    ___/|   ____/ /  _  \ the fastest packet injector.
@@ -41,7 +40,8 @@ else
 
   ARCHITECTURE = $(shell arch)
 
-  CC_VERSION = $(shell $(CC) --version | sed -nE '1s/^.+ ([0-9]+)(\.[0-9])+$$/\1/p')
+  IS_GCC = $(shell $(CC) -v 2>&1 | sed -nE 's/^(.+) version.+$$/\1/p')
+  CC_VERSION = $(shell $(CC) -v 2>&1 | sed -nE 's/^.+version (.).+$$/\1/p')
 
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
@@ -49,8 +49,10 @@ else
 
 		# Avoid CTE on Intel Platforms.
 		# Currently works on GCC 9+ (don't know if works on clang).
-    ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
-      CFLAGS += -fcf-protection=none
+    ifeq ($(IS_GCC),gcc)
+      ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
+        CFLAGS += -fcf-protection=none
+      endif
     endif
 
     LDFLAGS += -flto
@@ -61,8 +63,10 @@ else
 
 		# Avoid CTE on Intel Platforms.
 		# Currently works on GCC 9+ (don't know if works on clang).
-    ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
-      CFLAGS += -fcf-protection=none
+    ifeq ($(IS_GCC),gcc)
+      ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
+        CFLAGS += -fcf-protection=none
+      endif
     endif
 
     LDFLAGS += -flto
