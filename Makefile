@@ -10,7 +10,7 @@
 #       This way you don't need anything other than this makefile to
 #       compile the project.
 
-VERSION=5.8.7
+VERSION=5.8.8
 
 #CC=gcc
 #
@@ -29,6 +29,7 @@ LDLIBS=
 #
 # $ DEBUG=1 make
 #
+
 ifdef DEBUG
 	CFLAGS += -O0 -g
 else
@@ -40,14 +41,30 @@ else
 
   ARCHITECTURE = $(shell arch)
 
+  CC_VERSION = $(shell cc --version | sed -nE '1s/^.+ ([0-9]+)(\.[0-9])+$$/\1/p')
+
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
     CFLAGS += -march=native -mtune=native -ftree-vectorize -flto -fno-stack-protector
+
+		# Avoid CTE on Intel Platforms.
+		# Currently works on GCC 9+ (don't know if works on clang).
+    ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
+      CFLAGS += -fcf-protection=none
+    endif
+
     LDFLAGS += -flto
   endif
   # Options for i386
   ifeq ($(ARCHITECTURE),i686)
     CFLAGS += -march=native -mtune=native -flto -fno-stack-protector
+
+		# Avoid CTE on Intel Platforms.
+		# Currently works on GCC 9+ (don't know if works on clang).
+    ifeq ($(shell expr $(CC_VERSION) \>= 9),1)
+      CFLAGS += -fcf-protection=none
+    endif
+
     LDFLAGS += -flto
   endif
 

@@ -6,6 +6,10 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+T50 5.8.8
+  + Preliminary avoidance of CTE for Intel Processors 
+    in the Makefile.
+
 T50 5.8.7
   - Fixed tcphdr.doff calculation.
 
