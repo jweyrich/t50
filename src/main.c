@@ -272,7 +272,8 @@ void initialize ( const config_options_T *co )
 
   /* Hide ^X char output from terminal */
   tcgetattr ( STDOUT_FILENO, &tios );
-  if ( echo_enabled = tios.c_lflag & ECHO )
+  echo_enabled = tios.c_lflag & ECHO;
+  if ( echo_enabled )
     tios.c_lflag &= ~ECHO;
   tcsetattr ( STDOUT_FILENO, TCSANOW, &tios );
 

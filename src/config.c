@@ -746,7 +746,8 @@ void set_destination_addresses ( char * restrict arg, config_options_T * restric
     co->ip.daddr = resolv ( p );
 
     /* Get cidr if any. */
-    if ( p = strtok ( NULL, "/" ) )
+    p = strtok( NULL, "/" );
+    if ( p )
       co->bits = atoi ( p ); /* NOTE: Range will be checked later. */
     else
       co->bits = CIDR_MAXIMUM;
@@ -1468,7 +1469,8 @@ void set_config_option ( config_options_T * restrict co, char * restrict optname
       break;
 
     case OPTION_EIGRP_DESINATION:
-      if ( tmp_ptr = strchr ( arg, '/' ) )
+      tmp_ptr = strchr( arg, '/' );
+      if ( tmp_ptr )
       {
         *tmp_ptr++ = '\0';
         co->eigrp.prefix = htonl ( toULong ( optname, tmp_ptr ) );

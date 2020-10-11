@@ -41,7 +41,7 @@ else
 
   ARCHITECTURE = $(shell arch)
 
-  CC_VERSION = $(shell cc --version | sed -nE '1s/^.+ ([0-9]+)(\.[0-9])+$$/\1/p')
+  CC_VERSION = $(shell $(CC) --version | sed -nE '1s/^.+ ([0-9]+)(\.[0-9])+$$/\1/p')
 
   # Options for x86-64
   ifeq ($(ARCHITECTURE),x86_64)
